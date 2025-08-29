@@ -25,7 +25,7 @@ private val logger = LoggerFactory.getLogger("Database initialization")
  * Configures the database connection and initializes the schema.
  * Creates a default admin user if no users are found in the database.
  */
-fun Application.configureDatabase() {
+fun configureDatabase() {
 
     val dbHost = EnvUtil.getOrError(EnvUtil.DB_HOST)
     val dbPort = EnvUtil.getOrError(EnvUtil.DB_PORT)
@@ -45,30 +45,32 @@ fun Application.configureDatabase() {
 
     logger.info("Connected to database, creating tables if not existing")
 
-    transaction {
-        SchemaUtils.create(
-            UserTable, SessionTable, SettingsTable,
-            ImageTable,
-            TagTable,
-            ArtistTable, ArtistTagConnection,
-            AlbumTable,
-            TrackTable, TrackTagConnection, TrackArtistConnection
-        )
+    createTables()
+}
 
-        logger.info("Checking for existing users in database")
+fun createTables() = transaction {
+    SchemaUtils.create(
+        UserTable, SessionTable, SettingsTable,
+        ImageTable,
+        TagTable,
+        ArtistTable, ArtistTagConnection,
+        AlbumTable,
+        TrackTable, TrackTagConnection, TrackArtistConnection
+    )
 
-        if (UserEntity.count() == 0L) {
-            createDefaultAdminUser()
-        }
+    logger.info("Checking for existing users in database")
 
-        logger.info("Database setup complete")
+    if (UserEntity.count() == 0L) {
+        createDefaultAdminUser()
     }
+
+    logger.info("Database setup complete")
 }
 
 /**
  * Creates a default admin user with username "Admin" and password "admin".
  */
-fun Application.createDefaultAdminUser() {
+fun createDefaultAdminUser() {
 
     val username = "Admin"
     val salt = CryptoUtil.getSalt()
