@@ -1,0 +1,44 @@
+package wtf.ndu.vibin.db
+
+import org.jetbrains.exposed.dao.LongEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
+
+object UserTable : ModifiableLongIdTable("user") {
+    val username = varchar("username", 50).uniqueIndex()
+    val displayName = varchar("display_name", 100).nullable()
+    val passwordHash = binary("password_hash", 256)
+    val salt = binary("salt", 16)
+    val email = varchar("email", 100).nullable()
+    val isActive = bool("is_active").default(true)
+    val isAdmin = bool("is_admin").default(false)
+    val lastLogin = long("last_login").nullable()
+    val profilePictureId = reference("profile_picture_id", ImageTable).nullable()
+}
+
+/**
+ * Entity class representing a user in the system.
+ *
+ * @property username The unique username of the user.
+ * @property displayName The display name of the user, (null means to use username).
+ * @property passwordHash The hashed password of the user.
+ * @property salt The salt used for hashing the user's password.
+ * @property email The unique email address of the user. (optional)
+ * @property isActive Indicates if the user's account is active.
+ * @property isAdmin Indicates if the user has administrative privileges.
+ * @property lastLogin The timestamp of the user's last login. (optional)
+ * @property profilePicture The profile picture of the user. (optional)
+ */
+class UserEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, UserTable) {
+
+    companion object : LongEntityClass<UserEntity>(UserTable)
+
+    var username by UserTable.username
+    var displayName by UserTable.displayName
+    var passwordHash by UserTable.passwordHash
+    var salt by UserTable.salt
+    var email by UserTable.email
+    var isActive by UserTable.isActive
+    var isAdmin by UserTable.isAdmin
+    var lastLogin by UserTable.lastLogin
+    var profilePicture by ImageEntity optionalReferencedOn UserTable.profilePictureId
+}
