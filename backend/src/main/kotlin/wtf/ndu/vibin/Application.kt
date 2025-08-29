@@ -11,6 +11,7 @@ import wtf.ndu.vibin.config.configureSecurity
 import wtf.ndu.vibin.config.configureSerialization
 import wtf.ndu.vibin.processing.AudioFileProcessor
 import wtf.ndu.vibin.routes.configureAuthRoutes
+import wtf.ndu.vibin.routes.configureMetadataRoutes
 
 fun main() {
     embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
@@ -28,6 +29,7 @@ fun Application.module() {
     configureHTTP()
 
     configureAuthRoutes()
+    configureMetadataRoutes()
 
     GlobalScope.launch {
         AudioFileProcessor.initialProcess()

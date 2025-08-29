@@ -28,7 +28,6 @@ class ItunesProvider(val client: HttpClient) : BaseMetadataProvider() {
         try {
             val response = client.get("https://itunes.apple.com/search") {
                 parameter("term", query)
-                parameter("limit", 1)
                 parameter("media", "music")
             }
 
