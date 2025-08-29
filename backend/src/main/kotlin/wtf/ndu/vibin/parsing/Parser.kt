@@ -1,19 +1,38 @@
 package wtf.ndu.vibin.parsing
 
-import wtf.ndu.vibin.parsing.parsers.deezer.DeezerParser
-import wtf.ndu.vibin.parsing.parsers.itunes.ItunesParser
-import wtf.ndu.vibin.parsing.parsers.tika.MetadataParser
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsBytes
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.isSuccess
+import io.ktor.serialization.gson.gson
+import org.slf4j.LoggerFactory
+import wtf.ndu.vibin.parsing.parsers.deezer.DeezerProvider
+import wtf.ndu.vibin.parsing.parsers.itunes.ItunesProvider
+import wtf.ndu.vibin.parsing.parsers.tika.MetadataProvider
 import wtf.ndu.vibin.settings.FallbackMetadataSource
 import wtf.ndu.vibin.settings.PrimaryMetadataSource
 import wtf.ndu.vibin.settings.Settings
 import java.io.File
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 object Parser {
 
+    private val logger = LoggerFactory.getLogger(Parser::class.java)
+
+    private val client = HttpClient(CIO) {
+        install(ContentNegotiation) {
+            gson {}
+        }
+    }
+
     val parsers = mapOf(
-        "Metadata" to MetadataParser(),
-        "Deezer" to DeezerParser(),
-        "iTunes" to ItunesParser()
+        "Metadata" to MetadataProvider(),
+        "Deezer" to DeezerProvider(client),
+        "iTunes" to ItunesProvider(client)
     )
 
     /**
@@ -27,9 +46,9 @@ object Parser {
         val sources = listOf(Settings.get(PrimaryMetadataSource), Settings.get(FallbackMetadataSource))
 
         for (source in sources) {
-            val metadata = parsers[source]?.parseFile(file)
-            if (metadata != null) {
-                return metadata
+            val metadata = parsers[source]?.searchTrack(file.nameWithoutExtension)
+            if (metadata != null && metadata.isNotEmpty()) {
+                return metadata.first()
             }
         }
 
@@ -39,7 +58,38 @@ object Parser {
             albumName = "Unknown Album",
             durationMs = null,
             explicit = false,
-            coverImageData = null
+            coverImageUrl = null
         )
+    }
+
+    fun getFileProviders() = parsers.filter { it.value.supportedMethods.fromFile }.keys
+    fun getTrackSearchProviders() = parsers.filter { it.value.supportedMethods.searchTrack }.keys
+    fun getArtistSearchProviders() = parsers.filter { it.value.supportedMethods.searchArtist }.keys
+
+    @OptIn(ExperimentalEncodingApi::class)
+    suspend fun downloadCoverImage(url: String): ByteArray? {
+        if (url.startsWith("data:")) {
+            val base64Data = url.substringAfter("base64,")
+            return try {
+                Base64.decode(base64Data)
+            } catch (e: IllegalArgumentException) {
+                logger.error("Failed to decode base64 cover image data: ${e.message}", e)
+                null
+            }
+        }
+
+        return try {
+            val response = client.get(url)
+            if (response.status.isSuccess()) {
+                response.bodyAsBytes()
+            } else {
+                val error = response.bodyAsText()
+                logger.error("Failed to download cover image from $url: ${response.status}. Response: $error")
+                null
+            }
+        } catch (e: Exception) {
+            logger.error("Error downloading cover image from $url: ${e.message}", e)
+            null
+        }
     }
 }

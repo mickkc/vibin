@@ -127,10 +127,13 @@ object AudioFileProcessor {
 
         var track = TrackRepo.createTrack(file, metadata, album, artists, checksum)
 
-        if (metadata.coverImageData != null) {
-            logger.info("Processing cover image for track ID: ${track.id.value}, title: '${track.title}'")
-            val image = ThumbnailProcessor.getImage(metadata.coverImageData, ThumbnailProcessor.ThumbnailType.TRACK, track.id.value.toString())
-            track = TrackRepo.update(track) { this.cover = image }
+        if (metadata.coverImageUrl != null) {
+            val coverImageData = Parser.downloadCoverImage(metadata.coverImageUrl)
+            if (coverImageData != null) {
+                logger.info("Processing cover image for track ID: ${track.id.value}, title: '${track.title}'")
+                val image = ThumbnailProcessor.getImage(coverImageData, ThumbnailProcessor.ThumbnailType.TRACK, track.id.value.toString())
+                track = TrackRepo.update(track) { this.cover = image }
+            }
         }
 
         if (addGenreAsTags && metadata.genre != null) {

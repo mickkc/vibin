@@ -3,17 +3,27 @@ package wtf.ndu.vibin.parsing.parsers.tika
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
 import org.slf4j.LoggerFactory
-import wtf.ndu.vibin.parsing.BaseMetadataParser
+import wtf.ndu.vibin.parsing.BaseMetadataProvider
 import wtf.ndu.vibin.parsing.ParsingUtils
 import wtf.ndu.vibin.parsing.TrackMetadata
 import java.io.File
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.time.Duration.Companion.seconds
 
-class MetadataParser : BaseMetadataParser() {
+class MetadataProvider : BaseMetadataProvider() {
 
-    private val logger = LoggerFactory.getLogger(MetadataParser::class.java)
+    private val logger = LoggerFactory.getLogger(MetadataProvider::class.java)
 
-    override suspend fun parseFile(file: File): TrackMetadata? {
+    override val supportedMethods: SupportedMethods
+        get() = SupportedMethods(
+            fromFile = true,
+            searchTrack = false,
+            searchArtist = false
+        )
+
+    @OptIn(ExperimentalEncodingApi::class)
+    override suspend fun fromFile(file: File): TrackMetadata? {
 
         try {
             val audioFile = AudioFileIO.read(file)
@@ -49,6 +59,8 @@ class MetadataParser : BaseMetadataParser() {
                 return null
             }
 
+            val base64Cover = cover?.let { Base64.encode(it) }
+
             return TrackMetadata(
                 title = title,
                 artistNames = artist?.let { ParsingUtils.splitArtistNames(it) },
@@ -61,7 +73,7 @@ class MetadataParser : BaseMetadataParser() {
                 genre = genre,
                 durationMs = duration.inWholeMilliseconds,
                 comment = comment,
-                coverImageData = cover
+                coverImageUrl = "data:${tag.firstArtwork?.mimeType};base64,$base64Cover",
             )
         }
         catch (e: Exception) {

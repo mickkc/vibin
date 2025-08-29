@@ -17,7 +17,7 @@ object PrimaryMetadataSource : Setting<String>(
     parser = { value -> value },
     serializer = { value -> value },
     defaultValue = "Metadata",
-    generator = { Parser.parsers.keys.toList() }
+    generator = { Parser.getFileProviders() }
 )
 
 object FallbackMetadataSource : Setting<String>(
@@ -25,7 +25,7 @@ object FallbackMetadataSource : Setting<String>(
     parser = { value -> value },
     serializer = { value -> value },
     defaultValue = "iTunes",
-    generator = { Parser.parsers.keys.toList() }
+    generator = { Parser.getFileProviders() }
 )
 
 object AddGenreAsTag : Setting<Boolean>(

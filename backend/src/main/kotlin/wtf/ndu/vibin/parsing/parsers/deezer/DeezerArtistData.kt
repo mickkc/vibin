@@ -3,8 +3,7 @@ package wtf.ndu.vibin.parsing.parsers.deezer
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class DeezerSearchResponse<T>(
-    val data: List<T>,
-    val total: Int,
-    val next: String?
+data class DeezerArtistMetadata (
+    val name: String,
+    val picture_big: String?
 )
