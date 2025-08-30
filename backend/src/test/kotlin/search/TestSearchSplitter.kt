@@ -29,4 +29,12 @@ class TestSearchSplitter {
         val result = SearchQueryBuilder.split(input)
         assertContentEquals(expected, result)
     }
+
+    @Test
+    fun testMultipleBrackets() {
+        val input = "(a:beatles OR (a:\"the beatles\" AND t:help)) t:help"
+        val expected = listOf("(a:beatles OR (a:\"the beatles\" AND t:help))", "t:help")
+        val result = SearchQueryBuilder.split(input)
+        assertContentEquals(expected, result)
+    }
 }

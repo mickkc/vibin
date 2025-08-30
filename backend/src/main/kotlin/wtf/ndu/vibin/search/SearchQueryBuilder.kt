@@ -28,22 +28,24 @@ object SearchQueryBuilder {
         var current = ""
         var isEscaped = false
         var inQuotes = false
-        var isInBrackets = false
+        var bracketDepth = 0
 
         for (i in 0 until queryString.length) {
 
             if (queryString[i] == '(' && !isEscaped && !inQuotes) {
-                isInBrackets = true
+                bracketDepth++
                 current += queryString[i]
                 continue
             }
 
-            if (isInBrackets) {
+            if (bracketDepth > 0) {
                 if (queryString[i] == ')') {
-                    isInBrackets = false
+                    bracketDepth--
                     current += queryString[i]
-                    parts.add(current.trim())
-                    current = ""
+                    if (bracketDepth == 0) {
+                        parts.add(current.trim())
+                        current = ""
+                    }
                     continue
                 } else {
                     current += queryString[i]
@@ -82,7 +84,7 @@ object SearchQueryBuilder {
             throw IllegalArgumentException("Unclosed quotes in query")
         }
 
-        if (isInBrackets) {
+        if (bracketDepth > 0) {
             throw IllegalArgumentException("Unclosed brackets in query")
         }
 
