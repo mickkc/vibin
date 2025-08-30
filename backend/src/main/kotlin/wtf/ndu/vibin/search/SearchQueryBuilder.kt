@@ -93,7 +93,7 @@ object SearchQueryBuilder {
 
     fun buildQuery(parts: List<String>): Op<Boolean> {
 
-        var pparts = parts.toMutableList()
+        val pparts = parts.toMutableList()
         var op: Op<Boolean>? = null
 
         fun addWithRelation(nop: Op<Boolean>, relation: String) {

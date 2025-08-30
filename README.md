@@ -58,21 +58,17 @@ Vibin is a self-hosted music streaming server that allows you to upload, manage,
     - `e:no` - false
     - `e:1` - true
     - `e:0` - false
-- `g:genre` or `g:"multiple words"`: Search by genre
-    - `g:pop`
-    - `g:"synth pop"`
 - `+tag` or `-tag`: Include or exclude specific tags
     - `+favorite`
     - `-chill`
 - `c:word` or `c:"multiple words"`: Search by comment (Placeholders supported)
     - `c:"chill vibes"`
-- `AND`, `OR`, `NOT`: Combine multiple search criteria
+- `AND`, `OR`: Combine multiple search criteria
     - `a:"rick astley" AND t:"never gonna give you up"` - All Rick Astley songs titled "Never Gonna Give You Up"
-    - `g:pop OR g:"synth pop"` - All pop or synth pop songs
     - `a:"rick astley" AND e:false` - All Rick Astley songs that are not explicit
     - `+favorite AND g:pop AND y:2010-` - All favorite pop songs from 2010 onwards
-    - `+chill AND (g:lofi OR g:jazz) AND NOT more` - All chill lofi or jazz songs that do not have "more" as their title, artist, or album
-    - Precedence: `NOT` > `AND` > `OR`
+    - `+chill AND (+lofi OR +jazz) AND more` - All chill lofi or jazz songs that have "more" as their title, artist, or album
+    - Precedence: `AND` > `OR`
 
 All searches are case-insensitive.
 
