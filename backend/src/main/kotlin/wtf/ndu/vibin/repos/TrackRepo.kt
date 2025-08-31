@@ -1,12 +1,18 @@
 package wtf.ndu.vibin.repos
 
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.AlbumEntity
 import wtf.ndu.vibin.db.ArtistEntity
+import wtf.ndu.vibin.db.ArtistTable
 import wtf.ndu.vibin.db.TrackEntity
 import wtf.ndu.vibin.db.TrackTable
+import wtf.ndu.vibin.dto.TrackDto
+import wtf.ndu.vibin.dto.TrackEditDto
+import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.parsing.TrackMetadata
+import wtf.ndu.vibin.processing.ThumbnailProcessor
 import wtf.ndu.vibin.utils.ChecksumUtil
 import wtf.ndu.vibin.utils.PathUtils
 import java.io.File
@@ -44,6 +50,51 @@ object TrackRepo {
         val updated = track.apply(block)
         updated.updatedAt = System.currentTimeMillis()
         return@transaction updated
+    }
+
+    fun update(trackId: Long, editDto: TrackEditDto): TrackEntity? = transaction {
+
+        val track = TrackEntity.findById(trackId) ?: return@transaction null
+
+        editDto.title?.takeIf { it.isNotBlank() }?.let { track.title = it }
+        editDto.explicit?.let { track.explicit = it }
+
+        editDto.trackNumber?.let { track.trackNumber = it.takeIf { it > 0 } }
+        editDto.trackCount?.let { track.trackCount = it.takeIf { it > 0 } }
+        editDto.discNumber?.let { track.discNumber = it.takeIf { it > 0 } }
+        editDto.discCount?.let { track.discCount = it.takeIf { it > 0 } }
+
+        editDto.year?.let { track.year = it.takeIf { it > 0 } }
+        editDto.comment?.let { track.comment = it }
+
+        editDto.imageUrl?.let { imageUrl ->
+            val imageData = runBlocking { Parser.downloadCoverImage(imageUrl) } ?: return@let
+            val image = ThumbnailProcessor.getImage(imageData, ThumbnailProcessor.ThumbnailType.TRACK, track.id.value.toString())
+            image?.let { track.cover = it}
+        }
+
+        editDto.albumId?.let { albumId ->
+            if (editDto.albumId != track.album.id.value) {
+                val album = AlbumEntity.findById(albumId)
+                album?.let { track.album = it }
+            }
+        }
+
+        editDto.artistIds?.let { artistIds ->
+            val artists = ArtistEntity.find { ArtistTable.id inList artistIds }.toList()
+            track.artists = SizedCollection(artists)
+        }
+
+        track.updatedAt = System.currentTimeMillis()
+
+        return@transaction track
+    }
+
+    fun getAll(page: Int, pageSize: Int): List<TrackEntity> = transaction {
+        return@transaction TrackEntity.all()
+            .limit(pageSize)
+            .offset(((page - 1) * pageSize).toLong())
+            .toList()
     }
 
     fun toDto(trackEntity: TrackEntity): TrackDto = transaction {

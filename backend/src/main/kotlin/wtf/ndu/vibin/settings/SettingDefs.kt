@@ -34,3 +34,10 @@ object AddGenreAsTag : Setting<Boolean>(
     serializer = { value -> value.toString() },
     defaultValue = true
 )
+
+object PageSize : Setting<Int>(
+    key = "page_size",
+    parser = { value -> value.toIntOrNull() ?: 50 },
+    serializer = { value -> value.toString() },
+    defaultValue = 50
+)

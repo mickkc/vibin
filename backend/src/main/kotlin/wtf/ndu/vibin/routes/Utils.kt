@@ -16,6 +16,10 @@ suspend fun RoutingCall.unauthorized(message: String = "Unauthorized") {
     respondText(message, status = HttpStatusCode.Unauthorized)
 }
 
+suspend fun RoutingCall.notFound(message: String = "Not Found") {
+    respondText(message, status = HttpStatusCode.NotFound)
+}
+
 fun RoutingCall.getUser(): UserEntity? {
     val principal = principal<UserPrincipal>()
     return principal?.let {
