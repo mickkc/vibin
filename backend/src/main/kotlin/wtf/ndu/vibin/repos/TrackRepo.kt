@@ -45,4 +45,35 @@ object TrackRepo {
         updated.updatedAt = System.currentTimeMillis()
         return@transaction updated
     }
+
+    fun toDto(trackEntity: TrackEntity): TrackDto = transaction {
+        return@transaction toDtoInternal(trackEntity)
+    }
+
+    fun toDto(trackEntities: List<TrackEntity>): List<TrackDto> = transaction {
+        return@transaction trackEntities.map { toDtoInternal(it) }
+    }
+
+    private fun toDtoInternal(trackEntity: TrackEntity): TrackDto {
+        return TrackDto(
+            id = trackEntity.id.value,
+            title = trackEntity.title,
+            album = AlbumRepo.toDto(trackEntity.album),
+            artists = ArtistRepo.toDto(trackEntity.artists.toList()),
+            explicit = trackEntity.explicit,
+            trackNumber = trackEntity.trackNumber,
+            trackCount = trackEntity.trackCount,
+            discNumber = trackEntity.discNumber,
+            discCount = trackEntity.discCount,
+            year = trackEntity.year,
+            duration = trackEntity.duration,
+            comment = trackEntity.comment,
+            cover = trackEntity.cover?.let { ImageRepo.toDto(it) },
+            path = trackEntity.path,
+            checksum = trackEntity.checksum,
+            tags = TagRepo.toDto(trackEntity.tags.toList()),
+            createdAt = trackEntity.createdAt,
+            updatedAt = trackEntity.updatedAt
+        )
+    }
 }

@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.ArtistEntity
 import wtf.ndu.vibin.db.ArtistTable
+import wtf.ndu.vibin.dto.ArtistDto
 
 object ArtistRepo {
 
@@ -18,4 +19,23 @@ object ArtistRepo {
             ?: ArtistEntity.new { this.name = name }
     }
 
+    fun toDto(artistEntity: ArtistEntity): ArtistDto = transaction {
+        return@transaction toDtoInternal(artistEntity)
+    }
+
+    fun toDto(artistEntities: List<ArtistEntity>): List<ArtistDto> = transaction {
+        return@transaction artistEntities.map { toDtoInternal(it) }
+    }
+
+    private fun toDtoInternal(artistEntity: ArtistEntity): ArtistDto {
+        return ArtistDto(
+            id = artistEntity.id.value,
+            name = artistEntity.name,
+            image = artistEntity.image?.let { ImageRepo.toDto(it) },
+            sortName = artistEntity.sortName,
+            tags = TagRepo.toDto(artistEntity.tags.toList()),
+            createdAt = artistEntity.createdAt,
+            updatedAt = artistEntity.updatedAt
+        )
+    }
 }
