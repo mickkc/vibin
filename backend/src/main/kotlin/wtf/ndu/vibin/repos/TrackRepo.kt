@@ -14,6 +14,7 @@ import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.parsing.TrackMetadata
 import wtf.ndu.vibin.processing.ThumbnailProcessor
 import wtf.ndu.vibin.utils.ChecksumUtil
+import wtf.ndu.vibin.utils.DateTimeUtils
 import wtf.ndu.vibin.utils.PathUtils
 import java.io.File
 
@@ -48,7 +49,7 @@ object TrackRepo {
 
     fun update(track: TrackEntity, block: TrackEntity.() -> Unit): TrackEntity = transaction {
         val updated = track.apply(block)
-        updated.updatedAt = System.currentTimeMillis()
+        updated.updatedAt = DateTimeUtils.now()
         return@transaction updated
     }
 
@@ -85,7 +86,7 @@ object TrackRepo {
             track.artists = SizedCollection(artists)
         }
 
-        track.updatedAt = System.currentTimeMillis()
+        track.updatedAt = DateTimeUtils.now()
 
         return@transaction track
     }

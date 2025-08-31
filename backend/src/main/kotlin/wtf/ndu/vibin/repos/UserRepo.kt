@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.UserEntity
 import wtf.ndu.vibin.db.UserTable
 import wtf.ndu.vibin.dto.UserDto
+import wtf.ndu.vibin.utils.DateTimeUtils
 
 /**
  * Repository for managing [wtf.ndu.vibin.db.UserEntity] instances.
@@ -39,7 +40,7 @@ object UserRepo {
     fun updateUser(user: UserEntity, block: UserEntity.() -> Unit): UserEntity = transaction {
         user.apply {
             this.block()
-            this.updatedAt = System.currentTimeMillis()
+            this.updatedAt = DateTimeUtils.now()
         }
     }
 
