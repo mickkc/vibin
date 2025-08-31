@@ -7,7 +7,7 @@ data class DeezerTrackData(
     val id: Long,
     val title: String,
     val duration: Double,
-    val explicit_lyrics: Boolean,
+    @Suppress("PropertyName") val explicit_lyrics: Boolean,
     val artist: DeezerArtistData,
     val album: DeezerAlbumData
 )
@@ -18,6 +18,7 @@ data class DeezerArtistData(
     val name: String
 )
 
+@Suppress("PropertyName")
 @Serializable
 data class DeezerAlbumData(
     val id: Long,

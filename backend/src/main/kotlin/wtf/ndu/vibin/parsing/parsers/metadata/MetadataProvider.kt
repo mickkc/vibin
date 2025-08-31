@@ -1,4 +1,4 @@
-package wtf.ndu.vibin.parsing.parsers.tika
+package wtf.ndu.vibin.parsing.parsers.metadata
 
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
@@ -42,7 +42,7 @@ class MetadataProvider : BaseMetadataProvider() {
             val duration = audioFile.audioHeader.trackLength.seconds
 
             // 2025-08-24 -> 2025
-            val parsedYear = year?.let { it.split("-").firstOrNull { it.length == 4 }?.toInt() }
+            val parsedYear = year?.let { date -> date.split("-").firstOrNull { it.length == 4 }?.toInt() }
 
             // 1/5 -> 1, 5
             val parsedTracks = track?.split("/")?.map { it.toInt() }

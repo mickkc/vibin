@@ -1,23 +1,11 @@
 package wtf.ndu.vibin.config
 
-import io.ktor.server.application.Application
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.auth.CryptoUtil
-import wtf.ndu.vibin.db.AlbumTable
-import wtf.ndu.vibin.db.ArtistTable
-import wtf.ndu.vibin.db.ArtistTagConnection
-import wtf.ndu.vibin.db.ImageTable
-import wtf.ndu.vibin.db.SessionTable
-import wtf.ndu.vibin.db.SettingsTable
-import wtf.ndu.vibin.db.TagTable
-import wtf.ndu.vibin.db.TrackArtistConnection
-import wtf.ndu.vibin.db.TrackTable
-import wtf.ndu.vibin.db.TrackTagConnection
-import wtf.ndu.vibin.db.UserEntity
-import wtf.ndu.vibin.db.UserTable
+import wtf.ndu.vibin.db.*
 
 private val logger = LoggerFactory.getLogger("Database initialization")
 

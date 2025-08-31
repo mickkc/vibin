@@ -11,16 +11,6 @@ import wtf.ndu.vibin.db.UserEntity
 object SessionRepo {
 
     /**
-     * Retrieves a session by its token.
-     *
-     * @param token The token of the session to retrieve.
-     * @return The [SessionEntity] if found, otherwise null.
-     */
-    fun getByToken(token: String): SessionEntity? = transaction {
-        SessionEntity.find { SessionTable.token eq token }.firstOrNull()
-    }
-
-    /**
      * Adds a new session for the specified user with the given token.
      *
      * @param user The user to associate with the new session.

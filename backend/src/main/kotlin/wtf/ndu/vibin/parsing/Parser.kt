@@ -11,7 +11,7 @@ import io.ktor.serialization.gson.gson
 import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.parsing.parsers.deezer.DeezerProvider
 import wtf.ndu.vibin.parsing.parsers.itunes.ItunesProvider
-import wtf.ndu.vibin.parsing.parsers.tika.MetadataProvider
+import wtf.ndu.vibin.parsing.parsers.metadata.MetadataProvider
 import wtf.ndu.vibin.settings.FallbackMetadataSource
 import wtf.ndu.vibin.settings.PrimaryMetadataSource
 import wtf.ndu.vibin.settings.Settings
