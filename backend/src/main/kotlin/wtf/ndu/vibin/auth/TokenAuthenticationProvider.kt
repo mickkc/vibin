@@ -1,6 +1,7 @@
 package wtf.ndu.vibin.auth
 
 import io.ktor.server.auth.*
+import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.repos.SessionRepo
 
 /**
@@ -11,6 +12,8 @@ import wtf.ndu.vibin.repos.SessionRepo
  */
 class TokenAuthenticationProvider(config: TokenAuthenticationProviderConfig = TokenAuthenticationProviderConfig()) : AuthenticationProvider(config) {
 
+    private val logger = LoggerFactory.getLogger(TokenAuthenticationProvider::class.java)
+
     override suspend fun onAuthenticate(context: AuthenticationContext) {
         val call = context.call
         val token = call.request.headers["Authorization"]?.removePrefix("Bearer ")
@@ -20,6 +23,7 @@ class TokenAuthenticationProvider(config: TokenAuthenticationProviderConfig = To
         if (userId != null) {
             context.principal(UserPrincipal(userId, token))
         } else {
+            logger.warn("Authentication failed: invalid or missing token")
             context.challenge("TokenAuth", AuthenticationFailedCause.InvalidCredentials) { a, b ->
                 a.complete()
                 null
