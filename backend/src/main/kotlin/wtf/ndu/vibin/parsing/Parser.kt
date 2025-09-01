@@ -7,7 +7,8 @@ import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
-import io.ktor.serialization.gson.gson
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.parsing.parsers.deezer.DeezerProvider
 import wtf.ndu.vibin.parsing.parsers.itunes.ItunesProvider
@@ -25,7 +26,10 @@ object Parser {
 
     private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
-            gson {}
+            json(Json {
+                ignoreUnknownKeys = true
+                explicitNulls = false
+            })
         }
     }
 

@@ -1,10 +1,10 @@
 package wtf.ndu.vibin.parsing.parsers.itunes
 
-import com.google.gson.Gson
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.parsing.BaseMetadataProvider
 import wtf.ndu.vibin.parsing.ParsingUtils
@@ -14,7 +14,10 @@ import java.io.File
 class ItunesProvider(val client: HttpClient) : BaseMetadataProvider() {
 
     private val logger = LoggerFactory.getLogger(ItunesProvider::class.java)
-    private val gson  = Gson()
+    private val json  = Json {
+        ignoreUnknownKeys = true
+        explicitNulls = false
+    }
 
     override val supportedMethods: SupportedMethods
         get() = SupportedMethods(
@@ -39,7 +42,7 @@ class ItunesProvider(val client: HttpClient) : BaseMetadataProvider() {
 
             val itunesResponse = response.bodyAsBytes()
                 .toString(Charsets.UTF_8)
-                .let { gson.fromJson(it, ItunesSearchResponse::class.java) }
+                .let { json.decodeFromString<ItunesSearchResponse>(it) }
 
             logger.info("iTunes API response for '$query': found ${itunesResponse.results.size} results")
 
