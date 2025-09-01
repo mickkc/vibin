@@ -6,6 +6,7 @@ ktor = "3.2.3"
 logback = "1.4.14"
 postgres = "42.7.7"
 jaudiotagger = "1.4.22"
+flyway = "6.5.2"
 
 [libraries]
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
@@ -28,6 +29,8 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 jaudiotagger = { module = "com.github.RouHim:jaudiotagger", version.ref = "jaudiotagger" }
+
+flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }

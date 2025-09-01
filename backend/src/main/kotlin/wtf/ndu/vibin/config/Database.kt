@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.auth.CryptoUtil
 import wtf.ndu.vibin.db.*
+import org.flywaydb.core.Flyway
 
 private val logger = LoggerFactory.getLogger("Database initialization")
 
@@ -21,6 +22,14 @@ fun configureDatabase() {
 
     val dbUser = EnvUtil.getOrError(EnvUtil.DB_USER)
     val dbPassword = EnvUtil.getOrError(EnvUtil.DB_PASSWORD)
+
+    val dbUrl = "jdbc:postgresql://$dbHost:$dbPort/$dbName"
+
+    Flyway
+        .configure()
+        .dataSource(dbUrl, dbUser, dbPassword)
+        .load()
+        .migrate()
 
     logger.info("Connecting to database at $dbHost:$dbPort, database name: $dbName, user: $dbUser")
 
