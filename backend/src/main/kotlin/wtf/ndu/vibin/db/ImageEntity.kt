@@ -10,6 +10,7 @@ object ImageTable : LongIdTable("image") {
     val originalPath = varchar("original_url", 1024)
     val smallPath = varchar("small_url", 1024)
     val largePath = varchar("large_url", 1024).nullable()
+    val colorScheme = reference("color_scheme_id", ColorSchemeTable).nullable().default(null)
 }
 
 /**
@@ -25,6 +26,7 @@ class ImageEntity(id: EntityID<Long>) : LongEntity(id) {
     var originalPath by ImageTable.originalPath
     var smallPath by ImageTable.smallPath
     var largePath by ImageTable.largePath
+    var colorScheme by ColorSchemeEntity optionalReferencedOn ImageTable.colorScheme
 
     override fun delete() {
 

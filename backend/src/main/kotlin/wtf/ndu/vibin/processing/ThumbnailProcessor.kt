@@ -3,6 +3,7 @@ package wtf.ndu.vibin.processing
 import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.db.ImageEntity
 import wtf.ndu.vibin.repos.ImageRepo
+import wtf.ndu.vibin.utils.ImageUtils
 import wtf.ndu.vibin.utils.PathUtils
 import java.awt.Image
 import java.awt.image.BufferedImage
@@ -36,6 +37,8 @@ object ThumbnailProcessor {
             val small = scaleImage(img, 128)
             val large = if (size > 512) scaleImage(img, 512) else null
 
+            val colorScheme = ImageUtils.getColorThemeFromImage(img)
+
             val originalFile = PathUtils.getThumbnailPath(type, "$name.jpg")
             val smallFile = PathUtils.getThumbnailPath(type, "$name-128.jpg")
             val largeFile = large?.let { PathUtils.getThumbnailPath(type, "$name-512.jpg") }
@@ -47,7 +50,8 @@ object ThumbnailProcessor {
             return ImageRepo.createImage(
                 originalUrl = "${type.dir}/$name.jpg",
                 smallUrl = "${type.dir}/$name-128.jpg",
-                largeUrl = large?.let { "${type.dir}/$name-512.jpg" }
+                largeUrl = large?.let { "${type.dir}/$name-512.jpg" },
+                colorScheme = colorScheme
             )
         }
         catch (e: Exception) {
@@ -74,8 +78,8 @@ object ThumbnailProcessor {
      * @param size The desired size (width and height) of the scaled image. If null, the original size is used.
      * @return A byte array containing the JPEG data of the scaled image.
      */
-    fun scaleImage(image: Image, size: Int? = null): ByteArray {
-        val scaledImage = size?.let { image.getScaledInstance(size, size, Image.SCALE_SMOOTH) } ?: image
+    fun scaleImage(image: Image, size: Int? = null, imageScale: Int = Image.SCALE_SMOOTH): ByteArray {
+        val scaledImage = size?.let { image.getScaledInstance(size, size, imageScale) } ?: image
         val bufferedImage = convertUsingConstructor(scaledImage)
         return scaledImage.let {
             ByteArrayOutputStream().use {
