@@ -50,9 +50,9 @@ object Parser {
         val sources = listOf(Settings.get(PrimaryMetadataSource), Settings.get(FallbackMetadataSource))
 
         for (source in sources) {
-            val metadata = parsers[source]?.searchTrack(file.nameWithoutExtension)
-            if (metadata != null && metadata.isNotEmpty()) {
-                return metadata.first()
+            val metadata = parsers[source]?.fromFile(file)
+            if (metadata != null) {
+                return metadata
             }
         }
 
