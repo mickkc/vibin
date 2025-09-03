@@ -37,6 +37,7 @@ fun Application.module() {
     configureTrackRoutes()
     configureAlbumRoutes()
     configurePlaylistRoutes()
+    configurePermissionRoutes()
 
     GlobalScope.launch {
         AudioFileProcessor.initialProcess()
