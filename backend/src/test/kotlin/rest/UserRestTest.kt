@@ -22,7 +22,7 @@ class UserRestTest {
         val response = client.get("/api/users")
         assertTrue(response.status.isSuccess())
 
-        val users = response.body<List<UserEditDto>>()
+        val users = response.body<List<UserDto>>()
         assertTrue(users.size == 3) // including default admin user
         assertTrue(users.any { it.username == "user1" })
         assertTrue(users.any { it.username == "user2" })
