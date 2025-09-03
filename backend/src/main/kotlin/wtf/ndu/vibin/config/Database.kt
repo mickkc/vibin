@@ -54,6 +54,7 @@ fun configureDatabase() {
     logger.info("Connected to database, creating tables if not existing")
 
     createTables()
+    createDefaultAdminUser()
 }
 
 fun createTables() = transaction {
@@ -67,20 +68,20 @@ fun createTables() = transaction {
         PlaylistTable, PlaylistTrackTable, PlaylistCollaborator
     )
 
-    logger.info("Checking for existing users in database")
-
-    if (UserEntity.count() == 0L) {
-        createDefaultAdminUser()
-    }
-
-    logger.info("Database setup complete")
+    logger.info("Tables created or already existing")
 }
 
 /**
  * Creates a default admin user with username "Admin" and password "admin".
  */
-fun createDefaultAdminUser() {
+fun createDefaultAdminUser() = transaction {
 
+    if (UserEntity.count() > 0L) {
+        logger.info("Users found in database, skipping default admin user creation")
+        return@transaction
+    }
+
+    logger.info("Checking for existing users in database")
     val username = "Admin"
     val salt = CryptoUtil.getSalt()
     val passwordHash = CryptoUtil.hashPassword("admin", salt)

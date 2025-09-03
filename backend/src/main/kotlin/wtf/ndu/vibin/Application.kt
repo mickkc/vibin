@@ -19,16 +19,20 @@ import wtf.ndu.vibin.routes.configureTrackRoutes
 import wtf.ndu.vibin.routes.configureUserRoutes
 
 fun main() {
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
+    embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::mainModule)
         .start(wait = true)
 }
 
 val version: String
     get() = "0.0.1"
 
+fun Application.mainModule() {
+    configureDatabase()
+    module()
+}
+
 fun Application.module() {
 
-    configureDatabase()
     configureSerialization()
     configureSecurity()
     configureHTTP()
