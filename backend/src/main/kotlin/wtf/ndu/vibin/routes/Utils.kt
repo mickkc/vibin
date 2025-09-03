@@ -41,7 +41,7 @@ fun RoutingCall.getUserId(): Long? {
 fun RoutingCall.hasPermissions(vararg permissions: PermissionType): Boolean {
     val userId = getUserId() ?: return false
     if (permissions.isEmpty()) return true
-    return PermissionRepo.hasPermissions(userId, permissions.map { it.id })
+    return PermissionRepo.hasPermissions(userId, permissions.toList())
 }
 
 fun Route.getP(path: String, vararg permissions: PermissionType, body: suspend RoutingContext.() -> Unit) {

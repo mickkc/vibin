@@ -2,6 +2,8 @@ package wtf.ndu.vibin.permissions
 
 enum class PermissionType(val id: String, val grantedByDefault: Boolean) {
 
+    ADMIN("admin", false),
+
     CHANGE_SERVER_SETTINGS("change_server_settings", false),
     CHANGE_OWN_SETTINGS("change_own_settings", true),
     CHANGE_USER_SETTINGS("change_user_settings", false),
@@ -32,5 +34,10 @@ enum class PermissionType(val id: String, val grantedByDefault: Boolean) {
     VIEW_USERS("view_users", false),
     MANAGE_USERS("manage_users", false),
     DELETE_USERS("delete_users", false),
-    CREATE_USERS("create_users", false)
+    CREATE_USERS("create_users", false);
+
+    companion object {
+        private val map = entries.associateBy(PermissionType::id)
+        fun valueOfId(id: String): PermissionType? = map[id]
+    }
 }

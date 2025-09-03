@@ -6,7 +6,7 @@ import wtf.ndu.vibin.db.UserEntity
 
 object PermissionRepo {
 
-    fun hasPermissions(userId: Long, permissions: List<String>): Boolean = transaction {
+    fun hasPermissions(userId: Long, permissions: List<PermissionType>): Boolean = transaction {
 
         val user = UserEntity.findById(userId) ?: return@transaction false
 
