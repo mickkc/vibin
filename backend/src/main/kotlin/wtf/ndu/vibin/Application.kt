@@ -10,6 +10,7 @@ import wtf.ndu.vibin.config.configureHTTP
 import wtf.ndu.vibin.config.configureSecurity
 import wtf.ndu.vibin.config.configureSerialization
 import wtf.ndu.vibin.processing.AudioFileProcessor
+import wtf.ndu.vibin.routes.configureAlbumRoutes
 import wtf.ndu.vibin.routes.configureAuthRoutes
 import wtf.ndu.vibin.routes.configureMetadataRoutes
 import wtf.ndu.vibin.routes.configureTrackRoutes
@@ -31,7 +32,9 @@ fun Application.module() {
 
     configureAuthRoutes()
     configureMetadataRoutes()
+
     configureTrackRoutes()
+    configureAlbumRoutes()
 
     GlobalScope.launch {
         AudioFileProcessor.initialProcess()

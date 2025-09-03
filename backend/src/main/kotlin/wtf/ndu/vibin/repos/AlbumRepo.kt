@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.db.*
+import wtf.ndu.vibin.dto.AlbumDataDto
 import wtf.ndu.vibin.dto.AlbumDto
 
 object AlbumRepo {
@@ -21,12 +22,34 @@ object AlbumRepo {
             ?: AlbumEntity.new { this.title = title }
     }
 
+    fun count(): Long = transaction {
+        return@transaction AlbumEntity.count()
+    }
+
+    fun getAll(page: Int, pageSize: Int): List<AlbumEntity> = transaction {
+        return@transaction AlbumEntity.all()
+            .limit(pageSize)
+            .offset(((page - 1) * pageSize).toLong())
+            .toList()
+    }
+
+    fun getById(id: Long): AlbumEntity? = transaction {
+        return@transaction AlbumEntity.findById(id)
+    }
+
     fun toDto(albumEntity: AlbumEntity): AlbumDto = transaction {
         return@transaction toDtoInternal(albumEntity)
     }
 
     fun toDto(albumEntities: List<AlbumEntity>): List<AlbumDto> = transaction {
         return@transaction albumEntities.map { toDtoInternal(it) }
+    }
+
+    fun toDataDto(albumEntity: AlbumEntity): AlbumDataDto = transaction {
+        return@transaction AlbumDataDto(
+            album = toDtoInternal(albumEntity),
+            tracks = TrackRepo.toMinimalDto(TrackRepo.getAllFromAlbum(albumEntity.id.value))
+        )
     }
 
     private fun toDtoInternal(albumEntity: AlbumEntity): AlbumDto = transaction {

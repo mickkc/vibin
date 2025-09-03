@@ -2,6 +2,7 @@ package wtf.ndu.vibin.repos
 
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.SizedCollection
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.AlbumEntity
 import wtf.ndu.vibin.db.ArtistEntity
@@ -98,6 +99,10 @@ object TrackRepo {
             .limit(pageSize)
             .offset(((page - 1) * pageSize).toLong())
             .toList()
+    }
+
+    fun getAllFromAlbum(albumId: Long): List<TrackEntity> = transaction {
+        return@transaction TrackEntity.find { TrackTable.albumId eq albumId }.toList()
     }
 
     fun toDto(trackEntity: TrackEntity): TrackDto = transaction {
