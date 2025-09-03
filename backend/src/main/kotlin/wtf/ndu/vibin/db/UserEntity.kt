@@ -43,4 +43,9 @@ class UserEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, UserTable) {
     var isAdmin by UserTable.isAdmin
     var lastLogin by UserTable.lastLogin
     var profilePicture by ImageEntity optionalReferencedOn UserTable.profilePictureId
+
+    override fun delete() {
+        profilePicture?.delete()
+        super.delete()
+    }
 }

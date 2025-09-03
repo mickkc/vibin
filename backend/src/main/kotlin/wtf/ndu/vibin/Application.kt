@@ -13,8 +13,10 @@ import wtf.ndu.vibin.processing.AudioFileProcessor
 import wtf.ndu.vibin.routes.configureAlbumRoutes
 import wtf.ndu.vibin.routes.configureAuthRoutes
 import wtf.ndu.vibin.routes.configureMetadataRoutes
+import wtf.ndu.vibin.routes.configurePermissionRoutes
 import wtf.ndu.vibin.routes.configurePlaylistRoutes
 import wtf.ndu.vibin.routes.configureTrackRoutes
+import wtf.ndu.vibin.routes.configureUserRoutes
 
 fun main() {
     embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
@@ -32,6 +34,8 @@ fun Application.module() {
     configureHTTP()
 
     configureAuthRoutes()
+    configureUserRoutes()
+
     configureMetadataRoutes()
 
     configureTrackRoutes()

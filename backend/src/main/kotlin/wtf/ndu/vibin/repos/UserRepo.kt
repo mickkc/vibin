@@ -1,9 +1,13 @@
 package wtf.ndu.vibin.repos
 
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.UserEntity
 import wtf.ndu.vibin.db.UserTable
 import wtf.ndu.vibin.dto.UserDto
+import wtf.ndu.vibin.dto.UserEditDto
+import wtf.ndu.vibin.parsing.Parser
+import wtf.ndu.vibin.processing.ThumbnailProcessor
 import wtf.ndu.vibin.utils.DateTimeUtils
 
 /**
@@ -31,6 +35,38 @@ object UserRepo {
         UserEntity.findById(id)
     }
 
+    fun updateOrCreateUser(id: Long?, editDto: UserEditDto): UserEntity? = transaction {
+        val user = if (id != null) UserEntity.findById(id) else UserEntity.new {
+            username = editDto.username!!
+            displayName = editDto.displayName
+            email = editDto.email
+            isActive = editDto.isActive ?: true
+            isAdmin = editDto.isAdmin ?: false
+        }
+
+        if (user == null) return@transaction null
+
+        if (id != null) {
+            user.apply {
+                editDto.username?.takeIf { it.isNotBlank() }?.let { this.username = it }
+                editDto.displayName?.let { this.displayName = it.takeIf { it.isNotBlank() } }
+                editDto.email?.let { this.email = it.takeIf { it.isNotBlank() } }
+                editDto.isActive?.let { this.isActive = it }
+                editDto.isAdmin?.let { this.isAdmin = it }
+            }
+        }
+
+        if (editDto.profilePictureUrl != null) {
+            val data = runBlocking { Parser.downloadCoverImage(editDto.profilePictureUrl) }
+            val image = data?.let { ThumbnailProcessor.getImage(data, ThumbnailProcessor.ThumbnailType.USER, user.id.value.toString()) }
+            user.profilePicture?.delete()
+            user.profilePicture = image
+        }
+
+        user.updatedAt = DateTimeUtils.now()
+        return@transaction user
+    }
+
     /**
      * Updates the specified user with the provided block of code.
      *
@@ -42,6 +78,19 @@ object UserRepo {
             this.block()
             this.updatedAt = DateTimeUtils.now()
         }
+    }
+
+    fun deleteUser(user: UserEntity) = transaction {
+        user.delete()
+    }
+
+    /**
+     * Retrieves all users from the database.
+     *
+     * @return A list of all [UserEntity] instances.
+     */
+    fun getAllUsers(): List<UserEntity> = transaction {
+        UserEntity.all().toList()
     }
 
     /**
