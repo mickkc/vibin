@@ -10,7 +10,7 @@ import wtf.ndu.vibin.db.UserTable
  * @property user Reference to the user (collaborator).
  * @primaryKey Composite primary key consisting of playlist and user.
  */
-object PlaylistCollaborator : Table() {
+object PlaylistCollaborator : Table("playlist_collaborator") {
     val playlist = reference("playlist_id", PlaylistTable)
     val user = reference("user_id", UserTable)
 

@@ -10,7 +10,7 @@ import wtf.ndu.vibin.db.UserTable
 import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.db.images.ImageTable
 
-object PlaylistTable : ModifiableLongIdTable() {
+object PlaylistTable : ModifiableLongIdTable("playlist") {
     val name = varchar("name", 255)
     val description = text("description").default("")
     val cover = reference("cover_id", ImageTable).nullable()

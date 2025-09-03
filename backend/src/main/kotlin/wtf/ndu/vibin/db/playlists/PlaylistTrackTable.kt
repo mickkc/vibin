@@ -10,7 +10,7 @@ import wtf.ndu.vibin.db.tracks.TrackTable
  * @property track Reference to the track.
  * @primaryKey Composite primary key consisting of playlist and track.
  */
-object PlaylistTrackTable : Table() {
+object PlaylistTrackTable : Table("playlist_track") {
     val playlist = reference("playlist_id", PlaylistTable)
     val track = reference("track_id", TrackTable)
 

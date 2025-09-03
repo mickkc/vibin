@@ -66,7 +66,7 @@ fun Application.configurePlaylistRoutes() = routing {
             val playlist = PlaylistRepo.getByIdCollaborative(playlistId, user.id.value) ?: return@putP call.notFound()
 
             // Prevent editing others' playlists unless having the permission
-            if (playlist.owner.id.value != user.id.value && !call.hasPermissions(PermissionType.DELETE_COLLABORATIVE_PLAYLISTS))
+            if (!PlaylistRepo.checkOwnership(playlist, user.id.value) && !call.hasPermissions(PermissionType.DELETE_COLLABORATIVE_PLAYLISTS))
                 return@putP call.forbidden()
 
             // Update the playlist
@@ -84,7 +84,7 @@ fun Application.configurePlaylistRoutes() = routing {
             val playlist = PlaylistRepo.getByIdCollaborative(playlistId, userId) ?: return@deleteP call.notFound()
 
             // Prevent deleting others' playlists unless having the permission
-            if (playlist.owner.id.value != userId && !call.hasPermissions(PermissionType.DELETE_COLLABORATIVE_PLAYLISTS))
+            if (PlaylistRepo.checkOwnership(playlist, userId) && !call.hasPermissions(PermissionType.DELETE_COLLABORATIVE_PLAYLISTS))
                 return@deleteP call.forbidden()
 
             PlaylistRepo.deletePlaylist(playlist.id.value)

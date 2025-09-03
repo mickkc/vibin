@@ -37,6 +37,10 @@ object PlaylistRepo {
         return@transaction PlaylistEntity.find (createOp(userId) and (PlaylistTable.id eq id)).firstOrNull()
     }
 
+    fun checkOwnership(playlistEntity: PlaylistEntity, userId: Long): Boolean = transaction {
+        return@transaction playlistEntity.owner.id.value == userId
+    }
+
     /**
      * Gets a playlist by ID if the user is a collaborator or the owner.
      *
