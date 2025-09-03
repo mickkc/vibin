@@ -57,16 +57,18 @@ fun configureDatabase() {
     createDefaultAdminUser()
 }
 
+val allTables = arrayOf(
+    UserTable, GrantedPermissionTable, SessionTable, SettingsTable,
+    ImageTable,
+    TagTable,
+    ArtistTable, ArtistTagConnection,
+    AlbumTable,
+    TrackTable, TrackTagConnection, TrackArtistConnection,
+    PlaylistTable, PlaylistTrackTable, PlaylistCollaborator
+)
+
 fun createTables() = transaction {
-    SchemaUtils.create(
-        UserTable, GrantedPermissionTable, SessionTable, SettingsTable,
-        ImageTable,
-        TagTable,
-        ArtistTable, ArtistTagConnection,
-        AlbumTable,
-        TrackTable, TrackTagConnection, TrackArtistConnection,
-        PlaylistTable, PlaylistTrackTable, PlaylistCollaborator
-    )
+    SchemaUtils.create(*allTables)
 
     logger.info("Tables created or already existing")
 }
