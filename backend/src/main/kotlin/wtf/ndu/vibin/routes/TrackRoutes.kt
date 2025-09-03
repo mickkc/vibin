@@ -7,6 +7,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import wtf.ndu.vibin.dto.PaginatedDto
 import wtf.ndu.vibin.dto.TrackEditDto
+import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.repos.TrackRepo
 import wtf.ndu.vibin.settings.PageSize
 import wtf.ndu.vibin.settings.Settings
@@ -15,7 +16,7 @@ fun Application.configureTrackRoutes() = routing {
 
     authenticate("tokenAuth") {
 
-        get("/api/tracks") {
+        getP("/api/tracks", PermissionType.VIEW_TRACKS) {
             val page = call.request.queryParameters["p"]?.toIntOrNull() ?: 1
             val pageSize = call.request.queryParameters["pageSize"]?.toIntOrNull() ?: Settings.get(PageSize)
 
@@ -30,11 +31,11 @@ fun Application.configureTrackRoutes() = routing {
             ))
         }
 
-        post("/api/tracks/{trackId}/edit") {
-            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@post call.missingParameter("trackId")
+        postP("/api/tracks/{trackId}/edit", PermissionType.MANAGE_TRACKS) {
+            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@postP call.missingParameter("trackId")
             val editDto = call.receive<TrackEditDto>()
 
-            val updated = TrackRepo.update(trackId, editDto) ?: return@post call.notFound()
+            val updated = TrackRepo.update(trackId, editDto) ?: return@postP call.notFound()
             call.respond(TrackRepo.toDto(updated))
         }
     }

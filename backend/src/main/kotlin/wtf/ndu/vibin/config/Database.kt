@@ -58,7 +58,7 @@ fun configureDatabase() {
 
 fun createTables() = transaction {
     SchemaUtils.create(
-        UserTable, SessionTable, SettingsTable,
+        UserTable, GrantedPermissionTable, SessionTable, SettingsTable,
         ImageTable,
         TagTable,
         ArtistTable, ArtistTagConnection,

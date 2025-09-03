@@ -1,11 +1,11 @@
 package wtf.ndu.vibin.routes
 
-import io.ktor.server.application.Application
-import io.ktor.server.auth.authenticate
-import io.ktor.server.response.respond
-import io.ktor.server.routing.get
-import io.ktor.server.routing.routing
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import wtf.ndu.vibin.dto.PaginatedDto
+import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.repos.AlbumRepo
 import wtf.ndu.vibin.settings.PageSize
 import wtf.ndu.vibin.settings.Settings
@@ -14,7 +14,8 @@ fun Application.configureAlbumRoutes() = routing {
 
     authenticate("tokenAuth") {
 
-        get("/api/albums") {
+        getP("/api/albums", PermissionType.VIEW_ALBUMS) {
+
             val page = call.request.queryParameters["p"]?.toIntOrNull() ?: 1
             val pageSize = call.request.queryParameters["pageSize"]?.toIntOrNull() ?: Settings.get(PageSize)
 
@@ -29,12 +30,16 @@ fun Application.configureAlbumRoutes() = routing {
             ))
         }
 
-        get("/api/albums/{albumId}") {
-            val albumId = call.parameters["albumId"]?.toLongOrNull() ?: return@get call.missingParameter("albumId")
+        getP("/api/albums/{albumId}", PermissionType.VIEW_ALBUMS) {
+
+            if (!call.hasPermissions(PermissionType.VIEW_ALBUMS))
+                return@getP call.forbidden()
+
+            val albumId = call.parameters["albumId"]?.toLongOrNull() ?: return@getP call.missingParameter("albumId")
             val album = AlbumRepo.getById(albumId)
 
             if (album == null) {
-                return@get call.notFound()
+                return@getP call.notFound()
             }
 
             call.respond(AlbumRepo.toDataDto(album))

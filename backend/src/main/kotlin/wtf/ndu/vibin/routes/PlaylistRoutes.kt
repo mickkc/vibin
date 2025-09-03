@@ -1,16 +1,13 @@
 package wtf.ndu.vibin.routes
 
-import io.ktor.server.application.Application
-import io.ktor.server.auth.authenticate
-import io.ktor.server.request.receive
-import io.ktor.server.response.respond
-import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
-import io.ktor.server.routing.put
-import io.ktor.server.routing.routing
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import wtf.ndu.vibin.dto.PaginatedDto
 import wtf.ndu.vibin.dto.PlaylistEditDto
+import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.repos.PlaylistRepo
 import wtf.ndu.vibin.settings.PageSize
 import wtf.ndu.vibin.settings.Settings
@@ -18,8 +15,9 @@ import wtf.ndu.vibin.settings.Settings
 fun Application.configurePlaylistRoutes() = routing {
     authenticate("tokenAuth") {
 
-        get("/api/playlists") {
-            val userId = call.getUserId() ?: return@get call.unauthorized()
+        getP("/api/playlists", PermissionType.VIEW_PLAYLISTS) {
+
+            val userId = call.getUserId() ?: return@getP call.unauthorized()
             val page = call.request.queryParameters["p"]?.toIntOrNull() ?: 1
             val pageSize = call.request.queryParameters["pageSize"]?.toIntOrNull() ?: Settings.get(PageSize)
 
@@ -35,32 +33,41 @@ fun Application.configurePlaylistRoutes() = routing {
             )
         }
 
-        post("/api/playlists") {
-            val userId = call.getUserId() ?: return@post call.unauthorized()
+        postP("/api/playlists", PermissionType.MANAGE_PLAYLISTS) {
+
+            val userId = call.getUserId() ?: return@postP call.unauthorized()
             val editDto = call.receive<PlaylistEditDto>()
+
+            if ((editDto.isPublic == true && !call.hasPermissions(PermissionType.CREATE_PUBLIC_PLAYLISTS) ||
+                (editDto.isPublic == false && !call.hasPermissions(PermissionType.CREATE_PRIVATE_PLAYLISTS))))
+                return@postP call.forbidden()
 
             val created = PlaylistRepo.createOrUpdatePlaylist(userId, editDto, null)!!
 
             call.respond(PlaylistRepo.toDto(created))
         }
 
-        put("/api/playlists/{playlistId}") {
-            val userId = call.getUserId() ?: return@put call.unauthorized()
-            val playlistId = call.parameters["playlistId"]?.toLongOrNull() ?: return@put call.missingParameter("playlistId")
+        putP("/api/playlists/{playlistId}", PermissionType.MANAGE_PLAYLISTS) {
+            val userId = call.getUserId() ?: return@putP call.unauthorized()
+            val playlistId = call.parameters["playlistId"]?.toLongOrNull() ?: return@putP call.missingParameter("playlistId")
             val editDto = call.receive<PlaylistEditDto>()
 
-            val playlist = PlaylistRepo.getById(playlistId, userId) ?: return@put call.notFound()
+            if ((editDto.isPublic == true && !call.hasPermissions(PermissionType.CREATE_PUBLIC_PLAYLISTS) ||
+                (editDto.isPublic == false && !call.hasPermissions(PermissionType.CREATE_PRIVATE_PLAYLISTS))))
+                return@putP call.forbidden()
 
-            val updated = PlaylistRepo.createOrUpdatePlaylist(userId, editDto, playlist.id.value) ?: return@put call.notFound()
+            val playlist = PlaylistRepo.getById(playlistId, userId) ?: return@putP call.notFound()
+
+            val updated = PlaylistRepo.createOrUpdatePlaylist(userId, editDto, playlist.id.value) ?: return@putP call.notFound()
 
             call.respond(PlaylistRepo.toDto(updated))
         }
 
-        delete("/api/playlists/{playlistId}") {
-            val userId = call.getUserId() ?: return@delete call.unauthorized()
-            val playlistId = call.parameters["playlistId"]?.toLongOrNull() ?: return@delete call.missingParameter("playlistId")
+        deleteP("/api/playlists/{playlistId}", PermissionType.DELETE_OWN_PLAYLISTS) {
+            val userId = call.getUserId() ?: return@deleteP call.unauthorized()
+            val playlistId = call.parameters["playlistId"]?.toLongOrNull() ?: return@deleteP call.missingParameter("playlistId")
 
-            val playlist = PlaylistRepo.getById(playlistId, userId) ?: return@delete call.notFound()
+            val playlist = PlaylistRepo.getById(playlistId, userId) ?: return@deleteP call.notFound()
 
             PlaylistRepo.deletePlaylist(playlist.id.value)
 

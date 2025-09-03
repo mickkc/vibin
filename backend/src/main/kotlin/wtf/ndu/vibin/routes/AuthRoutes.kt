@@ -15,18 +15,18 @@ fun Application.configureAuthRoutes() = routing {
     val logger = LoggerFactory.getLogger("Authentication API Routes")
 
     // User login
-    post("/api/auth/login") {
+    postP("/api/auth/login") {
 
-        val username = call.parameters["username"] ?: return@post call.missingParameter("username")
-        val password = call.parameters["password"] ?: return@post call.missingParameter("password")
+        val username = call.parameters["username"] ?: return@postP call.missingParameter("username")
+        val password = call.parameters["password"] ?: return@postP call.missingParameter("password")
 
         val user = UserRepo.getByUsername(username)?.takeIf { it.isActive }
-            ?: return@post call.unauthorized("Invalid username or password")
+            ?: return@postP call.unauthorized("Invalid username or password")
 
         val hashedPassword = CryptoUtil.hashPassword(password, user.salt)
         if (!hashedPassword.contentEquals(user.passwordHash)) {
             logger.warn("Failed login attempt for user: $username")
-            return@post call.unauthorized("Invalid username or password")
+            return@postP call.unauthorized("Invalid username or password")
         }
 
         val token = CryptoUtil.createToken()
@@ -44,9 +44,9 @@ fun Application.configureAuthRoutes() = routing {
     authenticate("tokenAuth") {
 
         // Session validation
-        post("/api/auth/validate") {
+        postP("/api/auth/validate") {
             val user = call.getUser()?.takeIf { it.isActive }
-                ?: return@post call.unauthorized("Invalid or expired token")
+                ?: return@postP call.unauthorized("Invalid or expired token")
 
             call.respond(mapOf(
                 "success" to true,
@@ -55,9 +55,9 @@ fun Application.configureAuthRoutes() = routing {
         }
 
         // User logout
-        post("/api/auth/logout") {
+        postP("/api/auth/logout") {
 
-            val principal = call.principal<UserPrincipal>() ?: return@post call.unauthorized()
+            val principal = call.principal<UserPrincipal>() ?: return@postP call.unauthorized()
             SessionRepo.removeSession(principal.token)
 
             logger.info("User ID ${principal.userId} logged out")
@@ -66,15 +66,15 @@ fun Application.configureAuthRoutes() = routing {
         }
 
         // Change password
-        post("/api/auth/password") {
-            val user = call.getUser() ?: return@post call.unauthorized()
+        postP("/api/auth/password") {
+            val user = call.getUser() ?: return@postP call.unauthorized()
 
-            val currentPassword = call.parameters["currentPassword"] ?: return@post call.missingParameter("currentPassword")
-            val newPassword = call.parameters["newPassword"] ?: return@post call.missingParameter("newPassword")
+            val currentPassword = call.parameters["currentPassword"] ?: return@postP call.missingParameter("currentPassword")
+            val newPassword = call.parameters["newPassword"] ?: return@postP call.missingParameter("newPassword")
 
             val currentHashedPassword = CryptoUtil.hashPassword(currentPassword, user.salt)
             if (!currentHashedPassword.contentEquals(user.passwordHash)) {
-                return@post call.unauthorized("Invalid current password")
+                return@postP call.unauthorized("Invalid current password")
             }
 
             val newSalt = CryptoUtil.getSalt()
