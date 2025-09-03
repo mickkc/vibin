@@ -16,6 +16,7 @@ fun Application.configureTrackRoutes() = routing {
 
     authenticate("tokenAuth") {
 
+        // Get all tracks (paginated)
         getP("/api/tracks", PermissionType.VIEW_TRACKS) {
             val page = call.request.queryParameters["p"]?.toIntOrNull() ?: 1
             val pageSize = call.request.queryParameters["pageSize"]?.toIntOrNull() ?: Settings.get(PageSize)
@@ -31,12 +32,31 @@ fun Application.configureTrackRoutes() = routing {
             ))
         }
 
+        // Get track by ID
+        getP("/api/tracks/{trackId}", PermissionType.VIEW_TRACKS) {
+            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
+            val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
+            call.respond(TrackRepo.toDto(track))
+        }
+
+        // Edit track details
         postP("/api/tracks/{trackId}/edit", PermissionType.MANAGE_TRACKS) {
             val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@postP call.missingParameter("trackId")
             val editDto = call.receive<TrackEditDto>()
 
             val updated = TrackRepo.update(trackId, editDto) ?: return@postP call.notFound()
             call.respond(TrackRepo.toDto(updated))
+        }
+
+        // Delete track
+        deleteP("/api/tracks/{trackId}", PermissionType.DELETE_TRACKS) {
+            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@deleteP call.missingParameter("trackId")
+
+            val track = TrackRepo.getById(trackId) ?: return@deleteP call.notFound()
+            TrackRepo.delete(track)
+            call.respond(mapOf(
+                "success" to true
+            ))
         }
     }
 }

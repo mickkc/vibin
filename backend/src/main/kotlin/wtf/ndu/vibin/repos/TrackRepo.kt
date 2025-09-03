@@ -30,6 +30,10 @@ object TrackRepo {
         return@transaction TrackEntity.find { TrackTable.checksum eq checksum }.firstOrNull()
     }
 
+    fun getById(id: Long): TrackEntity? = transaction {
+        return@transaction TrackEntity.findById(id)
+    }
+
     fun createTrack(file: File, metadata: TrackMetadata, album: AlbumEntity, artists: List<ArtistEntity>?, checksum: String? = null): TrackEntity = transaction {
         return@transaction TrackEntity.new {
             this.title = metadata.title
@@ -110,6 +114,10 @@ object TrackRepo {
 
     fun toDto(trackEntities: List<TrackEntity>): List<TrackDto> = transaction {
         return@transaction trackEntities.map { toDtoInternal(it) }
+    }
+
+    fun delete(track: TrackEntity) = transaction {
+        track.delete()
     }
 
     private fun toDtoInternal(trackEntity: TrackEntity): TrackDto {
