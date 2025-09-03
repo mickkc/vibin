@@ -16,6 +16,10 @@ import wtf.ndu.vibin.utils.DateTimeUtils
  */
 object UserRepo {
 
+    fun count(): Long = transaction {
+        UserEntity.all().count()
+    }
+
     /**
      * Retrieves a user by their username.
      *
