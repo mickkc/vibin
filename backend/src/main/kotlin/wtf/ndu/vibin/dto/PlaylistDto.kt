@@ -11,6 +11,7 @@ data class PlaylistDto(
     val collaborators: List<UserDto>,
     val cover: ImageDto?,
     val hasVibeDef: Boolean,
+    val owner: UserDto,
     val createdAt: Long,
-    val updatedAt: Long?,
+    val updatedAt: Long?
 )

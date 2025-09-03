@@ -155,6 +155,7 @@ object PlaylistRepo {
             public = playlistEntity.public,
             hasVibeDef = playlistEntity.vibeDef != null,
             collaborators = UserRepo.toDto(playlistEntity.collaborators.toList()),
+            owner = UserRepo.toDto(playlistEntity.owner),
             createdAt = playlistEntity.createdAt,
             updatedAt = playlistEntity.updatedAt
         )
