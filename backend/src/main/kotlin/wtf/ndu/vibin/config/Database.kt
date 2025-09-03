@@ -52,7 +52,8 @@ fun createTables() = transaction {
         TagTable,
         ArtistTable, ArtistTagConnection,
         AlbumTable,
-        TrackTable, TrackTagConnection, TrackArtistConnection
+        TrackTable, TrackTagConnection, TrackArtistConnection,
+        PlaylistTable, PlaylistTrackTable, PlaylistCollaborator
     )
 
     logger.info("Checking for existing users in database")

@@ -26,3 +26,8 @@ fun RoutingCall.getUser(): UserEntity? {
         UserRepo.getById(principal.userId)
     }
 }
+
+fun RoutingCall.getUserId(): Long? {
+    val principal = principal<UserPrincipal>()
+    return principal?.userId
+}

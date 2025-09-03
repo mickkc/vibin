@@ -98,6 +98,9 @@ object Parser {
 
     @OptIn(ExperimentalEncodingApi::class)
     suspend fun downloadCoverImage(url: String): ByteArray? {
+
+        if (url.isBlank()) return null
+
         if (url.startsWith("data:")) {
             val base64Data = url.substringAfter("base64,")
             return try {

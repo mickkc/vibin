@@ -1,0 +1,36 @@
+package wtf.ndu.vibin.db
+
+import org.jetbrains.exposed.dao.LongEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
+
+object PlaylistTable : ModifiableLongIdTable() {
+    val name = varchar("name", 255)
+    val description = text("description").default("")
+    val cover = reference("cover_id", ImageTable).nullable()
+    val public = bool("public").default(false)
+    val vibeDef = text("vibe_def").nullable()
+}
+
+/**
+ * Playlist entity representing a music playlist.
+ *
+ * @property name The name of the playlist.
+ * @property description The description of the playlist.
+ * @property cover The cover image of the playlist. (optional)
+ * @property public Whether the playlist is public or private.
+ * @property vibeDef The vibe definition of the playlist. (optional)
+ * @property songs The songs in the playlist.
+ * @property collaborators The users who can collaborate on the playlist.
+ */
+class PlaylistEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, PlaylistTable) {
+    companion object : LongEntityClass<PlaylistEntity>(PlaylistTable)
+
+    var name by PlaylistTable.name
+    var description by PlaylistTable.description
+    var cover by ImageEntity optionalReferencedOn PlaylistTable.cover
+    var public by PlaylistTable.public
+    var vibeDef by PlaylistTable.vibeDef
+
+    var songs by TrackEntity via PlaylistTrackTable
+    var collaborators by UserEntity via PlaylistCollaborator
+}

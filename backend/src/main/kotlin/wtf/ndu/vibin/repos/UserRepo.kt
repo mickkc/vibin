@@ -52,7 +52,15 @@ object UserRepo {
      * @return The corresponding UserDto.
      */
     fun toDto(entity: UserEntity): UserDto = transaction {
-        UserDto(
+        toDtoInternal(entity)
+    }
+
+    fun toDto(entities: List<UserEntity>): List<UserDto> = transaction {
+        entities.map { toDtoInternal(it) }
+    }
+
+    fun toDtoInternal(entity: UserEntity): UserDto {
+        return UserDto(
             id = entity.id.value,
             username = entity.username,
             displayName = entity.displayName ?: entity.username,
