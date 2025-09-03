@@ -2,6 +2,8 @@ package wtf.ndu.vibin.db
 
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
+import wtf.ndu.vibin.db.images.ImageEntity
+import wtf.ndu.vibin.db.images.ImageTable
 
 object UserTable : ModifiableLongIdTable("user") {
     val username = varchar("username", 50).uniqueIndex()

@@ -6,12 +6,12 @@ import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inSubQuery
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.transactions.transaction
-import wtf.ndu.vibin.db.PlaylistCollaborator
-import wtf.ndu.vibin.db.PlaylistEntity
-import wtf.ndu.vibin.db.PlaylistTable
-import wtf.ndu.vibin.dto.IdNameDto
+import wtf.ndu.vibin.db.playlists.PlaylistCollaborator
+import wtf.ndu.vibin.db.playlists.PlaylistEntity
+import wtf.ndu.vibin.db.playlists.PlaylistTable
 import wtf.ndu.vibin.dto.PlaylistDto
 import wtf.ndu.vibin.dto.PlaylistEditDto
 import wtf.ndu.vibin.parsing.Parser
@@ -86,6 +86,7 @@ object PlaylistRepo {
 
     fun deletePlaylist(playlistId: Long) = transaction {
         val playlist = PlaylistEntity.findById(playlistId) ?: return@transaction
+        PlaylistCollaborator.deleteWhere { PlaylistCollaborator.playlist eq playlistId }
         playlist.delete()
     }
 

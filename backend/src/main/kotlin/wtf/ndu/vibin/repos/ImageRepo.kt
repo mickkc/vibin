@@ -1,7 +1,7 @@
 package wtf.ndu.vibin.repos
 
 import org.jetbrains.exposed.sql.transactions.transaction
-import wtf.ndu.vibin.db.ImageEntity
+import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.dto.ImageDto
 import wtf.ndu.vibin.utils.ImageUtils
 

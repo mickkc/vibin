@@ -3,7 +3,13 @@ package wtf.ndu.vibin.repos
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
-import wtf.ndu.vibin.db.*
+import wtf.ndu.vibin.db.albums.AlbumEntity
+import wtf.ndu.vibin.db.albums.AlbumTable
+import wtf.ndu.vibin.db.artists.ArtistEntity
+import wtf.ndu.vibin.db.artists.ArtistTable
+import wtf.ndu.vibin.db.artists.TrackArtistConnection
+import wtf.ndu.vibin.db.tracks.TrackEntity
+import wtf.ndu.vibin.db.tracks.TrackTable
 import wtf.ndu.vibin.dto.AlbumDataDto
 import wtf.ndu.vibin.dto.AlbumDto
 

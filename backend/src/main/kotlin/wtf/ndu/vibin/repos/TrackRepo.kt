@@ -2,13 +2,12 @@ package wtf.ndu.vibin.repos
 
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.SizedCollection
-import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.transactions.transaction
-import wtf.ndu.vibin.db.AlbumEntity
-import wtf.ndu.vibin.db.ArtistEntity
-import wtf.ndu.vibin.db.ArtistTable
-import wtf.ndu.vibin.db.TrackEntity
-import wtf.ndu.vibin.db.TrackTable
+import wtf.ndu.vibin.db.albums.AlbumEntity
+import wtf.ndu.vibin.db.artists.ArtistEntity
+import wtf.ndu.vibin.db.artists.ArtistTable
+import wtf.ndu.vibin.db.tracks.TrackEntity
+import wtf.ndu.vibin.db.tracks.TrackTable
 import wtf.ndu.vibin.dto.IdNameDto
 import wtf.ndu.vibin.dto.MinimalTrackDto
 import wtf.ndu.vibin.dto.TrackDto

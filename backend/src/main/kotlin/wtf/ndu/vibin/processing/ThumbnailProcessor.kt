@@ -1,7 +1,7 @@
 package wtf.ndu.vibin.processing
 
 import org.slf4j.LoggerFactory
-import wtf.ndu.vibin.db.ImageEntity
+import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.repos.ImageRepo
 import wtf.ndu.vibin.utils.ImageUtils
 import wtf.ndu.vibin.utils.PathUtils

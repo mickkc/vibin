@@ -10,7 +10,12 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInSubQuery
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.or
-import wtf.ndu.vibin.db.*
+import wtf.ndu.vibin.db.albums.AlbumTable
+import wtf.ndu.vibin.db.artists.ArtistTable
+import wtf.ndu.vibin.db.artists.TrackArtistConnection
+import wtf.ndu.vibin.db.tags.TagTable
+import wtf.ndu.vibin.db.tags.TrackTagConnection
+import wtf.ndu.vibin.db.tracks.TrackTable
 
 object SearchQueryBuilder {
 

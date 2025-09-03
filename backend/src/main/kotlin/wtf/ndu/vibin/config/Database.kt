@@ -7,6 +7,17 @@ import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.auth.CryptoUtil
 import wtf.ndu.vibin.db.*
 import org.flywaydb.core.Flyway
+import wtf.ndu.vibin.db.albums.AlbumTable
+import wtf.ndu.vibin.db.artists.ArtistTable
+import wtf.ndu.vibin.db.artists.TrackArtistConnection
+import wtf.ndu.vibin.db.images.ImageTable
+import wtf.ndu.vibin.db.playlists.PlaylistCollaborator
+import wtf.ndu.vibin.db.playlists.PlaylistTable
+import wtf.ndu.vibin.db.playlists.PlaylistTrackTable
+import wtf.ndu.vibin.db.tags.ArtistTagConnection
+import wtf.ndu.vibin.db.tags.TagTable
+import wtf.ndu.vibin.db.tags.TrackTagConnection
+import wtf.ndu.vibin.db.tracks.TrackTable
 
 private val logger = LoggerFactory.getLogger("Database initialization")
 

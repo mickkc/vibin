@@ -3,7 +3,7 @@ package wtf.ndu.vibin.processing
 import org.jetbrains.exposed.sql.SizedCollection
 import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.config.EnvUtil
-import wtf.ndu.vibin.db.TrackEntity
+import wtf.ndu.vibin.db.tracks.TrackEntity
 import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.repos.AlbumRepo
 import wtf.ndu.vibin.repos.ArtistRepo

@@ -1,7 +1,13 @@
-package wtf.ndu.vibin.db
+package wtf.ndu.vibin.db.artists
 
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
+import wtf.ndu.vibin.db.tags.ArtistTagConnection
+import wtf.ndu.vibin.db.images.ImageEntity
+import wtf.ndu.vibin.db.images.ImageTable
+import wtf.ndu.vibin.db.ModifiableLongIdEntity
+import wtf.ndu.vibin.db.ModifiableLongIdTable
+import wtf.ndu.vibin.db.tags.TagEntity
 
 object ArtistTable : ModifiableLongIdTable("artist") {
     val name = varchar("name", 255).uniqueIndex()
@@ -21,7 +27,7 @@ class ArtistEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, ArtistTable)
     companion object : LongEntityClass<ArtistEntity>(ArtistTable)
 
     var name by ArtistTable.name
-    var image by ImageEntity optionalReferencedOn ArtistTable.image
+    var image by ImageEntity.Companion optionalReferencedOn ArtistTable.image
     var sortName by ArtistTable.sortName
-    var tags by TagEntity via ArtistTagConnection
+    var tags by TagEntity.Companion via ArtistTagConnection
 }

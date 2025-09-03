@@ -1,6 +1,6 @@
 package wtf.ndu.vibin.repos
 
-import wtf.ndu.vibin.db.ColorSchemeEntity
+import wtf.ndu.vibin.db.images.ColorSchemeEntity
 import wtf.ndu.vibin.dto.ColorSchemeDto
 
 object ColorSchemeRepo {

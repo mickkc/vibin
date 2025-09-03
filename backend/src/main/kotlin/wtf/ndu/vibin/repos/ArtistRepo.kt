@@ -2,8 +2,8 @@ package wtf.ndu.vibin.repos
 
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
-import wtf.ndu.vibin.db.ArtistEntity
-import wtf.ndu.vibin.db.ArtistTable
+import wtf.ndu.vibin.db.artists.ArtistEntity
+import wtf.ndu.vibin.db.artists.ArtistTable
 import wtf.ndu.vibin.dto.ArtistDto
 
 object ArtistRepo {

@@ -1,6 +1,7 @@
-package wtf.ndu.vibin.db
+package wtf.ndu.vibin.db.tags
 
 import org.jetbrains.exposed.sql.Table
+import wtf.ndu.vibin.db.artists.ArtistTable
 
 /**
  * Connection table between artists and tags.

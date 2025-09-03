@@ -1,6 +1,7 @@
-package wtf.ndu.vibin.db
+package wtf.ndu.vibin.db.tags
 
 import org.jetbrains.exposed.sql.Table
+import wtf.ndu.vibin.db.tracks.TrackTable
 
 /**
  * Connection table between tracks and tags.

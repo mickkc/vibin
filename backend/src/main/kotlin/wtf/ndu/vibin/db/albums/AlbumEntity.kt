@@ -1,7 +1,11 @@
-package wtf.ndu.vibin.db
+package wtf.ndu.vibin.db.albums
 
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
+import wtf.ndu.vibin.db.images.ImageEntity
+import wtf.ndu.vibin.db.images.ImageTable
+import wtf.ndu.vibin.db.ModifiableLongIdEntity
+import wtf.ndu.vibin.db.ModifiableLongIdTable
 
 object AlbumTable : ModifiableLongIdTable("album") {
     val title = varchar("title", 255)
@@ -21,5 +25,5 @@ class AlbumEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, AlbumTable) {
 
     var title by AlbumTable.title
     var releaseYear by AlbumTable.releaseYear
-    var cover by ImageEntity optionalReferencedOn AlbumTable.cover
+    var cover by ImageEntity.Companion optionalReferencedOn AlbumTable.cover
 }

@@ -1,7 +1,19 @@
-package wtf.ndu.vibin.db
+package wtf.ndu.vibin.db.tracks
 
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
+import wtf.ndu.vibin.db.ModifiableLongIdEntity
+import wtf.ndu.vibin.db.ModifiableLongIdTable
+import wtf.ndu.vibin.db.UserEntity
+import wtf.ndu.vibin.db.UserTable
+import wtf.ndu.vibin.db.albums.AlbumEntity
+import wtf.ndu.vibin.db.albums.AlbumTable
+import wtf.ndu.vibin.db.artists.ArtistEntity
+import wtf.ndu.vibin.db.artists.TrackArtistConnection
+import wtf.ndu.vibin.db.images.ImageEntity
+import wtf.ndu.vibin.db.images.ImageTable
+import wtf.ndu.vibin.db.tags.TagEntity
+import wtf.ndu.vibin.db.tags.TrackTagConnection
 import wtf.ndu.vibin.utils.PathUtils
 
 object TrackTable : ModifiableLongIdTable("track") {
@@ -56,7 +68,7 @@ class TrackEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, TrackTable) {
     var checksum by TrackTable.checksum
     var artists by ArtistEntity via TrackArtistConnection
     var tags by TagEntity via TrackTagConnection
-    var uploader by UserEntity optionalReferencedOn TrackTable.uploader
+    var uploader by UserEntity.Companion optionalReferencedOn TrackTable.uploader
 
     override fun delete() {
         PathUtils.getTrackFileFromPath(path).delete()

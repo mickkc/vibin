@@ -2,8 +2,8 @@ package wtf.ndu.vibin.repos
 
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
-import wtf.ndu.vibin.db.TagEntity
-import wtf.ndu.vibin.db.TagTable
+import wtf.ndu.vibin.db.tags.TagEntity
+import wtf.ndu.vibin.db.tags.TagTable
 import wtf.ndu.vibin.dto.TagDto
 
 object TagRepo {

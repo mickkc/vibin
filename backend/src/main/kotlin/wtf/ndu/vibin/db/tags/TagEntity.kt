@@ -1,7 +1,9 @@
-package wtf.ndu.vibin.db
+package wtf.ndu.vibin.db.tags
 
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
+import wtf.ndu.vibin.db.ModifiableLongIdEntity
+import wtf.ndu.vibin.db.ModifiableLongIdTable
 
 object TagTable : ModifiableLongIdTable("tag") {
     val name = varchar("name", 255).uniqueIndex()

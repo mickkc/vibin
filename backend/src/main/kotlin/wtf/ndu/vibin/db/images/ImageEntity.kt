@@ -1,4 +1,4 @@
-package wtf.ndu.vibin.db
+package wtf.ndu.vibin.db.images
 
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass

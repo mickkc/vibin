@@ -1,4 +1,4 @@
-package wtf.ndu.vibin.db
+package wtf.ndu.vibin.db.images
 
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
@@ -11,6 +11,13 @@ object ColorSchemeTable : LongIdTable() {
     val dark = varchar("dark", 7)
 }
 
+/**
+ * Color scheme entity representing the color scheme of an image.
+ *
+ * @property primary The primary color in HEX format.
+ * @property light The light color in HEX format.
+ * @property dark The dark color in HEX format.
+ */
 class ColorSchemeEntity(id: EntityID<Long>) : LongEntity(id) {
     companion object : LongEntityClass<ColorSchemeEntity>(ColorSchemeTable)
 

@@ -1,7 +1,13 @@
-package wtf.ndu.vibin.db
+package wtf.ndu.vibin.db.playlists
 
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
+import wtf.ndu.vibin.db.ModifiableLongIdEntity
+import wtf.ndu.vibin.db.ModifiableLongIdTable
+import wtf.ndu.vibin.db.tracks.TrackEntity
+import wtf.ndu.vibin.db.UserEntity
+import wtf.ndu.vibin.db.images.ImageEntity
+import wtf.ndu.vibin.db.images.ImageTable
 
 object PlaylistTable : ModifiableLongIdTable() {
     val name = varchar("name", 255)
@@ -31,6 +37,6 @@ class PlaylistEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, PlaylistTa
     var public by PlaylistTable.public
     var vibeDef by PlaylistTable.vibeDef
 
-    var songs by TrackEntity via PlaylistTrackTable
-    var collaborators by UserEntity via PlaylistCollaborator
+    var songs by TrackEntity.Companion via PlaylistTrackTable
+    var collaborators by UserEntity.Companion via PlaylistCollaborator
 }
