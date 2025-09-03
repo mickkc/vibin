@@ -124,6 +124,7 @@ object TrackRepo {
             path = trackEntity.path,
             checksum = trackEntity.checksum,
             tags = TagRepo.toDto(trackEntity.tags.toList()),
+            uploader = trackEntity.uploader?.let { UserRepo.toDto(it) },
             createdAt = trackEntity.createdAt,
             updatedAt = trackEntity.updatedAt
         )

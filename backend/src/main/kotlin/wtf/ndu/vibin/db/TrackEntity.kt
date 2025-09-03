@@ -18,6 +18,7 @@ object TrackTable : ModifiableLongIdTable("track") {
     val coverId = reference("cover_id", ImageTable).nullable()
     val path = varchar("path", 1024).uniqueIndex()
     val checksum = text("checksum").uniqueIndex()
+    val uploader = reference("uploader", UserTable).nullable()
 }
 
 /**
@@ -55,6 +56,7 @@ class TrackEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, TrackTable) {
     var checksum by TrackTable.checksum
     var artists by ArtistEntity via TrackArtistConnection
     var tags by TagEntity via TrackTagConnection
+    var uploader by UserEntity optionalReferencedOn TrackTable.uploader
 
     override fun delete() {
         PathUtils.getTrackFileFromPath(path).delete()

@@ -20,6 +20,7 @@ data class TrackDto (
     val path: String,
     val checksum: String,
     val tags: List<TagDto>,
+    val uploader: UserDto?,
     val createdAt: Long,
     val updatedAt: Long?
 )
