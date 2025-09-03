@@ -6,11 +6,11 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.application.*
 import io.ktor.server.testing.*
 import kotlinx.coroutines.runBlocking
 
 fun testApp(test: suspend TestApplicationBuilder.(HttpClient) -> Unit) = testApplication {
+    initTestDb()
     application {
         testModule()
     }
@@ -24,8 +24,7 @@ fun testApp(test: suspend TestApplicationBuilder.(HttpClient) -> Unit) = testApp
         }
     }
 
-    // Wait for the server to be ready before running tests
-    application.monitor.subscribe(ServerReady) {
-        runBlocking { test(client) }
+    runBlocking {
+        test(client)
     }
 }

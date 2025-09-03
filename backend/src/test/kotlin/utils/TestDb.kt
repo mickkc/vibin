@@ -25,7 +25,6 @@ fun initTestDb() {
 }
 
 fun Application.testModule() {
-    initTestDb()
     module()
 }
 

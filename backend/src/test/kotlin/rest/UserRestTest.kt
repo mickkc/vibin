@@ -81,7 +81,7 @@ class UserRestTest {
     @Test
     fun testEditUser() = testApp { client ->
         val testUser = UserTestUtils.createTestUser("edituser", "oldpassword")
-        val response = client.post("/api/users/${testUser.id.value}") {
+        val response = client.put("/api/users/${testUser.id.value}") {
             setBody(UserEditDto(
                 username = "editeduser",
                 displayName = "Edited User",
@@ -111,7 +111,7 @@ class UserRestTest {
     @Test
     fun testEditUser_NoChanges() = testApp { client ->
         val testUser = UserTestUtils.createTestUser("nochangeuser", "password123")
-        val response = client.post("/api/users/${testUser.id.value}") {
+        val response = client.put("/api/users/${testUser.id.value}") {
             setBody(
                 UserEditDto(
                     username = null,
