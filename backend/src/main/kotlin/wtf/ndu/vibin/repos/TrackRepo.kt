@@ -8,6 +8,8 @@ import wtf.ndu.vibin.db.ArtistEntity
 import wtf.ndu.vibin.db.ArtistTable
 import wtf.ndu.vibin.db.TrackEntity
 import wtf.ndu.vibin.db.TrackTable
+import wtf.ndu.vibin.dto.IdNameDto
+import wtf.ndu.vibin.dto.MinimalTrackDto
 import wtf.ndu.vibin.dto.TrackDto
 import wtf.ndu.vibin.dto.TrackEditDto
 import wtf.ndu.vibin.parsing.Parser
@@ -127,6 +129,26 @@ object TrackRepo {
             uploader = trackEntity.uploader?.let { UserRepo.toDto(it) },
             createdAt = trackEntity.createdAt,
             updatedAt = trackEntity.updatedAt
+        )
+    }
+
+    fun toMinimalDto(trackEntity: TrackEntity): MinimalTrackDto = transaction {
+        return@transaction toMinimalDtoInternal(trackEntity)
+    }
+
+    fun toMinimalDto(trackEntities: List<TrackEntity>): List<MinimalTrackDto> = transaction {
+        return@transaction trackEntities.map { toMinimalDtoInternal(it) }
+    }
+
+    private fun toMinimalDtoInternal(trackEntity: TrackEntity): MinimalTrackDto {
+        return MinimalTrackDto(
+            id = trackEntity.id.value,
+            title = trackEntity.title,
+            album = IdNameDto(id = trackEntity.album.id.value, trackEntity.album.title),
+            artists = trackEntity.artists.map { IdNameDto(it.id.value, it.name) },
+            duration = trackEntity.duration,
+            cover = trackEntity.cover?.let { ImageRepo.toDto(it) },
+            uploader = trackEntity.uploader?.let { IdNameDto(it.id.value, it.displayName ?: it.username) }
         )
     }
 }

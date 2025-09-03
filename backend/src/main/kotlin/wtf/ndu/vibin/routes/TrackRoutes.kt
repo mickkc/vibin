@@ -23,7 +23,7 @@ fun Application.configureTrackRoutes() = routing {
             val tracks = TrackRepo.getAll(page, pageSize)
 
             call.respond(PaginatedDto(
-                items = TrackRepo.toDto(tracks),
+                items = TrackRepo.toMinimalDto(tracks),
                 total = total.toInt(),
                 pageSize = pageSize,
                 currentPage = page
