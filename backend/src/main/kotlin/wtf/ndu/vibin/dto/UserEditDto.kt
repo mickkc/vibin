@@ -9,5 +9,6 @@ data class UserEditDto(
     val email: String?,
     val isAdmin: Boolean?,
     val isActive: Boolean?,
-    val profilePictureUrl: String?
+    val profilePictureUrl: String?,
+    val password: String?
 )

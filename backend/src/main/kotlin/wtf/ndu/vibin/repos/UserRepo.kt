@@ -2,6 +2,7 @@ package wtf.ndu.vibin.repos
 
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.transactions.transaction
+import wtf.ndu.vibin.auth.CryptoUtil
 import wtf.ndu.vibin.db.UserEntity
 import wtf.ndu.vibin.db.UserTable
 import wtf.ndu.vibin.dto.UserDto
@@ -42,6 +43,8 @@ object UserRepo {
             email = editDto.email
             isActive = editDto.isActive ?: true
             isAdmin = editDto.isAdmin ?: false
+            salt = CryptoUtil.getSalt()
+            passwordHash = CryptoUtil.hashPassword(editDto.password!!, salt)
         }
 
         if (user == null) return@transaction null

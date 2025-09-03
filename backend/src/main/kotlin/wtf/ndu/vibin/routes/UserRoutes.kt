@@ -25,6 +25,10 @@ fun Application.configureUserRoutes() = routing {
 
         postP("/api/users", PermissionType.CREATE_USERS) {
             val userEditDto = call.receive<UserEditDto>()
+
+            if (userEditDto.username == null || userEditDto.displayName == null)
+                return@postP call.missingParameter("username and displayName are required")
+
             val created = UserRepo.updateOrCreateUser(null, userEditDto)!!
             call.respond(UserRepo.toDto(created))
         }
