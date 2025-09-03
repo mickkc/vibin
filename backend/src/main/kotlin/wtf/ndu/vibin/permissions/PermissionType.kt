@@ -28,6 +28,7 @@ enum class PermissionType(val id: String, val grantedByDefault: Boolean) {
     CREATE_PRIVATE_PLAYLISTS("create_private_playlists", true),
     CREATE_PUBLIC_PLAYLISTS("create_public_playlists", true),
     DELETE_OWN_PLAYLISTS("delete_own_playlists", true),
+    EDIT_COLLABORATIVE_PLAYLISTS("edit_collaborative_playlists", false),
     DELETE_COLLABORATIVE_PLAYLISTS("delete_collaborative_playlists", false),
     ALLOW_COLLABORATION("allow_collaboration", true),
 

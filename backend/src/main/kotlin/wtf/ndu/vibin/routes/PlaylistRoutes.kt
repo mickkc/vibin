@@ -21,7 +21,10 @@ fun Application.configurePlaylistRoutes() = routing {
             val page = call.request.queryParameters["p"]?.toIntOrNull() ?: 1
             val pageSize = call.request.queryParameters["pageSize"]?.toIntOrNull() ?: Settings.get(PageSize)
 
+            // Count all playlists the user has access to
             val total = PlaylistRepo.count(userId)
+
+            // Get the playlists for the requested page
             val playlists = PlaylistRepo.getAll(page, pageSize, userId)
 
             call.respond(PaginatedDto(
@@ -35,43 +38,58 @@ fun Application.configurePlaylistRoutes() = routing {
 
         postP("/api/playlists", PermissionType.MANAGE_PLAYLISTS) {
 
-            val userId = call.getUserId() ?: return@postP call.unauthorized()
+            val user = call.getUser() ?: return@postP call.unauthorized()
             val editDto = call.receive<PlaylistEditDto>()
 
+            // Check permissions for public/private playlists
             if ((editDto.isPublic == true && !call.hasPermissions(PermissionType.CREATE_PUBLIC_PLAYLISTS) ||
                 (editDto.isPublic == false && !call.hasPermissions(PermissionType.CREATE_PRIVATE_PLAYLISTS))))
                 return@postP call.forbidden()
 
-            val created = PlaylistRepo.createOrUpdatePlaylist(userId, editDto, null)!!
+            // Create the playlist
+            val created = PlaylistRepo.createOrUpdatePlaylist(user, editDto, null)!!
 
             call.respond(PlaylistRepo.toDto(created))
         }
 
         putP("/api/playlists/{playlistId}", PermissionType.MANAGE_PLAYLISTS) {
-            val userId = call.getUserId() ?: return@putP call.unauthorized()
+            val user = call.getUser() ?: return@putP call.unauthorized()
             val playlistId = call.parameters["playlistId"]?.toLongOrNull() ?: return@putP call.missingParameter("playlistId")
             val editDto = call.receive<PlaylistEditDto>()
 
+            // Prevent changing to a type of playlist the user cannot create
             if ((editDto.isPublic == true && !call.hasPermissions(PermissionType.CREATE_PUBLIC_PLAYLISTS) ||
                 (editDto.isPublic == false && !call.hasPermissions(PermissionType.CREATE_PRIVATE_PLAYLISTS))))
                 return@putP call.forbidden()
 
-            val playlist = PlaylistRepo.getById(playlistId, userId) ?: return@putP call.notFound()
+            // Get the playlist to check ownership
+            val playlist = PlaylistRepo.getByIdCollaborative(playlistId, user.id.value) ?: return@putP call.notFound()
 
-            val updated = PlaylistRepo.createOrUpdatePlaylist(userId, editDto, playlist.id.value) ?: return@putP call.notFound()
+            // Prevent editing others' playlists unless having the permission
+            if (playlist.owner.id.value != user.id.value && !call.hasPermissions(PermissionType.DELETE_COLLABORATIVE_PLAYLISTS))
+                return@putP call.forbidden()
+
+            // Update the playlist
+            val updated = PlaylistRepo.createOrUpdatePlaylist(user, editDto, playlist.id.value) ?: return@putP call.notFound()
 
             call.respond(PlaylistRepo.toDto(updated))
         }
 
         deleteP("/api/playlists/{playlistId}", PermissionType.DELETE_OWN_PLAYLISTS) {
             val userId = call.getUserId() ?: return@deleteP call.unauthorized()
-            val playlistId = call.parameters["playlistId"]?.toLongOrNull() ?: return@deleteP call.missingParameter("playlistId")
+            val playlistId =
+                call.parameters["playlistId"]?.toLongOrNull() ?: return@deleteP call.missingParameter("playlistId")
 
-            val playlist = PlaylistRepo.getById(playlistId, userId) ?: return@deleteP call.notFound()
+            // Get the playlist to check ownership
+            val playlist = PlaylistRepo.getByIdCollaborative(playlistId, userId) ?: return@deleteP call.notFound()
+
+            // Prevent deleting others' playlists unless having the permission
+            if (playlist.owner.id.value != userId && !call.hasPermissions(PermissionType.DELETE_COLLABORATIVE_PLAYLISTS))
+                return@deleteP call.forbidden()
 
             PlaylistRepo.deletePlaylist(playlist.id.value)
 
-            call.respond(mapOf("status" to "success"))
+            call.respond(mapOf("success" to true))
         }
     }
 }

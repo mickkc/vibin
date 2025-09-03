@@ -9,9 +9,11 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.transactions.transaction
+import wtf.ndu.vibin.db.UserEntity
 import wtf.ndu.vibin.db.playlists.PlaylistCollaborator
 import wtf.ndu.vibin.db.playlists.PlaylistEntity
 import wtf.ndu.vibin.db.playlists.PlaylistTable
+import wtf.ndu.vibin.db.playlists.PlaylistTrackTable
 import wtf.ndu.vibin.dto.PlaylistDto
 import wtf.ndu.vibin.dto.PlaylistEditDto
 import wtf.ndu.vibin.parsing.Parser
@@ -36,6 +38,17 @@ object PlaylistRepo {
     }
 
     /**
+     * Gets a playlist by ID if the user is a collaborator or the owner.
+     *
+     * @param id The ID of the playlist to retrieve.
+     * @param userId The ID of the user requesting the playlist.
+     * @return The [PlaylistEntity] if found and the user has access, otherwise null.
+     */
+    fun getByIdCollaborative(id: Long, userId: Long): PlaylistEntity? = transaction {
+        return@transaction PlaylistEntity.find (createCollaborationOp(userId) and (PlaylistTable.id eq id)).firstOrNull()
+    }
+
+    /**
      * Creates a new playlist or updates an existing one.
      * If `playlistId` is provided, it updates the existing playlist; otherwise, it creates a new one.
      *
@@ -44,12 +57,13 @@ object PlaylistRepo {
      * @param playlistId The ID of the playlist to update, or null to create a new one.
      * @return The created or updated [PlaylistEntity], or null if the playlist to update was not found.
      */
-    fun createOrUpdatePlaylist(userId: Long, editDto: PlaylistEditDto, playlistId: Long?): PlaylistEntity? = transaction {
+    fun createOrUpdatePlaylist(user: UserEntity, editDto: PlaylistEditDto, playlistId: Long?): PlaylistEntity? = transaction {
         val playlist = if (playlistId != null) PlaylistEntity.findById(playlistId) else PlaylistEntity.new {
             this.name = editDto.name
             this.description = editDto.description ?: ""
             this.public = editDto.isPublic ?: false
             this.vibeDef = editDto.vibeDef
+            this.owner = user
         }
 
 
@@ -64,12 +78,10 @@ object PlaylistRepo {
             playlist.vibeDef = editDto.vibeDef
         }
 
-        val collaborators = editDto.collaboratorIds?.mapNotNull { UserRepo.getById(it) }?.toMutableList() ?: mutableListOf()
-        if (!collaborators.any { it.id.value == userId }) {
-            UserRepo.getById(userId)?.let { collaborators.add(it) }
+        val collaborators = editDto.collaboratorIds?.mapNotNull { UserRepo.getById(it) }?.toList() ?: emptyList()
+        if (playlist.collaborators.toList() != collaborators) {
+            playlist.collaborators = SizedCollection(collaborators)
         }
-
-        playlist.collaborators = SizedCollection(collaborators)
 
         if (editDto.coverImageUrl != null) {
             val image = runBlocking { Parser.downloadCoverImage(editDto.coverImageUrl) }
@@ -86,14 +98,40 @@ object PlaylistRepo {
 
     fun deletePlaylist(playlistId: Long) = transaction {
         val playlist = PlaylistEntity.findById(playlistId) ?: return@transaction
+
+        // Delete links to collaborators and tracks
         PlaylistCollaborator.deleteWhere { PlaylistCollaborator.playlist eq playlistId }
+        PlaylistTrackTable.deleteWhere { PlaylistTrackTable.playlist eq playlistId }
+
+        // Delete cover image if exists
+        playlist.cover?.delete()
+
+        // Finally, delete the playlist
         playlist.delete()
     }
 
+    /**
+     * Creates an Op<Boolean> to filter playlists based on visibility to the given user.
+     * A playlist is visible if it is public, or if the user is the owner or a collaborator.
+     *
+     * @param userId The ID of the user for whom to filter playlists.
+     */
     private fun createOp(userId: Long): Op<Boolean> {
         return (PlaylistTable.public eq true) or (PlaylistTable.id inSubQuery (PlaylistCollaborator.select(
             PlaylistCollaborator.playlist
-        ).where { PlaylistCollaborator.user eq userId }))
+        ).where { PlaylistCollaborator.user eq userId }) or (PlaylistTable.owner eq userId))
+    }
+
+    /**
+     * Creates an Op<Boolean> to filter playlists that the given user can collaborate on.
+     * A user can collaborate on a playlist if they are a collaborator or the owner.
+     *
+     * @param userId The ID of the user for whom to filter collaborative playlists.
+     */
+    private fun createCollaborationOp(userId: Long): Op<Boolean> {
+        return (PlaylistTable.id inSubQuery (PlaylistCollaborator.select(
+            PlaylistCollaborator.playlist
+        ).where { PlaylistCollaborator.user eq userId }) or (PlaylistTable.owner eq userId))
     }
 
     fun toDto(playlistEntity: PlaylistEntity): PlaylistDto = transaction {

@@ -6,6 +6,7 @@ import wtf.ndu.vibin.db.ModifiableLongIdEntity
 import wtf.ndu.vibin.db.ModifiableLongIdTable
 import wtf.ndu.vibin.db.tracks.TrackEntity
 import wtf.ndu.vibin.db.UserEntity
+import wtf.ndu.vibin.db.UserTable
 import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.db.images.ImageTable
 
@@ -15,6 +16,7 @@ object PlaylistTable : ModifiableLongIdTable() {
     val cover = reference("cover_id", ImageTable).nullable()
     val public = bool("public").default(false)
     val vibeDef = text("vibe_def").nullable()
+    val owner = reference("owner_id", UserTable)
 }
 
 /**
@@ -39,4 +41,5 @@ class PlaylistEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, PlaylistTa
 
     var songs by TrackEntity.Companion via PlaylistTrackTable
     var collaborators by UserEntity.Companion via PlaylistCollaborator
+    var owner by UserEntity referencedOn PlaylistTable.owner
 }

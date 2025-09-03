@@ -117,6 +117,7 @@ object TrackRepo {
     }
 
     fun delete(track: TrackEntity) = transaction {
+        track.cover?.delete()
         track.delete()
     }
 
