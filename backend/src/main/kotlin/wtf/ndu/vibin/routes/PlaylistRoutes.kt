@@ -41,6 +41,9 @@ fun Application.configurePlaylistRoutes() = routing {
             val user = call.getUser() ?: return@postP call.unauthorized()
             val editDto = call.receive<PlaylistEditDto>()
 
+            if (editDto.name.isBlank())
+                return@postP call.missingParameter("name")
+
             // Check permissions for public/private playlists
             if ((editDto.isPublic == true && !call.hasPermissions(PermissionType.CREATE_PUBLIC_PLAYLISTS) ||
                 (editDto.isPublic == false && !call.hasPermissions(PermissionType.CREATE_PRIVATE_PLAYLISTS))))
@@ -56,6 +59,9 @@ fun Application.configurePlaylistRoutes() = routing {
             val user = call.getUser() ?: return@putP call.unauthorized()
             val playlistId = call.parameters["playlistId"]?.toLongOrNull() ?: return@putP call.missingParameter("playlistId")
             val editDto = call.receive<PlaylistEditDto>()
+
+            if (editDto.name.isBlank())
+                return@putP call.missingParameter("name")
 
             // Prevent changing to a type of playlist the user cannot create
             if ((editDto.isPublic == true && !call.hasPermissions(PermissionType.CREATE_PUBLIC_PLAYLISTS) ||
