@@ -7,6 +7,8 @@ import io.ktor.server.routing.*
 import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.auth.CryptoUtil
 import wtf.ndu.vibin.auth.UserPrincipal
+import wtf.ndu.vibin.dto.LoginResultDto
+import wtf.ndu.vibin.repos.PermissionRepo
 import wtf.ndu.vibin.repos.SessionRepo
 import wtf.ndu.vibin.repos.UserRepo
 
@@ -34,10 +36,11 @@ fun Application.configureAuthRoutes() = routing {
 
         logger.info("Successful login for user: $username")
 
-        call.respond(mapOf(
-            "success" to true,
-            "token" to session.token,
-            "user" to UserRepo.toDto(user)
+        call.respond(LoginResultDto(
+            success = true,
+            token = session.token,
+            user = UserRepo.toDto(user),
+            permissions = PermissionRepo.getPermissions(user.id.value).map { it.id }
         ))
     }
 
@@ -48,9 +51,11 @@ fun Application.configureAuthRoutes() = routing {
             val user = call.getUser()?.takeIf { it.isActive }
                 ?: return@postP call.unauthorized("Invalid or expired token")
 
-            call.respond(mapOf(
-                "success" to true,
-                "user" to UserRepo.toDto(user)
+            call.respond(LoginResultDto(
+                success = true,
+                token = call.getToken()!!,
+                user = UserRepo.toDto(user),
+                permissions = PermissionRepo.getPermissions(user.id.value).map { it.id }
             ))
         }
 
@@ -86,6 +91,7 @@ fun Application.configureAuthRoutes() = routing {
             }
 
             logger.info("User ID ${user.id.value} changed their password")
+            SessionRepo.invalidateAllSessionsForUser(user.id.value)
 
             call.respond(mapOf("success" to true))
         }

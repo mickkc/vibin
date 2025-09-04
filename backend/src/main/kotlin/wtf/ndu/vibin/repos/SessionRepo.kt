@@ -10,6 +10,10 @@ import wtf.ndu.vibin.db.UserEntity
  */
 object SessionRepo {
 
+    fun count(): Long = transaction {
+        SessionEntity.all().count()
+    }
+
     /**
      * Adds a new session for the specified user with the given token.
      *
@@ -30,5 +34,9 @@ object SessionRepo {
 
     fun getUserIdFromToken(token: String): Long? = transaction {
         SessionEntity.find { SessionTable.token eq token }.firstOrNull()?.user?.id?.value
+    }
+
+    fun invalidateAllSessionsForUser(userId: Long) = transaction {
+        SessionEntity.find { SessionTable.userId eq userId }.forEach { it.delete() }
     }
 }

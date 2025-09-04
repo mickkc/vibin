@@ -26,6 +26,11 @@ suspend fun RoutingCall.notFound(message: String = "Not Found") {
     respondText(message, status = HttpStatusCode.NotFound)
 }
 
+fun RoutingCall.getToken(): String? {
+    val principal = principal<UserPrincipal>()
+    return principal?.token
+}
+
 fun RoutingCall.getUser(): UserEntity? {
     val principal = principal<UserPrincipal>()
     return principal?.let {
