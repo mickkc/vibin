@@ -44,4 +44,14 @@ object PermissionRepo {
             (GrantedPermissionTable.user eq userId) and (GrantedPermissionTable.permission eq permissionType)
         }
     }
+
+    fun addDefaultPermissions(userId: Long) = transaction {
+        val defaultPermissions = PermissionType.values().filter { it.grantedByDefault }
+        defaultPermissions.forEach { permission ->
+            GrantedPermissionTable.insert {
+                it[GrantedPermissionTable.user] = userId
+                it[GrantedPermissionTable.permission] = permission
+            }
+        }
+    }
 }

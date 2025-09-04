@@ -62,6 +62,9 @@ object UserRepo {
                 editDto.isAdmin?.let { this.isAdmin = it }
             }
         }
+        else {
+            PermissionRepo.addDefaultPermissions(user.id.value)
+        }
 
         if (editDto.profilePictureUrl != null) {
             val data = runBlocking { Parser.downloadCoverImage(editDto.profilePictureUrl) }
