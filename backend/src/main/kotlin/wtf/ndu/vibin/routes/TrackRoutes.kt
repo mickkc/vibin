@@ -18,7 +18,7 @@ fun Application.configureTrackRoutes() = routing {
 
         // Get all tracks (paginated)
         getP("/api/tracks", PermissionType.VIEW_TRACKS) {
-            val page = call.request.queryParameters["p"]?.toIntOrNull() ?: 1
+            val page = call.request.queryParameters["page"]?.toIntOrNull() ?: 1
             val pageSize = call.request.queryParameters["pageSize"]?.toIntOrNull() ?: Settings.get(PageSize)
 
             val total = TrackRepo.count()
@@ -40,11 +40,11 @@ fun Application.configureTrackRoutes() = routing {
         }
 
         // Edit track details
-        postP("/api/tracks/{trackId}/edit", PermissionType.MANAGE_TRACKS) {
-            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@postP call.missingParameter("trackId")
+        putP("/api/tracks/{trackId}", PermissionType.MANAGE_TRACKS) {
+            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@putP call.missingParameter("trackId")
             val editDto = call.receive<TrackEditDto>()
 
-            val updated = TrackRepo.update(trackId, editDto) ?: return@postP call.notFound()
+            val updated = TrackRepo.update(trackId, editDto) ?: return@putP call.notFound()
             call.respond(TrackRepo.toDto(updated))
         }
 

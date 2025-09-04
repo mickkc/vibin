@@ -16,7 +16,7 @@ fun Application.configureAlbumRoutes() = routing {
 
         getP("/api/albums", PermissionType.VIEW_ALBUMS) {
 
-            val page = call.request.queryParameters["p"]?.toIntOrNull() ?: 1
+            val page = call.request.queryParameters["page"]?.toIntOrNull() ?: 1
             val pageSize = call.request.queryParameters["pageSize"]?.toIntOrNull() ?: Settings.get(PageSize)
 
             val total = AlbumRepo.count()
