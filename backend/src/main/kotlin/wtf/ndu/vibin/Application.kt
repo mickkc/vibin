@@ -7,6 +7,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import wtf.ndu.vibin.config.configureDatabase
 import wtf.ndu.vibin.config.configureHTTP
+import wtf.ndu.vibin.config.configureOpenApi
 import wtf.ndu.vibin.config.configureSecurity
 import wtf.ndu.vibin.config.configureSerialization
 import wtf.ndu.vibin.processing.AudioFileProcessor
@@ -36,6 +37,8 @@ fun Application.module() {
     configureSerialization()
     configureSecurity()
     configureHTTP()
+
+    configureOpenApi()
 
     configureAuthRoutes()
     configureUserRoutes()

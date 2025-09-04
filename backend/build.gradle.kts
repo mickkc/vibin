@@ -28,6 +28,7 @@ dependencies {
     implementation(libs.ktor.server.cors)
     implementation(libs.ktor.server.default.headers)
     implementation(libs.ktor.server.netty)
+    implementation(libs.ktor.server.openapi)
     implementation(libs.logback.classic)
 
     implementation(libs.flyway.core)
