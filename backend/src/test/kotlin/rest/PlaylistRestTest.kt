@@ -12,8 +12,8 @@ import utils.PlaylistTestUtils
 import utils.UserTestUtils
 import utils.testApp
 import wtf.ndu.vibin.dto.PaginatedDto
-import wtf.ndu.vibin.dto.PlaylistDto
-import wtf.ndu.vibin.dto.PlaylistEditDto
+import wtf.ndu.vibin.dto.playlists.PlaylistDto
+import wtf.ndu.vibin.dto.playlists.PlaylistEditDto
 import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.repos.PermissionRepo
 import wtf.ndu.vibin.repos.PlaylistRepo

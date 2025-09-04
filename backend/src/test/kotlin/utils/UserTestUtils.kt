@@ -2,7 +2,7 @@ package utils
 
 import org.junit.jupiter.api.assertNotNull
 import wtf.ndu.vibin.db.UserEntity
-import wtf.ndu.vibin.dto.UserEditDto
+import wtf.ndu.vibin.dto.users.UserEditDto
 import wtf.ndu.vibin.repos.UserRepo
 
 object UserTestUtils {

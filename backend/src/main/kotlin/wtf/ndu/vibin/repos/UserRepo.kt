@@ -5,8 +5,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.auth.CryptoUtil
 import wtf.ndu.vibin.db.UserEntity
 import wtf.ndu.vibin.db.UserTable
-import wtf.ndu.vibin.dto.UserDto
-import wtf.ndu.vibin.dto.UserEditDto
+import wtf.ndu.vibin.dto.users.UserDto
+import wtf.ndu.vibin.dto.users.UserEditDto
 import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.processing.ThumbnailProcessor
 import wtf.ndu.vibin.utils.DateTimeUtils

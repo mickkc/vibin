@@ -10,8 +10,8 @@ import wtf.ndu.vibin.db.artists.ArtistTable
 import wtf.ndu.vibin.db.artists.TrackArtistConnection
 import wtf.ndu.vibin.db.tracks.TrackEntity
 import wtf.ndu.vibin.db.tracks.TrackTable
-import wtf.ndu.vibin.dto.AlbumDataDto
-import wtf.ndu.vibin.dto.AlbumDto
+import wtf.ndu.vibin.dto.albums.AlbumDataDto
+import wtf.ndu.vibin.dto.albums.AlbumDto
 
 object AlbumRepo {
 

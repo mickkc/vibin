@@ -1,4 +1,4 @@
-package wtf.ndu.vibin.dto
+package wtf.ndu.vibin.dto.playlists
 
 import kotlinx.serialization.Serializable
 

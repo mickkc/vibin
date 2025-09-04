@@ -2,7 +2,7 @@ package utils
 
 import org.junit.jupiter.api.assertNotNull
 import wtf.ndu.vibin.db.playlists.PlaylistEntity
-import wtf.ndu.vibin.dto.PlaylistEditDto
+import wtf.ndu.vibin.dto.playlists.PlaylistEditDto
 import wtf.ndu.vibin.repos.PlaylistRepo
 import wtf.ndu.vibin.repos.UserRepo
 

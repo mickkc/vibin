@@ -7,8 +7,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import utils.UserTestUtils
 import utils.testApp
 import wtf.ndu.vibin.auth.CryptoUtil
-import wtf.ndu.vibin.dto.UserDto
-import wtf.ndu.vibin.dto.UserEditDto
+import wtf.ndu.vibin.dto.users.UserDto
+import wtf.ndu.vibin.dto.users.UserEditDto
 import wtf.ndu.vibin.repos.UserRepo
 import kotlin.test.*
 

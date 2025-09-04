@@ -1,6 +1,8 @@
-package wtf.ndu.vibin.dto
+package wtf.ndu.vibin.dto.albums
 
 import kotlinx.serialization.Serializable
+import wtf.ndu.vibin.dto.ArtistDto
+import wtf.ndu.vibin.dto.ImageDto
 
 @Serializable
 data class AlbumDto (

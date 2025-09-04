@@ -1,6 +1,8 @@
-package wtf.ndu.vibin.dto
+package wtf.ndu.vibin.dto.playlists
 
 import kotlinx.serialization.Serializable
+import wtf.ndu.vibin.dto.ImageDto
+import wtf.ndu.vibin.dto.users.UserDto
 
 @Serializable
 data class PlaylistDto(

@@ -14,8 +14,8 @@ import wtf.ndu.vibin.db.playlists.PlaylistCollaborator
 import wtf.ndu.vibin.db.playlists.PlaylistEntity
 import wtf.ndu.vibin.db.playlists.PlaylistTable
 import wtf.ndu.vibin.db.playlists.PlaylistTrackTable
-import wtf.ndu.vibin.dto.PlaylistDto
-import wtf.ndu.vibin.dto.PlaylistEditDto
+import wtf.ndu.vibin.dto.playlists.PlaylistDto
+import wtf.ndu.vibin.dto.playlists.PlaylistEditDto
 import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.processing.ThumbnailProcessor
 import wtf.ndu.vibin.utils.DateTimeUtils

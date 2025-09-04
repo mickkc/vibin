@@ -9,9 +9,9 @@ import wtf.ndu.vibin.db.artists.ArtistTable
 import wtf.ndu.vibin.db.tracks.TrackEntity
 import wtf.ndu.vibin.db.tracks.TrackTable
 import wtf.ndu.vibin.dto.IdNameDto
-import wtf.ndu.vibin.dto.MinimalTrackDto
-import wtf.ndu.vibin.dto.TrackDto
-import wtf.ndu.vibin.dto.TrackEditDto
+import wtf.ndu.vibin.dto.tracks.MinimalTrackDto
+import wtf.ndu.vibin.dto.tracks.TrackDto
+import wtf.ndu.vibin.dto.tracks.TrackEditDto
 import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.parsing.TrackMetadata
 import wtf.ndu.vibin.processing.ThumbnailProcessor
