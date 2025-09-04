@@ -9,7 +9,7 @@ import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.testing.*
 import kotlinx.coroutines.runBlocking
 
-fun testApp(test: suspend TestApplicationBuilder.(HttpClient) -> Unit) = testApplication {
+fun testApp(addDefaultAuthHeader: Boolean = true, test: suspend TestApplicationBuilder.(HttpClient) -> Unit) = testApplication {
     initTestDb()
     application {
         testModule()
@@ -19,7 +19,8 @@ fun testApp(test: suspend TestApplicationBuilder.(HttpClient) -> Unit) = testApp
             json()
         }
         defaultRequest {
-            bearerAuth(testToken)
+            if (addDefaultAuthHeader)
+                bearerAuth(testToken)
             contentType(ContentType.Application.Json)
         }
     }
