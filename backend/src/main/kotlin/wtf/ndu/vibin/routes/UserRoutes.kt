@@ -33,7 +33,7 @@ fun Application.configureUserRoutes() = routing {
             call.respond(UserRepo.toDto(created))
         }
 
-        putP("/api/users/{userId}") {
+        putP("/api/users/{userId}", PermissionType.MANAGE_USERS) {
             val userId = call.parameters["userId"]?.toLongOrNull() ?: return@putP call.missingParameter("userId")
             val user = UserRepo.getById(userId) ?: return@putP call.notFound()
 
