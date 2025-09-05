@@ -1,12 +1,23 @@
 package wtf.ndu.vibin.repos
 
+import io.ktor.server.plugins.NotFoundException
+import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.artists.ArtistEntity
 import wtf.ndu.vibin.db.artists.ArtistTable
 import wtf.ndu.vibin.dto.ArtistDto
+import wtf.ndu.vibin.dto.artists.ArtistEditData
+import wtf.ndu.vibin.parsing.Parser
+import wtf.ndu.vibin.processing.ThumbnailProcessor
 
 object ArtistRepo {
+
+    fun count(): Long = transaction {
+        return@transaction ArtistEntity.all().count()
+    }
+
 
     /**
      * Retrieves an existing artist by name or creates a new one if it doesn't exist.
@@ -15,8 +26,60 @@ object ArtistRepo {
      * @return The existing or newly created ArtistEntity.
      */
     fun getOrCreateArtist(name: String): ArtistEntity = transaction {
-        return@transaction ArtistEntity.find { ArtistTable.name.lowerCase() eq name.lowercase() }.firstOrNull()
+        return@transaction ArtistEntity.find { ArtistTable.originalName.lowerCase() eq name.lowercase() }.firstOrNull()
             ?: ArtistEntity.new { this.name = name }
+    }
+
+    fun updateOrCreateArtist(id: Long?, data: ArtistEditData): ArtistEntity = transaction {
+        val artist = if (id == null) {
+            if (data.name == null) {
+                throw IllegalStateException("Artist name is required for creation")
+            }
+            ArtistEntity.new {
+                this.name = data.name
+                this.sortName = data.sortName
+                this.originalName = data.name
+                this.image = null
+            }
+        } else {
+            ArtistEntity.findByIdAndUpdate(id) { a ->
+                data.name?.takeIf { it.isNotEmpty() }?.let {  a.name = it; }
+                data.sortName?.let { a.sortName = it.takeIf { it.isNotEmpty() } }
+            }
+        }
+
+        if (artist == null) {
+            throw NotFoundException("Artist with id $id not found")
+        }
+
+        if (data.imageUrl != null && data.imageUrl.isNotEmpty()) {
+            val data = runBlocking { Parser.downloadCoverImage(data.imageUrl) }
+            val image = data?.let { ThumbnailProcessor.getImage(data, ThumbnailProcessor.ThumbnailType.ARTIST, artist.id.value.toString()) }
+            artist.image?.delete()
+            artist.image = image
+        }
+
+        if (data.tagIds != null && data.tagIds != artist.tags.map { it.id.value }) {
+            val tags = data.tagIds.mapNotNull { TagRepo.getById(it) }
+            artist.tags = SizedCollection(tags)
+        }
+
+        return@transaction artist
+    }
+
+    fun deleteArtist(artistId: Long): Boolean = transaction {
+        val artist = ArtistEntity.findById(artistId) ?: return@transaction false
+        //ArtistTagConnection.deleteWhere { ArtistTagConnection.artist eq artistId }
+        artist.image?.delete()
+        artist.delete()
+        return@transaction true
+    }
+
+    fun getAll(page: Int, pageSize: Int): List<ArtistEntity> = transaction {
+        return@transaction ArtistEntity.all()
+            .limit(pageSize)
+            .offset(((page - 1) * pageSize).toLong())
+            .toList()
     }
 
     fun toDto(artistEntity: ArtistEntity): ArtistDto = transaction {

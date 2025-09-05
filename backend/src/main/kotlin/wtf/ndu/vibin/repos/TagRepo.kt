@@ -8,6 +8,10 @@ import wtf.ndu.vibin.dto.TagDto
 
 object TagRepo {
 
+    fun getById(id: Long): TagEntity? = transaction {
+        return@transaction TagEntity.findById(id)
+    }
+
     fun getOrCreateTag(name: String): TagEntity = transaction {
         TagEntity.find { TagTable.name.lowerCase() eq name.lowercase() }.firstOrNull() ?: TagEntity.new {
             this.name = name

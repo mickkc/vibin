@@ -14,6 +14,10 @@ suspend fun RoutingCall.missingParameter(param: String) {
     respondText("Missing parameter: $param", status = HttpStatusCode.BadRequest)
 }
 
+suspend fun RoutingCall.badRequest(message: String = "Bad Request") {
+    respondText(message, status = HttpStatusCode.BadRequest)
+}
+
 suspend fun RoutingCall.unauthorized(message: String = "Unauthorized") {
     respondText(message, status = HttpStatusCode.Unauthorized)
 }
