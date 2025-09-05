@@ -13,7 +13,7 @@ object ArtistTable : ModifiableLongIdTable("artist") {
     val name = varchar("name", 255).uniqueIndex()
     val originalName = varchar("original_name", 255).nullable()
     val image = reference("image_url", ImageTable).nullable()
-    val sortName = varchar("sort_name", 255).nullable().index()
+    val sortName = varchar("sort_name", 255).index()
 }
 
 /**

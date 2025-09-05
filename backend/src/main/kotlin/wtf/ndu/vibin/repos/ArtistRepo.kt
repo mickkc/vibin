@@ -1,8 +1,9 @@
 package wtf.ndu.vibin.repos
 
-import io.ktor.server.plugins.NotFoundException
+import io.ktor.server.plugins.*
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.SizedCollection
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.artists.ArtistEntity
@@ -11,6 +12,7 @@ import wtf.ndu.vibin.dto.ArtistDto
 import wtf.ndu.vibin.dto.artists.ArtistEditData
 import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.processing.ThumbnailProcessor
+import wtf.ndu.vibin.utils.DateTimeUtils
 
 object ArtistRepo {
 
@@ -27,7 +29,11 @@ object ArtistRepo {
      */
     fun getOrCreateArtist(name: String): ArtistEntity = transaction {
         return@transaction ArtistEntity.find { ArtistTable.originalName.lowerCase() eq name.lowercase() }.firstOrNull()
-            ?: ArtistEntity.new { this.name = name }
+            ?: ArtistEntity.new {
+                this.name = name
+                this.sortName = name
+                this.originalName = name
+            }
     }
 
     fun updateOrCreateArtist(id: Long?, data: ArtistEditData): ArtistEntity = transaction {
@@ -37,14 +43,15 @@ object ArtistRepo {
             }
             ArtistEntity.new {
                 this.name = data.name
-                this.sortName = data.sortName
+                this.sortName = data.sortName ?: data.name
                 this.originalName = data.name
                 this.image = null
             }
         } else {
             ArtistEntity.findByIdAndUpdate(id) { a ->
                 data.name?.takeIf { it.isNotEmpty() }?.let {  a.name = it; }
-                data.sortName?.let { a.sortName = it.takeIf { it.isNotEmpty() } }
+                data.sortName?.let { a.sortName = it.takeIf { it.isNotEmpty() } ?: a.name }
+                a.updatedAt = DateTimeUtils.now()
             }
         }
 
@@ -77,6 +84,7 @@ object ArtistRepo {
 
     fun getAll(page: Int, pageSize: Int): List<ArtistEntity> = transaction {
         return@transaction ArtistEntity.all()
+            .orderBy(ArtistTable.sortName to SortOrder.ASC)
             .limit(pageSize)
             .offset(((page - 1) * pageSize).toLong())
             .toList()
