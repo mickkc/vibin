@@ -67,7 +67,12 @@ fun Application.configureArtistRoutes() = routing {
             if (id == null) {
                 return@deleteP call.missingParameter("id")
             }
-            ArtistRepo.deleteArtist(id)
+            val success = ArtistRepo.deleteArtist(id)
+
+            if (!success) {
+                return@deleteP call.notFound()
+            }
+
             call.respond(mapOf(
                 "success" to true
             ))
