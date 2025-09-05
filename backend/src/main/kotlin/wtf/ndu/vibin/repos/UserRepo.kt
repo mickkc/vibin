@@ -1,8 +1,11 @@
 package wtf.ndu.vibin.repos
 
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.auth.CryptoUtil
+import wtf.ndu.vibin.db.GrantedPermissionTable
 import wtf.ndu.vibin.db.UserEntity
 import wtf.ndu.vibin.db.UserTable
 import wtf.ndu.vibin.dto.users.UserDto
@@ -91,6 +94,7 @@ object UserRepo {
     }
 
     fun deleteUser(user: UserEntity) = transaction {
+        GrantedPermissionTable.deleteWhere { GrantedPermissionTable.user eq user.id.value }
         user.delete()
     }
 
