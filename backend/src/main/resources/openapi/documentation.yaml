@@ -784,9 +784,9 @@ components:
         artists:
           type: array
           items:
+            $ref: '#/components/schemas/Artist'
         cover:
           $ref: '#/components/schemas/Image'
-          nullable: true
         songsAmount:
           type: integer
           format: int64
@@ -808,7 +808,6 @@ components:
           type: string
         image:
           $ref: '#/components/schemas/Image'
-          nullable: true
         sortName:
           type: string
           nullable: true
@@ -826,6 +825,7 @@ components:
 
     Image:
       type: object
+      nullable: true
       properties:
         originalUrl:
           type: string
@@ -841,10 +841,10 @@ components:
           nullable: true
         colorScheme:
           $ref: '#/components/schemas/ColorScheme'
-          nullable: true
 
     ColorScheme:
       type: object
+      nullable: true
       properties:
         primary:
           type: string
@@ -905,10 +905,8 @@ components:
           nullable: true
         cover:
           $ref: '#/components/schemas/Image'
-          nullable: true
         uploader:
           $ref: '#/components/schemas/IdName'
-          nullable: true
 
     Track:
       type: object
@@ -955,7 +953,6 @@ components:
           nullable: true
         cover:
           $ref: '#/components/schemas/Image'
-          nullable: true
         path:
           type: string
         checksum:
@@ -966,7 +963,6 @@ components:
             $ref: '#/components/schemas/Tag'
         uploader:
           $ref: '#/components/schemas/User'
-          nullable: true
         createdAt:
           type: integer
           format: int64
@@ -1008,7 +1004,6 @@ components:
           nullable: true
         profilePicture:
           $ref: '#/components/schemas/Image'
-          nullable: true
         createdAt:
           type: integer
           format: int64
@@ -1108,7 +1103,6 @@ components:
             $ref: '#/components/schemas/User'
         cover:
           $ref: '#/components/schemas/Image'
-          nullable: true
         hasVibeDef:
           type: boolean
         owner:
