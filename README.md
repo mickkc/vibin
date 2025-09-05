@@ -1,5 +1,7 @@
 ![Banner](assets/Banner-MD.jpg)
 
+![Tests](https://github.com/mickkc/vibin/actions/workflows/test_server.yml/badge.svg)
+
 Vibin is a self-hosted music streaming server that allows you to upload, manage, and stream your music collection from anywhere.
 
 
