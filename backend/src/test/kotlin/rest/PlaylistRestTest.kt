@@ -4,6 +4,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
@@ -31,16 +32,19 @@ class PlaylistRestTest {
 
     @Test
     fun testViewOwnPlaylists() = testApp { client ->
+        PlaylistTestUtils.createPlaylist("Another Playlist", false, 1)
         PlaylistTestUtils.createPlaylist("My Public Playlist", true, 1)
         PlaylistTestUtils.createPlaylist("My Private Playlist", false, 1)
-        assertEquals(2, PlaylistRepo.count(1))
+        assertEquals(3, PlaylistRepo.count(1))
 
-        val result = client.get("/api/playlists")
+        val result = client.get("/api/playlists") {
+            parameter("pageSize", 2)
+        }
 
         assertTrue(result.status.isSuccess())
 
         val fetchedPlaylists = result.body<PaginatedDto<PlaylistDto>>()
-        assertEquals(2, fetchedPlaylists.total)
+        assertEquals(3, fetchedPlaylists.total)
         assertEquals(2, fetchedPlaylists.items.size)
 
         val publicPlaylist = fetchedPlaylists.items.find { it.name == "My Public Playlist" }
@@ -62,14 +66,13 @@ class PlaylistRestTest {
 
     @Test
     fun testViewPlaylistAsCollaborator() = testApp(false) { client ->
-        val collaborator = UserTestUtils.createTestUser("collabview", "password")
+
+        val (collaborator, token) = UserTestUtils.createUserWithSession("collabview", "password")
         PlaylistTestUtils.createPlaylist("Collab Playlist", false, 1, collaborator.id.value)
         assertEquals(1, PlaylistRepo.count(collaborator.id.value))
 
-        SessionRepo.addSession(collaborator, "collab-session-token")
-
         val result = client.get("/api/playlists") {
-            bearerAuth("collab-session-token")
+            bearerAuth(token)
         }
 
         assertTrue(result.status.isSuccess())
@@ -89,14 +92,13 @@ class PlaylistRestTest {
 
     @Test
     fun testViewPlaylistAsNonCollaborator() = testApp(false) { client ->
-        val nonCollaborator = UserTestUtils.createTestUser("noncollab", "password")
+        val (nonCollaborator, token) = UserTestUtils.createUserWithSession("noncollab", "password")
+
         PlaylistTestUtils.createPlaylist("Private Playlist", false, 1)
         assertEquals(0, PlaylistRepo.count(nonCollaborator.id.value))
 
-        SessionRepo.addSession(nonCollaborator, "noncollab-session-token")
-
         val result = client.get("/api/playlists") {
-            bearerAuth("noncollab-session-token")
+            bearerAuth(token)
         }
 
         assertTrue(result.status.isSuccess())
@@ -161,6 +163,41 @@ class PlaylistRestTest {
 
         assertEquals(400, result.status.value)
         assertEquals(0, PlaylistRepo.count(1))
+    }
+
+    @Test
+    fun testCreatePlaylist_NoPermission() = testApp(false) { client ->
+        val (user, token) = UserTestUtils.createUserAndSessionWithPermissions(
+            "noperms3", "password",
+            PermissionType.CREATE_PUBLIC_PLAYLISTS to false,
+            PermissionType.CREATE_PRIVATE_PLAYLISTS to false
+        )
+
+        val publicResult = client.post("/api/playlists") {
+            bearerAuth(token)
+            setBody(PlaylistEditDto(
+                name = "My Playlist",
+                description = "A cool playlist",
+                isPublic = true,
+                collaboratorIds = emptyList()
+            ))
+        }
+
+        assertEquals(403, publicResult.status.value)
+
+        val privateResult = client.post("/api/playlists") {
+            bearerAuth(token)
+            setBody(PlaylistEditDto(
+                name = "My Playlist",
+                description = "A cool playlist",
+                isPublic = false,
+                collaboratorIds = emptyList()
+            ))
+        }
+
+        assertEquals(403, privateResult.status.value)
+
+        assertEquals(0, PlaylistRepo.count(user.id.value))
     }
     // endregion
 
@@ -287,6 +324,81 @@ class PlaylistRestTest {
         assertEquals(false, dbPlaylist.public) // unchanged
         assertTrue(PlaylistRepo.checkOwnership(dbPlaylist, 1))
     }
+
+    @Test
+    fun testEditPlaylist_NoPermission() = testApp(false) { client ->
+
+        val (user, token) = UserTestUtils.createUserAndSessionWithPermissions(
+            "noperms2", "password",
+            PermissionType.MANAGE_PLAYLISTS to false
+        )
+
+        val playlist = PlaylistTestUtils.createPlaylist("Old Name", false, user.id.value)
+        assertEquals(1, PlaylistRepo.count(user.id.value))
+
+        val result = client.put("/api/playlists/${playlist.id.value}") {
+            bearerAuth(token)
+            setBody(PlaylistEditDto(
+                name = "New Name",
+                description = "Updated Description",
+                isPublic = true,
+                collaboratorIds = emptyList()
+            ))
+        }
+
+        assertEquals(403, result.status.value)
+
+        val dbPlaylist = PlaylistRepo.getById(playlist.id.value, user.id.value)
+        assertNotNull(dbPlaylist)
+
+        assertEquals("Old Name", dbPlaylist.name)
+        assertEquals("Test Description", dbPlaylist.description) // unchanged
+        assertEquals(false, dbPlaylist.public) // unchanged
+        assertTrue(PlaylistRepo.checkOwnership(dbPlaylist, user.id.value))
+    }
+
+    @Test
+    fun testEditPlaylist_InvalidType() = testApp(false) { client ->
+
+        val (_, token) = UserTestUtils.createUserAndSessionWithPermissions(
+            "noperms", "password",
+            PermissionType.CREATE_PUBLIC_PLAYLISTS to false,
+            PermissionType.CREATE_PRIVATE_PLAYLISTS to false)
+
+        val playlist = PlaylistTestUtils.createPlaylist("Old Name", false, 1)
+        assertEquals(1, PlaylistRepo.count(1))
+
+        val privateRresult = client.put("/api/playlists/${playlist.id.value}") {
+            bearerAuth(token)
+            setBody(PlaylistEditDto(
+                name = "New Name",
+                description = "Updated Description",
+                isPublic = false,
+                collaboratorIds = emptyList()
+            ))
+        }
+
+        assertEquals(403, privateRresult.status.value)
+
+        val publicResult = client.put("/api/playlists/${playlist.id.value}") {
+            bearerAuth(token)
+            setBody(PlaylistEditDto(
+                name = "New Name",
+                description = "Updated Description",
+                isPublic = true,
+                collaboratorIds = emptyList()
+            ))
+        }
+
+        assertEquals(403, publicResult.status.value)
+
+        val dbPlaylist = PlaylistRepo.getById(playlist.id.value, 1)
+        assertNotNull(dbPlaylist)
+
+        assertEquals("Old Name", dbPlaylist.name) // unchanged
+        assertEquals("Test Description", dbPlaylist.description) // unchanged
+        assertFalse(dbPlaylist.public) // unchanged
+    }
     // endregion
 
     // region Delete
@@ -349,6 +461,24 @@ class PlaylistRestTest {
 
         assertTrue(result.status.isSuccess())
         assertEquals(0, PlaylistRepo.count(1))
+    }
+
+    @Test
+    fun testDeletePlaylist_NoPermission() = testApp(false) { client ->
+        val (user, token) = UserTestUtils.createUserAndSessionWithPermissions(
+            "noperms5", "password",
+            PermissionType.DELETE_OWN_PLAYLISTS to false
+        )
+
+        val playlist = PlaylistTestUtils.createPlaylist("My Playlist", false, user.id.value)
+        assertEquals(1, PlaylistRepo.count(user.id.value))
+
+        val result = client.delete("/api/playlists/${playlist.id.value}") {
+            bearerAuth(token)
+        }
+
+        assertEquals(403, result.status.value)
+        assertEquals(1, PlaylistRepo.count(user.id.value))
     }
     // endregion
 }

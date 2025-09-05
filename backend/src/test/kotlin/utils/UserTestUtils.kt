@@ -25,8 +25,15 @@ object UserTestUtils {
         return user
     }
 
-    fun createUserAndSessionWithPermissions(username: String, password: String, permissions: Map<PermissionType, Boolean>): Pair<UserEntity, String> {
+    fun createUserWithSession(username: String, password: String): Pair<UserEntity, String> {
         val user = createTestUser(username, password)
+        val sessionToken = CryptoUtil.createToken()
+        SessionRepo.addSession(user, sessionToken)
+        return user to sessionToken
+    }
+
+    fun createUserAndSessionWithPermissions(username: String, password: String, vararg permissions: Pair<PermissionType, Boolean>): Pair<UserEntity, String> {
+        val (user, token) = createUserWithSession(username, password)
         permissions.forEach { (permission, granted) ->
             if (granted) {
                 PermissionRepo.addPermission(user.id.value, permission)
@@ -34,8 +41,6 @@ object UserTestUtils {
                 PermissionRepo.removePermission(user.id.value, permission)
             }
         }
-        val sessionToken = CryptoUtil.createToken()
-        SessionRepo.addSession(user, sessionToken)
-        return user to sessionToken
+        return user to token
     }
 }

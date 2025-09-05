@@ -54,10 +54,9 @@ class ArtistRestTest {
     @Test
     fun testGetArtists_NoPermission() = testApp(false) { client ->
         val (_, token) = UserTestUtils.createUserAndSessionWithPermissions(
-            "noperms", "password",
-            permissions = mapOf(
-                PermissionType.VIEW_ARTISTS to false
-            )
+            "noperms",
+            "password",
+            PermissionType.VIEW_ARTISTS to false
         )
         val response = client.get("/api/artists") {
             bearerAuth(token)
@@ -90,9 +89,7 @@ class ArtistRestTest {
     fun testCreateArtist_NoPermission() = testApp(false) { client ->
         val (_, token) = UserTestUtils.createUserAndSessionWithPermissions(
             "noperms2", "password",
-            permissions = mapOf(
-                PermissionType.MANAGE_ARTISTS to false
-            )
+            PermissionType.MANAGE_ARTISTS to false
         )
         val data = ArtistEditData(
             name = "New Artist",
@@ -154,9 +151,7 @@ class ArtistRestTest {
         val artist = ArtistTestUtils.createArtist("No Perms", "Perms, No")
         val (_, token) = UserTestUtils.createUserAndSessionWithPermissions(
             "noperms3", "password",
-            permissions = mapOf(
-                PermissionType.MANAGE_ARTISTS to false
-            )
+            PermissionType.MANAGE_ARTISTS to false
         )
 
         val data = ArtistEditData(
@@ -206,9 +201,7 @@ class ArtistRestTest {
 
         val (_, token) = UserTestUtils.createUserAndSessionWithPermissions(
             "noperms4", "password",
-            permissions = mapOf(
-                PermissionType.MANAGE_ARTISTS to false
-            )
+            PermissionType.MANAGE_ARTISTS to false
         )
 
         val response = client.delete("/api/artists/${artist.id.value}") {

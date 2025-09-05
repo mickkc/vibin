@@ -29,6 +29,18 @@ class UserRestTest {
     }
 
     @Test
+    fun testGetUsers_NoPermission() = testApp(false) { client ->
+        val (_, token) = UserTestUtils.createUserWithSession(
+            "noperms",
+            "password"
+        ) // No VIEW_USERS permission
+        val response = client.get("/api/users") {
+            header("Authorization", "Bearer $token")
+        }
+        assertEquals(403, response.status.value)
+    }
+
+    @Test
     fun testGetUserById() = testApp { client ->
         val testUser = UserTestUtils.createTestUser("singleuser", "password123")
         val response = client.get("/api/users/${testUser.id.value}")
@@ -42,6 +54,21 @@ class UserRestTest {
         assertEquals(user.isActive, true)
         assertEquals(user.profilePicture, null)
     }
+
+    @Test
+    fun testGetUserById_NoPermission() = testApp(false) { client ->
+        val testUser = UserTestUtils.createTestUser("nopermsuser", "password123")
+        val (_, token) = UserTestUtils.createUserWithSession(
+            "noperms",
+            "password"
+        ) // No VIEW_USERS permission
+
+        val response = client.get("/api/users/${testUser.id.value}") {
+            bearerAuth(token)
+        }
+        assertEquals(403, response.status.value)
+    }
+
 
     @Test
     fun testGetUserById_NotFound() = testApp { client ->
@@ -76,6 +103,29 @@ class UserRestTest {
             assertNull(user.profilePicture)
             assertContentEquals(user.passwordHash, CryptoUtil.hashPassword("password123", user.salt))
         }
+    }
+
+    @Test
+    fun testCreateUser_NoPermission() = testApp(false) { client ->
+        val (_, token) = UserTestUtils.createUserWithSession(
+            "noperms",
+            "password"
+        ) // No MANAGE_USERS permission
+        val response = client.post("/api/users") {
+            header("Authorization", "Bearer $token")
+            setBody(UserEditDto(
+                username = "testuser",
+                displayName = "Test User",
+                email = null,
+                isAdmin = false,
+                isActive = null,
+                profilePictureUrl = null,
+                password = "password123"
+            ))
+        }
+        assertEquals(403, response.status.value)
+
+        assertEquals(2, UserRepo.count()) // only default admin user and noperms user
     }
 
     @Test
@@ -142,6 +192,41 @@ class UserRestTest {
     }
 
     @Test
+    fun testEditUser_NoPermission() = testApp(false) { client ->
+        val testUser = UserTestUtils.createTestUser("nopermsedit", "password123")
+        val (_, token) = UserTestUtils.createUserWithSession(
+            "noperms",
+            "password"
+        ) // No MANAGE_USERS permission
+        val response = client.put("/api/users/${testUser.id.value}") {
+            bearerAuth(token)
+            setBody(UserEditDto(
+                username = "editeduser",
+                displayName = "Edited User",
+                email = "edited@example.cokm",
+                isAdmin = true,
+                isActive = null,
+                profilePictureUrl = null,
+                password = "other password that won't be changed"
+            ))
+        }
+        assertEquals(403, response.status.value)
+
+        val user = UserRepo.getById(testUser.id.value)
+        transaction {
+            assertNotNull(user)
+
+            assertEquals(user.username, "nopermsedit")
+            assertNull(user.displayName)
+            assertNull(user.email)
+            assertFalse(user.isAdmin)
+            assertTrue(user.isActive)
+            assertNull(user.profilePicture)
+            assertContentEquals(user.passwordHash, CryptoUtil.hashPassword("password123", user.salt))
+        }
+    }
+
+    @Test
     fun testDeleteUser() = testApp { client ->
         val testUser = UserTestUtils.createTestUser("deleteuser", "password123")
         assertEquals(2, UserRepo.count())
@@ -152,5 +237,22 @@ class UserRestTest {
         val user = UserRepo.getById(testUser.id.value)
         assertNull(user)
         assertEquals(1, UserRepo.count())
+    }
+
+    @Test
+    fun testDeleteUser_NoPermission() = testApp(false) { client ->
+        val testUser = UserTestUtils.createTestUser("nopermsdelete", "password123")
+        val (_, token) = UserTestUtils.createUserWithSession(
+            "noperms",
+            "password"
+        ) // No DELETE_USERS permission
+        val response = client.delete("/api/users/${testUser.id.value}") {
+            bearerAuth(token)
+        }
+        assertEquals(403, response.status.value)
+
+        val user = UserRepo.getById(testUser.id.value)
+        assertNotNull(user)
+        assertEquals(3, UserRepo.count()) // default admin, noperms user, nopermsdelete user
     }
 }
