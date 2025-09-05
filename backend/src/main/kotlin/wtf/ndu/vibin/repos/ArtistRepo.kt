@@ -20,6 +20,10 @@ object ArtistRepo {
         return@transaction ArtistEntity.all().count()
     }
 
+    fun getById(id: Long): ArtistEntity? = transaction {
+        return@transaction ArtistEntity.findById(id)
+    }
+
 
     /**
      * Retrieves an existing artist by name or creates a new one if it doesn't exist.

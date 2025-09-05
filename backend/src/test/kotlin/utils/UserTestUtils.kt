@@ -1,8 +1,12 @@
 package utils
 
 import org.junit.jupiter.api.assertNotNull
+import wtf.ndu.vibin.auth.CryptoUtil
 import wtf.ndu.vibin.db.UserEntity
 import wtf.ndu.vibin.dto.users.UserEditDto
+import wtf.ndu.vibin.permissions.PermissionType
+import wtf.ndu.vibin.repos.PermissionRepo
+import wtf.ndu.vibin.repos.SessionRepo
 import wtf.ndu.vibin.repos.UserRepo
 
 object UserTestUtils {
@@ -21,4 +25,17 @@ object UserTestUtils {
         return user
     }
 
+    fun createUserAndSessionWithPermissions(username: String, password: String, permissions: Map<PermissionType, Boolean>): Pair<UserEntity, String> {
+        val user = createTestUser(username, password)
+        permissions.forEach { (permission, granted) ->
+            if (granted) {
+                PermissionRepo.addPermission(user.id.value, permission)
+            } else {
+                PermissionRepo.removePermission(user.id.value, permission)
+            }
+        }
+        val sessionToken = CryptoUtil.createToken()
+        SessionRepo.addSession(user, sessionToken)
+        return user to sessionToken
+    }
 }
