@@ -1,5 +1,6 @@
 package wtf.ndu.vibin.repos
 
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
@@ -34,6 +35,7 @@ object AlbumRepo {
 
     fun getAll(page: Int, pageSize: Int): List<AlbumEntity> = transaction {
         return@transaction AlbumEntity.all()
+            .orderBy(AlbumTable.title to SortOrder.ASC)
             .limit(pageSize)
             .offset(((page - 1) * pageSize).toLong())
             .toList()

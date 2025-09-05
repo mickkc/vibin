@@ -3,6 +3,7 @@ package wtf.ndu.vibin.repos
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.SizedCollection
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inSubQuery
 import org.jetbrains.exposed.sql.and
@@ -28,6 +29,7 @@ object PlaylistRepo {
 
     fun getAll(page: Int, pageSize: Int, userId: Long): List<PlaylistEntity> = transaction {
         PlaylistEntity.find (createOp(userId))
+        .orderBy(PlaylistTable.name to SortOrder.DESC)
         .limit(pageSize)
         .offset(((page - 1) * pageSize).toLong())
         .toList()
