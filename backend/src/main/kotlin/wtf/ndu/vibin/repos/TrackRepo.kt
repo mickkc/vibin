@@ -1,8 +1,11 @@
 package wtf.ndu.vibin.repos
 
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
+import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.albums.AlbumEntity
 import wtf.ndu.vibin.db.artists.ArtistEntity
@@ -16,6 +19,7 @@ import wtf.ndu.vibin.dto.tracks.TrackEditDto
 import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.parsing.TrackMetadata
 import wtf.ndu.vibin.processing.ThumbnailProcessor
+import wtf.ndu.vibin.search.SearchQueryBuilder
 import wtf.ndu.vibin.utils.ChecksumUtil
 import wtf.ndu.vibin.utils.DateTimeUtils
 import wtf.ndu.vibin.utils.PathUtils
@@ -104,6 +108,49 @@ object TrackRepo {
             .limit(pageSize)
             .offset(((page - 1) * pageSize).toLong())
             .toList()
+    }
+
+    /**
+     * Counts the number of tracks matching the provided search query.
+     *
+     * @param query The search query string.
+     * @param advanced If true, uses advanced search parsing; otherwise, performs a simple case-insensitive title search.
+     * @return The count of tracks matching the search criteria.
+     */
+    fun countSearched(query: String, advanced: Boolean): Long = transaction {
+        return@transaction TrackEntity.find { buildQuery(query, advanced) }.count()
+    }
+
+    /**
+     * Searches for tracks based on the provided query string.
+     *
+     * @param query The search query string.
+     * @param advanced If true, uses advanced search parsing; otherwise, performs a simple case-insensitive title search.
+     * @param page The page number for pagination (1-based).
+     * @param pageSize The number of items per page.
+     * @return A list of [TrackEntity] matching the search criteria.
+     */
+    fun getSearched(query: String, advanced: Boolean, page: Int, pageSize: Int): List<TrackEntity> = transaction {
+        return@transaction TrackEntity.find { buildQuery(query, advanced) }
+            .orderBy(TrackTable.title to SortOrder.ASC)
+            .limit(pageSize)
+            .offset(((page - 1) * pageSize).toLong())
+            .toList()
+    }
+
+    /**
+     * Builds a search query for tracks based on the provided query string.
+     *
+     * @param query The search query string.
+     * @param advanced If true, uses advanced search parsing; otherwise, performs a simple case-insensitive title search.
+     * @return An [Op] representing the search condition.
+     */
+    private fun buildQuery(query: String, advanced: Boolean): Op<Boolean> {
+        return if (advanced) {
+            SearchQueryBuilder.build(query)
+        } else {
+            (TrackTable.title.lowerCase() like "%${query.lowercase()}%")
+        }
     }
 
     fun getAllFromAlbum(albumId: Long): List<TrackEntity> = transaction {
