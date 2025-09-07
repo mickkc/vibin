@@ -61,7 +61,7 @@ object PlaylistRepo {
      * Creates a new playlist or updates an existing one.
      * If `playlistId` is provided, it updates the existing playlist; otherwise, it creates a new one.
      *
-     * @param userId The ID of the user creating or updating the playlist.
+     * @param user The user creating or updating the playlist.
      * @param editDto The data transfer object containing playlist details.
      * @param playlistId The ID of the playlist to update, or null to create a new one.
      * @return The created or updated [PlaylistEntity], or null if the playlist to update was not found.

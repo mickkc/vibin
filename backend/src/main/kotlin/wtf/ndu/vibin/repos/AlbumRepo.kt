@@ -16,8 +16,6 @@ import wtf.ndu.vibin.dto.albums.AlbumDto
 
 object AlbumRepo {
 
-    private val logger = LoggerFactory.getLogger(AlbumRepo::class.java)
-
     /**
      * Retrieves an existing album by title or creates a new one if it doesn't exist.
      *

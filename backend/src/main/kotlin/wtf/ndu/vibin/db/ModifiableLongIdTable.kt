@@ -22,7 +22,7 @@ open class ModifiableLongIdTable(name: String = "") : LongIdTable(name) {
  * @property createdAt The timestamp when the record was created.
  * @property updatedAt The timestamp when the record was last updated, nullable.
  */
-open class ModifiableLongIdEntity(id: EntityID<Long>, table: ModifiableLongIdTable) : LongEntity(id) {
+open class ModifiableLongIdEntity(id: EntityID<Long>, val table: ModifiableLongIdTable) : LongEntity(id) {
     var createdAt by table.createdAt
     var updatedAt by table.updatedAt
 }

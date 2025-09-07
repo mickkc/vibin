@@ -33,18 +33,28 @@ fun Application.configurePlaylistRoutes() = routing {
             )
         }
 
-        postP("/api/playlists", PermissionType.MANAGE_PLAYLISTS) {
-
-            val user = call.getUser() ?: return@postP call.unauthorized()
+        suspend fun getValidatedEditDto(call: RoutingCall): PlaylistEditDto? {
             val editDto = call.receive<PlaylistEditDto>()
 
-            if (editDto.name.isBlank())
-                return@postP call.missingParameter("name")
+            if (editDto.name.isBlank()) {
+                call.missingParameter("name")
+                return null
+            }
 
             // Check permissions for public/private playlists
             if ((editDto.isPublic == true && !call.hasPermissions(PermissionType.CREATE_PUBLIC_PLAYLISTS) ||
-                (editDto.isPublic == false && !call.hasPermissions(PermissionType.CREATE_PRIVATE_PLAYLISTS))))
-                return@postP call.forbidden()
+                (editDto.isPublic == false && !call.hasPermissions(PermissionType.CREATE_PRIVATE_PLAYLISTS)))) {
+                call.forbidden()
+                return null
+            }
+
+            return editDto
+        }
+
+        postP("/api/playlists", PermissionType.MANAGE_PLAYLISTS) {
+
+            val user = call.getUser() ?: return@postP call.unauthorized()
+            val editDto = getValidatedEditDto(call) ?: return@postP
 
             // Create the playlist
             val created = PlaylistRepo.createOrUpdatePlaylist(user, editDto, null)!!
@@ -55,15 +65,7 @@ fun Application.configurePlaylistRoutes() = routing {
         putP("/api/playlists/{playlistId}", PermissionType.MANAGE_PLAYLISTS) {
             val user = call.getUser() ?: return@putP call.unauthorized()
             val playlistId = call.parameters["playlistId"]?.toLongOrNull() ?: return@putP call.missingParameter("playlistId")
-            val editDto = call.receive<PlaylistEditDto>()
-
-            if (editDto.name.isBlank())
-                return@putP call.missingParameter("name")
-
-            // Prevent changing to a type of playlist the user cannot create
-            if ((editDto.isPublic == true && !call.hasPermissions(PermissionType.CREATE_PUBLIC_PLAYLISTS) ||
-                (editDto.isPublic == false && !call.hasPermissions(PermissionType.CREATE_PRIVATE_PLAYLISTS))))
-                return@putP call.forbidden()
+            val editDto = getValidatedEditDto(call) ?: return@putP
 
             // Get the playlist to check ownership
             val playlist = PlaylistRepo.getByIdCollaborative(playlistId, user.id.value) ?: return@putP call.notFound()

@@ -24,9 +24,8 @@ class TokenAuthenticationProvider(config: TokenAuthenticationProviderConfig = To
             context.principal(UserPrincipal(userId, token))
         } else {
             logger.warn("Authentication failed: invalid or missing token")
-            context.challenge("TokenAuth", AuthenticationFailedCause.InvalidCredentials) { a, b ->
-                a.complete()
-                null
+            context.challenge("TokenAuth", AuthenticationFailedCause.InvalidCredentials) { challenge, _ ->
+                challenge.complete()
             }
         }
     }

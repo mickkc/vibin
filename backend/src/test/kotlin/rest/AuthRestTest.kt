@@ -93,7 +93,7 @@ class AuthRestTest {
         // Password changed, session should be invalidated
         assertEquals(0, SessionRepo.count())
 
-        // Try to login with old password (should fail)
+        // Try to log in with old password (should fail)
         val oldLoginResponse = client.post("/api/auth/login") {
             parameter("username", "Admin")
             parameter("password", "admin")
@@ -101,7 +101,7 @@ class AuthRestTest {
         assertFalse(oldLoginResponse.status.isSuccess())
         assertEquals(HttpStatusCode.Unauthorized, oldLoginResponse.status)
 
-        // Try to login with new password (should succeed)
+        // Try to log in with new password (should succeed)
         val newLoginResponse = client.post("/api/auth/login") {
             parameter("username", "Admin")
             parameter("password", "newpassword123")
