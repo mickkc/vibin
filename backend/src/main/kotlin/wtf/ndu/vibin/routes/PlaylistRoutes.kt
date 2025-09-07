@@ -21,11 +21,8 @@ fun Application.configurePlaylistRoutes() = routing {
             val page = call.request.queryParameters["p"]?.toIntOrNull() ?: 1
             val pageSize = call.request.queryParameters["pageSize"]?.toIntOrNull() ?: Settings.get(PageSize)
 
-            // Count all playlists the user has access to
-            val total = PlaylistRepo.count(userId)
-
             // Get the playlists for the requested page
-            val playlists = PlaylistRepo.getAll(page, pageSize, userId)
+            val (playlists, total) = PlaylistRepo.getAll(page, pageSize, userId)
 
             call.respond(PaginatedDto(
                     items = PlaylistRepo.toDto(playlists),

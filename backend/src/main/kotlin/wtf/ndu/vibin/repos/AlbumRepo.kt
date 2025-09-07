@@ -33,12 +33,15 @@ object AlbumRepo {
         return@transaction AlbumEntity.count()
     }
 
-    fun getAll(page: Int, pageSize: Int): List<AlbumEntity> = transaction {
-        return@transaction AlbumEntity.all()
+    fun getAll(page: Int, pageSize: Int): Pair<List<AlbumEntity>, Long> = transaction {
+        val albums = AlbumEntity.all()
+        val count = albums.count()
+        val results = albums
             .orderBy(AlbumTable.title to SortOrder.ASC)
             .limit(pageSize)
             .offset(((page - 1) * pageSize).toLong())
             .toList()
+        return@transaction results to count
     }
 
     fun getById(id: Long): AlbumEntity? = transaction {

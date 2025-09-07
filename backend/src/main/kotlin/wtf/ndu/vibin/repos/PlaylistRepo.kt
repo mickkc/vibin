@@ -27,12 +27,15 @@ object PlaylistRepo {
         PlaylistEntity.find (createOp(userId)).count()
     }
 
-    fun getAll(page: Int, pageSize: Int, userId: Long): List<PlaylistEntity> = transaction {
-        PlaylistEntity.find (createOp(userId))
-        .orderBy(PlaylistTable.name to SortOrder.DESC)
-        .limit(pageSize)
-        .offset(((page - 1) * pageSize).toLong())
-        .toList()
+    fun getAll(page: Int, pageSize: Int, userId: Long): Pair<List<PlaylistEntity>, Long> = transaction {
+        val playlists = PlaylistEntity.find (createOp(userId))
+        val count = playlists.count()
+        val results = playlists
+            .orderBy(PlaylistTable.name to SortOrder.DESC)
+            .limit(pageSize)
+            .offset(((page - 1) * pageSize).toLong())
+            .toList()
+        return@transaction results to count
     }
 
     fun getById(id: Long, userId: Long): PlaylistEntity? = transaction {

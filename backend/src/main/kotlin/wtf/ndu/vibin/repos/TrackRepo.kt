@@ -102,23 +102,15 @@ object TrackRepo {
         return@transaction track
     }
 
-    fun getAll(page: Int, pageSize: Int): List<TrackEntity> = transaction {
-        return@transaction TrackEntity.all()
+    fun getAll(page: Int, pageSize: Int): Pair<List<TrackEntity>, Long> = transaction {
+        val tracks = TrackEntity.all()
+        val count = tracks.count()
+        val results = tracks
             .orderBy(TrackTable.title to SortOrder.ASC)
             .limit(pageSize)
             .offset(((page - 1) * pageSize).toLong())
             .toList()
-    }
-
-    /**
-     * Counts the number of tracks matching the provided search query.
-     *
-     * @param query The search query string.
-     * @param advanced If true, uses advanced search parsing; otherwise, performs a simple case-insensitive title search.
-     * @return The count of tracks matching the search criteria.
-     */
-    fun countSearched(query: String, advanced: Boolean): Long = transaction {
-        return@transaction TrackEntity.find { buildQuery(query, advanced) }.count()
+        return@transaction results to count
     }
 
     /**
@@ -130,12 +122,15 @@ object TrackRepo {
      * @param pageSize The number of items per page.
      * @return A list of [TrackEntity] matching the search criteria.
      */
-    fun getSearched(query: String, advanced: Boolean, page: Int, pageSize: Int): List<TrackEntity> = transaction {
-        return@transaction TrackEntity.find { buildQuery(query, advanced) }
+    fun getSearched(query: String, advanced: Boolean, page: Int, pageSize: Int): Pair<List<TrackEntity>, Long> = transaction {
+        val tracks = TrackEntity.find { buildQuery(query, advanced) }
+        val count = tracks.count()
+        val results = tracks
             .orderBy(TrackTable.title to SortOrder.ASC)
             .limit(pageSize)
             .offset(((page - 1) * pageSize).toLong())
             .toList()
+        return@transaction results to count
     }
 
     /**

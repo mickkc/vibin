@@ -21,8 +21,7 @@ fun Application.configureTrackRoutes() = routing {
             val page = call.request.queryParameters["page"]?.toIntOrNull() ?: 1
             val pageSize = call.request.queryParameters["pageSize"]?.toIntOrNull() ?: Settings.get(PageSize)
 
-            val total = TrackRepo.count()
-            val tracks = TrackRepo.getAll(page, pageSize)
+            val (tracks, total) = TrackRepo.getAll(page, pageSize)
 
             call.respond(PaginatedDto(
                 items = TrackRepo.toMinimalDto(tracks),
@@ -65,8 +64,7 @@ fun Application.configureTrackRoutes() = routing {
             val page = call.request.queryParameters["page"]?.toIntOrNull() ?: 1
             val pageSize = call.request.queryParameters["pageSize"]?.toIntOrNull() ?: Settings.get(PageSize)
 
-            val count = TrackRepo.countSearched(query, advanced)
-            val results = TrackRepo.getSearched(query, advanced, page, pageSize)
+            val (results, count) = TrackRepo.getSearched(query, advanced, page, pageSize)
 
             call.respond(PaginatedDto(
                 items = TrackRepo.toMinimalDto(results),

@@ -20,8 +20,8 @@ fun Application.configureArtistRoutes() = routing {
             val page = call.parameters["page"]?.toIntOrNull() ?: 1
             val pageSize = call.parameters["pageSize"]?.toIntOrNull() ?: Settings.get(PageSize)
 
-            val total = ArtistRepo.count()
-            val artists = ArtistRepo.getAll(page, pageSize)
+            val (artists, total) = ArtistRepo.getAll(page, pageSize)
+
             call.respond(PaginatedDto(
                 items = ArtistRepo.toDto(artists),
                 total = total.toInt(),

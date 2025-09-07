@@ -86,12 +86,15 @@ object ArtistRepo {
         return@transaction true
     }
 
-    fun getAll(page: Int, pageSize: Int): List<ArtistEntity> = transaction {
-        return@transaction ArtistEntity.all()
+    fun getAll(page: Int, pageSize: Int): Pair<List<ArtistEntity>, Long> = transaction {
+        val artists = ArtistEntity.all()
+        val count = artists.count()
+        val results = artists
             .orderBy(ArtistTable.sortName to SortOrder.ASC)
             .limit(pageSize)
             .offset(((page - 1) * pageSize).toLong())
             .toList()
+        return@transaction results to count
     }
 
     fun toDto(artistEntity: ArtistEntity): ArtistDto = transaction {
