@@ -40,9 +40,18 @@ fun Application.configureUserRoutes() = routing {
             call.respond(UserRepo.toDto(created))
         }
 
-        putP("/api/users/{userId}", PermissionType.MANAGE_USERS) {
+        putP("/api/users/{userId}") {
             val userId = call.parameters["userId"]?.toLongOrNull() ?: return@putP call.missingParameter("userId")
             val currentUser = call.getUser() ?: return@putP call.unauthorized()
+
+            if (userId == currentUser.id.value) {
+                if (!call.hasPermissions(PermissionType.MANAGE_OWN_USER))
+                    return@putP call.forbidden(PermissionType.MANAGE_OWN_USER)
+            } else {
+                if (!call.hasPermissions(PermissionType.MANAGE_USERS))
+                    return@putP call.forbidden(PermissionType.MANAGE_USERS)
+            }
+
             val user = UserRepo.getById(userId) ?: return@putP call.notFound()
 
             val userEditDto = call.receive<UserEditDto>()
@@ -59,8 +68,18 @@ fun Application.configureUserRoutes() = routing {
             call.respond(UserRepo.toDto(updated))
         }
 
-        deleteP("/api/users/{userId}", PermissionType.DELETE_USERS) {
+        deleteP("/api/users/{userId}") {
             val userId = call.parameters["userId"]?.toLongOrNull() ?: return@deleteP call.missingParameter("userId")
+
+            if (userId == call.getUserId()) {
+                if (!call.hasPermissions(PermissionType.DELETE_OWN_USER))
+                    return@deleteP call.forbidden(PermissionType.DELETE_OWN_USER)
+            }
+            else {
+                if (!call.hasPermissions(PermissionType.DELETE_USERS))
+                    return@deleteP call.forbidden(PermissionType.DELETE_USERS)
+            }
+
             val user = UserRepo.getById(userId) ?: return@deleteP call.notFound()
 
             UserRepo.deleteUser(user)

@@ -35,7 +35,9 @@ enum class PermissionType(val id: String, val grantedByDefault: Boolean) {
 
     VIEW_USERS("view_users", false),
     MANAGE_USERS("manage_users", false),
+    MANAGE_OWN_USER("edit_own_user", true),
     DELETE_USERS("delete_users", false),
+    DELETE_OWN_USER("delete_own_user", false),
     CREATE_USERS("create_users", false);
 
     companion object {
