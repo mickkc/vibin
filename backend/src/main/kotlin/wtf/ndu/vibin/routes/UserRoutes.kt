@@ -18,6 +18,11 @@ fun Application.configureUserRoutes() = routing {
             call.respond(UserRepo.toDto(users))
         }
 
+        getP("/api/users/me", PermissionType.VIEW_USERS) {
+            val user = call.getUser() ?: return@getP call.notFound()
+            call.respond(UserRepo.toDto(user))
+        }
+
         getP("/api/users/{userId}", PermissionType.VIEW_USERS) {
             val userId = call.parameters["userId"]?.toLongOrNull() ?: return@getP call.missingParameter("userId")
             val user = UserRepo.getById(userId) ?: return@getP call.notFound()
