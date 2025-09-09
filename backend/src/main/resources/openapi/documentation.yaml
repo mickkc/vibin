@@ -93,43 +93,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  /api/auth/password:
-    post:
-      summary: Change user password
-      operationId: changePassword
-      tags:
-        - Auth
-      security:
-        - tokenAuth: []
-      parameters:
-        - name: currentPassword
-          in: query
-          description: Current password of the user
-          required: true
-          schema:
-              type: string
-        - name: newPassword
-          in: query
-          description: New password for the user
-          required: true
-          schema:
-              type: string
-      responses:
-        200:
-          description: Password change result
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Success'
-        401:
-          description: Invalid old password
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
   /api/albums:
     get:
       summary: Get all albums
@@ -191,6 +154,45 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AlbumData'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/albums/{id}/cover:
+    get:
+      summary: Get album cover image
+      operationId: getAlbumCover
+      tags:
+        - Albums
+      security:
+        - tokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the album to retrieve the cover for
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: quality
+          in: query
+          description: Size of the cover image (small, large or original (default))
+          required: false
+          schema:
+            type: string
+            enum: [small, large, original]
+            default: original
+      responses:
+        200:
+          description: Album cover image
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
         default:
           description: Error
           content:
@@ -648,6 +650,45 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /api/tracks/{id}/cover:
+    get:
+      summary: Get track cover image
+      operationId: getTrackCover
+      tags:
+        - Tracks
+      security:
+        - tokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the track to retrieve the cover for
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: quality
+          in: query
+          description: Size of the cover image (small, large or original (default))
+          required: false
+          schema:
+            type: string
+            enum: [small, large, original]
+            default: original
+      responses:
+        200:
+          description: Track cover image
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /api/users:
     get:
       summary: Get all users
@@ -778,6 +819,67 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Success"
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/users/{id}/pfp:
+    get:
+      summary: Get user profile picture
+      operationId: getUserProfilePicture
+      tags:
+        - Users
+      security:
+        - tokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the user to retrieve the profile picture for
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: quality
+          in: query
+          description: Size of the profile picture (small, large or original (default))
+          required: false
+          schema:
+            type: string
+            enum: [small, large, original]
+            default: original
+      responses:
+        200:
+          description: User profile picture
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/users/me:
+    get:
+      summary: Get current authenticated user
+      operationId: getCurrentUser
+      tags:
+        - Users
+      security:
+        - tokenAuth: []
+      responses:
+        200:
+          description: Current user data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
         default:
           description: Error
           content:
@@ -1307,6 +1409,10 @@ components:
         profilePictureUrl:
           type: string
           nullable: true
+        oldPassword:
+          type: string
+          nullable: true
+          description: Must be provided when changing the password
         password:
           type: string
           nullable: true
