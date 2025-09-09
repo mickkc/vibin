@@ -10,6 +10,7 @@ import wtf.ndu.vibin.config.configureHTTP
 import wtf.ndu.vibin.config.configureOpenApi
 import wtf.ndu.vibin.config.configureSecurity
 import wtf.ndu.vibin.config.configureSerialization
+import wtf.ndu.vibin.config.configureStatusPages
 import wtf.ndu.vibin.processing.AudioFileProcessor
 import wtf.ndu.vibin.routes.configureAlbumRoutes
 import wtf.ndu.vibin.routes.configureArtistRoutes
@@ -38,6 +39,7 @@ fun Application.module() {
     configureSerialization()
     configureSecurity()
     configureHTTP()
+    configureStatusPages()
 
     configureOpenApi()
 
