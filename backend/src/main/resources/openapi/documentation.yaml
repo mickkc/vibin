@@ -40,8 +40,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LoginResult'
-        401:
-          description: Invalid username or password
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/Error'
 
   /api/auth/validate:
     post:
@@ -60,6 +64,12 @@ paths:
                 $ref: '#/components/schemas/User'
         401:
           description: Token is invalid or expired
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /api/auth/logout:
     post:
@@ -75,10 +85,13 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
+                $ref: '#/components/schemas/Success'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /api/auth/password:
     post:
@@ -107,12 +120,15 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
+                $ref: '#/components/schemas/Success'
         401:
           description: Invalid old password
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /api/albums:
     get:
@@ -145,6 +161,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedAlbumResponse'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /api/albums/{id}:
     get:
@@ -169,6 +191,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AlbumData'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /api/metadata/providers:
     get:
@@ -198,6 +226,12 @@ paths:
                     type: array
                     items:
                       type: string
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /api/metadata/track:
     get:
@@ -229,8 +263,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/TrackMetadata'
-        400:
-          description: Invalid query or provider
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /api/metadata/artist:
     get:
@@ -262,8 +300,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ArtistMetada'
-        400:
-          description: Invalid query or provider
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /api/permissions:
     get:
@@ -282,6 +324,12 @@ paths:
                 type: array
                 items:
                   type: string
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /api/permissions/{userId}:
     get:
@@ -308,8 +356,12 @@ paths:
                 type: array
                 items:
                   type: string
-        404:
-          description: User not found
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
     put:
       summary: Toggle a permission for a user
@@ -343,6 +395,12 @@ paths:
                 properties:
                   granted:
                     type: boolean
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /api/playlists:
     get:
@@ -375,6 +433,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedPlaylistResponse'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
     post:
       summary: Create a new playlist
@@ -396,10 +460,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Playlist'
-        400:
-          description: Invalid input data
-        403:
-          description: User does not have permission to create playlists of this type (public/private)
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /api/playlists/{id}:
     put:
@@ -422,12 +488,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Playlist'
-        400:
-          description: Invalid input data
-        403:
-          description: User does not have permission to change playlists to this type (public/private)
-        404:
-          description: Playlist not found
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
     delete:
       summary: Deletes a playlist
@@ -450,14 +516,13 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-        403:
-          description: User does not have permission to delete this playlist
-        404:
-            description: Playlist not found
+                $ref: "#/components/schemas/Success"
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /api/tracks:
     get:
@@ -490,6 +555,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedMinimalTrackResponse'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /api/tracks/{id}:
     get:
@@ -514,8 +585,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Track'
-        404:
-          description: Track not found
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
     put:
       summary: Updates a track
@@ -537,10 +612,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Track'
-        400:
-          description: Invalid input data
-        404:
-          description: Track not found
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
     delete:
       summary: Deletes a track
@@ -563,14 +640,13 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-        403:
-          description: User does not have permission to delete this track
-        404:
-          description: Track not found
+                $ref: "#/components/schemas/Success"
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /api/users:
     get:
@@ -589,8 +665,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/User'
-        403:
-          description: User does not have permission to view users
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
     post:
       summary: Create a new user
@@ -612,10 +692,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-        400:
-          description: Invalid input data
-        403:
-          description: User does not have permission to create users
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /api/users/{id}:
     get:
@@ -640,10 +722,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-        403:
-          description: User does not have permission to view this user
-        404:
-          description: User not found
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
     put:
       summary: Updates a user
@@ -665,12 +749,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-        400:
-          description: Invalid input data
-        403:
-          description: User does not have permission to update this user
-        404:
-          description: User not found
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
           
     delete:
       summary: Deletes a user
@@ -693,14 +777,13 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-        403:
-          description: User does not have permission to delete this user
-        404:
-          description: User not found
+                $ref: "#/components/schemas/Success"
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
 components:
   securitySchemes:
@@ -710,6 +793,24 @@ components:
       name: Authorization
 
   schemas:
+
+    Success:
+      type: object
+      properties:
+        success:
+          type: boolean
+
+    Error:
+      type: object
+      properties:
+        type:
+          type: string
+          example: "MISSING_PARAMETER"
+        data:
+          type: object
+          additionalProperties: true
+          example: {"parameterName": "username"}
+
     PaginatedAlbumResponse:
       type: object
       properties:
