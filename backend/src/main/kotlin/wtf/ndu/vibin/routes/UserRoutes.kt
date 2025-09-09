@@ -5,6 +5,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import wtf.ndu.vibin.auth.CryptoUtil
 import wtf.ndu.vibin.dto.users.UserEditDto
 import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.repos.UserRepo
@@ -41,9 +42,18 @@ fun Application.configureUserRoutes() = routing {
 
         putP("/api/users/{userId}", PermissionType.MANAGE_USERS) {
             val userId = call.parameters["userId"]?.toLongOrNull() ?: return@putP call.missingParameter("userId")
+            val currentUser = call.getUser() ?: return@putP call.unauthorized()
             val user = UserRepo.getById(userId) ?: return@putP call.notFound()
 
             val userEditDto = call.receive<UserEditDto>()
+
+            if (userEditDto.password != null) {
+                val oldHashedPassword = userEditDto.password.let { CryptoUtil.hashPassword(it, user.salt) }
+                if (!oldHashedPassword.contentEquals(user.passwordHash) && !currentUser.isAdmin) {
+                    return@putP call.forbidden(PermissionType.ADMIN)
+                }
+            }
+
             val updated = UserRepo.updateOrCreateUser(user.id.value, userEditDto) ?: return@putP call.notFound()
 
             call.respond(UserRepo.toDto(updated))
@@ -52,6 +62,7 @@ fun Application.configureUserRoutes() = routing {
         deleteP("/api/users/{userId}", PermissionType.DELETE_USERS) {
             val userId = call.parameters["userId"]?.toLongOrNull() ?: return@deleteP call.missingParameter("userId")
             val user = UserRepo.getById(userId) ?: return@deleteP call.notFound()
+
             UserRepo.deleteUser(user)
             call.success()
         }

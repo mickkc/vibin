@@ -19,7 +19,8 @@ object UserTestUtils {
             isAdmin = false,
             isActive = true,
             displayName = null,
-            profilePictureUrl = null
+            profilePictureUrl = null,
+            oldPassword = null
         ))
         assertNotNull(user)
         return user

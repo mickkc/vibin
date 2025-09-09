@@ -86,6 +86,7 @@ class UserRestTest {
                 isAdmin = false,
                 isActive = null,
                 profilePictureUrl = null,
+                oldPassword = null,
                 password = "password123"
             ))
         }
@@ -120,7 +121,8 @@ class UserRestTest {
                 isAdmin = false,
                 isActive = null,
                 profilePictureUrl = null,
-                password = "password123"
+                password = "password123",
+                oldPassword = null
             ))
         }
         assertEquals(403, response.status.value)
@@ -139,7 +141,8 @@ class UserRestTest {
                 isAdmin = true,
                 isActive = null,
                 profilePictureUrl = null,
-                password = "other password that won't be changed"
+                password = "newpassword",
+                oldPassword = "oldpassword"
             ))
         }
         assertTrue(response.status.isSuccess())
@@ -154,7 +157,55 @@ class UserRestTest {
             assertTrue(user.isAdmin)
             assertEquals(testUser.isActive, user.isActive) // unchanged
             assertNull(user.profilePicture)
-            assertContentEquals(user.passwordHash, CryptoUtil.hashPassword("oldpassword", user.salt)) // unchanged
+            assertContentEquals(user.passwordHash, CryptoUtil.hashPassword("newpassword", user.salt))
+        }
+    }
+
+    @Test
+    fun testChangePassword_IncorrectOldPassword() = testApp(false) { client ->
+        val (testUser, token) = UserTestUtils.createUserWithSession("changepassuser", "oldpassword")
+        val response = client.put("/api/users/${testUser.id.value}") {
+            bearerAuth(token)
+            setBody(
+                UserEditDto(
+                    username = null,
+                    displayName = null,
+                    email = null,
+                    isAdmin = null,
+                    isActive = null,
+                    profilePictureUrl = null,
+                    password = "newpassword",
+                    oldPassword = "wrongoldpassword"
+                )
+            )
+        }
+        assertEquals(403, response.status.value)
+    }
+
+    @Test
+    fun testChangedPassword_NoOldPasswordAsAdmin() = testApp { client ->
+        val testUser = UserTestUtils.createTestUser("adminchangepassuser", "oldpassword")
+
+        val response = client.put("/api/users/${testUser.id.value}") {
+            setBody(
+                UserEditDto(
+                    username = null,
+                    displayName = null,
+                    email = null,
+                    isAdmin = null,
+                    isActive = null,
+                    profilePictureUrl = null,
+                    password = "newpassword",
+                    oldPassword = null // no old password provided
+                )
+            )
+        }
+        assertTrue(response.status.isSuccess())
+
+        val user = UserRepo.getById(testUser.id.value)
+        transaction {
+            assertNotNull(user)
+            assertContentEquals(user.passwordHash, CryptoUtil.hashPassword("newpassword", user.salt))
         }
     }
 
@@ -170,7 +221,8 @@ class UserRestTest {
                     isAdmin = null,
                     isActive = null,
                     profilePictureUrl = null,
-                    password = null
+                    password = null,
+                    oldPassword = null
                 )
             )
         }
@@ -207,7 +259,8 @@ class UserRestTest {
                 isAdmin = true,
                 isActive = null,
                 profilePictureUrl = null,
-                password = "other password that won't be changed"
+                password = "other password that won't be changed",
+                oldPassword = null
             ))
         }
         assertEquals(403, response.status.value)

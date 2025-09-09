@@ -69,31 +69,5 @@ fun Application.configureAuthRoutes() = routing {
 
             call.success()
         }
-
-        // Change password
-        postP("/api/auth/password") {
-            val user = call.getUser() ?: return@postP call.unauthorized()
-
-            val currentPassword = call.parameters["currentPassword"] ?: return@postP call.missingParameter("currentPassword")
-            val newPassword = call.parameters["newPassword"] ?: return@postP call.missingParameter("newPassword")
-
-            val currentHashedPassword = CryptoUtil.hashPassword(currentPassword, user.salt)
-            if (!currentHashedPassword.contentEquals(user.passwordHash)) {
-                return@postP call.unauthorized("Invalid current password")
-            }
-
-            val newSalt = CryptoUtil.getSalt()
-            val newHashedPassword = CryptoUtil.hashPassword(newPassword, newSalt)
-
-            UserRepo.updateUser(user) {
-                passwordHash = newHashedPassword
-                salt = newSalt
-            }
-
-            logger.info("User ID ${user.id.value} changed their password")
-            SessionRepo.invalidateAllSessionsForUser(user.id.value)
-
-            call.success()
-        }
     }
 }

@@ -75,39 +75,4 @@ class AuthRestTest {
         assertFalse(response.status.isSuccess())
         assertEquals(HttpStatusCode.Unauthorized, response.status)
     }
-
-    @Test
-    fun changePassword() = testApp { client ->
-
-        assertEquals(1, SessionRepo.count()) // one active session (default admin user)
-
-        val response = client.post("/api/auth/password") {
-            parameter("currentPassword", "admin")
-            parameter("newPassword", "newpassword123")
-        }
-        assertTrue(response.status.isSuccess())
-
-        val responseBody = response.body<Map<String, Boolean>>()
-        assertTrue(responseBody["success"] == true)
-
-        // Password changed, session should be invalidated
-        assertEquals(0, SessionRepo.count())
-
-        // Try to log in with old password (should fail)
-        val oldLoginResponse = client.post("/api/auth/login") {
-            parameter("username", "Admin")
-            parameter("password", "admin")
-        }
-        assertFalse(oldLoginResponse.status.isSuccess())
-        assertEquals(HttpStatusCode.Unauthorized, oldLoginResponse.status)
-
-        // Try to log in with new password (should succeed)
-        val newLoginResponse = client.post("/api/auth/login") {
-            parameter("username", "Admin")
-            parameter("password", "newpassword123")
-        }
-        assertTrue(newLoginResponse.status.isSuccess())
-
-        assertEquals(1, SessionRepo.count())
-    }
 }

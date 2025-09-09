@@ -68,6 +68,9 @@ object UserRepo {
                 editDto.email?.let { this.email = it.takeIf { it.isNotBlank() } }
                 editDto.isActive?.let { this.isActive = it }
                 editDto.isAdmin?.let { this.isAdmin = it }
+                editDto.password?.let {
+                    this.passwordHash = CryptoUtil.hashPassword(it, this.salt)
+                }
             }
         }
         else {
