@@ -12,6 +12,7 @@ import wtf.ndu.vibin.repos.TrackRepo
 import wtf.ndu.vibin.settings.PageSize
 import wtf.ndu.vibin.settings.Settings
 import wtf.ndu.vibin.utils.ImageUtils
+import wtf.ndu.vibin.utils.PathUtils
 
 fun Application.configureTrackRoutes() = routing {
 
@@ -82,6 +83,19 @@ fun Application.configureTrackRoutes() = routing {
             val cover = TrackRepo.getCover(track)
 
             call.respondFile(ImageUtils.getFileOrDefault(cover, quality, "track") )
+        }
+
+        getP("/api/tracks/{trackId}/stream", PermissionType.STREAM_TRACKS) {
+            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
+            val streamId = call.request.queryParameters["streamId"] ?: ""
+            val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
+
+            val audioFile = PathUtils.getTrackFileFromPath(track.path)
+            if (!audioFile.exists()) {
+                return@getP call.notFound()
+            }
+
+            call.respondFile(audioFile)
         }
     }
 }

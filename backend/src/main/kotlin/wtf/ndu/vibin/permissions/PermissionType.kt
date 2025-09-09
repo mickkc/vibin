@@ -11,6 +11,7 @@ enum class PermissionType(val id: String, val grantedByDefault: Boolean) {
     MANAGE_PERMISSIONS("manage_permissions", false),
 
     VIEW_TRACKS("view_tracks", true),
+    STREAM_TRACKS("stream_tracks", true),
     MANAGE_TRACKS("manage_tracks", false),
     UPLOAD_TRACKS("upload_tracks", true),
     DELETE_TRACKS("delete_tracks", false),
