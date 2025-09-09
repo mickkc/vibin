@@ -12,6 +12,8 @@ import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.repos.ArtistRepo
 import wtf.ndu.vibin.settings.PageSize
 import wtf.ndu.vibin.settings.Settings
+import wtf.ndu.vibin.utils.ImageUtils
+import wtf.ndu.vibin.utils.PathUtils
 
 fun Application.configureArtistRoutes() = routing {
 
@@ -65,6 +67,15 @@ fun Application.configureArtistRoutes() = routing {
             }
 
             call.success()
+        }
+
+        getP("/api/artists/{artistId}/image", PermissionType.VIEW_ARTISTS) {
+            val artistId = call.parameters["artistId"]?.toLongOrNull() ?: return@getP call.missingParameter("artistId")
+            val quality = call.request.queryParameters["quality"] ?: "original"
+            val artist = ArtistRepo.getById(artistId) ?: return@getP call.notFound()
+            val image = ArtistRepo.getImage(artist)
+
+            call.respondFile(ImageUtils.getFileOrDefault(image, quality, "artist"))
         }
     }
 }

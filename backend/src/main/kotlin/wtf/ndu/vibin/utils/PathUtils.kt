@@ -51,4 +51,13 @@ object PathUtils {
         val songsDir = File(EnvUtil.getOrDefault(EnvUtil.MUSIC_DIR, EnvUtil.DEFAULT_MUSIC_DIR))
         return File(songsDir, path)
     }
+
+    fun getDefaultImage(type: String, quality: String = "large"): File {
+        val actualQuality = when (quality.lowercase()) {
+            "large", "small" -> quality.lowercase()
+            else -> "large"
+        }
+        val resource = this::class.java.getResource("/img/default_${type}_$actualQuality.png")
+        return File(resource.toURI())
+    }
 }

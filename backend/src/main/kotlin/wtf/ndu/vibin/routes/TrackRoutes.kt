@@ -11,6 +11,7 @@ import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.repos.TrackRepo
 import wtf.ndu.vibin.settings.PageSize
 import wtf.ndu.vibin.settings.Settings
+import wtf.ndu.vibin.utils.ImageUtils
 
 fun Application.configureTrackRoutes() = routing {
 
@@ -56,6 +57,7 @@ fun Application.configureTrackRoutes() = routing {
             call.success()
         }
 
+        // Search tracks
         getP("/api/tracks/search", PermissionType.VIEW_TRACKS) {
             val query = call.request.queryParameters["query"] ?: return@getP call.missingParameter("query")
             val advanced = call.request.queryParameters["advanced"]?.toBooleanStrictOrNull() ?: false
@@ -70,6 +72,16 @@ fun Application.configureTrackRoutes() = routing {
                 pageSize = pageSize,
                 currentPage = page
             ))
+        }
+
+        // Get track cover image
+        getP("/api/tracks/{trackId}/cover") {
+            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
+            val quality = call.request.queryParameters["quality"] ?: "original"
+            val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
+            val cover = TrackRepo.getCover(track)
+
+            call.respondFile(ImageUtils.getFileOrDefault(cover, quality, "track") )
         }
     }
 }

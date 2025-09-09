@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.artists.ArtistEntity
 import wtf.ndu.vibin.db.artists.ArtistTable
+import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.dto.ArtistDto
 import wtf.ndu.vibin.dto.artists.ArtistEditData
 import wtf.ndu.vibin.parsing.Parser
@@ -24,6 +25,9 @@ object ArtistRepo {
         return@transaction ArtistEntity.findById(id)
     }
 
+    fun getImage(artist: ArtistEntity): ImageEntity? = transaction {
+        return@transaction artist.image
+    }
 
     /**
      * Retrieves an existing artist by name or creates a new one if it doesn't exist.

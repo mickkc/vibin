@@ -1,14 +1,15 @@
 package wtf.ndu.vibin.repos
 
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.db.albums.AlbumEntity
 import wtf.ndu.vibin.db.albums.AlbumTable
 import wtf.ndu.vibin.db.artists.ArtistEntity
 import wtf.ndu.vibin.db.artists.ArtistTable
 import wtf.ndu.vibin.db.artists.TrackArtistConnection
+import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.db.tracks.TrackEntity
 import wtf.ndu.vibin.db.tracks.TrackTable
 import wtf.ndu.vibin.dto.albums.AlbumDataDto
@@ -40,6 +41,22 @@ object AlbumRepo {
             .offset(((page - 1) * pageSize).toLong())
             .toList()
         return@transaction results to count
+    }
+
+    fun getTracks(albumId: Long): List<TrackEntity> {
+        return transaction {
+            return@transaction TrackEntity.find { TrackTable.albumId eq albumId }
+                .orderBy(TrackTable.discNumber to SortOrder.ASC_NULLS_LAST, TrackTable.trackNumber to SortOrder.ASC_NULLS_LAST)
+                .toList()
+        }
+    }
+
+    fun getAlbumCover(album: AlbumEntity): ImageEntity? = transaction {
+        if (album.cover != null) return@transaction album.cover
+        val trackWithCover = TrackEntity.find { (TrackTable.albumId eq album.id) and (TrackTable.coverId neq null) }
+            .orderBy(TrackTable.discNumber to SortOrder.ASC_NULLS_LAST, TrackTable.trackNumber to SortOrder.ASC_NULLS_LAST)
+            .firstOrNull()
+        return@transaction trackWithCover?.cover
     }
 
     fun getById(id: Long): AlbumEntity? = transaction {

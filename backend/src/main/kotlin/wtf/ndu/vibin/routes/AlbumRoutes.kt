@@ -9,6 +9,7 @@ import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.repos.AlbumRepo
 import wtf.ndu.vibin.settings.PageSize
 import wtf.ndu.vibin.settings.Settings
+import wtf.ndu.vibin.utils.ImageUtils
 
 fun Application.configureAlbumRoutes() = routing {
 
@@ -35,6 +36,15 @@ fun Application.configureAlbumRoutes() = routing {
             val album = AlbumRepo.getById(albumId) ?: return@getP call.notFound()
 
             call.respond(AlbumRepo.toDataDto(album))
+        }
+
+        getP("/api/albums/{albumId}/cover", PermissionType.VIEW_ALBUMS) {
+            val albumId = call.parameters["albumId"]?.toLongOrNull() ?: return@getP call.missingParameter("albumId")
+            val album = AlbumRepo.getById(albumId) ?: return@getP call.notFound()
+            val quality = call.request.queryParameters["quality"] ?: "original"
+            val cover = AlbumRepo.getAlbumCover(album)
+
+            call.respondFile(ImageUtils.getFileOrDefault(cover, quality, "album"))
         }
     }
 }

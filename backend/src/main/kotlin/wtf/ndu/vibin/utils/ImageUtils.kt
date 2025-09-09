@@ -1,13 +1,23 @@
 package wtf.ndu.vibin.utils
 
+import org.slf4j.LoggerFactory
+import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.processing.ThumbnailProcessor
 import java.awt.Color
 import java.awt.Image
+import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.File
 import javax.imageio.ImageIO
+import kotlin.math.floor
+import kotlin.math.min
+import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 object ImageUtils {
+
+    private val logger = LoggerFactory.getLogger(ImageUtils::class.java)
 
     data class ColorScheme(val primary: Color, val light: Color, val dark: Color)
 
@@ -71,5 +81,54 @@ object ImageUtils {
 
     fun getNonBwColorChannels(color: Color): Int {
         return listOf(color.red, color.green, color.blue).count { it in 110..200 }
+    }
+
+    fun generateCollage(files: List<File>, size: Int, maxImagesPerSide: Int = Int.MAX_VALUE): ByteArray? {
+        if (files.isEmpty()) {
+            logger.warn("No image files provided for collage generation")
+            return null
+        }
+
+        val sideLength = min(floor(sqrt(files.size.toDouble())), maxImagesPerSide.toDouble())
+        val thumbSize = (size / sideLength).roundToInt()
+
+        val collage = BufferedImage(size, size, BufferedImage.TYPE_INT_RGB)
+        val graphics = collage.createGraphics()
+
+        var x = 0
+        var y = 0
+
+        for (file in files) {
+            val img = ImageIO.read(file) ?: continue
+            val scaledImg = img.getScaledInstance(thumbSize, thumbSize, Image.SCALE_SMOOTH)
+            graphics.drawImage(scaledImg, x * thumbSize, y * thumbSize, null)
+
+            x++
+            if (x >= sideLength) {
+                x = 0
+                y++
+                if (y >= sideLength) break
+            }
+        }
+
+        graphics.dispose()
+        ByteArrayOutputStream().use {
+            ImageIO.write(collage, "jpg", it)
+            return it.toByteArray()
+        }
+    }
+
+    fun getFileOrDefault(image: ImageEntity?, quality: String, type: String): File {
+        if (image == null) {
+            return PathUtils.getDefaultImage(type, quality)
+        }
+        else {
+            val path = when (quality.lowercase()) {
+                "large" -> image.largePath
+                "small" -> image.smallPath
+                else -> image.originalPath
+            } ?: image.originalPath
+            return PathUtils.getThumbnailFileFromPath(path)
+        }
     }
 }

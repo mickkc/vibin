@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.albums.AlbumEntity
 import wtf.ndu.vibin.db.artists.ArtistEntity
 import wtf.ndu.vibin.db.artists.ArtistTable
+import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.db.tracks.TrackEntity
 import wtf.ndu.vibin.db.tracks.TrackTable
 import wtf.ndu.vibin.dto.IdNameDto
@@ -37,6 +38,10 @@ object TrackRepo {
 
     fun getById(id: Long): TrackEntity? = transaction {
         return@transaction TrackEntity.findById(id)
+    }
+
+    fun getCover(track: TrackEntity): ImageEntity? = transaction {
+        return@transaction track.cover
     }
 
     fun createTrack(file: File, metadata: TrackMetadata, album: AlbumEntity, artists: List<ArtistEntity>?, checksum: String? = null): TrackEntity = transaction {

@@ -8,6 +8,7 @@ import io.ktor.server.routing.*
 import wtf.ndu.vibin.dto.users.UserEditDto
 import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.repos.UserRepo
+import wtf.ndu.vibin.utils.ImageUtils
 
 fun Application.configureUserRoutes() = routing {
     authenticate("tokenAuth") {
@@ -48,6 +49,15 @@ fun Application.configureUserRoutes() = routing {
             val user = UserRepo.getById(userId) ?: return@deleteP call.notFound()
             UserRepo.deleteUser(user)
             call.success()
+        }
+
+        getP("/api/users/{userId}/pfp", PermissionType.VIEW_USERS) {
+            val userId = call.parameters["userId"]?.toLongOrNull() ?: return@getP call.missingParameter("userId")
+            val user = UserRepo.getById(userId) ?: return@getP call.notFound()
+            val quality = call.request.queryParameters["quality"] ?: "original"
+            val profilePicture = UserRepo.getProfilePicture(user)
+
+            call.respondFile(ImageUtils.getFileOrDefault(profilePicture, quality, "user"))
         }
     }
 }

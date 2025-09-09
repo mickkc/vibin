@@ -8,6 +8,7 @@ import wtf.ndu.vibin.auth.CryptoUtil
 import wtf.ndu.vibin.db.GrantedPermissionTable
 import wtf.ndu.vibin.db.UserEntity
 import wtf.ndu.vibin.db.UserTable
+import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.dto.users.UserDto
 import wtf.ndu.vibin.dto.users.UserEditDto
 import wtf.ndu.vibin.parsing.Parser
@@ -21,6 +22,10 @@ object UserRepo {
 
     fun count(): Long = transaction {
         UserEntity.all().count()
+    }
+
+    fun getProfilePicture(user: UserEntity): ImageEntity? = transaction {
+        return@transaction user.profilePicture
     }
 
     /**
