@@ -26,8 +26,8 @@ fun Application.configureUserRoutes() = routing {
         postP("/api/users", PermissionType.CREATE_USERS) {
             val userEditDto = call.receive<UserEditDto>()
 
-            if (userEditDto.username == null || userEditDto.displayName == null)
-                return@postP call.missingParameter("username and displayName are required")
+            if (userEditDto.username == null)
+                return@postP call.missingParameter("username")
 
             val created = UserRepo.updateOrCreateUser(null, userEditDto)!!
             call.respond(UserRepo.toDto(created))
@@ -47,9 +47,7 @@ fun Application.configureUserRoutes() = routing {
             val userId = call.parameters["userId"]?.toLongOrNull() ?: return@deleteP call.missingParameter("userId")
             val user = UserRepo.getById(userId) ?: return@deleteP call.notFound()
             UserRepo.deleteUser(user)
-            call.respond(mapOf(
-                "success" to true
-            ))
+            call.success()
         }
     }
 }

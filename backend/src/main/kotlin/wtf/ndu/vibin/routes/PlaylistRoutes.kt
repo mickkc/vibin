@@ -44,7 +44,7 @@ fun Application.configurePlaylistRoutes() = routing {
             // Check permissions for public/private playlists
             if ((editDto.isPublic == true && !call.hasPermissions(PermissionType.CREATE_PUBLIC_PLAYLISTS) ||
                 (editDto.isPublic == false && !call.hasPermissions(PermissionType.CREATE_PRIVATE_PLAYLISTS)))) {
-                call.forbidden()
+                call.forbidden(if (editDto.isPublic) PermissionType.CREATE_PUBLIC_PLAYLISTS else PermissionType.CREATE_PRIVATE_PLAYLISTS)
                 return null
             }
 
@@ -72,7 +72,7 @@ fun Application.configurePlaylistRoutes() = routing {
 
             // Prevent editing others' playlists unless having the permission
             if (!PlaylistRepo.checkOwnership(playlist, user.id.value) && !call.hasPermissions(PermissionType.EDIT_COLLABORATIVE_PLAYLISTS))
-                return@putP call.forbidden()
+                return@putP call.forbidden(PermissionType.EDIT_COLLABORATIVE_PLAYLISTS)
 
             // Update the playlist
             val updated = PlaylistRepo.createOrUpdatePlaylist(user, editDto, playlist.id.value) ?: return@putP call.notFound()
@@ -90,11 +90,11 @@ fun Application.configurePlaylistRoutes() = routing {
 
             // Prevent deleting others' playlists unless having the permission
             if (!PlaylistRepo.checkOwnership(playlist, userId) && !call.hasPermissions(PermissionType.DELETE_COLLABORATIVE_PLAYLISTS))
-                return@deleteP call.forbidden()
+                return@deleteP call.forbidden(PermissionType.DELETE_COLLABORATIVE_PLAYLISTS)
 
             PlaylistRepo.deletePlaylist(playlist.id.value)
 
-            call.respond(mapOf("success" to true))
+            call.success()
         }
     }
 }

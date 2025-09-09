@@ -29,17 +29,14 @@ fun Application.configurePermissionRoutes() = routing {
             val permissionId = call.request.queryParameters["permissionId"] ?: return@putP call.missingParameter("permissionId")
 
             val user = UserRepo.getById(userId) ?: return@putP call.notFound()
-            if (user.isAdmin) {
-                return@putP call.forbidden("Cannot modify permissions for admin users")
-            }
 
             val permissionType = PermissionType.valueOfId(permissionId) ?: return@putP call.notFound()
-            val hasPermission = PermissionRepo.hasPermissions(userId, listOf(permissionType))
+            val hasPermission = PermissionRepo.hasPermissions(user.id.value, listOf(permissionType))
 
             if (hasPermission) {
-                PermissionRepo.removePermission(userId, permissionType)
+                PermissionRepo.removePermission(user.id.value, permissionType)
             } else {
-                PermissionRepo.addPermission(userId, permissionType)
+                PermissionRepo.addPermission(user.id.value, permissionType)
             }
 
             call.respond(mapOf(

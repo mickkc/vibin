@@ -31,9 +31,6 @@ fun Application.configureAlbumRoutes() = routing {
 
         getP("/api/albums/{albumId}", PermissionType.VIEW_ALBUMS) {
 
-            if (!call.hasPermissions(PermissionType.VIEW_ALBUMS))
-                return@getP call.forbidden()
-
             val albumId = call.parameters["albumId"]?.toLongOrNull() ?: return@getP call.missingParameter("albumId")
             val album = AlbumRepo.getById(albumId) ?: return@getP call.notFound()
 

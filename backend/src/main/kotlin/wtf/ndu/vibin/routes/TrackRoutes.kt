@@ -53,9 +53,7 @@ fun Application.configureTrackRoutes() = routing {
 
             val track = TrackRepo.getById(trackId) ?: return@deleteP call.notFound()
             TrackRepo.delete(track)
-            call.respond(mapOf(
-                "success" to true
-            ))
+            call.success()
         }
 
         getP("/api/tracks/search", PermissionType.VIEW_TRACKS) {

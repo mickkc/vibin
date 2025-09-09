@@ -67,7 +67,7 @@ fun Application.configureAuthRoutes() = routing {
 
             logger.info("User ID ${principal.userId} logged out")
 
-            call.respond(mapOf("success" to true))
+            call.success()
         }
 
         // Change password
@@ -93,7 +93,7 @@ fun Application.configureAuthRoutes() = routing {
             logger.info("User ID ${user.id.value} changed their password")
             SessionRepo.invalidateAllSessionsForUser(user.id.value)
 
-            call.respond(mapOf("success" to true))
+            call.success()
         }
     }
 }

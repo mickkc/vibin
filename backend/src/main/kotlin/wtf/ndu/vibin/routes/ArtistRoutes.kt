@@ -37,45 +37,34 @@ fun Application.configureArtistRoutes() = routing {
                 call.respond(ArtistRepo.toDto(updatedArtist))
             }
             catch (e400: IllegalStateException) {
-                call.badRequest(e400.message ?: "Bad Request")
+                call.missingParameter(e400.message!!)
             }
-            catch (e404: NotFoundException) {
-                call.notFound(e404.message ?: "Not Found")
+            catch (_: NotFoundException) {
+                call.notFound()
             }
         }
 
         putP("/api/artists/{id}", PermissionType.MANAGE_ARTISTS) {
-            val id = call.parameters["id"]?.toLongOrNull()
-            if (id == null) {
-                return@putP call.missingParameter("id")
-            }
+            val id = call.parameters["id"]?.toLongOrNull() ?: return@putP call.missingParameter("id")
             val data = call.receive<ArtistEditData>()
             try {
                 val updatedArtist = ArtistRepo.updateOrCreateArtist(id, data)
                 call.respond(ArtistRepo.toDto(updatedArtist))
             }
-            catch (e400: IllegalStateException) {
-                call.badRequest(e400.message ?: "Bad Request")
-            }
-            catch (e404: NotFoundException) {
-                call.notFound(e404.message ?: "Not Found")
+            catch (_: NotFoundException) {
+                call.notFound()
             }
         }
 
         deleteP("/api/artists/{id}", PermissionType.DELETE_ARTISTS) {
-            val id = call.parameters["id"]?.toLongOrNull()
-            if (id == null) {
-                return@deleteP call.missingParameter("id")
-            }
+            val id = call.parameters["id"]?.toLongOrNull() ?: return@deleteP call.missingParameter("id")
             val success = ArtistRepo.deleteArtist(id)
 
             if (!success) {
                 return@deleteP call.notFound()
             }
 
-            call.respond(mapOf(
-                "success" to true
-            ))
+            call.success()
         }
     }
 }

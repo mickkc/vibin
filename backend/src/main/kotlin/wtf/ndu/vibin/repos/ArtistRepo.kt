@@ -43,7 +43,7 @@ object ArtistRepo {
     fun updateOrCreateArtist(id: Long?, data: ArtistEditData): ArtistEntity = transaction {
         val artist = if (id == null) {
             if (data.name == null) {
-                throw IllegalStateException("Artist name is required for creation")
+                throw IllegalStateException("name")
             }
             ArtistEntity.new {
                 this.name = data.name
