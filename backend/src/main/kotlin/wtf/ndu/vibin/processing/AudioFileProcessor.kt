@@ -103,10 +103,10 @@ object AudioFileProcessor {
      * Processes a single audio file, extracting metadata and storing it in the database.
      *
      * @param file The audio file to process.
-     * @param addGenreAsTags Whether to add genre information as tags.
+     * @param addScannedTags Whether to add genre information as tags.
      * @return The created TrackEntity, or null if processing failed or the track already exists.
      */
-    suspend fun processSingleFile(file: File, addGenreAsTags: Boolean = true): TrackEntity? {
+    suspend fun processSingleFile(file: File, addScannedTags: Boolean = true): TrackEntity? {
 
         val checksum = ChecksumUtil.getChecksum(file)
         val existingTrack = TrackRepo.getByChecksum(checksum)
@@ -117,18 +117,18 @@ object AudioFileProcessor {
 
         val metadata = Parser.parse(file)
 
-        val album = metadata.albumName?.let { AlbumRepo.getOrCreateAlbum(it) }
+        val album = metadata.trackInfo.albumName?.let { AlbumRepo.getOrCreateAlbum(it) }
         if (album == null) {
             logger.warn("No album name found in metadata for file: ${file.absolutePath}")
             return null
         }
 
-        val artists = metadata.artistNames?.map { ArtistRepo.getOrCreateArtist(it) }
+        val artists = metadata.trackInfo.artistNames?.map { ArtistRepo.getOrCreateArtist(it) }
 
         var track = TrackRepo.createTrack(file, metadata, album, artists, checksum)
 
-        if (metadata.coverImageUrl != null) {
-            val coverImageData = Parser.downloadCoverImage(metadata.coverImageUrl)
+        if (metadata.trackInfo.coverImageUrl != null) {
+            val coverImageData = Parser.downloadCoverImage(metadata.trackInfo.coverImageUrl)
             if (coverImageData != null) {
                 logger.info("Processing cover image for track ID: ${track.id.value}, title: '${track.title}'")
                 val image = ThumbnailProcessor.getImage(coverImageData, ThumbnailProcessor.ThumbnailType.TRACK, track.id.value.toString())
@@ -136,9 +136,9 @@ object AudioFileProcessor {
             }
         }
 
-        if (addGenreAsTags && metadata.genre != null) {
-            logger.info("Setting genre '${metadata.genre}' for track ID: ${track.id.value}, title: '${track.title}'")
-            val genreTag = TagRepo.getOrCreateTag(metadata.genre)
+        if (addScannedTags && metadata.trackInfo.tags != null) {
+            logger.info("Adding ${metadata.trackInfo.tags.size} tags to track ID: ${track.id.value}, title: '${track.title}'")
+            val genreTag = metadata.trackInfo.tags.map { tag -> TagRepo.getOrCreateTag(tag) }
             track = TrackRepo.update(track) { this.tags = SizedCollection(genreTag) }
         }
 

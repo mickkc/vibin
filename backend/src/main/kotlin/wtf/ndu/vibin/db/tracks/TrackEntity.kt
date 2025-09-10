@@ -27,6 +27,9 @@ object TrackTable : ModifiableLongIdTable("track") {
     val year = integer("year").nullable()
     val duration = long("duration").nullable()
     val comment = text("comment").default("")
+    val bitrate = integer("bitrate").nullable()
+    val sampleRate = integer("sample_rate").nullable()
+    val channels = integer("channels").nullable()
     val coverId = reference("cover_id", ImageTable).nullable()
     val path = varchar("path", 1024).uniqueIndex()
     val checksum = text("checksum").uniqueIndex()
@@ -63,6 +66,9 @@ class TrackEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, TrackTable) {
     var year by TrackTable.year
     var duration by TrackTable.duration
     var comment by TrackTable.comment
+    var bitrate by TrackTable.bitrate
+    var sampleRate by TrackTable.sampleRate
+    var channels by TrackTable.channels
     var cover by ImageEntity optionalReferencedOn TrackTable.coverId
     var path by TrackTable.path
     var checksum by TrackTable.checksum

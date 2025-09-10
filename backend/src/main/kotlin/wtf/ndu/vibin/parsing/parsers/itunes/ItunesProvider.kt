@@ -8,8 +8,8 @@ import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.parsing.BaseMetadataProvider
 import wtf.ndu.vibin.parsing.ParsingUtils
-import wtf.ndu.vibin.parsing.TrackMetadata
-import java.io.File
+import wtf.ndu.vibin.parsing.TrackInfoMetadata
+import wtf.ndu.vibin.parsing.parsers.PreparseData
 
 class ItunesProvider(val client: HttpClient) : BaseMetadataProvider() {
 
@@ -26,7 +26,7 @@ class ItunesProvider(val client: HttpClient) : BaseMetadataProvider() {
             searchArtist = false
         )
 
-    override suspend fun searchTrack(query: String): List<TrackMetadata>? {
+    override suspend fun searchTrack(query: String): List<TrackInfoMetadata>? {
 
         try {
             val response = client.get("https://itunes.apple.com/search") {
@@ -47,7 +47,7 @@ class ItunesProvider(val client: HttpClient) : BaseMetadataProvider() {
             logger.info("iTunes API response for '$query': found ${itunesResponse.results.size} results")
 
             return itunesResponse.results.map {
-                TrackMetadata(
+                TrackInfoMetadata(
                     title = it.trackName,
                     artistNames = ParsingUtils.splitArtistNames(it.artistName),
                     albumName = it.collectionName,
@@ -56,8 +56,7 @@ class ItunesProvider(val client: HttpClient) : BaseMetadataProvider() {
                     discNumber = it.discNumber,
                     discCount = it.discCount,
                     year = it.releaseDate?.substringBefore("-")?.toIntOrNull(),
-                    genre = it.primaryGenreName,
-                    durationMs = it.trackTimeMillis,
+                    tags = it.primaryGenreName?.let { genre -> listOf(genre) },
                     explicit = it.trackExplicitness == "explicit",
                     coverImageUrl = it.artworkUrl100?.replace("100x100bb", "512x512bb")
                 )
@@ -69,5 +68,5 @@ class ItunesProvider(val client: HttpClient) : BaseMetadataProvider() {
         }
     }
 
-    override suspend fun fromFile(file: File): TrackMetadata? = searchTrack(file.nameWithoutExtension)?.firstOrNull()
+    override suspend fun parse(data: PreparseData): TrackInfoMetadata? = searchTrack(data.audioFile.file.nameWithoutExtension)?.firstOrNull()
 }

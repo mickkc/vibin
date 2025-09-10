@@ -9,8 +9,8 @@ import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.parsing.ArtistMetadata
 import wtf.ndu.vibin.parsing.BaseMetadataProvider
 import wtf.ndu.vibin.parsing.ParsingUtils
-import wtf.ndu.vibin.parsing.TrackMetadata
-import java.io.File
+import wtf.ndu.vibin.parsing.TrackInfoMetadata
+import wtf.ndu.vibin.parsing.parsers.PreparseData
 
 class DeezerProvider(val client: HttpClient) : BaseMetadataProvider() {
 
@@ -23,17 +23,16 @@ class DeezerProvider(val client: HttpClient) : BaseMetadataProvider() {
             searchArtist = true
         )
 
-    override suspend fun searchTrack(query: String): List<TrackMetadata>? {
+    override suspend fun searchTrack(query: String): List<TrackInfoMetadata>? {
 
         val deezerResponse = get<DeezerSearchResponse<DeezerTrackData>>("https://api.deezer.com/search/track", query) ?: return null
         logger.info("Deezer API response for track '$query': found ${deezerResponse.data.size} results")
 
         return deezerResponse.data.map {
-            TrackMetadata(
+            TrackInfoMetadata(
                 title = it.title,
                 artistNames = ParsingUtils.splitArtistNames(it.artist.name),
                 albumName = it.album.title,
-                durationMs = (it.duration * 1000).toLong(),
                 explicit = it.explicit_lyrics,
                 coverImageUrl = it.album.cover_big.replace("500x500", "512x512")
             )
@@ -71,5 +70,5 @@ class DeezerProvider(val client: HttpClient) : BaseMetadataProvider() {
         }
     }
 
-    override suspend fun fromFile(file: File): TrackMetadata? = searchTrack(file.nameWithoutExtension)?.firstOrNull()
+    override suspend fun parse(data: PreparseData): TrackInfoMetadata? = searchTrack(data.audioFile.file.nameWithoutExtension)?.firstOrNull()
 }

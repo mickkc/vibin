@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.parsing.parsers.deezer.DeezerProvider
 import wtf.ndu.vibin.parsing.parsers.itunes.ItunesProvider
 import wtf.ndu.vibin.parsing.parsers.metadata.MetadataProvider
+import wtf.ndu.vibin.parsing.parsers.preparser.PreParser
 import wtf.ndu.vibin.settings.FallbackMetadataSource
 import wtf.ndu.vibin.settings.PrimaryMetadataSource
 import wtf.ndu.vibin.settings.Settings
@@ -48,29 +49,34 @@ object Parser {
     suspend fun parse(file: File): TrackMetadata {
 
         val sources = listOf(Settings.get(PrimaryMetadataSource), Settings.get(FallbackMetadataSource))
+        val preParsed = PreParser.preParse(file)
 
-        for (source in sources) {
-            val metadata = parsers[source]?.fromFile(file)
-            if (metadata != null) {
-                return metadata
+        if (preParsed != null) {
+            for (source in sources) {
+                val metadata = parsers[source]?.parse(preParsed)
+                if (metadata != null) {
+                    return TrackMetadata(preParsed, metadata)
+                }
             }
         }
+        else {
+            logger.error("Pre-parsing failed for file: ${file.absolutePath}")
+        }
 
-        return TrackMetadata(
+        return TrackMetadata(null, TrackInfoMetadata(
             title = file.nameWithoutExtension,
             artistNames = emptyList(),
             albumName = "Unknown Album",
-            durationMs = null,
             explicit = false,
             coverImageUrl = null
-        )
+        ))
     }
 
     fun getFileProviders() = parsers.filter { it.value.supportedMethods.fromFile }.keys
     fun getTrackSearchProviders() = parsers.filter { it.value.supportedMethods.searchTrack }.keys
     fun getArtistSearchProviders() = parsers.filter { it.value.supportedMethods.searchArtist }.keys
 
-    suspend fun searchTrack(query: String, provider: String): List<TrackMetadata>? {
+    suspend fun searchTrack(query: String, provider: String): List<TrackInfoMetadata>? {
         val parser = parsers[provider] ?: return null
         if (!parser.supportedMethods.searchTrack) return null
 

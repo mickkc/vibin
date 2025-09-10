@@ -7,7 +7,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import wtf.ndu.vibin.parsing.ArtistMetadata
 import wtf.ndu.vibin.parsing.Parser
-import wtf.ndu.vibin.parsing.TrackMetadata
+import wtf.ndu.vibin.parsing.TrackInfoMetadata
 
 fun Application.configureMetadataRoutes() = routing {
 
@@ -25,7 +25,7 @@ fun Application.configureMetadataRoutes() = routing {
             val query = call.request.queryParameters["q"]?.takeIf { it.isNotBlank() } ?: return@get call.missingParameter("q")
             val provider = call.request.queryParameters["provider"] ?: return@get call.missingParameter("provider")
 
-            val results = Parser.searchTrack(query, provider) ?: return@get call.respond(emptyList<TrackMetadata>())
+            val results = Parser.searchTrack(query, provider) ?: return@get call.respond(emptyList<TrackInfoMetadata>())
             call.respond(results)
         }
 

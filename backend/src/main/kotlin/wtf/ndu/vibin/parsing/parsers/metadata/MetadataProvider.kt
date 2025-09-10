@@ -1,15 +1,14 @@
 package wtf.ndu.vibin.parsing.parsers.metadata
 
-import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
+import org.jaudiotagger.tag.Tag
 import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.parsing.BaseMetadataProvider
 import wtf.ndu.vibin.parsing.ParsingUtils
-import wtf.ndu.vibin.parsing.TrackMetadata
-import java.io.File
+import wtf.ndu.vibin.parsing.TrackInfoMetadata
+import wtf.ndu.vibin.parsing.parsers.PreparseData
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
-import kotlin.time.Duration.Companion.seconds
 
 class MetadataProvider : BaseMetadataProvider() {
 
@@ -22,24 +21,42 @@ class MetadataProvider : BaseMetadataProvider() {
             searchArtist = false
         )
 
+    fun Tag.getFirstNonEmpty(vararg keys: FieldKey): String? {
+        for (key in keys) {
+            val value = this.getFirst(key)
+            if (value.isNotBlank()) {
+                return value
+            }
+        }
+        return null
+    }
+
+    fun Tag.getAllNonEmpty(vararg keys: FieldKey): List<String> {
+        val results = mutableListOf<String>()
+        for (key in keys) {
+            val values = this.getFields(key).flatMap { field -> field.toString().split(",").map { part -> part.trim() } }
+            results.addAll(values)
+        }
+        return results.distinct()
+    }
+
     @OptIn(ExperimentalEncodingApi::class)
-    override suspend fun fromFile(file: File): TrackMetadata? {
+    override suspend fun parse(data: PreparseData): TrackInfoMetadata? {
 
         try {
-            val audioFile = AudioFileIO.read(file)
-            val tag = audioFile.tag
+            val tag = data.audioFile.tag
 
-            val artist = tag.getFirst(FieldKey.ARTISTS).ifBlank { tag.getFirst(FieldKey.ARTIST) }
-            val album = tag.getFirst(FieldKey.ALBUM).takeIf { it.isNotBlank() }
-            val title = tag.getFirst(FieldKey.TITLE).takeIf { it.isNotBlank() }
-            val track = tag.getFirst(FieldKey.TRACK).takeIf { it.isNotBlank() }
-            val discNo = tag.getFirst(FieldKey.DISC_NO).takeIf { it.isNotBlank() }
-            val year = tag.getFirst(FieldKey.YEAR).takeIf { it.isNotBlank() }
-            val genre = tag.getFirst(FieldKey.GENRE).takeIf { it.isNotBlank() }
-            val comment = tag.getFirst(FieldKey.COMMENT).takeIf { it.isNotBlank() }
+            val artist = tag.getFirstNonEmpty(FieldKey.ARTISTS, FieldKey.ARTIST, FieldKey.ORIGINAL_ARTIST, FieldKey.ALBUM_ARTISTS, FieldKey.ALBUM_ARTIST)
+            val album = tag.getFirstNonEmpty(FieldKey.ALBUM, FieldKey.ORIGINAL_ALBUM)
+            val title = tag.getFirstNonEmpty(FieldKey.TITLE)
+            val track = tag.getFirstNonEmpty(FieldKey.TRACK, FieldKey.SINGLE_DISC_TRACK_NO)
+            val discNo = tag.getFirstNonEmpty(FieldKey.DISC_NO)
+            val year = tag.getFirstNonEmpty(FieldKey.YEAR)
+            val tags = tag.getAllNonEmpty(FieldKey.GENRE, FieldKey.LANGUAGE, FieldKey.MOOD, FieldKey.QUALITY, FieldKey.TAGS)
+            val comment = tag.getFirstNonEmpty(FieldKey.COMMENT, FieldKey.SUBTITLE, FieldKey.DISC_SUBTITLE)
+            val rating = tag.getFirst(FieldKey.RATING).takeIf { it.isNotBlank() }
 
             val cover = tag.firstArtwork?.binaryData
-            val duration = audioFile.audioHeader.trackLength.seconds
 
             // 2025-08-24 -> 2025
             val parsedYear = year?.let { date -> date.split("-").firstOrNull { it.length == 4 }?.toInt() }
@@ -55,13 +72,13 @@ class MetadataProvider : BaseMetadataProvider() {
             val parsedDiscCount = parsedDiscs?.getOrNull(1)
 
             if (title == null) {
-                logger.info("No useful metadata found in file ${file.name}, skipping.")
+                logger.info("No useful metadata found in file ${data.audioFile.file.absolutePath}, skipping.")
                 return null
             }
 
             val base64Cover = cover?.let { Base64.encode(it) }
 
-            return TrackMetadata(
+            return TrackInfoMetadata(
                 title = title,
                 artistNames = artist?.let { ParsingUtils.splitArtistNames(it) },
                 albumName = album,
@@ -70,14 +87,14 @@ class MetadataProvider : BaseMetadataProvider() {
                 discNumber = parsedDiscNo,
                 discCount = parsedDiscCount,
                 year = parsedYear,
-                genre = genre,
-                durationMs = duration.inWholeMilliseconds,
+                tags = tags,
                 comment = comment,
                 coverImageUrl = "data:${tag.firstArtwork?.mimeType};base64,$base64Cover",
+                explicit = rating?.lowercase() == "explicit"
             )
         }
         catch (e: Exception) {
-            logger.error("Error parsing file ${file.name}", e)
+            logger.error("Error parsing file ${data.audioFile.file.absolutePath}", e)
             return null
         }
     }

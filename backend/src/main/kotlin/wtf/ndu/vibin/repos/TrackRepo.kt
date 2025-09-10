@@ -46,15 +46,18 @@ object TrackRepo {
 
     fun createTrack(file: File, metadata: TrackMetadata, album: AlbumEntity, artists: List<ArtistEntity>?, checksum: String? = null): TrackEntity = transaction {
         return@transaction TrackEntity.new {
-            this.title = metadata.title
-            this.trackNumber = metadata.trackNumber
-            this.trackCount = metadata.trackCount
-            this.discNumber = metadata.discNumber
-            this.discCount = metadata.discCount
-            this.year = metadata.year
-            this.duration = metadata.durationMs
-            this.comment = metadata.comment ?: ""
-            this.explicit = metadata.explicit ?: false
+            this.title = metadata.trackInfo.title
+            this.trackNumber = metadata.trackInfo.trackNumber
+            this.trackCount = metadata.trackInfo.trackCount
+            this.discNumber = metadata.trackInfo.discNumber
+            this.discCount = metadata.trackInfo.discCount
+            this.year = metadata.trackInfo.year
+            this.duration = metadata.fileInfo?.durationMs
+            this.comment = metadata.trackInfo.comment ?: ""
+            this.bitrate = metadata.fileInfo?.bitrate?.toIntOrNull()
+            this.sampleRate = metadata.fileInfo?.sampleRate?.toIntOrNull()
+            this.channels = metadata.fileInfo?.channels?.toIntOrNull()
+            this.explicit = metadata.trackInfo.explicit ?: false
             this.path = PathUtils.getTrackPathFromFile(file)
             this.checksum = checksum ?: ChecksumUtil.getChecksum(file)
 
