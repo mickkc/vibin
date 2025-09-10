@@ -50,7 +50,9 @@ class MetadataProvider : BaseMetadataProvider() {
             val album = tag.getFirstNonEmpty(FieldKey.ALBUM, FieldKey.ORIGINAL_ALBUM)
             val title = tag.getFirstNonEmpty(FieldKey.TITLE)
             val track = tag.getFirstNonEmpty(FieldKey.TRACK, FieldKey.SINGLE_DISC_TRACK_NO)
+            val tracks = tag.getFirstNonEmpty(FieldKey.TRACK_TOTAL)
             val discNo = tag.getFirstNonEmpty(FieldKey.DISC_NO)
+            val discCount = tag.getFirstNonEmpty(FieldKey.DISC_TOTAL)
             val year = tag.getFirstNonEmpty(FieldKey.YEAR)
             val tags = tag.getAllNonEmpty(FieldKey.GENRE, FieldKey.LANGUAGE, FieldKey.MOOD, FieldKey.QUALITY, FieldKey.TAGS)
             val comment = tag.getFirstNonEmpty(FieldKey.COMMENT, FieldKey.SUBTITLE, FieldKey.DISC_SUBTITLE)
@@ -62,14 +64,14 @@ class MetadataProvider : BaseMetadataProvider() {
             val parsedYear = year?.let { date -> date.split("-").firstOrNull { it.length == 4 }?.toInt() }
 
             // 1/5 -> 1, 5
-            val parsedTracks = track?.split("/")?.map { it.toInt() }
+            val parsedTracks = track?.split("/")?.mapNotNull { it.toIntOrNull() }
             val parsedTrackNo = parsedTracks?.firstOrNull()
-            val parsedTrackCount = parsedTracks?.getOrNull(1)
+            val parsedTrackCount = parsedTracks?.getOrNull(1) ?: tracks?.toIntOrNull()
 
             // 1/3 -> 1, 3
-            val parsedDiscs = discNo?.split("/")?.map { it.toInt() }
+            val parsedDiscs = discNo?.split("/")?.mapNotNull { it.toIntOrNull() }
             val parsedDiscNo = parsedDiscs?.firstOrNull()
-            val parsedDiscCount = parsedDiscs?.getOrNull(1)
+            val parsedDiscCount = parsedDiscs?.getOrNull(1) ?: discCount?.toIntOrNull()
 
             if (title == null) {
                 logger.info("No useful metadata found in file ${data.audioFile.file.absolutePath}, skipping.")

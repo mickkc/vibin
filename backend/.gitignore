@@ -35,6 +35,8 @@ out/
 ### VS Code ###
 .vscode/
 
-
 # OpenAPI docs
 docs/
+
+# Logs
+**.log
