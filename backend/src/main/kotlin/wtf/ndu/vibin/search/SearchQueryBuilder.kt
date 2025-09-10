@@ -1,11 +1,13 @@
 package wtf.ndu.vibin.search
 
+import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inSubQuery
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInSubQuery
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.lowerCase
@@ -124,57 +126,62 @@ object SearchQueryBuilder {
                 b
             }
 
+            // region Parentheses
             if (opPart.startsWith("(") && opPart.endsWith(")")) {
                 val parts = split(opPart.removePrefix("(").removeSuffix(")"))
                 val nop = buildQuery(parts)
                 addWithRelation(nop, relationPart ?: "AND")
             }
+            // endregion
+            // region Title
             else if (opPart.startsWith("t:")) {
                 val titleSearch = opPart.removePrefix("t:").removeSurrounding("\"")
                 val nop = titleSearch(titleSearch)
                 addWithRelation(nop, relationPart ?: "AND")
             }
+            // endregion
+            // region Artist
             else if (opPart.startsWith("a:")) {
                 val artistSearch = opPart.removePrefix("a:").removeSurrounding("\"")
                 val nop = artistSearch(artistSearch)
                 addWithRelation(nop, relationPart ?: "AND")
             }
+            // endregion
+            // region Album
             else if (opPart.startsWith("al:"))  {
                 val albumSearch = opPart.removePrefix("al:").removeSurrounding("\"")
                 val nop = albumSearch(albumSearch)
                 addWithRelation(nop, relationPart ?: "AND")
             }
+            // endregion
+            // region Year
             else if (opPart.startsWith("y:")) {
-                val yearSearch = opPart.removePrefix("y:")
+                val yearSearch = opPart.removePrefix("y:").removeSurrounding("\"")
                 val yearParts = yearSearch.split("-")
 
-                if (yearParts.size == 1) {
-                    val year = yearParts[0].toIntOrNull()
-                    if (year != null) {
-                        val nop = (TrackTable.year eq year)
-                        addWithRelation(nop, relationPart ?: "AND")
-                    }
-                }
-                else if (yearParts.size == 2) {
-                    val startYear = yearParts[0].toIntOrNull()
-                    val endYear = yearParts[1].toIntOrNull()
-
-                    var op: Op<Boolean>? = null
-
-                    if (startYear != null) {
-                        op = (TrackTable.year greaterEq startYear)
-                    }
-
-                    if (endYear != null) {
-                        val nop = (TrackTable.year lessEq endYear)
-                        op = if (op == null) { nop } else { op and nop }
-                    }
-
-                    if (op != null) {
-                        addWithRelation(op, relationPart ?: "AND")
-                    }
-                }
+                val op = minMaxSearchInt(TrackTable.year, yearParts)
+                addWithRelation(op, relationPart ?: "AND")
             }
+            // endregion
+            // region Duration
+            else if (opPart.startsWith("d:")) {
+                val durationSearch = opPart.removePrefix("d:").removeSurrounding("\"")
+                val durationParts = durationSearch.split("-")
+
+                val op = minMaxSearchLong(TrackTable.duration, durationParts)
+                addWithRelation(op, relationPart ?: "AND")
+            }
+            // endregion
+            // region Bitrate
+            else if (opPart.startsWith("b:")) {
+                val bitrateSearch = opPart.removePrefix("b:").removeSurrounding("\"")
+                val birateParts = bitrateSearch.split("-")
+
+                val op = minMaxSearchInt(TrackTable.bitrate, birateParts)
+                addWithRelation(op, relationPart ?: "AND")
+            }
+            // endregion
+            // region Explicit
             else if (opPart.startsWith("e:")) {
                 val explicitSearch = opPart.removePrefix("e:").lowercase()
                 if (explicitSearch in trueBooleans) {
@@ -186,6 +193,8 @@ object SearchQueryBuilder {
                     addWithRelation(nop, relationPart ?: "AND")
                 }
             }
+            // endregion
+            // region Tags
             else if (opPart.startsWith("+") || opPart.startsWith("-"))  {
                 val tagSearch = opPart.removePrefix("+").removePrefix("-").removeSurrounding("\"")
                 val isInclude = opPart.startsWith("+")
@@ -200,14 +209,56 @@ object SearchQueryBuilder {
                 }
                 addWithRelation(nop, relationPart ?: "AND")
             }
+            // endregion
+            // region Other
             else {
                 val search = opPart.removeSurrounding("\"")
                 val nop = titleSearch(search) or artistSearch(search) or albumSearch(search)
                 addWithRelation(nop, relationPart ?: "AND")
             }
+            // endregion
         }
 
         return op ?: Op.TRUE
+    }
+
+    private fun minMaxSearchLong(col: Column<Long?>, parts: List<String>): Op<Boolean> {
+        val numParts = parts.map { it.toLongOrNull() }
+        return minMaxSearchGeneric(col, numParts)
+    }
+
+    private fun minMaxSearchInt(col: Column<Int?>, parts: List<String>): Op<Boolean> {
+        val numParts = parts.map { it.toIntOrNull() }
+        return minMaxSearchGeneric(col, numParts)
+    }
+
+    private fun <T>minMaxSearchGeneric(col: Column<T?>, parts: List<T?>): Op<Boolean> where T: Comparable<T>, T: Number {
+        if (parts.size == 1 && parts[0] != null) {
+            val v = parts[0]
+            return (col eq v)
+        }
+        else if (parts.size == 2) {
+            val min = parts[0]
+            val max = parts[1]
+
+            var op: Op<Boolean> = (col neq null)
+            var added = false
+
+            if (min != null) {
+                op = op and (col greaterEq min)
+                added = true
+            }
+
+            if (max != null) {
+                op = op and (col lessEq max)
+                added = true
+            }
+
+            if (added)
+                return op
+        }
+
+        return Op.TRUE
     }
 
     private fun albumSearch(query: String): Op<Boolean> {

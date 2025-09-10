@@ -47,21 +47,21 @@ class TestSearchBuilder {
     fun testGteYearSearch() = transaction {
         val input = "y:1987-"
         val op = SearchQueryBuilder.build(input)
-        assertEquals("TRACK.\"year\" >= 1987", op.toString())
+        assertEquals("(TRACK.\"year\" IS NOT NULL) AND (TRACK.\"year\" >= 1987)", op.toString())
     }
 
     @Test
     fun testLteYearSearch() = transaction {
         val input = "y:-1987"
         val op = SearchQueryBuilder.build(input)
-        assertEquals("TRACK.\"year\" <= 1987", op.toString())
+        assertEquals("(TRACK.\"year\" IS NOT NULL) AND (TRACK.\"year\" <= 1987)", op.toString())
     }
 
     @Test
     fun testRangeYearSearch() = transaction {
         val input = "y:1980-1987"
         val op = SearchQueryBuilder.build(input)
-        assertEquals("(TRACK.\"year\" >= 1980) AND (TRACK.\"year\" <= 1987)", op.toString())
+        assertEquals("(TRACK.\"year\" IS NOT NULL) AND (TRACK.\"year\" >= 1980) AND (TRACK.\"year\" <= 1987)", op.toString())
     }
 
     @Test
@@ -92,6 +92,63 @@ class TestSearchBuilder {
         assertEquals("(LOWER(TRACK.TITLE) LIKE '%never gonna give you up%') " +
                 "OR (TRACK.ID IN (SELECT TRACK_ARTIST.TRACK_ID FROM TRACK_ARTIST WHERE TRACK_ARTIST.ARTIST_ID IN (SELECT ARTIST.ID FROM ARTIST WHERE LOWER(ARTIST.\"name\") LIKE '%never gonna give you up%'))) " +
                 "OR (TRACK.ALBUM_ID IN (SELECT ALBUM.ID FROM ALBUM WHERE LOWER(ALBUM.TITLE) LIKE '%never gonna give you up%'))", op.toString())
+    }
+
+    @Test
+    fun testDurationSearch() = transaction {
+        val input = "d:200000-300000"
+        val op = SearchQueryBuilder.build(input)
+        assertEquals("(TRACK.DURATION IS NOT NULL) AND (TRACK.DURATION >= 200000) AND (TRACK.DURATION <= 300000)", op.toString())
+    }
+
+    @Test
+    fun testDurationGteSearch() = transaction {
+        val input = "d:200000-"
+        val op = SearchQueryBuilder.build(input)
+        assertEquals("(TRACK.DURATION IS NOT NULL) AND (TRACK.DURATION >= 200000)", op.toString())
+    }
+
+    @Test
+    fun testDurationLteSearch() = transaction {
+        val input = "d:-300000"
+        val op = SearchQueryBuilder.build(input)
+        assertEquals("(TRACK.DURATION IS NOT NULL) AND (TRACK.DURATION <= 300000)", op.toString())
+    }
+
+    @Test
+    fun testDurationExactSearch() = transaction {
+        val input = "d:250000"
+        val op = SearchQueryBuilder.build(input)
+        assertEquals("TRACK.DURATION = 250000", op.toString())
+    }
+
+
+    @Test
+    fun testBitrateSearch() = transaction {
+        val input = "b:256-320"
+        val op = SearchQueryBuilder.build(input)
+        assertEquals("(TRACK.BITRATE IS NOT NULL) AND (TRACK.BITRATE >= 256) AND (TRACK.BITRATE <= 320)", op.toString())
+    }
+
+    @Test
+    fun testBitrateGteSearch() = transaction {
+        val input = "b:256-"
+        val op = SearchQueryBuilder.build(input)
+        assertEquals("(TRACK.BITRATE IS NOT NULL) AND (TRACK.BITRATE >= 256)", op.toString())
+    }
+
+    @Test
+    fun testBitrateLteSearch() = transaction {
+        val input = "b:-320"
+        val op = SearchQueryBuilder.build(input)
+        assertEquals("(TRACK.BITRATE IS NOT NULL) AND (TRACK.BITRATE <= 320)", op.toString())
+    }
+
+    @Test
+    fun testBitrateExactSearch() = transaction {
+        val input = "b:320"
+        val op = SearchQueryBuilder.build(input)
+        assertEquals("TRACK.BITRATE = 320", op.toString())
     }
 
     @Test
