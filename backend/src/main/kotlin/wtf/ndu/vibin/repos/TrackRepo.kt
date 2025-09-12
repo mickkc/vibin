@@ -141,6 +141,11 @@ object TrackRepo {
         return@transaction results to count
     }
 
+    fun getSearched(query: String, advanced: Boolean): List<TrackEntity> = transaction {
+        return@transaction TrackEntity.find { buildQuery(query, advanced) }
+            .toList()
+    }
+
     /**
      * Builds a search query for tracks based on the provided query string.
      *

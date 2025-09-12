@@ -15,8 +15,11 @@ import wtf.ndu.vibin.db.playlists.PlaylistCollaborator
 import wtf.ndu.vibin.db.playlists.PlaylistEntity
 import wtf.ndu.vibin.db.playlists.PlaylistTable
 import wtf.ndu.vibin.db.playlists.PlaylistTrackTable
+import wtf.ndu.vibin.db.tracks.TrackEntity
+import wtf.ndu.vibin.dto.playlists.PlaylistDataDto
 import wtf.ndu.vibin.dto.playlists.PlaylistDto
 import wtf.ndu.vibin.dto.playlists.PlaylistEditDto
+import wtf.ndu.vibin.dto.playlists.PlaylistTrackDto
 import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.processing.ThumbnailProcessor
 import wtf.ndu.vibin.utils.DateTimeUtils
@@ -119,6 +122,84 @@ object PlaylistRepo {
         playlist.delete()
     }
 
+    fun getTracksWithSource(playlist: PlaylistEntity): Map<String, List<TrackEntity>> = transaction {
+
+        val result = mutableMapOf<String, List<TrackEntity>>()
+
+        result["manual"] = playlist.tracks.toList()
+
+        playlist.vibeDef?.takeIf { it.isNotBlank() }?.let { vibeDef ->
+            val vibeTracks = TrackRepo.getSearched(vibeDef, true)
+            result["vibe"] = vibeTracks
+        }
+
+        return@transaction result
+    }
+
+/*    fun setPosition(playlist: PlaylistEntity, track: TrackEntity, newPosition: Int): Boolean = transaction {
+        val currentPosition = PlaylistTrackTable
+            .select(PlaylistTrackTable.position)
+            .where {
+                (PlaylistTrackTable.playlist eq playlist.id.value) and
+                (PlaylistTrackTable.track eq track.id.value)
+            }
+            .map { it[PlaylistTrackTable.position] }
+            .singleOrNull() ?: return@transaction false
+
+        val trackCount = playlist.tracks.count()
+        if (newPosition !in 0..<trackCount) return@transaction false
+        if (newPosition == currentPosition) return@transaction true
+
+        if (newPosition < currentPosition) {
+            // Moving UP: shift down tracks between newPosition and currentPosition - 1
+            PlaylistTrackTable.update(
+                where = {
+                    (PlaylistTrackTable.playlist eq playlist.id.value) and
+                    (PlaylistTrackTable.position greaterEq newPosition) and
+                    (PlaylistTrackTable.position less currentPosition)
+                }
+            ) {
+                it[position] = position + 1
+            }
+        } else {
+            // Moving DOWN: shift up tracks between currentPosition + 1 and newPosition
+            PlaylistTrackTable.update(
+                where = {
+                    (PlaylistTrackTable.playlist eq playlist.id.value) and
+                    (PlaylistTrackTable.position greater currentPosition) and
+                    (PlaylistTrackTable.position lessEq newPosition)
+                }
+            ) {
+                it[position] = position - 1
+            }
+        }
+
+        // Set the track to its new position
+        val updated = PlaylistTrackTable.update(
+            where = {
+                (PlaylistTrackTable.playlist eq playlist.id.value) and
+                        (PlaylistTrackTable.track eq track.id.value)
+            }
+        ) {
+            it[PlaylistTrackTable.position] = newPosition
+        }
+
+        // Check if all positions are unique and sequential
+        val positions = PlaylistTrackTable
+            .select(PlaylistTrackTable.position)
+            .where { PlaylistTrackTable.playlist eq playlist.id.value }
+            .map { it[PlaylistTrackTable.position] }
+            .sorted()
+        if (positions != (0 until trackCount).toList()) {
+            // Something went wrong, rollback
+            rollback()
+            return@transaction false
+        }
+
+        return@transaction updated > 0
+    }*/
+
+
     /**
      * Creates an Op<Boolean> to filter playlists based on visibility to the given user.
      * A playlist is visible if it is public, or if the user is the owner or a collaborator.
@@ -163,6 +244,17 @@ object PlaylistRepo {
             owner = UserRepo.toDto(playlistEntity.owner),
             createdAt = playlistEntity.createdAt,
             updatedAt = playlistEntity.updatedAt
+        )
+    }
+
+    fun toDataDto(playlist: PlaylistEntity, tracks: Map<String, List<TrackEntity>>): PlaylistDataDto = transaction {
+        val tracks = tracks.flatMap {
+            val dtos = TrackRepo.toDto(it.value)
+            dtos.map { dto -> PlaylistTrackDto(source = it.key, track = dto) }
+        }
+        return@transaction PlaylistDataDto(
+            playlist = toDtoInternal(playlist),
+            tracks = tracks
         )
     }
 }

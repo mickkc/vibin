@@ -27,7 +27,7 @@ object PlaylistTable : ModifiableLongIdTable("playlist") {
  * @property cover The cover image of the playlist. (optional)
  * @property public Whether the playlist is public or private.
  * @property vibeDef The vibe definition of the playlist. (optional)
- * @property songs The songs in the playlist.
+ * @property tracks The tracks in the playlist.
  * @property collaborators The users who can collaborate on the playlist.
  */
 class PlaylistEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, PlaylistTable) {
@@ -39,7 +39,7 @@ class PlaylistEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, PlaylistTa
     var public by PlaylistTable.public
     var vibeDef by PlaylistTable.vibeDef
 
-    var songs by TrackEntity.Companion via PlaylistTrackTable
+    var tracks by TrackEntity.Companion via PlaylistTrackTable orderBy PlaylistTrackTable.position
     var collaborators by UserEntity.Companion via PlaylistCollaborator
     var owner by UserEntity referencedOn PlaylistTable.owner
 }
