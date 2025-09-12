@@ -260,7 +260,7 @@ class PlaylistRestTest {
             ))
         }
 
-        assertEquals(403, result.status.value)
+        assertEquals(404, result.status.value)
 
         val dbPlaylist = PlaylistRepo.getById(playlist.id.value, 1)
         assertNotNull(dbPlaylist)
@@ -443,7 +443,7 @@ class PlaylistRestTest {
             bearerAuth("collab5-session-token")
         }
 
-        assertEquals(403, result.status.value)
+        assertEquals(404, result.status.value)
         assertEquals(1, PlaylistRepo.count(1))
     }
 

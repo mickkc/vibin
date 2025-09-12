@@ -9,6 +9,7 @@ import wtf.ndu.vibin.dto.PaginatedDto
 import wtf.ndu.vibin.dto.playlists.PlaylistEditDto
 import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.repos.PlaylistRepo
+import wtf.ndu.vibin.repos.TrackRepo
 import wtf.ndu.vibin.settings.PageSize
 import wtf.ndu.vibin.settings.Settings
 
@@ -41,6 +42,37 @@ fun Application.configurePlaylistRoutes() = routing {
 
             val tracks = PlaylistRepo.getTracksWithSource(playlist)
             call.respond(PlaylistRepo.toDataDto(playlist, tracks))
+        }
+
+        putP("/api/playlists/{playlistId}/tracks", PermissionType.MANAGE_PLAYLISTS) {
+            val userId = call.getUserId() ?: return@putP call.unauthorized()
+            val playlistId = call.parameters["playlistId"]?.toLongOrNull() ?: return@putP call.missingParameter("playlistId")
+            val trackId = call.request.queryParameters["trackId"]?.toLongOrNull() ?: return@putP call.missingParameter("trackId")
+
+            val playlist = PlaylistRepo.getByIdIfAllowed(playlistId, userId, PermissionType.EDIT_COLLABORATIVE_PLAYLISTS)
+                ?: return@putP call.notFound()
+
+            val track = TrackRepo.getById(trackId) ?: return@putP call.notFound()
+
+            // Update the playlist tracks
+            PlaylistRepo.addTrackToPlaylist(playlist, track)
+
+            call.success()
+        }
+
+        deleteP("/api/playlists/{playlistId}/tracks", PermissionType.MANAGE_PLAYLISTS) {
+            val userId = call.getUserId() ?: return@deleteP call.unauthorized()
+            val playlistId = call.parameters["playlistId"]?.toLongOrNull() ?: return@deleteP call.missingParameter("playlistId")
+            val trackId = call.request.queryParameters["trackId"]?.toLongOrNull() ?: return@deleteP call.missingParameter("trackId")
+
+            val playlist = PlaylistRepo.getByIdIfAllowed(playlistId, userId, PermissionType.EDIT_COLLABORATIVE_PLAYLISTS)
+                ?: return@deleteP call.notFound()
+
+            val track = TrackRepo.getById(trackId) ?: return@deleteP call.notFound()
+
+            // Update the playlist tracks
+            PlaylistRepo.removeTrackFromPlaylist(playlist, track)
+            call.success()
         }
 
         suspend fun getValidatedEditDto(call: RoutingCall): PlaylistEditDto? {
@@ -78,11 +110,8 @@ fun Application.configurePlaylistRoutes() = routing {
             val editDto = getValidatedEditDto(call) ?: return@putP
 
             // Get the playlist to check ownership
-            val playlist = PlaylistRepo.getByIdCollaborative(playlistId, user.id.value) ?: return@putP call.notFound()
-
-            // Prevent editing others' playlists unless having the permission
-            if (!PlaylistRepo.checkOwnership(playlist, user.id.value) && !call.hasPermissions(PermissionType.EDIT_COLLABORATIVE_PLAYLISTS))
-                return@putP call.forbidden(PermissionType.EDIT_COLLABORATIVE_PLAYLISTS)
+            val playlist = PlaylistRepo.getByIdIfAllowed(playlistId, user.id.value, PermissionType.EDIT_COLLABORATIVE_PLAYLISTS)
+                ?: return@putP call.notFound()
 
             // Update the playlist
             val updated = PlaylistRepo.createOrUpdatePlaylist(user, editDto, playlist.id.value) ?: return@putP call.notFound()
@@ -96,11 +125,8 @@ fun Application.configurePlaylistRoutes() = routing {
                 call.parameters["playlistId"]?.toLongOrNull() ?: return@deleteP call.missingParameter("playlistId")
 
             // Get the playlist to check ownership
-            val playlist = PlaylistRepo.getByIdCollaborative(playlistId, userId) ?: return@deleteP call.notFound()
-
-            // Prevent deleting others' playlists unless having the permission
-            if (!PlaylistRepo.checkOwnership(playlist, userId) && !call.hasPermissions(PermissionType.DELETE_COLLABORATIVE_PLAYLISTS))
-                return@deleteP call.forbidden(PermissionType.DELETE_COLLABORATIVE_PLAYLISTS)
+            val playlist = PlaylistRepo.getByIdIfAllowed(playlistId, userId, PermissionType.DELETE_COLLABORATIVE_PLAYLISTS)
+                ?: return@deleteP call.notFound()
 
             PlaylistRepo.deletePlaylist(playlist.id.value)
 

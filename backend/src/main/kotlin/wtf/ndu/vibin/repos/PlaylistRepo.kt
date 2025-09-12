@@ -6,10 +6,15 @@ import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inSubQuery
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.minus
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.update
+import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.db.UserEntity
 import wtf.ndu.vibin.db.playlists.PlaylistCollaborator
 import wtf.ndu.vibin.db.playlists.PlaylistEntity
@@ -21,10 +26,13 @@ import wtf.ndu.vibin.dto.playlists.PlaylistDto
 import wtf.ndu.vibin.dto.playlists.PlaylistEditDto
 import wtf.ndu.vibin.dto.playlists.PlaylistTrackDto
 import wtf.ndu.vibin.parsing.Parser
+import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.processing.ThumbnailProcessor
 import wtf.ndu.vibin.utils.DateTimeUtils
 
 object PlaylistRepo {
+
+    private val logger = LoggerFactory.getLogger(PlaylistRepo::class.java)
 
     fun count(userId: Long): Long = transaction {
         PlaylistEntity.find (createOp(userId)).count()
@@ -47,6 +55,15 @@ object PlaylistRepo {
 
     fun checkOwnership(playlistEntity: PlaylistEntity, userId: Long): Boolean = transaction {
         return@transaction playlistEntity.owner.id.value == userId
+    }
+
+    fun getByIdIfAllowed(id: Long, userId: Long, perm: PermissionType): PlaylistEntity? = transaction {
+        val playlist = PlaylistEntity.findById(id) ?: return@transaction null
+        if (playlist.owner.id.value == userId) return@transaction playlist
+        if (playlist.collaborators.any { it.id.value == userId }) {
+            return@transaction if (PermissionRepo.hasPermissions(userId, listOf(perm))) playlist else null
+        }
+        return@transaction null
     }
 
     /**
@@ -136,7 +153,64 @@ object PlaylistRepo {
         return@transaction result
     }
 
-/*    fun setPosition(playlist: PlaylistEntity, track: TrackEntity, newPosition: Int): Boolean = transaction {
+    fun addTrackToPlaylist(playlist: PlaylistEntity, track: TrackEntity): Boolean = transaction {
+        // Check if the track is already in the playlist
+        val exists = PlaylistTrackTable.select(PlaylistTrackTable.columns) .where {
+            (PlaylistTrackTable.playlist eq playlist.id.value) and
+            (PlaylistTrackTable.track eq track.id.value)
+        }.count() > 0
+
+        if (exists) {
+            logger.warn("Tried to add track ID ${track.id.value} to playlist ID ${playlist.id.value}, but it is already present.")
+            return@transaction false
+        }
+
+        // Get the current max position in the playlist
+        val maxPosition = PlaylistTrackTable.select(PlaylistTrackTable.position).where {
+            PlaylistTrackTable.playlist eq playlist.id.value
+        }.maxOfOrNull { it[PlaylistTrackTable.position] } ?: -1
+
+        // Insert the new track at the next position
+        PlaylistTrackTable.insert {
+            it[this.playlist] = playlist.id.value
+            it[this.track] = track.id.value
+            it[this.position] = maxPosition + 1
+        }
+
+        return@transaction true
+    }
+
+    fun removeTrackFromPlaylist(playlist: PlaylistEntity, track: TrackEntity): Boolean = transaction {
+
+        val position = PlaylistTrackTable.select(PlaylistTrackTable.position).where {
+            (PlaylistTrackTable.playlist eq playlist.id.value) and
+            (PlaylistTrackTable.track eq track.id.value)
+        }.map { it[PlaylistTrackTable.position] }.singleOrNull() ?: return@transaction false
+
+        val deleted = PlaylistTrackTable.deleteWhere {
+            (PlaylistTrackTable.playlist eq playlist.id.value) and
+            (PlaylistTrackTable.track eq track.id.value)
+        }
+
+        if (deleted > 0) {
+            // Update positions of remaining tracks
+            PlaylistTrackTable.update(
+                where = {
+                    (PlaylistTrackTable.playlist eq playlist.id.value) and
+                    (PlaylistTrackTable.position greater position)
+                }
+            ) {
+                it[this.position] = this.position - 1
+            }
+        }
+        else {
+            logger.warn("Tried to remove track ID ${track.id.value} from playlist ID ${playlist.id.value}, but it was not found.")
+        }
+
+        return@transaction deleted > 0
+    }
+
+    fun setPosition(playlist: PlaylistEntity, track: TrackEntity, newPosition: Int): Boolean = transaction {
         val currentPosition = PlaylistTrackTable
             .select(PlaylistTrackTable.position)
             .where {
@@ -197,7 +271,7 @@ object PlaylistRepo {
         }
 
         return@transaction updated > 0
-    }*/
+    }
 
 
     /**
