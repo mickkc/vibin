@@ -18,6 +18,7 @@ import wtf.ndu.vibin.routes.configureAuthRoutes
 import wtf.ndu.vibin.routes.configureMetadataRoutes
 import wtf.ndu.vibin.routes.configurePermissionRoutes
 import wtf.ndu.vibin.routes.configurePlaylistRoutes
+import wtf.ndu.vibin.routes.configurePlaylistTrackRoutes
 import wtf.ndu.vibin.routes.configureTrackRoutes
 import wtf.ndu.vibin.routes.configureUserRoutes
 
@@ -51,6 +52,7 @@ fun Application.module() {
     configureTrackRoutes()
     configureAlbumRoutes()
     configurePlaylistRoutes()
+    configurePlaylistTrackRoutes()
     configurePermissionRoutes()
     configureArtistRoutes()
 

@@ -44,37 +44,6 @@ fun Application.configurePlaylistRoutes() = routing {
             call.respond(PlaylistRepo.toDataDto(playlist, tracks))
         }
 
-        putP("/api/playlists/{playlistId}/tracks", PermissionType.MANAGE_PLAYLISTS) {
-            val userId = call.getUserId() ?: return@putP call.unauthorized()
-            val playlistId = call.parameters["playlistId"]?.toLongOrNull() ?: return@putP call.missingParameter("playlistId")
-            val trackId = call.request.queryParameters["trackId"]?.toLongOrNull() ?: return@putP call.missingParameter("trackId")
-
-            val playlist = PlaylistRepo.getByIdIfAllowed(playlistId, userId, PermissionType.EDIT_COLLABORATIVE_PLAYLISTS)
-                ?: return@putP call.notFound()
-
-            val track = TrackRepo.getById(trackId) ?: return@putP call.notFound()
-
-            // Update the playlist tracks
-            PlaylistRepo.addTrackToPlaylist(playlist, track)
-
-            call.success()
-        }
-
-        deleteP("/api/playlists/{playlistId}/tracks", PermissionType.MANAGE_PLAYLISTS) {
-            val userId = call.getUserId() ?: return@deleteP call.unauthorized()
-            val playlistId = call.parameters["playlistId"]?.toLongOrNull() ?: return@deleteP call.missingParameter("playlistId")
-            val trackId = call.request.queryParameters["trackId"]?.toLongOrNull() ?: return@deleteP call.missingParameter("trackId")
-
-            val playlist = PlaylistRepo.getByIdIfAllowed(playlistId, userId, PermissionType.EDIT_COLLABORATIVE_PLAYLISTS)
-                ?: return@deleteP call.notFound()
-
-            val track = TrackRepo.getById(trackId) ?: return@deleteP call.notFound()
-
-            // Update the playlist tracks
-            PlaylistRepo.removeTrackFromPlaylist(playlist, track)
-            call.success()
-        }
-
         suspend fun getValidatedEditDto(call: RoutingCall): PlaylistEditDto? {
             val editDto = call.receive<PlaylistEditDto>()
 
