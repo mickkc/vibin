@@ -8,6 +8,8 @@ import io.ktor.server.routing.*
 import wtf.ndu.vibin.dto.PaginatedDto
 import wtf.ndu.vibin.dto.tracks.TrackEditDto
 import wtf.ndu.vibin.permissions.PermissionType
+import wtf.ndu.vibin.repos.PermissionRepo
+import wtf.ndu.vibin.repos.SessionRepo
 import wtf.ndu.vibin.repos.TrackRepo
 import wtf.ndu.vibin.settings.PageSize
 import wtf.ndu.vibin.settings.Settings
@@ -75,16 +77,6 @@ fun Application.configureTrackRoutes() = routing {
             ))
         }
 
-        // Get track cover image
-        getP("/api/tracks/{trackId}/cover") {
-            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
-            val quality = call.request.queryParameters["quality"] ?: "original"
-            val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
-            val cover = TrackRepo.getCover(track)
-
-            call.respondFile(ImageUtils.getFileOrDefault(cover, quality, "track") )
-        }
-
         getP("/api/tracks/{trackId}/stream", PermissionType.STREAM_TRACKS) {
             val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
             val streamId = call.request.queryParameters["streamId"] ?: ""
@@ -97,5 +89,25 @@ fun Application.configureTrackRoutes() = routing {
 
             call.respondFile(audioFile)
         }
+    }
+
+    // Get track cover image
+    // Not using authentication to allow fetching covers with the token as a query parameter instead of a header
+    getP("/api/tracks/{trackId}/cover") {
+        val token = call.request.header("Authorization")?.removePrefix("Bearer ")
+            ?: call.request.queryParameters["token"]
+            ?: return@getP call.missingParameter("token")
+
+        val userId = SessionRepo.getUserIdFromToken(token) ?: return@getP call.unauthorized()
+        if (!PermissionRepo.hasPermissions(userId, listOf(PermissionType.VIEW_TRACKS))) {
+            return@getP call.forbidden(PermissionType.VIEW_TRACKS)
+        }
+
+        val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
+        val quality = call.request.queryParameters["quality"] ?: "original"
+        val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
+        val cover = TrackRepo.getCover(track)
+
+        call.respondFile(ImageUtils.getFileOrDefault(cover, quality, "track") )
     }
 }
