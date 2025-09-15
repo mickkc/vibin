@@ -8,6 +8,7 @@ import io.ktor.server.routing.*
 import wtf.ndu.vibin.dto.PaginatedDto
 import wtf.ndu.vibin.dto.tracks.TrackEditDto
 import wtf.ndu.vibin.permissions.PermissionType
+import wtf.ndu.vibin.repos.ListenRepo
 import wtf.ndu.vibin.repos.PermissionRepo
 import wtf.ndu.vibin.repos.SessionRepo
 import wtf.ndu.vibin.repos.TrackRepo
@@ -78,14 +79,16 @@ fun Application.configureTrackRoutes() = routing {
         }
 
         getP("/api/tracks/{trackId}/stream", PermissionType.STREAM_TRACKS) {
+            val userId = call.getUserId() ?: return@getP call.unauthorized()
             val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
-            val streamId = call.request.queryParameters["streamId"] ?: ""
             val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
 
             val audioFile = PathUtils.getTrackFileFromPath(track.path)
             if (!audioFile.exists()) {
                 return@getP call.notFound()
             }
+
+            ListenRepo.listenedTo(userId, track.id.value)
 
             call.respondFile(audioFile)
         }
