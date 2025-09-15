@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.ListenEntity
 import wtf.ndu.vibin.db.ListenTable
+import wtf.ndu.vibin.db.albums.AlbumEntity
 import wtf.ndu.vibin.db.artists.ArtistEntity
 import wtf.ndu.vibin.db.tags.TagEntity
 import wtf.ndu.vibin.db.tracks.TrackEntity
@@ -44,6 +45,14 @@ object ListenRepo {
             .mapValues { it.value.size }
     }
 
+    fun getMostListenedAlbums(tracks: Map<TrackEntity, Int>): Map<AlbumEntity, Int> = transaction {
+        val albumCount = mutableMapOf<AlbumEntity, Int>()
+        tracks.forEach { (track, count) ->
+            albumCount[track.album] = albumCount.getOrDefault(track.album, 0) + count
+        }
+        return@transaction albumCount
+    }
+
     fun getMostListenedArtists(tracks: Map<TrackEntity, Int>): Map<ArtistEntity, Int> = transaction {
         val artistCount = mutableMapOf<ArtistEntity, Int>()
         tracks.forEach { (track, count) ->
@@ -62,5 +71,13 @@ object ListenRepo {
             }
         }
         return@transaction tagCount
+    }
+
+    fun getRecentTracks(userId: Long, limit: Int): List<TrackEntity> = transaction {
+        return@transaction ListenEntity
+            .find { ListenTable.user eq userId }
+            .orderBy(ListenTable.listenedAt to SortOrder.DESC)
+            .limit(limit)
+            .map { it.track }
     }
 }

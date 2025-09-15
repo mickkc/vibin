@@ -23,6 +23,10 @@ suspend fun RoutingCall.missingParameter(param: String) {
     respond(ErrorDto.fromType(ErrorDtoType.MISSING_PARAMETER, "parameterName" to param))
 }
 
+suspend fun RoutingCall.invalidParameter(param: String, vararg allowedParameters: String) {
+    respond(ErrorDto.fromType(ErrorDtoType.INVALID_PARAMETER, "parameterName" to param, "reason" to allowedParameters.joinToString(", ")))
+}
+
 suspend fun RoutingCall.unauthorized(reason: String = "Unauthorized") {
     respond(ErrorDto.fromType(ErrorDtoType.UNAUTHORIZED, "reason" to reason))
 }

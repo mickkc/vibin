@@ -19,6 +19,7 @@ import wtf.ndu.vibin.routes.configureMetadataRoutes
 import wtf.ndu.vibin.routes.configurePermissionRoutes
 import wtf.ndu.vibin.routes.configurePlaylistRoutes
 import wtf.ndu.vibin.routes.configurePlaylistTrackRoutes
+import wtf.ndu.vibin.routes.configureStatisticRoutes
 import wtf.ndu.vibin.routes.configureTrackRoutes
 import wtf.ndu.vibin.routes.configureUserRoutes
 
@@ -55,6 +56,7 @@ fun Application.module() {
     configurePlaylistTrackRoutes()
     configurePermissionRoutes()
     configureArtistRoutes()
+    configureStatisticRoutes()
 
     GlobalScope.launch {
         AudioFileProcessor.initialProcess()
