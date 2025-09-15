@@ -887,6 +887,90 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /api/stats/recent:
+    get:
+      summary: Get the most recently listened to tracks
+      operationId: getRecentTracks
+      tags:
+        - Stats
+      security:
+        - tokenAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: Number of recent tracks to retrieve
+          required: false
+          schema:
+              type: integer
+              format: int32
+              default: 5
+      responses:
+        200:
+          description: List of recent tracks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MinimalTrack'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/stats/{type}/top{limit}:
+    get:
+      summary: Get the top listened to tracks or artists
+      operationId: getTopStats
+      tags:
+        - Stats
+      security:
+        - tokenAuth: []
+      parameters:
+        - name: type
+          in: path
+          description: Type of stats to retrieve
+          required: true
+          schema:
+            type: string
+            enum: [tracks, artists, albums, tags]
+        - name: limit
+          in: path
+          description: Number of top items to retrieve
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: since
+          in: query
+          description: The timestamp in seconds since epoch to get stats since
+          required: false
+          schema:
+            type: integer
+            format: int64
+            default: Start of month
+      responses:
+        200:
+          description: List of top tracks or artists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/MinimalTrack'
+                    - $ref: '#/components/schemas/Artist'
+                    - $ref: '#/components/schemas/Album'
+                    - $ref: '#/components/schemas/Tag'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
 components:
   securitySchemes:
     tokenAuth:
