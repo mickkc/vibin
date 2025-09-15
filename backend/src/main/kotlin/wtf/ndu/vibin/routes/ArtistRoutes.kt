@@ -1,7 +1,7 @@
 package wtf.ndu.vibin.routes
 
 import io.ktor.server.application.*
-import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -13,7 +13,6 @@ import wtf.ndu.vibin.repos.ArtistRepo
 import wtf.ndu.vibin.settings.PageSize
 import wtf.ndu.vibin.settings.Settings
 import wtf.ndu.vibin.utils.ImageUtils
-import wtf.ndu.vibin.utils.PathUtils
 
 fun Application.configureArtistRoutes() = routing {
 

@@ -1,19 +1,10 @@
 package wtf.ndu.vibin.repos
 
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.SizedCollection
-import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inSubQuery
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.minus
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.update
 import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.db.UserEntity
 import wtf.ndu.vibin.db.playlists.PlaylistCollaborator
@@ -192,7 +183,7 @@ object PlaylistRepo {
             description = playlistEntity.description,
             cover = playlistEntity.cover?.let { ImageRepo.toDto(it) },
             public = playlistEntity.public,
-            hasVibeDef = playlistEntity.vibeDef != null,
+            vibedef = playlistEntity.vibeDef,
             collaborators = UserRepo.toDto(playlistEntity.collaborators.toList()),
             owner = UserRepo.toDto(playlistEntity.owner),
             createdAt = playlistEntity.createdAt,

@@ -10,7 +10,7 @@ data class AlbumDto (
     val title: String,
     val artists: List<ArtistDto>,
     val cover: ImageDto?,
-    val songsAmount: Long,
+    val trackCount: Long,
     val createdAt: Long,
     val updatedAt: Long?
 )

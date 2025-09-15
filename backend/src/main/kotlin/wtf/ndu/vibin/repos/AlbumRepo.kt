@@ -84,7 +84,7 @@ object AlbumRepo {
             title = albumEntity.title,
             cover = albumEntity.cover?.let { ImageRepo.toDto(it) },
             artists = ArtistRepo.toDto(getArtistsForAlbum(albumEntity)),
-            songsAmount = getSongAmountForAlbum(albumEntity),
+            trackCount = getSongAmountForAlbum(albumEntity),
             createdAt = albumEntity.createdAt,
             updatedAt = albumEntity.updatedAt
         )
