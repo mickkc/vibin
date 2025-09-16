@@ -1,5 +1,6 @@
 package wtf.ndu.vibin.routes
 
+import io.ktor.http.ContentType
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
@@ -9,7 +10,6 @@ import wtf.ndu.vibin.dto.PaginatedDto
 import wtf.ndu.vibin.dto.playlists.PlaylistEditDto
 import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.repos.PlaylistRepo
-import wtf.ndu.vibin.repos.TrackRepo
 import wtf.ndu.vibin.settings.PageSize
 import wtf.ndu.vibin.settings.Settings
 
@@ -100,6 +100,18 @@ fun Application.configurePlaylistRoutes() = routing {
             PlaylistRepo.deletePlaylist(playlist.id.value)
 
             call.success()
+        }
+
+        getP("/api/playlists/{playlistId}/image", PermissionType.VIEW_PLAYLISTS) {
+            val userId = call.getUserId() ?: return@getP call.unauthorized()
+            val playlistId = call.parameters["playlistId"]?.toLongOrNull() ?: return@getP call.missingParameter("playlistId")
+            val quality = call.request.queryParameters["quality"] ?: "original"
+
+            val playlist = PlaylistRepo.getById(playlistId, userId) ?: return@getP call.notFound()
+
+            val imageBytes = PlaylistRepo.getCoverImageBytes(playlist, quality)
+
+            call.respondBytes(imageBytes, contentType = ContentType.Image.JPEG)
         }
     }
 }

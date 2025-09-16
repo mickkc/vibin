@@ -20,6 +20,8 @@ import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.processing.ThumbnailProcessor
 import wtf.ndu.vibin.utils.DateTimeUtils
+import wtf.ndu.vibin.utils.ImageUtils
+import wtf.ndu.vibin.utils.PathUtils
 
 object PlaylistRepo {
 
@@ -142,6 +144,49 @@ object PlaylistRepo {
         }
 
         return@transaction result
+    }
+
+    fun getCoverImageBytes(playlist: PlaylistEntity, quality: String): ByteArray = transaction {
+        if (playlist.cover != null) {
+            val path = when(quality) {
+                "small" -> playlist.cover!!.smallPath
+                "large" -> playlist.cover!!.largePath
+                else -> playlist.cover!!.originalPath
+            } ?: playlist.cover!!.originalPath
+
+            val file = PathUtils.getThumbnailFileFromPath(path)
+            if (file.exists()) {
+                return@transaction file.readBytes()
+            }
+        }
+
+        val tracksWithCover = playlist.tracks.filter { it.cover != null }.toList()
+
+        if (tracksWithCover.size in 1..3) {
+            val firstTrack = playlist.tracks.first()
+            val cover = firstTrack.cover!!
+            val path = when(quality) {
+                "small" -> cover.smallPath
+                "large" -> cover.largePath
+                else -> cover.originalPath
+            } ?: cover.originalPath
+
+            val file = PathUtils.getThumbnailFileFromPath(path)
+            if (file.exists()) {
+                return@transaction file.readBytes()
+            }
+        }
+
+        if (tracksWithCover.size > 3) {
+            val files = tracksWithCover.take(4).map { PathUtils.getThumbnailFileFromPath(it.cover!!.smallPath) }
+            val collage = ImageUtils.generateCollage(files, if (quality == "small") 128 else 512, 2)
+            if (collage != null) {
+                return@transaction collage
+            }
+        }
+
+        val placeholder = PathUtils.getDefaultImage("playlist", quality)
+        return@transaction placeholder.readBytes()
     }
 
     /**
