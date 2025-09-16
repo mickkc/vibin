@@ -15,6 +15,7 @@ import wtf.ndu.vibin.processing.AudioFileProcessor
 import wtf.ndu.vibin.routes.configureAlbumRoutes
 import wtf.ndu.vibin.routes.configureArtistRoutes
 import wtf.ndu.vibin.routes.configureAuthRoutes
+import wtf.ndu.vibin.routes.configureCheckRoutes
 import wtf.ndu.vibin.routes.configureMetadataRoutes
 import wtf.ndu.vibin.routes.configurePermissionRoutes
 import wtf.ndu.vibin.routes.configurePlaylistRoutes
@@ -37,6 +38,8 @@ fun Application.mainModule() {
 }
 
 fun Application.module() {
+
+    configureCheckRoutes()
 
     configureSerialization()
     configureSecurity()
