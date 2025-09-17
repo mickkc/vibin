@@ -5,7 +5,7 @@ import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
 
-object ListenTable : LongIdTable() {
+object ListenTable : LongIdTable("listen") {
     val user = reference("user_id", UserTable)
     val entityId = long("entity_id")
     val type = enumeration("type", ListenType::class)

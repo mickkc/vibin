@@ -8,6 +8,7 @@ import wtf.ndu.vibin.db.ListenType
 import wtf.ndu.vibin.repos.AlbumRepo
 import wtf.ndu.vibin.repos.ArtistRepo
 import wtf.ndu.vibin.repos.ListenRepo
+import wtf.ndu.vibin.repos.PlaylistRepo
 import wtf.ndu.vibin.repos.TagRepo
 import wtf.ndu.vibin.repos.TrackRepo
 import wtf.ndu.vibin.utils.DateTimeUtils
@@ -57,6 +58,10 @@ fun Application.configureStatisticRoutes() = routing {
                 "tags" -> {
                     val topTags = ListenRepo.getMostListenedTags(userId, since)
                     TagRepo.toDto(sortAndLimit(topTags))
+                }
+                "playlists" -> {
+                    val topPlaylists = ListenRepo.getMostListenedPlaylists(userId, since)
+                    PlaylistRepo.toDto(sortAndLimit(topPlaylists))
                 }
                 "nontracks" -> {
                     val top = ListenRepo.getMostListenedToAsDtos(userId, since)
