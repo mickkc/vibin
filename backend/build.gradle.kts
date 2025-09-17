@@ -13,7 +13,7 @@ application {
 
 dependencies {
     implementation(libs.ktor.server.core)
-    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.serialization.gson)
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.postgresql)
     implementation(libs.h2)

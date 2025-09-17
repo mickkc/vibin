@@ -5,7 +5,7 @@ import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.serialization.gson.*
 import io.ktor.server.testing.*
 import kotlinx.coroutines.runBlocking
 
@@ -16,7 +16,7 @@ fun testApp(addDefaultAuthHeader: Boolean = true, test: suspend TestApplicationB
     }
     client = createClient {
         install(ContentNegotiation) {
-            json()
+            gson()
         }
         defaultRequest {
             if (addDefaultAuthHeader)
