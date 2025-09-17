@@ -5,6 +5,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import wtf.ndu.vibin.db.ListenType
 import wtf.ndu.vibin.dto.PaginatedDto
 import wtf.ndu.vibin.dto.tracks.TrackEditDto
 import wtf.ndu.vibin.permissions.PermissionType
@@ -88,7 +89,7 @@ fun Application.configureTrackRoutes() = routing {
                 return@getP call.notFound()
             }
 
-            ListenRepo.listenedTo(userId, track.id.value)
+            ListenRepo.listenedTo(userId, track.id.value, ListenType.TRACK)
 
             call.respondFile(audioFile)
         }

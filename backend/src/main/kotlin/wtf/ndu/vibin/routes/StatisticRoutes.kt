@@ -4,6 +4,7 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.response.respond
 import io.ktor.server.routing.*
+import wtf.ndu.vibin.db.ListenType
 import wtf.ndu.vibin.repos.AlbumRepo
 import wtf.ndu.vibin.repos.ArtistRepo
 import wtf.ndu.vibin.repos.ListenRepo
@@ -34,7 +35,6 @@ fun Application.configureStatisticRoutes() = routing {
 
             val userId = call.getUserId() ?: return@get call.unauthorized()
 
-            val topTracks = ListenRepo.getMostListenedTracks(userId, since)
 
             fun <T>sortAndLimit(map: Map<T, Int>): List<T> {
                 val sorted = map.toList().sortedByDescending { (_, count) -> count }.map { it.first }
@@ -43,22 +43,27 @@ fun Application.configureStatisticRoutes() = routing {
 
             val response = when (type) {
                 "tracks" -> {
+                    val topTracks = ListenRepo.getMostListenedTracks(userId, since)
                     TrackRepo.toMinimalDto(sortAndLimit(topTracks))
                 }
                 "artists" -> {
-                    val topArtists = ListenRepo.getMostListenedArtists(topTracks)
+                    val topArtists = ListenRepo.getMostListenedArtists(userId, since)
                     ArtistRepo.toDto(sortAndLimit(topArtists))
                 }
                 "albums" -> {
-                    val topAlbums = ListenRepo.getMostListenedAlbums(topTracks)
+                    val topAlbums = ListenRepo.getMostListenedAlbums(userId, since)
                     AlbumRepo.toDto(sortAndLimit(topAlbums))
                 }
                 "tags" -> {
-                    val topTags = ListenRepo.getMostListenedTags(topTracks)
+                    val topTags = ListenRepo.getMostListenedTags(userId, since)
                     TagRepo.toDto(sortAndLimit(topTags))
                 }
+                "nontracks" -> {
+                    val top = ListenRepo.getMostListenedToAsDtos(userId, since)
+                    sortAndLimit(top)
+                }
                 else -> {
-                    call.invalidParameter("type", "tracks", "artists", "albums", "tags")
+                    call.invalidParameter("type", "tracks", "artists", "albums", "tags", "nontracks")
                     null
                 }
             }
@@ -66,6 +71,16 @@ fun Application.configureStatisticRoutes() = routing {
             if (response != null) {
                 call.respond(response)
             }
+        }
+
+        post("/api/stats/listen/{type}/{entityId}") {
+            val userId = call.getUserId() ?: return@post call.unauthorized()
+            val type = call.parameters["type"]?.let { ListenType.valueOf(it) } ?: return@post call.missingParameter("type")
+            val entityId = call.parameters["entityId"]?.toLongOrNull() ?: return@post call.missingParameter("entityId")
+
+            val success = ListenRepo.listenedTo(userId, entityId, type)
+            call.success(success)
+
         }
 
     }
