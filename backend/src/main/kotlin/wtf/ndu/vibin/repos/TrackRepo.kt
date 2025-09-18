@@ -121,6 +121,12 @@ object TrackRepo {
         return@transaction results to count
     }
 
+    fun getRandom(limit: Int): List<TrackEntity> = transaction {
+        val ids = TrackTable.select(TrackTable.id).map { it[TrackTable.id].value }
+        val randomIds = ids.shuffled().take(limit)
+        return@transaction TrackEntity.find { TrackTable.id inList randomIds }.shuffled()
+    }
+
     /**
      * Searches for tracks based on the provided query string.
      *

@@ -93,6 +93,12 @@ fun Application.configureTrackRoutes() = routing {
 
             call.respondFile(audioFile)
         }
+
+        getP("/api/tracks/random", PermissionType.VIEW_TRACKS) {
+            val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 1
+            val track = TrackRepo.getRandom(limit)
+            call.respond(TrackRepo.toMinimalDto(track))
+        }
     }
 
     // Get track cover image
