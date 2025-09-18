@@ -87,11 +87,30 @@ object ListenRepo {
     }
 
     fun getMostListenedToAsDtos(userId: Long, since: Long): Map<KeyValueDto, Int> = transaction {
-        val albumCounts = getMostListenedAlbums(userId, since).mapKeys { KeyValueDto(ListenType.ALBUM.name, AlbumRepo.toDto(it.key)) }
-        val artistCounts = getMostListenedArtists(userId, since).mapKeys { KeyValueDto(ListenType.ARTIST.name, ArtistRepo.toDto(it.key)) }
-        val playlistCounts = getMostListenedPlaylists(userId, since).mapKeys { KeyValueDto(ListenType.PLAYLIST.name, PlaylistRepo.toDto(it.key)) }
 
-        return@transaction albumCounts + artistCounts + playlistCounts
+        val allowedTypes = PermissionRepo.getPermittedListenTypes(userId) - ListenType.TRACK
+
+        val dtos = mutableMapOf<KeyValueDto, Int>()
+
+        if (allowedTypes.contains(ListenType.ALBUM)) {
+            dtos += getMostListenedAlbums(userId, since).mapKeys {
+                KeyValueDto(ListenType.ALBUM.name, AlbumRepo.toDto(it.key))
+            }
+        }
+
+        if (allowedTypes.contains(ListenType.ARTIST)) {
+            dtos += getMostListenedArtists(userId, since).mapKeys {
+                KeyValueDto(ListenType.ARTIST.name, ArtistRepo.toDto(it.key))
+            }
+        }
+
+        if (allowedTypes.contains(ListenType.PLAYLIST)) {
+            dtos += getMostListenedPlaylists(userId, since).mapKeys {
+                KeyValueDto(ListenType.PLAYLIST.name, PlaylistRepo.toDto(it.key))
+            }
+        }
+
+        return@transaction dtos
     }
 
     fun getMostListenedTags(userId: Long, since: Long): Map<TagEntity, Int> = transaction {
@@ -116,8 +135,11 @@ object ListenRepo {
     }
 
     fun getRecentNonTrackDtos(userId: Long, limit: Int): List<KeyValueDto> = transaction {
+
+        val allowedTypes = PermissionRepo.getPermittedListenTypes(userId) - ListenType.TRACK
+
         return@transaction ListenEntity
-            .find { (ListenTable.user eq userId) and (ListenTable.type neq ListenType.TRACK) }
+            .find { (ListenTable.user eq userId) and (ListenTable.type inList allowedTypes) }
             .orderBy(ListenTable.listenedAt to SortOrder.DESC)
             .mapNotNull { KeyValueDto(it.type.name, when (it.type) {
                 ListenType.ALBUM -> AlbumRepo.toDto(AlbumRepo.getById(it.entityId) ?: return@mapNotNull null)

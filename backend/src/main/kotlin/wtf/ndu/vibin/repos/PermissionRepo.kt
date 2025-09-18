@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.GrantedPermissionTable
+import wtf.ndu.vibin.db.ListenType
 import wtf.ndu.vibin.db.UserEntity
 import wtf.ndu.vibin.permissions.PermissionType
 
@@ -23,6 +24,32 @@ object PermissionRepo {
             .map { it[GrantedPermissionTable.permission] }
 
         return@transaction permissions.all { it in grantedPermissions }
+    }
+
+    fun getPermittedListenTypes(userId: Long): List<ListenType> = transaction {
+        val user = UserEntity.findById(userId) ?: return@transaction emptyList()
+
+        if (user.isAdmin) {
+            return@transaction ListenType.entries.toList()
+        }
+
+        val grantedPermissions = GrantedPermissionTable
+            .select(GrantedPermissionTable.permission)
+            .where { GrantedPermissionTable.user eq userId }
+            .map { it[GrantedPermissionTable.permission] }
+
+        val allowedTypes = mutableListOf<ListenType>()
+
+        if (PermissionType.VIEW_TRACKS in grantedPermissions)
+            allowedTypes.add(ListenType.TRACK)
+        if (PermissionType.VIEW_ALBUMS in grantedPermissions)
+            allowedTypes.add(ListenType.ALBUM)
+        if (PermissionType.VIEW_ARTISTS in grantedPermissions)
+            allowedTypes.add(ListenType.ARTIST)
+        if (PermissionType.VIEW_PLAYLISTS in grantedPermissions)
+            allowedTypes.add(ListenType.PLAYLIST)
+
+        return@transaction allowedTypes
     }
 
     fun getPermissions(userId: Long): List<PermissionType> = transaction {
