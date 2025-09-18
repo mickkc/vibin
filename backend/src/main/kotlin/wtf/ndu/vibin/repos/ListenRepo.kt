@@ -1,6 +1,5 @@
 package wtf.ndu.vibin.repos
 
-import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -114,5 +113,19 @@ object ListenRepo {
             .distinct()
             .take(limit)
             .mapNotNull { TrackRepo.getById(it) }
+    }
+
+    fun getRecentNonTrackDtos(userId: Long, limit: Int): List<KeyValueDto> = transaction {
+        return@transaction ListenEntity
+            .find { (ListenTable.user eq userId) and (ListenTable.type neq ListenType.TRACK) }
+            .orderBy(ListenTable.listenedAt to SortOrder.DESC)
+            .mapNotNull { KeyValueDto(it.type.name, when (it.type) {
+                ListenType.ALBUM -> AlbumRepo.toDto(AlbumRepo.getById(it.entityId) ?: return@mapNotNull null)
+                ListenType.ARTIST -> ArtistRepo.toDto(ArtistRepo.getById(it.entityId) ?: return@mapNotNull null)
+                ListenType.PLAYLIST -> PlaylistRepo.toDto(PlaylistRepo.getById(it.entityId, userId) ?: return@mapNotNull null)
+                else -> null
+            } ?: return@mapNotNull null) }
+            .distinct()
+            .take(limit)
     }
 }

@@ -25,6 +25,14 @@ fun Application.configureStatisticRoutes() = routing {
             call.respond(TrackRepo.toMinimalDto(recentTracks))
         }
 
+        get("/api/stats/recent/nontracks") {
+            val userId = call.getUserId() ?: return@get call.unauthorized()
+            val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 5
+
+            val recent = ListenRepo.getRecentNonTrackDtos(userId, limit)
+            call.respond(recent)
+        }
+
         get("/api/stats/{type}/top{num}") {
             val type = call.parameters["type"] ?: return@get call.missingParameter("type")
             val num = call.parameters["num"]?.toIntOrNull() ?: return@get call.missingParameter("num")
@@ -85,7 +93,6 @@ fun Application.configureStatisticRoutes() = routing {
 
             val success = ListenRepo.listenedTo(userId, entityId, type)
             call.success(success)
-
         }
 
     }
