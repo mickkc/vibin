@@ -5,12 +5,17 @@ import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.count
 import org.jetbrains.exposed.sql.lowerCase
+import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.albums.AlbumEntity
 import wtf.ndu.vibin.db.artists.ArtistEntity
 import wtf.ndu.vibin.db.artists.ArtistTable
+import wtf.ndu.vibin.db.artists.TrackArtistConnection
 import wtf.ndu.vibin.db.images.ImageEntity
+import wtf.ndu.vibin.db.tags.TrackTagConnection
 import wtf.ndu.vibin.db.tracks.TrackEntity
 import wtf.ndu.vibin.db.tracks.TrackTable
 import wtf.ndu.vibin.dto.IdNameDto
@@ -165,6 +170,41 @@ object TrackRepo {
         } else {
             (TrackTable.title.lowerCase() like "%${query.lowercase()}%")
         }
+    }
+
+    fun getRelated(track: TrackEntity, limit: Int): List<TrackEntity> = transaction {
+        val candidates = TrackEntity.find {
+            // Exclude the current track
+            (TrackTable.id neq track.id.value) and
+            // Same album
+            ((TrackTable.albumId eq track.album.id.value) or
+            // Shared artists
+            (TrackTable.id inSubQuery TrackArtistConnection.select(TrackArtistConnection.track).where {
+                TrackArtistConnection.artist inList track.artists.map { it.id.value }
+            }) or
+            // More than half of the same tags
+            (TrackTable.id inSubQuery TrackTagConnection.select(TrackTagConnection.track).where {
+                TrackTagConnection.tag inList track.tags.map { it.id.value }
+            }.groupBy(TrackTagConnection.track).having { TrackTagConnection.tag.count() greater track.tags.count() / 2 }))
+        }.toList()
+        return@transaction candidates
+            .map { it to rateRelatedScore(track, it) }
+            .filter { it.second > 0 }
+            .sortedByDescending { it.second }
+            .take(limit)
+            .map { it.first }
+    }
+
+    private fun rateRelatedScore(track: TrackEntity, related: TrackEntity): Int {
+        var score = 0
+        val sharedArtists = track.artists.intersect(related.artists.toSet()).size
+        score += sharedArtists * 3
+        if (track.year != null && track.year == related.year) score += 1
+        val sharedTags = track.tags.intersect(related.tags.toSet()).size
+        score += sharedTags
+        val notSharedTags = (track.tags + related.tags).toSet().size - sharedTags
+        score -= notSharedTags / 2
+        return score
     }
 
     fun getAllFromAlbum(albumId: Long): List<TrackEntity> = transaction {

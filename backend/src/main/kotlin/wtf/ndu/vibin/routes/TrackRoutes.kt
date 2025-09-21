@@ -62,6 +62,15 @@ fun Application.configureTrackRoutes() = routing {
             call.success()
         }
 
+        // Get related tracks
+        getP("/api/tracks/{trackId}/related", PermissionType.VIEW_TRACKS) {
+            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
+            val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 10
+            val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
+            val related = TrackRepo.getRelated(track, limit)
+            call.respond(TrackRepo.toMinimalDto(related))
+        }
+
         // Search tracks
         getP("/api/tracks/search", PermissionType.VIEW_TRACKS) {
             val query = call.request.queryParameters["query"] ?: return@getP call.missingParameter("query")
