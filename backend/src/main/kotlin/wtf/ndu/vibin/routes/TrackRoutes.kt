@@ -88,21 +88,6 @@ fun Application.configureTrackRoutes() = routing {
             ))
         }
 
-        getP("/api/tracks/{trackId}/stream", PermissionType.STREAM_TRACKS) {
-            val userId = call.getUserId() ?: return@getP call.unauthorized()
-            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
-            val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
-
-            val audioFile = PathUtils.getTrackFileFromPath(track.path)
-            if (!audioFile.exists()) {
-                return@getP call.notFound()
-            }
-
-            ListenRepo.listenedTo(userId, track.id.value, ListenType.TRACK)
-
-            call.respondFile(audioFile)
-        }
-
         getP("/api/tracks/random", PermissionType.VIEW_TRACKS) {
             val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 1
             val track = TrackRepo.getRandom(limit)
@@ -128,5 +113,29 @@ fun Application.configureTrackRoutes() = routing {
         val cover = TrackRepo.getCover(track)
 
         call.respondFile(ImageUtils.getFileOrDefault(cover, quality, "track") )
+    }
+
+    // TODO: Move into authenticated block when headers are fixed on Web
+    getP("/api/tracks/{trackId}/stream") {
+        val token = call.request.header("Authorization")?.removePrefix("Bearer ")
+            ?: call.request.queryParameters["token"]
+            ?: return@getP call.missingParameter("token")
+
+        val userId = SessionRepo.getUserIdFromToken(token) ?: return@getP call.unauthorized()
+        if (!PermissionRepo.hasPermissions(userId, listOf(PermissionType.STREAM_TRACKS))) {
+            return@getP call.forbidden(PermissionType.STREAM_TRACKS)
+        }
+
+        val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
+        val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
+
+        val audioFile = PathUtils.getTrackFileFromPath(track.path)
+        if (!audioFile.exists()) {
+            return@getP call.notFound()
+        }
+
+        ListenRepo.listenedTo(userId, track.id.value, ListenType.TRACK)
+
+        call.respondFile(audioFile)
     }
 }
