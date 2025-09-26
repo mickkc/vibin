@@ -95,11 +95,15 @@ fun Application.configureTrackRoutes() = routing {
         }
     }
 
+    fun getUserIdFromCall(call: ApplicationCall): Long? {
+        return call.request.headers["Authorization"]?.removePrefix("Bearer ")?.let { SessionRepo.getUserIdFromToken(it) }
+            ?: call.parameters["mediaToken"]?.let { SessionRepo.getUserFromMediaToken(it)?.id?.value }
+    }
+
     // Get track cover image
     // Not using authentication to allow fetching covers with the token as a query parameter instead of a header
     getP("/api/tracks/{trackId}/cover") {
-        val mediaToken = call.parameters["mediaToken"]
-        val userId = call.getUserId() ?: mediaToken?.let { SessionRepo.getUserFromMediaToken(mediaToken)?.id?.value } ?: return@getP call.unauthorized()
+        val userId = getUserIdFromCall(call) ?: return@getP call.unauthorized()
 
         if (!PermissionRepo.hasPermissions(userId, listOf(PermissionType.VIEW_TRACKS))) {
             return@getP call.forbidden(PermissionType.VIEW_TRACKS)
@@ -115,8 +119,7 @@ fun Application.configureTrackRoutes() = routing {
 
     // TODO: Move into authenticated block when headers are fixed on Web
     getP("/api/tracks/{trackId}/stream") {
-        val mediaToken = call.parameters["mediaToken"]
-        val userId = call.getUserId() ?: mediaToken?.let { SessionRepo.getUserFromMediaToken(mediaToken)?.id?.value } ?: return@getP call.unauthorized()
+        val userId = getUserIdFromCall(call) ?: return@getP call.unauthorized()
 
         if (!PermissionRepo.hasPermissions(userId, listOf(PermissionType.STREAM_TRACKS))) {
             return@getP call.forbidden(PermissionType.STREAM_TRACKS)
