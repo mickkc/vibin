@@ -69,5 +69,41 @@ fun Application.configureAuthRoutes() = routing {
 
             call.success()
         }
+
+        // Create new media token
+        postP("/api/auth/media/token") {
+            val user = call.getUser()
+                ?: return@postP call.unauthorized()
+            val deviceId = call.request.queryParameters["deviceId"]
+                ?: return@postP call.missingParameter("deviceId")
+
+            val mediaToken = SessionRepo.createMediaToken(user, deviceId)
+
+            call.respond(mapOf("mediaToken" to mediaToken.token))
+        }
+
+        // Validate media token
+        getP("/api/auth/media") {
+            val mediaToken = call.request.queryParameters["mediaToken"]
+                ?: return@getP call.missingParameter("mediaToken")
+            val userId = call.getUserId()
+
+            val user = SessionRepo.getUserFromMediaToken(mediaToken)?.takeIf { it.isActive }
+                ?: return@getP call.success(false)
+
+            call.success(user.id.value == userId)
+        }
+
+        // Delete media token
+        deleteP("/api/auth/media/token") {
+            val userId = call.getUserId()
+                ?: return@deleteP call.unauthorized()
+            val deviceId = call.request.queryParameters["deviceId"]
+                ?: return@deleteP call.missingParameter("deviceId")
+
+            SessionRepo.deleteMediaToken(userId, deviceId)
+
+            call.success()
+        }
     }
 }

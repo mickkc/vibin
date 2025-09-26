@@ -58,7 +58,7 @@ fun configureDatabase() {
 }
 
 val allTables = arrayOf(
-    UserTable, GrantedPermissionTable, SessionTable, SettingsTable,
+    UserTable, GrantedPermissionTable, SessionTable, MediaTokenTable, SettingsTable,
     ImageTable,
     TagTable,
     ArtistTable, ArtistTagConnection,
