@@ -34,8 +34,8 @@ object ThumbnailProcessor {
             val size = max(img.width, img.height)
 
             val original = scaleImage(img)
-            val small = scaleImage(img, 128)
-            val large = if (size > 512) scaleImage(img, 512) else null
+            val small = scaleImage(img, 128, square = true)
+            val large = if (size > 512) scaleImage(img, 512, square = true) else null
 
             val colorScheme = ImageUtils.getColorThemeFromImage(img)
 
@@ -78,7 +78,20 @@ object ThumbnailProcessor {
      * @param size The desired size (width and height) of the scaled image. If null, the original size is used.
      * @return A byte array containing the JPEG data of the scaled image.
      */
-    fun scaleImage(image: Image, size: Int? = null, imageScale: Int = Image.SCALE_SMOOTH): ByteArray {
+    fun scaleImage(image: BufferedImage, size: Int? = null, imageScale: Int = Image.SCALE_SMOOTH, square: Boolean = false): ByteArray {
+        val image = if (square && image.width != image.height) {
+            // Make the image square by cropping the longer side
+            val minSize = minOf(image.width, image.height)
+            image.getSubimage(
+                (image.width - minSize) / 2,
+                (image.height - minSize) / 2,
+                minSize,
+                minSize
+            )
+        }
+        else {
+            image
+        }
         val scaledImage = size?.let { image.getScaledInstance(size, size, imageScale) } ?: image
         val bufferedImage = convertUsingConstructor(scaledImage)
         return scaledImage.let {

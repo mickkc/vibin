@@ -23,7 +23,7 @@ object ImageUtils {
 
     private const val MAX_COLOR_DIFFERENCE = 25
 
-    fun getColorThemeFromImage(image: Image, maxDiff: Int = MAX_COLOR_DIFFERENCE): ColorScheme? {
+    fun getColorThemeFromImage(image: BufferedImage, maxDiff: Int = MAX_COLOR_DIFFERENCE): ColorScheme? {
 
         val resized = ThumbnailProcessor.scaleImage(image, 100, Image.SCALE_FAST)
         val resizedImage = ByteArrayInputStream(resized).use {
