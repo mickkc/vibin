@@ -74,7 +74,7 @@ object AlbumRepo {
     fun toDataDto(albumEntity: AlbumEntity): AlbumDataDto = transaction {
         return@transaction AlbumDataDto(
             album = toDtoInternal(albumEntity),
-            tracks = TrackRepo.toMinimalDto(TrackRepo.getAllFromAlbum(albumEntity.id.value))
+            tracks = TrackRepo.toDto(TrackRepo.getAllFromAlbum(albumEntity.id.value))
         )
     }
 
