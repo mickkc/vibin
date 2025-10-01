@@ -56,7 +56,7 @@ fun Application.configureStatisticRoutes() = routing {
                     TrackRepo.toMinimalDto(sortAndLimit(topTracks))
                 }
                 "artists" -> {
-                    val topArtists = ListenRepo.getMostListenedArtists(userId, since)
+                    val topArtists = ListenRepo.getMostListenedArtistsByTracks(userId, since)
                     ArtistRepo.toDto(sortAndLimit(topArtists))
                 }
                 "albums" -> {
