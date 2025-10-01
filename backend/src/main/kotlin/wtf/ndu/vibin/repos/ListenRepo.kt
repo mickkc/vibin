@@ -67,13 +67,12 @@ object ListenRepo {
     }
 
     fun getMostListenedArtists(userId: Long, since: Long): Map<ArtistEntity, Int> = transaction {
-        ListenEntity
-            .find { (ListenTable.listenedAt greaterEq since) and (ListenTable.user eq userId) and (ListenTable.type eq ListenType.ARTIST) }
-            .groupBy { it.entityId }
-            .mapValues { it.value.size }
-            .mapKeys { ArtistRepo.getById(it.key) }
-            .filterKeys { it != null }
-            .mapKeys { it.key!! }
+
+        val mostListenedTracks = getMostListenedTracks(userId, since)
+
+        val artists = mostListenedTracks.flatMap { it.key.artists }
+
+        return@transaction artists.groupingBy { it }.eachCount()
     }
 
     fun getMostListenedPlaylists(userId: Long, since: Long): Map<PlaylistEntity, Int> = transaction {
