@@ -1,5 +1,6 @@
 package wtf.ndu.vibin.repos
 
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.lowerCase
@@ -14,6 +15,9 @@ import wtf.ndu.vibin.db.tracks.TrackEntity
 import wtf.ndu.vibin.db.tracks.TrackTable
 import wtf.ndu.vibin.dto.albums.AlbumDataDto
 import wtf.ndu.vibin.dto.albums.AlbumDto
+import wtf.ndu.vibin.dto.albums.AlbumEditDto
+import wtf.ndu.vibin.parsing.Parser
+import wtf.ndu.vibin.processing.ThumbnailProcessor
 
 object AlbumRepo {
 
@@ -63,6 +67,24 @@ object AlbumRepo {
         return@transaction AlbumEntity.findById(id)
     }
 
+    fun update(albumId: Long, editDto: AlbumEditDto): AlbumEntity? = transaction {
+        val album = AlbumEntity.findById(albumId) ?: return@transaction null
+        editDto.title?.takeIf { it.isNotBlank() }?.let { album.title = it }
+        editDto.coverUrl?.let { url ->
+            val cover = album.cover
+            album.cover = null
+            cover?.delete()
+            if (url.isNotEmpty()) {
+                val data = runBlocking { Parser.downloadCoverImage(url) }
+                if (data != null) {
+                    val image = ThumbnailProcessor.getImage(data, ThumbnailProcessor.ThumbnailType.ALBUM, album.id.value.toString())
+                    album.cover = image
+                }
+            }
+        }
+        return@transaction album
+    }
+
     fun toDto(albumEntity: AlbumEntity): AlbumDto = transaction {
         return@transaction toDtoInternal(albumEntity)
     }
@@ -74,7 +96,7 @@ object AlbumRepo {
     fun toDataDto(albumEntity: AlbumEntity): AlbumDataDto = transaction {
         return@transaction AlbumDataDto(
             album = toDtoInternal(albumEntity),
-            tracks = TrackRepo.toDto(TrackRepo.getAllFromAlbum(albumEntity.id.value))
+            tracks = TrackRepo.toDto(getTracks(albumEntity.id.value))
         )
     }
 
