@@ -22,17 +22,17 @@ fun Application.configurePlaylistRoutes() = routing {
             val page = call.request.queryParameters["p"]?.toIntOrNull() ?: 1
             val pageSize = call.request.queryParameters["pageSize"]?.toIntOrNull() ?: Settings.get(PageSize)
             val query = call.request.queryParameters["query"]
+            val onlyOwn = call.request.queryParameters["onlyOwn"]?.toBoolean() ?: false
 
             // Get the playlists for the requested page
-            val (playlists, total) = PlaylistRepo.getAll(page, pageSize, userId, query ?: "")
+            val (playlists, total) = PlaylistRepo.getAll(page, pageSize, userId, query ?: "", onlyOwn)
 
             call.respond(PaginatedDto(
-                    items = PlaylistRepo.toDto(playlists),
-                    total = total.toInt(),
-                    pageSize = pageSize,
-                    currentPage = page
-                )
-            )
+                items = PlaylistRepo.toDto(playlists),
+                total = total.toInt(),
+                pageSize = pageSize,
+                currentPage = page
+            ))
         }
 
         getP("/api/playlists/{playlistId}", PermissionType.VIEW_PLAYLISTS, PermissionType.VIEW_TRACKS) {

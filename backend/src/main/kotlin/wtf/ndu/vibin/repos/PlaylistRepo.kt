@@ -32,8 +32,20 @@ object PlaylistRepo {
         PlaylistEntity.find (createOp(userId)).count()
     }
 
-    fun getAll(page: Int, pageSize: Int, userId: Long, query: String = ""): Pair<List<PlaylistEntity>, Long> = transaction {
-        val playlists = PlaylistEntity.find (createOp(userId) and (PlaylistTable.name like "%$query%"))
+    fun getAll(page: Int, pageSize: Int, userId: Long, query: String = "", onlyOwn: Boolean = false): Pair<List<PlaylistEntity>, Long> = transaction {
+        val op = if (onlyOwn) createCollaborationOp(userId) else createOp(userId)
+        val playlists = PlaylistEntity.find (op and (PlaylistTable.name like "%$query%"))
+        val count = playlists.count()
+        val results = playlists
+            .orderBy(PlaylistTable.name to SortOrder.DESC)
+            .limit(pageSize)
+            .offset(((page - 1) * pageSize).toLong())
+            .toList()
+        return@transaction results to count
+    }
+
+    fun getAllByCollaborator(page: Int, pageSize: Int, userId: Long, query: String = ""): Pair<List<PlaylistEntity>, Long> = transaction {
+        val playlists = PlaylistEntity.find (createCollaborationOp(userId) and (PlaylistTable.name like "%$query%"))
         val count = playlists.count()
         val results = playlists
             .orderBy(PlaylistTable.name to SortOrder.DESC)
