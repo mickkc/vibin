@@ -31,8 +31,8 @@ object PlaylistRepo {
         PlaylistEntity.find (createOp(userId)).count()
     }
 
-    fun getAll(page: Int, pageSize: Int, userId: Long): Pair<List<PlaylistEntity>, Long> = transaction {
-        val playlists = PlaylistEntity.find (createOp(userId))
+    fun getAll(page: Int, pageSize: Int, userId: Long, query: String = ""): Pair<List<PlaylistEntity>, Long> = transaction {
+        val playlists = PlaylistEntity.find (createOp(userId) and (PlaylistTable.name like "%$query%"))
         val count = playlists.count()
         val results = playlists
             .orderBy(PlaylistTable.name to SortOrder.DESC)

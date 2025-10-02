@@ -20,8 +20,9 @@ fun Application.configureArtistRoutes() = routing {
         getP("/api/artists", PermissionType.VIEW_ARTISTS) {
             val page = call.parameters["page"]?.toIntOrNull() ?: 1
             val pageSize = call.parameters["pageSize"]?.toIntOrNull() ?: Settings.get(PageSize)
+            val query = call.request.queryParameters["query"]
 
-            val (artists, total) = ArtistRepo.getAll(page, pageSize)
+            val (artists, total) = ArtistRepo.getAll(page, pageSize, query ?: "")
 
             call.respond(PaginatedDto(
                 items = ArtistRepo.toDto(artists),
