@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inSubQuery
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.db.UserEntity
@@ -84,7 +85,7 @@ object PlaylistRepo {
             this.name = editDto.name
             this.description = editDto.description ?: ""
             this.public = editDto.isPublic ?: false
-            this.vibeDef = editDto.vibeDef
+            this.vibeDef = editDto.vibedef?.takeIf { it.isNotEmpty() }
             this.owner = user
         }
 
@@ -97,7 +98,7 @@ object PlaylistRepo {
             playlist.name = editDto.name
             editDto.description?.let { playlist.description = it }
             editDto.isPublic?.let { playlist.public = it }
-            playlist.vibeDef = editDto.vibeDef
+            playlist.vibeDef = editDto.vibedef?.takeIf { it.isNotEmpty() }
         }
 
         val collaborators = editDto.collaboratorIds?.mapNotNull { UserRepo.getById(it) }?.toList() ?: emptyList()
@@ -105,11 +106,17 @@ object PlaylistRepo {
             playlist.collaborators = SizedCollection(collaborators)
         }
 
-        if (editDto.coverImageUrl != null) {
-            val image = runBlocking { Parser.downloadCoverImage(editDto.coverImageUrl) }
-            if (image != null) {
-                val processedImage = ThumbnailProcessor.getImage(image, ThumbnailProcessor.ThumbnailType.PLAYLIST, playlist.id.value.toString())
-                playlist.cover = processedImage
+        editDto.coverImageUrl?.let {
+            val cover = playlist.cover
+            playlist.cover = null
+            cover?.delete()
+
+            if (it.isNotEmpty()) {
+                val image = runBlocking { Parser.downloadCoverImage(editDto.coverImageUrl) }
+                if (image != null) {
+                    val processedImage = ThumbnailProcessor.getImage(image, ThumbnailProcessor.ThumbnailType.PLAYLIST, playlist.id.value.toString())
+                    playlist.cover = processedImage
+                }
             }
         }
 
@@ -126,7 +133,9 @@ object PlaylistRepo {
         PlaylistTrackTable.deleteWhere { PlaylistTrackTable.playlist eq playlistId }
 
         // Delete cover image if exists
-        playlist.cover?.delete()
+        val cover = playlist.cover
+        playlist.cover = null
+        cover?.delete()
 
         // Finally, delete the playlist
         playlist.delete()

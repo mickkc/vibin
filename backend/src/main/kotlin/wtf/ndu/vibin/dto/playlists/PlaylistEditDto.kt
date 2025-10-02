@@ -9,5 +9,5 @@ data class PlaylistEditDto (
     val isPublic: Boolean? = null,
     val coverImageUrl: String? = null,
     val collaboratorIds: List<Long>? = null,
-    val vibeDef: String? = null
+    val vibedef: String? = null
 )
