@@ -3,23 +3,16 @@ package wtf.ndu.vibin.parsing.parsers.metadata
 import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.Tag
 import org.slf4j.LoggerFactory
-import wtf.ndu.vibin.parsing.BaseMetadataProvider
 import wtf.ndu.vibin.parsing.ParsingUtils
 import wtf.ndu.vibin.parsing.TrackInfoMetadata
+import wtf.ndu.vibin.parsing.parsers.FileParser
 import wtf.ndu.vibin.parsing.parsers.PreparseData
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
-class MetadataProvider : BaseMetadataProvider() {
+class MetadataProvider : FileParser {
 
     private val logger = LoggerFactory.getLogger(MetadataProvider::class.java)
-
-    override val supportedMethods: SupportedMethods
-        get() = SupportedMethods(
-            fromFile = true,
-            searchTrack = false,
-            searchArtist = false
-        )
 
     fun Tag.getFirstNonEmpty(vararg keys: FieldKey): String? {
         for (key in keys) {

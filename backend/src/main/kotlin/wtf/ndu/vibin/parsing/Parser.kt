@@ -9,6 +9,9 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
 import io.ktor.serialization.gson.gson
 import org.slf4j.LoggerFactory
+import wtf.ndu.vibin.parsing.parsers.ArtistSearchProvider
+import wtf.ndu.vibin.parsing.parsers.FileParser
+import wtf.ndu.vibin.parsing.parsers.TrackSearchProvider
 import wtf.ndu.vibin.parsing.parsers.deezer.DeezerProvider
 import wtf.ndu.vibin.parsing.parsers.itunes.ItunesProvider
 import wtf.ndu.vibin.parsing.parsers.metadata.MetadataProvider
@@ -32,10 +35,23 @@ object Parser {
         }
     }
 
-    val parsers = mapOf(
-        "Metadata" to MetadataProvider(),
-        "Deezer" to DeezerProvider(client),
-        "iTunes" to ItunesProvider(client)
+    private val metadataParser = MetadataProvider()
+    private val iTunesProvider = ItunesProvider(client)
+    private val deezerProvider = DeezerProvider(client)
+
+    val fileParsers = mapOf<String, FileParser>(
+        "Metadata" to metadataParser,
+        "iTunes" to iTunesProvider,
+        "Deezer" to deezerProvider
+    )
+
+    val trackSearchProviders = mapOf<String, TrackSearchProvider>(
+        "iTunes" to iTunesProvider,
+        "Deezer" to deezerProvider
+    )
+
+    val artistSearchProviders = mapOf<String, ArtistSearchProvider>(
+        "Deezer" to deezerProvider
     )
 
     /**
@@ -51,7 +67,7 @@ object Parser {
 
         if (preParsed != null) {
             for (source in sources) {
-                val metadata = parsers[source]?.parse(preParsed)
+                val metadata = fileParsers[source]?.parse(preParsed)
                 if (metadata != null) {
                     return TrackMetadata(preParsed, metadata)
                 }
@@ -70,13 +86,12 @@ object Parser {
         ))
     }
 
-    fun getFileProviders() = parsers.filter { it.value.supportedMethods.fromFile }.keys
-    fun getTrackSearchProviders() = parsers.filter { it.value.supportedMethods.searchTrack }.keys
-    fun getArtistSearchProviders() = parsers.filter { it.value.supportedMethods.searchArtist }.keys
+    fun getFileProviders() = fileParsers.keys
+    fun getTrackSearchProviders() = trackSearchProviders.keys
+    fun getArtistSearchProviders() = artistSearchProviders.keys
 
     suspend fun searchTrack(query: String, provider: String): List<TrackInfoMetadata>? {
-        val parser = parsers[provider] ?: return null
-        if (!parser.supportedMethods.searchTrack) return null
+        val parser = trackSearchProviders[provider] ?: return null
 
         return try {
             parser.searchTrack(query)
@@ -88,8 +103,7 @@ object Parser {
     }
 
     suspend fun searchArtist(query: String, provider: String): List<ArtistMetadata>? {
-        val parser = parsers[provider] ?: return null
-        if (!parser.supportedMethods.searchArtist) return null
+        val parser = artistSearchProviders[provider] ?: return null
 
         return try {
             parser.searchArtist(query)

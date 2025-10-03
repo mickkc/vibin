@@ -7,21 +7,16 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.parsing.ArtistMetadata
-import wtf.ndu.vibin.parsing.BaseMetadataProvider
 import wtf.ndu.vibin.parsing.ParsingUtils
 import wtf.ndu.vibin.parsing.TrackInfoMetadata
+import wtf.ndu.vibin.parsing.parsers.ArtistSearchProvider
+import wtf.ndu.vibin.parsing.parsers.FileParser
 import wtf.ndu.vibin.parsing.parsers.PreparseData
+import wtf.ndu.vibin.parsing.parsers.TrackSearchProvider
 
-class DeezerProvider(val client: HttpClient) : BaseMetadataProvider() {
+class DeezerProvider(val client: HttpClient) : FileParser, ArtistSearchProvider, TrackSearchProvider {
 
     private val logger = LoggerFactory.getLogger(DeezerProvider::class.java)
-
-    override val supportedMethods: SupportedMethods
-        get() = SupportedMethods(
-            fromFile = true,
-            searchTrack = true,
-            searchArtist = true
-        )
 
     override suspend fun searchTrack(query: String): List<TrackInfoMetadata>? {
 

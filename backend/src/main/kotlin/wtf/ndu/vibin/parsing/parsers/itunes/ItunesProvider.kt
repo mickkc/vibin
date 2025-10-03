@@ -6,25 +6,19 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
-import wtf.ndu.vibin.parsing.BaseMetadataProvider
 import wtf.ndu.vibin.parsing.ParsingUtils
 import wtf.ndu.vibin.parsing.TrackInfoMetadata
+import wtf.ndu.vibin.parsing.parsers.FileParser
 import wtf.ndu.vibin.parsing.parsers.PreparseData
+import wtf.ndu.vibin.parsing.parsers.TrackSearchProvider
 
-class ItunesProvider(val client: HttpClient) : BaseMetadataProvider() {
+class ItunesProvider(val client: HttpClient) : TrackSearchProvider, FileParser {
 
     private val logger = LoggerFactory.getLogger(ItunesProvider::class.java)
     private val json  = Json {
         ignoreUnknownKeys = true
         explicitNulls = false
     }
-
-    override val supportedMethods: SupportedMethods
-        get() = SupportedMethods(
-            fromFile = true,
-            searchTrack = true,
-            searchArtist = false
-        )
 
     override suspend fun searchTrack(query: String): List<TrackInfoMetadata>? {
 
