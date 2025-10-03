@@ -59,7 +59,8 @@ object Parser {
     )
 
     val albumSearchProviders = mapOf<String, AlbumSearchProvider>(
-        "Deezer" to deezerProvider
+        "Deezer" to deezerProvider,
+        "iTunes" to iTunesProvider
     )
 
     /**

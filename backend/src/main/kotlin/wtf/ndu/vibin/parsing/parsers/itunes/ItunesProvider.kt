@@ -6,13 +6,15 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
+import wtf.ndu.vibin.parsing.AlbumMetadata
 import wtf.ndu.vibin.parsing.ParsingUtils
 import wtf.ndu.vibin.parsing.TrackInfoMetadata
+import wtf.ndu.vibin.parsing.parsers.AlbumSearchProvider
 import wtf.ndu.vibin.parsing.parsers.FileParser
 import wtf.ndu.vibin.parsing.parsers.PreparseData
 import wtf.ndu.vibin.parsing.parsers.TrackSearchProvider
 
-class ItunesProvider(val client: HttpClient) : TrackSearchProvider, FileParser {
+class ItunesProvider(val client: HttpClient) : TrackSearchProvider, AlbumSearchProvider, FileParser {
 
     private val logger = LoggerFactory.getLogger(ItunesProvider::class.java)
     private val json  = Json {
@@ -26,6 +28,7 @@ class ItunesProvider(val client: HttpClient) : TrackSearchProvider, FileParser {
             val response = client.get("https://itunes.apple.com/search") {
                 parameter("term", query)
                 parameter("media", "music")
+                parameter("entity", "song")
             }
 
             if (!response.status.isSuccess()) {
@@ -36,7 +39,7 @@ class ItunesProvider(val client: HttpClient) : TrackSearchProvider, FileParser {
 
             val itunesResponse = response.bodyAsBytes()
                 .toString(Charsets.UTF_8)
-                .let { json.decodeFromString<ItunesSearchResponse>(it) }
+                .let { json.decodeFromString<ItunesSearchResponse<ItunesTrackData>>(it) }
 
             logger.info("iTunes API response for '$query': found ${itunesResponse.results.size} results")
 
@@ -58,6 +61,41 @@ class ItunesProvider(val client: HttpClient) : TrackSearchProvider, FileParser {
         }
         catch (e: Exception) {
             logger.error("Error searching iTunes for query '$query'", e)
+            return null
+        }
+    }
+
+    override suspend fun searchAlbum(query: String): List<AlbumMetadata>? {
+        try {
+            val response = client.get("https://itunes.apple.com/search") {
+                parameter("term", query)
+                parameter("media", "music")
+                parameter("entity", "album")
+            }
+
+            if (!response.status.isSuccess()) {
+                val reply = response.bodyAsText()
+                logger.error("iTunes API request failed for album query '$query': ${response.status}. Response: $reply")
+                return null
+            }
+
+            val itunesResponse = response.bodyAsBytes()
+                .toString(Charsets.UTF_8)
+                .let { json.decodeFromString<ItunesSearchResponse<ItunesAlbumData>>(it) }
+
+            logger.info("iTunes API response for album '$query': found ${itunesResponse.results.size} results")
+
+            return itunesResponse.results.map {
+                AlbumMetadata(
+                    title = it.collectionName,
+                    artistName = it.artistName,
+                    year = it.releaseDate?.substringBefore("-")?.toIntOrNull(),
+                    coverImageUrl = it.artworkUrl100?.replace("100x100bb", "512x512bb")
+                )
+            }
+        }
+        catch (e: Exception) {
+            logger.error("Error searching iTunes for album query '$query'", e)
             return null
         }
     }

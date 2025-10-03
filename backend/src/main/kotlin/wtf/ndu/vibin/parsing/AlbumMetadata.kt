@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable
 data class AlbumMetadata(
     val title: String,
     val coverImageUrl: String?,
-    val artistName: String?
+    val artistName: String?,
+    val year: Int? = null,
 )
