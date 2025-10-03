@@ -1,8 +1,11 @@
 package wtf.ndu.vibin.repos
 
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.sql.Case
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.intLiteral
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.albums.AlbumEntity
@@ -45,6 +48,19 @@ object AlbumRepo {
             .offset(((page - 1) * pageSize).toLong())
             .toList()
         return@transaction results to count
+    }
+
+    fun autocomplete(query: String, limit: Int): List<String> = transaction {
+        AlbumTable.select(AlbumTable.title)
+            .where { AlbumTable.title.lowerCase() like "%${query.lowercase()}%" }
+            .orderBy(
+                (Case()
+                    .When(AlbumTable.title.lowerCase() like "${query.lowercase()}%", intLiteral(1))
+                    .Else(intLiteral(2))) to SortOrder.ASC,
+                AlbumTable.title to SortOrder.ASC
+            )
+            .limit(limit)
+            .map { it[AlbumTable.title] }
     }
 
     fun getTracks(albumId: Long): List<TrackEntity> {

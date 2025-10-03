@@ -77,5 +77,13 @@ fun Application.configureArtistRoutes() = routing {
 
             call.respondFile(ImageUtils.getFileOrDefault(image, quality, "artist"))
         }
+
+        getP("/api/artists/autocomplete", PermissionType.VIEW_ARTISTS) {
+            val query = call.request.queryParameters["query"] ?: return@getP call.missingParameter("query")
+            val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 10
+
+            val artistNames = ArtistRepo.autocomplete(query, limit)
+            call.respond(artistNames)
+        }
     }
 }

@@ -33,6 +33,16 @@ fun Application.configureAlbumRoutes() = routing {
             ))
         }
 
+        getP("/api/albums/autocomplete", PermissionType.VIEW_ALBUMS) {
+
+            val query = call.request.queryParameters["query"] ?: return@getP call.missingParameter("query")
+            val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 10
+
+            val albumNames = AlbumRepo.autocomplete(query, limit)
+
+            call.respond(albumNames)
+        }
+
         getP("/api/albums/{albumId}", PermissionType.VIEW_ALBUMS) {
 
             val albumId = call.parameters["albumId"]?.toLongOrNull() ?: return@getP call.missingParameter("albumId")

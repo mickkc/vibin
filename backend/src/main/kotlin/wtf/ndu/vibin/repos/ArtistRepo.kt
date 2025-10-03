@@ -2,9 +2,8 @@ package wtf.ndu.vibin.repos
 
 import io.ktor.server.plugins.*
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.sql.SizedCollection
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.lowerCase
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.artists.ArtistEntity
 import wtf.ndu.vibin.db.artists.ArtistTable
@@ -80,6 +79,19 @@ object ArtistRepo {
         }
 
         return@transaction artist
+    }
+
+    fun autocomplete(query: String, limit: Int = 10): List<String> = transaction {
+        return@transaction ArtistTable.select(ArtistTable.name)
+            .where { ArtistTable.name.lowerCase() like "%${query.lowercase()}%" }
+            .orderBy(
+                (Case()
+                    .When(ArtistTable.name.lowerCase() like "${query.lowercase()}%", intLiteral(1))
+                    .Else(intLiteral(0))) to SortOrder.DESC,
+                ArtistTable.sortName to SortOrder.ASC
+            )
+            .limit(limit)
+            .map { it[ArtistTable.name] }
     }
 
     fun deleteArtist(artistId: Long): Boolean = transaction {
