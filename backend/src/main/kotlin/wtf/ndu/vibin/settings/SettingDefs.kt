@@ -19,6 +19,20 @@ object MetadataLanguage : Setting<String>(
     defaultValue = "en"
 )
 
+object SpotifyClientId : Setting<String>(
+    key = "spotify_client_id",
+    parser = { value -> value },
+    serializer = { value -> value },
+    defaultValue = ""
+)
+
+object SpotifyClientSecret : Setting<String>(
+    key = "spotify_client_secret",
+    parser = { value -> value },
+    serializer = { value -> value },
+    defaultValue = ""
+)
+
 object PrimaryMetadataSource : Setting<String>(
     key = "primary_metadata_source",
     parser = { value -> value },

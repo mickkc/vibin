@@ -25,7 +25,7 @@ class TheAudioDbProvider(val client: HttpClient) : ArtistSearchProvider {
 
             if (!response.status.isSuccess()) {
                 val reply = response.bodyAsText()
-                logger.error("iTunes API request failed for query '$query': ${response.status}. Response: $reply")
+                logger.error("TheAudioDb API request failed for artist query '$query': ${response.status}. Response: $reply")
                 return null
             }
 
