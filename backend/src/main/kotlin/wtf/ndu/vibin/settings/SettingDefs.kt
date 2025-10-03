@@ -12,6 +12,13 @@ object ArtistNameDelimiters : Setting<List<String>>(
     defaultValue = listOf(", ", " & ", " feat. ", " ft. ", "; ")
 )
 
+object MetadataLanguage : Setting<String>(
+    key = "metadata_language",
+    parser = { value -> value },
+    serializer = { value -> value },
+    defaultValue = "en"
+)
+
 object PrimaryMetadataSource : Setting<String>(
     key = "primary_metadata_source",
     parser = { value -> value },

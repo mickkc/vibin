@@ -17,6 +17,7 @@ import wtf.ndu.vibin.parsing.parsers.deezer.DeezerProvider
 import wtf.ndu.vibin.parsing.parsers.itunes.ItunesProvider
 import wtf.ndu.vibin.parsing.parsers.metadata.MetadataProvider
 import wtf.ndu.vibin.parsing.parsers.preparser.PreParser
+import wtf.ndu.vibin.parsing.parsers.theaudiodb.TheAudioDbProvider
 import wtf.ndu.vibin.settings.FallbackMetadataSource
 import wtf.ndu.vibin.settings.PrimaryMetadataSource
 import wtf.ndu.vibin.settings.Settings
@@ -39,6 +40,7 @@ object Parser {
     private val metadataParser = MetadataProvider()
     private val iTunesProvider = ItunesProvider(client)
     private val deezerProvider = DeezerProvider(client)
+    private val theAudioDbProvider = TheAudioDbProvider(client)
 
     val fileParsers = mapOf<String, FileParser>(
         "Metadata" to metadataParser,
@@ -52,7 +54,8 @@ object Parser {
     )
 
     val artistSearchProviders = mapOf<String, ArtistSearchProvider>(
-        "Deezer" to deezerProvider
+        "Deezer" to deezerProvider,
+        "TheAudioDb" to theAudioDbProvider
     )
 
     val albumSearchProviders = mapOf<String, AlbumSearchProvider>(
