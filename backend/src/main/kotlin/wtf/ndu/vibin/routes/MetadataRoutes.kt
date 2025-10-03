@@ -17,7 +17,8 @@ fun Application.configureMetadataRoutes() = routing {
             call.respond(mapOf(
                 "file" to Parser.getFileProviders(),
                 "track" to Parser.getTrackSearchProviders(),
-                "artist" to Parser.getArtistSearchProviders()
+                "artist" to Parser.getArtistSearchProviders(),
+                "album" to Parser.getAlbumSearchProviders()
             ))
         }
 
@@ -34,6 +35,14 @@ fun Application.configureMetadataRoutes() = routing {
             val provider = call.request.queryParameters["provider"] ?: return@get call.missingParameter("provider")
 
             val results = Parser.searchArtist(query, provider) ?: return@get call.respond(emptyList<ArtistMetadata>())
+            call.respond(results)
+        }
+
+        get("/api/metadata/album") {
+            val query = call.request.queryParameters["q"]?.takeIf { it.isNotBlank() } ?: return@get call.missingParameter("q")
+            val provider = call.request.queryParameters["provider"] ?: return@get call.missingParameter("provider")
+
+            val results = Parser.searchAlbum(query, provider) ?: return@get call.respond(emptyList<ArtistMetadata>())
             call.respond(results)
         }
     }

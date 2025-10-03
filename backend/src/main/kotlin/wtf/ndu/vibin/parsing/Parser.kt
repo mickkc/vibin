@@ -9,6 +9,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
 import io.ktor.serialization.gson.gson
 import org.slf4j.LoggerFactory
+import wtf.ndu.vibin.parsing.parsers.AlbumSearchProvider
 import wtf.ndu.vibin.parsing.parsers.ArtistSearchProvider
 import wtf.ndu.vibin.parsing.parsers.FileParser
 import wtf.ndu.vibin.parsing.parsers.TrackSearchProvider
@@ -54,6 +55,10 @@ object Parser {
         "Deezer" to deezerProvider
     )
 
+    val albumSearchProviders = mapOf<String, AlbumSearchProvider>(
+        "Deezer" to deezerProvider
+    )
+
     /**
      * Tries to parse the given file using the configured primary and fallback metadata sources.
      *
@@ -89,6 +94,7 @@ object Parser {
     fun getFileProviders() = fileParsers.keys
     fun getTrackSearchProviders() = trackSearchProviders.keys
     fun getArtistSearchProviders() = artistSearchProviders.keys
+    fun getAlbumSearchProviders() = albumSearchProviders.keys
 
     suspend fun searchTrack(query: String, provider: String): List<TrackInfoMetadata>? {
         val parser = trackSearchProviders[provider] ?: return null
@@ -110,6 +116,18 @@ object Parser {
         }
         catch (e: Exception) {
             logger.error("Error searching artist '$query' with provider '$provider': ${e.message}", e)
+            null
+        }
+    }
+
+    suspend fun searchAlbum(query: String, provider: String): List<AlbumMetadata>? {
+        val parser = albumSearchProviders[provider] ?: return null
+
+        return try {
+            parser.searchAlbum(query)
+        }
+        catch (e: Exception) {
+            logger.error("Error searching album '$query' with provider '$provider': ${e.message}", e)
             null
         }
     }

@@ -6,15 +6,17 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import org.slf4j.LoggerFactory
+import wtf.ndu.vibin.parsing.AlbumMetadata
 import wtf.ndu.vibin.parsing.ArtistMetadata
 import wtf.ndu.vibin.parsing.ParsingUtils
 import wtf.ndu.vibin.parsing.TrackInfoMetadata
+import wtf.ndu.vibin.parsing.parsers.AlbumSearchProvider
 import wtf.ndu.vibin.parsing.parsers.ArtistSearchProvider
 import wtf.ndu.vibin.parsing.parsers.FileParser
 import wtf.ndu.vibin.parsing.parsers.PreparseData
 import wtf.ndu.vibin.parsing.parsers.TrackSearchProvider
 
-class DeezerProvider(val client: HttpClient) : FileParser, ArtistSearchProvider, TrackSearchProvider {
+class DeezerProvider(val client: HttpClient) : FileParser, ArtistSearchProvider, TrackSearchProvider, AlbumSearchProvider {
 
     private val logger = LoggerFactory.getLogger(DeezerProvider::class.java)
 
@@ -42,6 +44,19 @@ class DeezerProvider(val client: HttpClient) : FileParser, ArtistSearchProvider,
             ArtistMetadata(
                 name = it.name,
                 pictureUrl = it.picture_big?.replace("500x500", "512x512")
+            )
+        }
+    }
+
+    override suspend fun searchAlbum(query: String): List<AlbumMetadata>? {
+        val deezerResponse = get<DeezerSearchResponse<DeezerAlbumMetadata>>("https://api.deezer.com/search/album", query) ?: return null
+        logger.info("Deezer API response for album '$query': found ${deezerResponse.data.size} results")
+
+        return deezerResponse.data.map {
+            AlbumMetadata(
+                title = it.title,
+                coverImageUrl = it.cover_big?.replace("500x500", "512x512"),
+                artistName = it.artist?.name
             )
         }
     }
