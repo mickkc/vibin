@@ -13,6 +13,7 @@ data class TrackEditDto(
     val year: Int?,
     val comment: String?,
     val imageUrl: String?,
-    val albumId: Long?,
-    val artistIds: List<Long>?,
+    val albumName: String?,
+    val artistNames: List<String>?,
+    val tagNames: List<String>?
 )

@@ -84,12 +84,12 @@ object TrackRepo {
         editDto.title?.takeIf { it.isNotBlank() }?.let { track.title = it }
         editDto.explicit?.let { track.explicit = it }
 
-        editDto.trackNumber?.let { track.trackNumber = it.takeIf { it > 0 } }
-        editDto.trackCount?.let { track.trackCount = it.takeIf { it > 0 } }
-        editDto.discNumber?.let { track.discNumber = it.takeIf { it > 0 } }
-        editDto.discCount?.let { track.discCount = it.takeIf { it > 0 } }
+        track.trackNumber = editDto.trackNumber
+        track.trackCount = editDto.trackCount
+        track.discNumber = editDto.discNumber
+        track.discCount = editDto.discCount
+        track.year = editDto.year
 
-        editDto.year?.let { track.year = it.takeIf { it > 0 } }
         editDto.comment?.let { track.comment = it }
 
         editDto.imageUrl?.let { imageUrl ->
@@ -98,16 +98,23 @@ object TrackRepo {
             image?.let { track.cover = it}
         }
 
-        editDto.albumId?.let { albumId ->
-            if (editDto.albumId != track.album.id.value) {
-                val album = AlbumEntity.findById(albumId)
-                album?.let { track.album = it }
+        editDto.albumName?.takeIf { it.isNotBlank() }?.let { albumName ->
+            if (albumName != track.album.title) {
+                val album = AlbumRepo.getOrCreateAlbum(albumName)
+                track.album = album
             }
         }
 
-        editDto.artistIds?.let { artistIds ->
-            val artists = ArtistEntity.find { ArtistTable.id inList artistIds }.toList()
+        editDto.artistNames?.filter { it.isNotBlank() }?.let { artistNames ->
+            if (artistNames == track.artists.map { it.name }) return@let
+            val artists = artistNames.map { name -> ArtistRepo.getOrCreateArtist(name) }
             track.artists = SizedCollection(artists)
+        }
+
+        editDto.tagNames?.filter { it.isNotBlank() }?.let { tagNames ->
+            if (tagNames == track.tags.map { it.name }) return@let
+            val tags = tagNames.map { name -> TagRepo.getOrCreateTag(name) }
+            track.tags = SizedCollection(tags)
         }
 
         track.updatedAt = DateTimeUtils.now()
