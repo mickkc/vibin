@@ -33,6 +33,8 @@ class MetadataProvider : FileParser {
         return results.distinct()
     }
 
+    private val textTagRegex = Regex("^Text=\"(?<value>.*)\";$")
+
     @OptIn(ExperimentalEncodingApi::class)
     override suspend fun parse(data: PreparseData): TrackInfoMetadata? {
 
@@ -82,7 +84,7 @@ class MetadataProvider : FileParser {
                 discNumber = parsedDiscNo,
                 discCount = parsedDiscCount,
                 year = parsedYear,
-                tags = tags,
+                tags = tags.map { textTagRegex.find(it)?.groups?.get("value")?.value ?: it }.distinct(),
                 comment = comment,
                 coverImageUrl = "data:${tag.firstArtwork?.mimeType};base64,$base64Cover",
                 explicit = rating?.lowercase() == "explicit"

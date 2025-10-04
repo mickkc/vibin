@@ -124,8 +124,9 @@ object AudioFileProcessor {
         }
 
         val artists = metadata.trackInfo.artistNames?.map { ArtistRepo.getOrCreateArtist(it) }
+        val uniqueArtists = artists?.distinctBy { it.id.value } ?: emptyList()
 
-        var track = TrackRepo.createTrack(file, metadata, album, artists, checksum)
+        var track = TrackRepo.createTrack(file, metadata, album, uniqueArtists, checksum)
 
         if (metadata.trackInfo.coverImageUrl != null) {
             val coverImageData = Parser.downloadCoverImage(metadata.trackInfo.coverImageUrl)
