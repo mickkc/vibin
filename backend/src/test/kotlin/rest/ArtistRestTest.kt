@@ -63,6 +63,24 @@ class ArtistRestTest {
         }
         assertEquals(403, response.status.value)
     }
+
+    @Test
+    fun testGetArtists_Search() = testApp { client ->
+        ArtistTestUtils.createArtist("Match 1")
+        ArtistTestUtils.createArtist("Should not appear")
+        ArtistTestUtils.createArtist("this is match 2")
+
+        val response = client.get("/api/artists") {
+            parameter("query", "Match")
+        }
+        assertTrue(response.status.isSuccess())
+
+        val data = response.body<PaginatedDto<ArtistDto>>()
+        assertEquals(2, data.total)
+        assertEquals(2, data.items.size)
+        assertEquals("Match 1", data.items[0].name)
+        assertEquals("this is match 2", data.items[1].name)
+    }
     // endregion
 
     // region Create
@@ -214,5 +232,44 @@ class ArtistRestTest {
         assertEquals(1, ArtistRepo.count())
     }
 
+    // endregion
+
+    // region Autocomplete
+
+    @Test
+    fun testAutocompleteArtists() = testApp { client ->
+        ArtistTestUtils.createArtist("The Beatles")
+        ArtistTestUtils.createArtist("The Rolling Stones")
+        ArtistTestUtils.createArtist("Contains the Word")
+        ArtistTestUtils.createArtist("No Match")
+
+        val response = client.get("/api/artists/autocomplete") {
+            parameter("query", "The")
+            parameter("limit", 5)
+        }
+        assertTrue(response.status.isSuccess())
+
+        val suggestions = response.body<List<String>>()
+        assertEquals(3, suggestions.size)
+        assertEquals("The Beatles", suggestions[0])
+        assertEquals("The Rolling Stones", suggestions[1])
+        assertEquals("Contains the Word", suggestions[2])
+    }
+
+    @Test
+    fun testAutocompleteArtists_NoPermission() = testApp(false) { client ->
+        val (_, token) = UserTestUtils.createUserAndSessionWithPermissions(
+            "noperms5", "password",
+            PermissionType.VIEW_ARTISTS to false
+        )
+        ArtistTestUtils.createArtist("The Beatles")
+
+        val response = client.get("/api/artists/autocomplete") {
+            bearerAuth(token)
+            parameter("query", "The")
+            parameter("limit", 5)
+        }
+        assertEquals(403, response.status.value)
+    }
     // endregion
 }
