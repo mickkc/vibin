@@ -45,6 +45,15 @@ fun Application.configurePlaylistRoutes() = routing {
             call.respond(PlaylistRepo.toDataDto(playlist, tracks))
         }
 
+        getP("/api/playlists/random", PermissionType.VIEW_PLAYLISTS) {
+            val userId = call.getUserId() ?: return@getP call.unauthorized()
+            val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 1
+
+            val playlists = PlaylistRepo.getRandom(limit, userId)
+
+            call.respond(PlaylistRepo.toDto(playlists))
+        }
+
         suspend fun getValidatedEditDto(call: RoutingCall): PlaylistEditDto? {
             val editDto = call.receive<PlaylistEditDto>()
 

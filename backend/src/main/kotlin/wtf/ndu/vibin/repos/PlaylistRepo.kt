@@ -44,19 +44,21 @@ object PlaylistRepo {
         return@transaction results to count
     }
 
-    fun getAllByCollaborator(page: Int, pageSize: Int, userId: Long, query: String = ""): Pair<List<PlaylistEntity>, Long> = transaction {
-        val playlists = PlaylistEntity.find (createCollaborationOp(userId) and (PlaylistTable.name like "%$query%"))
-        val count = playlists.count()
-        val results = playlists
-            .orderBy(PlaylistTable.name to SortOrder.DESC)
-            .limit(pageSize)
-            .offset(((page - 1) * pageSize).toLong())
-            .toList()
-        return@transaction results to count
+    fun getRandom(limit: Int, userId: Long): List<PlaylistEntity> = transaction {
+        val allIds = PlaylistTable
+            .select(PlaylistTable.id)
+            .where { createCollaborationOp(userId) }
+            .map { it[PlaylistTable.id] }
+        val randomIds = allIds.shuffled().take(limit)
+        return@transaction PlaylistEntity.find { PlaylistTable.id inList randomIds }.shuffled()
     }
 
     fun getById(id: Long, userId: Long): PlaylistEntity? = transaction {
         return@transaction PlaylistEntity.find (createOp(userId) and (PlaylistTable.id eq id)).firstOrNull()
+    }
+
+    fun getByIdPublic(id: Long): PlaylistEntity? = transaction {
+        return@transaction PlaylistEntity.find { (PlaylistTable.id eq id) and (PlaylistTable.public eq true) }.firstOrNull()
     }
 
     fun checkOwnership(playlistEntity: PlaylistEntity, userId: Long): Boolean = transaction {
