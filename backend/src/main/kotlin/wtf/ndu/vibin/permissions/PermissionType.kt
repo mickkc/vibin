@@ -38,7 +38,12 @@ enum class PermissionType(val id: String, val grantedByDefault: Boolean) {
     MANAGE_OWN_USER("edit_own_user", true),
     DELETE_USERS("delete_users", false),
     DELETE_OWN_USER("delete_own_user", false),
-    CREATE_USERS("create_users", false);
+    CREATE_USERS("create_users", false),
+
+    VIEW_TAGS("view_tags", true),
+    MANAGE_TAGS("manage_tags", false),
+    DELETE_TAGS("delete_tags", false),
+    CREATE_TAGS("create_tags", false);
 
     companion object {
         private val map = entries.associateBy(PermissionType::id)

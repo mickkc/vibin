@@ -56,7 +56,7 @@ object AlbumRepo {
             .orderBy(
                 (Case()
                     .When(AlbumTable.title.lowerCase() like "${query.lowercase()}%", intLiteral(1))
-                    .Else(intLiteral(2))) to SortOrder.ASC,
+                    .Else(intLiteral(0))) to SortOrder.DESC,
                 AlbumTable.title to SortOrder.ASC
             )
             .limit(limit)

@@ -3,7 +3,7 @@ package wtf.ndu.vibin.dto.tracks
 import kotlinx.serialization.Serializable
 import wtf.ndu.vibin.dto.ArtistDto
 import wtf.ndu.vibin.dto.ImageDto
-import wtf.ndu.vibin.dto.TagDto
+import wtf.ndu.vibin.dto.tags.TagDto
 import wtf.ndu.vibin.dto.users.UserDto
 import wtf.ndu.vibin.dto.albums.AlbumDto
 
