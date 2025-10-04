@@ -24,9 +24,9 @@ class ArtistRestTest {
 
     @Test
     fun testGetArtists() = testApp { client ->
-        val artist1 = ArtistTestUtils.createArtist("Artist One", "B")
-        val artist2 = ArtistTestUtils.createArtist("Artist Two", "A")
-        ArtistTestUtils.createArtist("Artist Three", "C")
+        val artist1 = ArtistTestUtils.createArtist("B", "This should be second")
+        val artist2 = ArtistTestUtils.createArtist("A", "This should be first")
+        ArtistTestUtils.createArtist("C", "This should be third")
 
         val response = client.get("/api/artists") {
             parameter("pageSize", 2)
@@ -44,11 +44,11 @@ class ArtistRestTest {
 
         val artistTwo = data.items[0]
         assertEquals(artist2.name, artistTwo.name)
-        assertEquals(artist2.sortName, artistTwo.sortName)
+        assertEquals(artist2.description, artistTwo.description)
 
         val artistOne = data.items[1]
         assertEquals(artist1.name, artistOne.name)
-        assertEquals(artist1.sortName, artistOne.sortName)
+        assertEquals(artist1.description, artistOne.description)
     }
 
     @Test
@@ -71,7 +71,7 @@ class ArtistRestTest {
     fun testCreateArtist() = testApp { client ->
         val data = ArtistEditData(
             name = "New Artist",
-            sortName = "Artist, New",
+            description = "An awesome new artist",
             imageUrl = null
         )
 
@@ -82,7 +82,7 @@ class ArtistRestTest {
 
         val createdArtist = response.body<ArtistDto>()
         assertEquals("New Artist", createdArtist.name)
-        assertEquals("Artist, New", createdArtist.sortName)
+        assertEquals("An awesome new artist", createdArtist.description)
     }
 
     @Test
@@ -93,7 +93,7 @@ class ArtistRestTest {
         )
         val data = ArtistEditData(
             name = "New Artist",
-            sortName = "Artist, New",
+            description = "An awesome new artist",
             imageUrl = null
         )
 
@@ -112,11 +112,11 @@ class ArtistRestTest {
 
     @Test
     fun testUpdateArtist() = testApp { client ->
-        val artist = ArtistTestUtils.createArtist("Old Name", "Name, Old")
+        val artist = ArtistTestUtils.createArtist("Old Name", "An old description")
 
         val data = ArtistEditData(
             name = "Updated Name",
-            sortName = "Name, Updated",
+            description = "An updated description",
             imageUrl = null
         )
 
@@ -128,14 +128,14 @@ class ArtistRestTest {
         val updatedArtist = response.body<ArtistDto>()
         assertEquals(artist.id.value, updatedArtist.id)
         assertEquals("Updated Name", updatedArtist.name)
-        assertEquals("Name, Updated", updatedArtist.sortName)
+        assertEquals("An updated description", updatedArtist.description)
     }
 
     @Test
     fun testUpdateArtist_NotFound() = testApp { client ->
         val data = ArtistEditData(
             name = "Updated Name",
-            sortName = "Name, Updated",
+            description = "An updated description",
             imageUrl = null
         )
 
@@ -148,7 +148,7 @@ class ArtistRestTest {
 
     @Test
     fun testUpdateArtist_NoPermission() = testApp(false) { client ->
-        val artist = ArtistTestUtils.createArtist("No Perms", "Perms, No")
+        val artist = ArtistTestUtils.createArtist("No Perms", "This should not change")
         val (_, token) = UserTestUtils.createUserAndSessionWithPermissions(
             "noperms3", "password",
             PermissionType.MANAGE_ARTISTS to false
@@ -156,7 +156,7 @@ class ArtistRestTest {
 
         val data = ArtistEditData(
             name = "Updated Name",
-            sortName = "Name, Updated",
+            description = "An updated description",
             imageUrl = null
         )
 
@@ -169,7 +169,7 @@ class ArtistRestTest {
         val notUpdatedArtist = ArtistRepo.getById(artist.id.value)
         assertNotNull(notUpdatedArtist)
         assertEquals("No Perms", notUpdatedArtist.name)
-        assertEquals("Perms, No", notUpdatedArtist.sortName)
+        assertEquals("This should not change", notUpdatedArtist.description)
     }
     // endregion
 

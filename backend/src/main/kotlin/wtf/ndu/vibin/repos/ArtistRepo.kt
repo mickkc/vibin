@@ -49,11 +49,13 @@ object ArtistRepo {
             }
             ArtistEntity.new {
                 this.name = data.name
+                this.description = data.description ?: ""
                 this.image = null
             }
         } else {
             ArtistEntity.findByIdAndUpdate(id) { a ->
                 data.name?.takeIf { it.isNotEmpty() }?.let {  a.name = it; }
+                data.description?.let { a.description = it }
                 a.updatedAt = DateTimeUtils.now()
             }
         }
