@@ -95,7 +95,7 @@ object ArtistRepo {
     }
 
     fun getAll(page: Int, pageSize: Int, query: String = ""): Pair<List<ArtistEntity>, Long> = transaction {
-        val artists = ArtistEntity.find { ArtistTable.name like "%$query%" }
+        val artists = ArtistEntity.find { ArtistTable.name.lowerCase() like "%${query.lowercase()}%" }
         val count = artists.count()
         val results = artists
             .orderBy(ArtistTable.name to SortOrder.ASC)

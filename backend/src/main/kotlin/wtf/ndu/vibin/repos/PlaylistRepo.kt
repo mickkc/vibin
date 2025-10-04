@@ -34,7 +34,7 @@ object PlaylistRepo {
 
     fun getAll(page: Int, pageSize: Int, userId: Long, query: String = "", onlyOwn: Boolean = false): Pair<List<PlaylistEntity>, Long> = transaction {
         val op = if (onlyOwn) createCollaborationOp(userId) else createOp(userId)
-        val playlists = PlaylistEntity.find (op and (PlaylistTable.name like "%$query%"))
+        val playlists = PlaylistEntity.find (op and (PlaylistTable.name.lowerCase() like "%${query.lowercase()}%"))
         val count = playlists.count()
         val results = playlists
             .orderBy(PlaylistTable.name to SortOrder.DESC)
