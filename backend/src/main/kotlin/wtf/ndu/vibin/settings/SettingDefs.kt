@@ -45,7 +45,7 @@ object FallbackMetadataSource : Setting<String>(
     key = "fallback_metadata_source",
     parser = { value -> value },
     serializer = { value -> value },
-    defaultValue = "iTunes",
+    defaultValue = "None",
     generator = { Parser.getFileProviders() }
 )
 

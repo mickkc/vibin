@@ -35,11 +35,10 @@ object ArtistRepo {
      * @return The existing or newly created ArtistEntity.
      */
     fun getOrCreateArtist(name: String): ArtistEntity = transaction {
-        return@transaction ArtistEntity.find { ArtistTable.originalName.lowerCase() eq name.lowercase() }.firstOrNull()
+        return@transaction ArtistEntity.find { ArtistTable.name.lowerCase() eq name.lowercase() }.firstOrNull()
             ?: ArtistEntity.new {
                 this.name = name
-                this.sortName = name
-                this.originalName = name
+                this.image = null
             }
     }
 
@@ -50,14 +49,11 @@ object ArtistRepo {
             }
             ArtistEntity.new {
                 this.name = data.name
-                this.sortName = data.sortName ?: data.name
-                this.originalName = data.name
                 this.image = null
             }
         } else {
             ArtistEntity.findByIdAndUpdate(id) { a ->
                 data.name?.takeIf { it.isNotEmpty() }?.let {  a.name = it; }
-                data.sortName?.let { a.sortName = it.takeIf { it.isNotEmpty() } ?: a.name }
                 a.updatedAt = DateTimeUtils.now()
             }
         }
@@ -73,11 +69,6 @@ object ArtistRepo {
             artist.image = image
         }
 
-        if (data.tagIds != null && data.tagIds != artist.tags.map { it.id.value }) {
-            val tags = data.tagIds.mapNotNull { TagRepo.getById(it) }
-            artist.tags = SizedCollection(tags)
-        }
-
         return@transaction artist
     }
 
@@ -88,7 +79,7 @@ object ArtistRepo {
                 (Case()
                     .When(ArtistTable.name.lowerCase() like "${query.lowercase()}%", intLiteral(1))
                     .Else(intLiteral(0))) to SortOrder.DESC,
-                ArtistTable.sortName to SortOrder.ASC
+                ArtistTable.name to SortOrder.ASC
             )
             .limit(limit)
             .map { it[ArtistTable.name] }
@@ -96,7 +87,6 @@ object ArtistRepo {
 
     fun deleteArtist(artistId: Long): Boolean = transaction {
         val artist = ArtistEntity.findById(artistId) ?: return@transaction false
-        //ArtistTagConnection.deleteWhere { ArtistTagConnection.artist eq artistId }
         artist.image?.delete()
         artist.delete()
         return@transaction true
@@ -106,7 +96,7 @@ object ArtistRepo {
         val artists = ArtistEntity.find { ArtistTable.name like "%$query%" }
         val count = artists.count()
         val results = artists
-            .orderBy(ArtistTable.sortName to SortOrder.ASC)
+            .orderBy(ArtistTable.name to SortOrder.ASC)
             .limit(pageSize)
             .offset(((page - 1) * pageSize).toLong())
             .toList()
@@ -125,9 +115,8 @@ object ArtistRepo {
         return ArtistDto(
             id = artistEntity.id.value,
             name = artistEntity.name,
+            description = artistEntity.description,
             image = artistEntity.image?.let { ImageRepo.toDto(it) },
-            sortName = artistEntity.sortName,
-            tags = TagRepo.toDto(artistEntity.tags.toList()),
             createdAt = artistEntity.createdAt,
             updatedAt = artistEntity.updatedAt
         )

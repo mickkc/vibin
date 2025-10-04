@@ -14,7 +14,6 @@ import wtf.ndu.vibin.db.images.ImageTable
 import wtf.ndu.vibin.db.playlists.PlaylistCollaborator
 import wtf.ndu.vibin.db.playlists.PlaylistTable
 import wtf.ndu.vibin.db.playlists.PlaylistTrackTable
-import wtf.ndu.vibin.db.tags.ArtistTagConnection
 import wtf.ndu.vibin.db.tags.TagTable
 import wtf.ndu.vibin.db.tags.TrackTagConnection
 import wtf.ndu.vibin.db.tracks.TrackTable
@@ -61,7 +60,7 @@ val allTables = arrayOf(
     UserTable, GrantedPermissionTable, SessionTable, MediaTokenTable, SettingsTable,
     ImageTable,
     TagTable,
-    ArtistTable, ArtistTagConnection,
+    ArtistTable,
     AlbumTable,
     TrackTable, TrackTagConnection, TrackArtistConnection,
     PlaylistTable, PlaylistTrackTable, PlaylistCollaborator,
