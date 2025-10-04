@@ -40,7 +40,7 @@ object AlbumRepo {
     }
 
     fun getAll(page: Int, pageSize: Int, query: String = ""): Pair<List<AlbumEntity>, Long> = transaction {
-        val albums = AlbumEntity.find { AlbumTable.title like "%$query%" }
+        val albums = AlbumEntity.find { AlbumTable.title.lowerCase() like "%${query.lowercase()}%" }
         val count = albums.count()
         val results = albums
             .orderBy(AlbumTable.title to SortOrder.ASC)
