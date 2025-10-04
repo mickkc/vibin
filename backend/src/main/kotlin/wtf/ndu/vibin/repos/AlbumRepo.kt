@@ -86,6 +86,8 @@ object AlbumRepo {
     fun update(albumId: Long, editDto: AlbumEditDto): AlbumEntity? = transaction {
         val album = AlbumEntity.findById(albumId) ?: return@transaction null
         editDto.title?.takeIf { it.isNotBlank() }?.let { album.title = it }
+        editDto.description?.let { album.description = it }
+        album.releaseYear = editDto.year
         editDto.coverUrl?.let { url ->
             val cover = album.cover
             album.cover = null
@@ -120,9 +122,11 @@ object AlbumRepo {
         return@transaction AlbumDto(
             id = albumEntity.id.value,
             title = albumEntity.title,
+            description = albumEntity.description,
             cover = albumEntity.cover?.let { ImageRepo.toDto(it) },
             artists = ArtistRepo.toDto(getArtistsForAlbum(albumEntity)),
             trackCount = getSongAmountForAlbum(albumEntity),
+            year = albumEntity.releaseYear,
             createdAt = albumEntity.createdAt,
             updatedAt = albumEntity.updatedAt
         )

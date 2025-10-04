@@ -9,6 +9,7 @@ import wtf.ndu.vibin.db.ModifiableLongIdTable
 
 object AlbumTable : ModifiableLongIdTable("album") {
     val title = varchar("title", 255)
+    val description = text("description").default("")
     val releaseYear = integer("release_year").nullable()
     val cover = reference("cover", ImageTable).nullable()
 }
@@ -24,6 +25,7 @@ class AlbumEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, AlbumTable) {
     companion object : LongEntityClass<AlbumEntity>(AlbumTable)
 
     var title by AlbumTable.title
+    var description by AlbumTable.description
     var releaseYear by AlbumTable.releaseYear
     var cover by ImageEntity.Companion optionalReferencedOn AlbumTable.cover
 }

@@ -8,6 +8,8 @@ import wtf.ndu.vibin.dto.ImageDto
 data class AlbumDto (
     val id: Long,
     val title: String,
+    val description: String,
+    val year: Int?,
     val artists: List<ArtistDto>,
     val cover: ImageDto?,
     val trackCount: Long,
