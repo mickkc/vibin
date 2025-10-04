@@ -75,6 +75,10 @@ fun Application.configureStatisticRoutes() = routing {
                     val top = ListenRepo.getMostListenedToAsDtos(userId, since)
                     sortAndLimit(top)
                 }
+                "global_nontracks" -> {
+                    val top = ListenRepo.getMostListenedToAsDtos(userId, since, global = true)
+                    sortAndLimit(top)
+                }
                 else -> {
                     call.invalidParameter("type", "tracks", "artists", "albums", "tags", "nontracks")
                     null
