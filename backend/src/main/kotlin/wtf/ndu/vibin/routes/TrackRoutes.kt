@@ -93,6 +93,12 @@ fun Application.configureTrackRoutes() = routing {
             val track = TrackRepo.getRandom(limit)
             call.respond(TrackRepo.toMinimalDto(track))
         }
+
+        getP("/api/tracks/newest", PermissionType.VIEW_TRACKS) {
+            val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 10
+            val tracks = TrackRepo.getNewest(limit)
+            call.respond(TrackRepo.toMinimalDto(tracks))
+        }
     }
 
     fun getUserIdFromCall(call: ApplicationCall): Long? {

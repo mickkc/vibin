@@ -1,18 +1,11 @@
 package wtf.ndu.vibin.repos
 
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.SizedCollection
-import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.count
-import org.jetbrains.exposed.sql.lowerCase
-import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.albums.AlbumEntity
 import wtf.ndu.vibin.db.artists.ArtistEntity
-import wtf.ndu.vibin.db.artists.ArtistTable
 import wtf.ndu.vibin.db.artists.TrackArtistConnection
 import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.db.tags.TrackTagConnection
@@ -137,6 +130,13 @@ object TrackRepo {
         val ids = TrackTable.select(TrackTable.id).map { it[TrackTable.id].value }
         val randomIds = ids.shuffled().take(limit)
         return@transaction TrackEntity.find { TrackTable.id inList randomIds }.shuffled()
+    }
+
+    fun getNewest(limit: Int): List<TrackEntity> = transaction {
+        return@transaction TrackEntity.all()
+            .orderBy(TrackTable.createdAt to SortOrder.DESC)
+            .limit(limit)
+            .toList()
     }
 
     /**
