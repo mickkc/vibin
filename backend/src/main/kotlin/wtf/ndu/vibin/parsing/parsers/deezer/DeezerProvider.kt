@@ -56,7 +56,8 @@ class DeezerProvider(val client: HttpClient) : FileParser, ArtistSearchProvider,
             AlbumMetadata(
                 title = it.title,
                 coverImageUrl = it.cover_big?.replace("500x500", "512x512"),
-                artistName = it.artist?.name
+                artistName = it.artist?.name,
+                description = null,
             )
         }
     }

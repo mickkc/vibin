@@ -90,7 +90,8 @@ class ItunesProvider(val client: HttpClient) : TrackSearchProvider, AlbumSearchP
                     title = it.collectionName,
                     artistName = it.artistName,
                     year = it.releaseDate?.substringBefore("-")?.toIntOrNull(),
-                    coverImageUrl = it.artworkUrl100?.replace("100x100bb", "512x512bb")
+                    coverImageUrl = it.artworkUrl100?.replace("100x100bb", "512x512bb"),
+                    description = null
                 )
             }
         }
