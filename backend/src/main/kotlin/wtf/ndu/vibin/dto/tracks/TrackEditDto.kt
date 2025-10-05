@@ -15,5 +15,6 @@ data class TrackEditDto(
     val imageUrl: String?,
     val albumName: String?,
     val artistNames: List<String>?,
-    val tagNames: List<String>?
+    val tagNames: List<String>?,
+    val lyrics: String?
 )

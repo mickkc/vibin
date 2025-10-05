@@ -64,7 +64,8 @@ val allTables = arrayOf(
     AlbumTable,
     TrackTable, TrackTagConnection, TrackArtistConnection,
     PlaylistTable, PlaylistTrackTable, PlaylistCollaborator,
-    ListenTable
+    ListenTable,
+    LyricsTable
 )
 
 fun createTables() = transaction {

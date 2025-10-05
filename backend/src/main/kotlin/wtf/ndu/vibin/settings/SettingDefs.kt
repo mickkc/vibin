@@ -33,6 +33,13 @@ object SpotifyClientSecret : Setting<String>(
     defaultValue = ""
 )
 
+object LyricFilePathTemplate : Setting<String>(
+    key = "lyric_file_path_template",
+    parser = { value -> value },
+    serializer = { value -> value },
+    defaultValue = "{parentPath}{sep}{name}.lrc"
+)
+
 object PrimaryMetadataSource : Setting<String>(
     key = "primary_metadata_source",
     parser = { value -> value },

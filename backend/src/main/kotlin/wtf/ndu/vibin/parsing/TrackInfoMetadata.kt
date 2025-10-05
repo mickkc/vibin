@@ -15,5 +15,6 @@ data class TrackInfoMetadata (
     val tags: List<String>? = null,
     val comment: String? = null,
     val coverImageUrl: String? = null,
-    val explicit: Boolean? = null
+    val explicit: Boolean? = null,
+    val lyrics: String? = null
 )

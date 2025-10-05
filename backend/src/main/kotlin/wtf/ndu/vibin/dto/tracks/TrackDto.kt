@@ -29,6 +29,7 @@ data class TrackDto (
     val checksum: String,
     val tags: List<TagDto>,
     val uploader: UserDto?,
+    val hasLyrics: Boolean,
     val createdAt: Long,
     val updatedAt: Long?
 )

@@ -9,7 +9,9 @@ import wtf.ndu.vibin.db.ListenType
 import wtf.ndu.vibin.dto.PaginatedDto
 import wtf.ndu.vibin.dto.tracks.TrackEditDto
 import wtf.ndu.vibin.permissions.PermissionType
+import wtf.ndu.vibin.repos.ColorSchemeRepo
 import wtf.ndu.vibin.repos.ListenRepo
+import wtf.ndu.vibin.repos.LyricsRepo
 import wtf.ndu.vibin.repos.PermissionRepo
 import wtf.ndu.vibin.repos.SessionRepo
 import wtf.ndu.vibin.repos.TrackRepo
@@ -98,6 +100,26 @@ fun Application.configureTrackRoutes() = routing {
             val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 10
             val tracks = TrackRepo.getNewest(limit)
             call.respond(TrackRepo.toMinimalDto(tracks))
+        }
+
+
+        getP("/api/tracks/{trackId}/lyrics", PermissionType.VIEW_TRACKS) {
+            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
+
+            val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
+            val lyrics = LyricsRepo.getLyrics(track)?.content
+            val colorScheme = TrackRepo.getColorScheme(track)
+
+            call.respond(mapOf(
+                "lyrics" to lyrics,
+                "colorScheme" to colorScheme?.let { ColorSchemeRepo.toDto(it) }
+            ))
+        }
+
+        getP("/api/tracks/{trackId}/lyrics/check", PermissionType.VIEW_TRACKS) {
+            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
+            val hasLyrics = LyricsRepo.hasLyrics(trackId)
+            call.success(hasLyrics)
         }
     }
 

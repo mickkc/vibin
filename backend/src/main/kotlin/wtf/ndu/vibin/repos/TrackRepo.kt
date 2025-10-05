@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.albums.AlbumEntity
 import wtf.ndu.vibin.db.artists.ArtistEntity
 import wtf.ndu.vibin.db.artists.TrackArtistConnection
+import wtf.ndu.vibin.db.images.ColorSchemeEntity
 import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.db.tags.TrackTagConnection
 import wtf.ndu.vibin.db.tracks.TrackEntity
@@ -43,7 +44,7 @@ object TrackRepo {
     }
 
     fun createTrack(file: File, metadata: TrackMetadata, album: AlbumEntity, artists: List<ArtistEntity>?, checksum: String? = null): TrackEntity = transaction {
-        return@transaction TrackEntity.new {
+        val track = TrackEntity.new {
             this.title = metadata.trackInfo.title
             this.trackNumber = metadata.trackInfo.trackNumber
             this.trackCount = metadata.trackInfo.trackCount
@@ -62,6 +63,10 @@ object TrackRepo {
             this.album = album
             this.artists = SizedCollection(artists ?: emptyList())
         }
+        if (metadata.trackInfo.lyrics != null) {
+            LyricsRepo.setLyrics(track, metadata.trackInfo.lyrics)
+        }
+        return@transaction track
     }
 
     fun update(track: TrackEntity, block: TrackEntity.() -> Unit): TrackEntity = transaction {
@@ -112,6 +117,8 @@ object TrackRepo {
 
         track.updatedAt = DateTimeUtils.now()
 
+        LyricsRepo.setLyrics(track, editDto.lyrics)
+
         return@transaction track
     }
 
@@ -137,6 +144,10 @@ object TrackRepo {
             .orderBy(TrackTable.createdAt to SortOrder.DESC)
             .limit(limit)
             .toList()
+    }
+
+    fun getColorScheme(track: TrackEntity): ColorSchemeEntity? = transaction {
+        return@transaction track.cover?.colorScheme
     }
 
     /**
@@ -252,6 +263,7 @@ object TrackRepo {
             path = trackEntity.path,
             checksum = trackEntity.checksum,
             tags = TagRepo.toDto(trackEntity.tags.toList()),
+            hasLyrics = LyricsRepo.hasLyrics(trackEntity.id.value),
             uploader = trackEntity.uploader?.let { UserRepo.toDto(it) },
             createdAt = trackEntity.createdAt,
             updatedAt = trackEntity.updatedAt

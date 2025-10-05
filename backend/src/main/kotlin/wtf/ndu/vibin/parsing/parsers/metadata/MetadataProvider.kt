@@ -7,6 +7,9 @@ import wtf.ndu.vibin.parsing.ParsingUtils
 import wtf.ndu.vibin.parsing.TrackInfoMetadata
 import wtf.ndu.vibin.parsing.parsers.FileParser
 import wtf.ndu.vibin.parsing.parsers.PreparseData
+import wtf.ndu.vibin.settings.LyricFilePathTemplate
+import wtf.ndu.vibin.settings.Settings
+import java.io.File
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -52,6 +55,28 @@ class MetadataProvider : FileParser {
             val tags = tag.getAllNonEmpty(FieldKey.GENRE, FieldKey.LANGUAGE, FieldKey.MOOD, FieldKey.QUALITY, FieldKey.TAGS)
             val comment = tag.getFirstNonEmpty(FieldKey.COMMENT, FieldKey.SUBTITLE, FieldKey.DISC_SUBTITLE)
             val rating = tag.getFirst(FieldKey.RATING).takeIf { it.isNotBlank() }
+            var lyrics = tag.getFirstNonEmpty(FieldKey.LYRICS)?.takeIf { it.isNotBlank() }
+
+            if (lyrics == null) {
+                val lyricsPath = Settings.get(LyricFilePathTemplate)
+                    .replace("{artist}", artist ?: "")
+                    .replace("{album}", album ?: "")
+                    .replace("{title}", title ?: "")
+                    .replace("{parentPath}", data.audioFile.file.parentFile.absolutePath)
+                    .replace("{name}", data.audioFile.file.nameWithoutExtension)
+                    .replace("{ext}", data.audioFile.file.extension)
+                    .replace("{sep}", File.separator)
+                    .trim()
+
+                val lyricsFile = File(lyricsPath)
+                if (lyricsFile.exists() && lyricsFile.isFile) {
+                    try {
+                        lyrics = lyricsFile.readText().takeIf { it.isNotBlank() }
+                    } catch (e: Exception) {
+                        logger.warn("Failed to read lyrics file at $lyricsPath: ${e.message}", e)
+                    }
+                }
+            }
 
             val cover = tag.firstArtwork?.binaryData
 
@@ -87,7 +112,8 @@ class MetadataProvider : FileParser {
                 tags = tags.map { textTagRegex.find(it)?.groups?.get("value")?.value ?: it }.distinct(),
                 comment = comment,
                 coverImageUrl = "data:${tag.firstArtwork?.mimeType};base64,$base64Cover",
-                explicit = rating?.lowercase() == "explicit"
+                explicit = rating?.lowercase() == "explicit",
+                lyrics = lyrics
             )
         }
         catch (e: Exception) {
