@@ -8,4 +8,5 @@ data class AlbumEditDto(
     val coverUrl: String?,
     val description: String?,
     val year: Int?,
+    val isSingle: Boolean?,
 )

@@ -58,6 +58,7 @@ class DeezerProvider(val client: HttpClient) : FileParser, ArtistSearchProvider,
                 coverImageUrl = it.cover_big?.replace("500x500", "512x512"),
                 artistName = it.artist?.name,
                 description = null,
+                isSingle = it.record_type == "single"
             )
         }
     }

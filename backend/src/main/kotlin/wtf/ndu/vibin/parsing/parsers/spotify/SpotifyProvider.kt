@@ -155,7 +155,8 @@ class SpotifyProvider(val client: HttpClient) : ArtistSearchProvider, TrackSearc
                     artistName = it.artists.joinToString { a -> a.name },
                     year = it.release_date.substringBefore("-").toIntOrNull(),
                     coverImageUrl = it.images.maxByOrNull { img -> img.width * img.height }?.url,
-                    description = null
+                    description = null,
+                    isSingle = it.album_type == "single"
                 )
             }
         }

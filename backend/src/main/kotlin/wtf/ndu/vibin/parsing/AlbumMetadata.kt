@@ -9,4 +9,5 @@ data class AlbumMetadata(
     val coverImageUrl: String?,
     val artistName: String?,
     val year: Int? = null,
+    val isSingle: Boolean? = null,
 )

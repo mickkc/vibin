@@ -13,6 +13,7 @@ data class AlbumDto (
     val artists: List<ArtistDto>,
     val cover: ImageDto?,
     val trackCount: Long,
+    val single: Boolean,
     val createdAt: Long,
     val updatedAt: Long?
 )

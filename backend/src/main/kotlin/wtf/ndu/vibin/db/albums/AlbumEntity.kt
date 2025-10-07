@@ -11,6 +11,7 @@ object AlbumTable : ModifiableLongIdTable("album") {
     val title = varchar("title", 255)
     val description = text("description").default("")
     val releaseYear = integer("release_year").nullable()
+    val single = bool("single").nullable()
     val cover = reference("cover", ImageTable).nullable()
 }
 
@@ -27,5 +28,6 @@ class AlbumEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, AlbumTable) {
     var title by AlbumTable.title
     var description by AlbumTable.description
     var releaseYear by AlbumTable.releaseYear
+    var single by AlbumTable.single
     var cover by ImageEntity.Companion optionalReferencedOn AlbumTable.cover
 }

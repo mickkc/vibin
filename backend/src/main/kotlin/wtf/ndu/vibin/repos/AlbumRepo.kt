@@ -88,6 +88,7 @@ object AlbumRepo {
         editDto.title?.takeIf { it.isNotBlank() }?.let { album.title = it }
         editDto.description?.let { album.description = it }
         album.releaseYear = editDto.year
+        album.single = editDto.isSingle
         editDto.coverUrl?.let { url ->
             val cover = album.cover
             album.cover = null
@@ -101,6 +102,20 @@ object AlbumRepo {
             }
         }
         return@transaction album
+    }
+
+    fun estimateIsSingle(albumId: Long): Boolean = transaction {
+        val trackCounts = TrackTable.select(TrackTable.trackCount).where {
+            (TrackTable.albumId eq albumId) and (TrackTable.trackCount neq null)
+        }.map { it[TrackTable.trackCount] }
+        return@transaction trackCounts.all { it == 1 }
+    }
+
+    fun estimateReleaseYear(albumId: Long): Int? = transaction {
+        val years = TrackTable.select(TrackTable.year).where {
+            (TrackTable.albumId eq albumId) and (TrackTable.year neq null)
+        }.mapNotNull { it[TrackTable.year] }
+        return@transaction years.maxOrNull()
     }
 
     fun toDto(albumEntity: AlbumEntity): AlbumDto = transaction {
@@ -126,7 +141,8 @@ object AlbumRepo {
             cover = albumEntity.cover?.let { ImageRepo.toDto(it) },
             artists = ArtistRepo.toDto(getArtistsForAlbum(albumEntity)),
             trackCount = getSongAmountForAlbum(albumEntity),
-            year = albumEntity.releaseYear,
+            year = albumEntity.releaseYear ?: estimateReleaseYear(albumEntity.id.value),
+            single = albumEntity.single ?: estimateIsSingle(albumEntity.id.value),
             createdAt = albumEntity.createdAt,
             updatedAt = albumEntity.updatedAt
         )
