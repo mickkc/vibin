@@ -15,6 +15,7 @@ import wtf.ndu.vibin.parsing.parsers.FileParser
 import wtf.ndu.vibin.parsing.parsers.TrackSearchProvider
 import wtf.ndu.vibin.parsing.parsers.deezer.DeezerProvider
 import wtf.ndu.vibin.parsing.parsers.itunes.ItunesProvider
+import wtf.ndu.vibin.parsing.parsers.lrclib.LrcLibProvider
 import wtf.ndu.vibin.parsing.parsers.metadata.MetadataProvider
 import wtf.ndu.vibin.parsing.parsers.preparser.PreParser
 import wtf.ndu.vibin.parsing.parsers.spotify.SpotifyProvider
@@ -69,6 +70,10 @@ object Parser {
         "Spotify" to spotifyProvider
     )
 
+    val lyricsSearchProviders = mapOf<String, LyricsSearchProvider>(
+        "LrcLib" to LrcLibProvider(client)
+    )
+
     /**
      * Tries to parse the given file using the configured primary and fallback metadata sources.
      *
@@ -105,6 +110,7 @@ object Parser {
     fun getTrackSearchProviders() = trackSearchProviders.keys
     fun getArtistSearchProviders() = artistSearchProviders.keys
     fun getAlbumSearchProviders() = albumSearchProviders.keys
+    fun getLyricsSearchProviders() = lyricsSearchProviders.keys
 
     suspend fun searchTrack(query: String, provider: String): List<TrackInfoMetadata>? {
         val parser = trackSearchProviders[provider] ?: return null
@@ -138,6 +144,18 @@ object Parser {
         }
         catch (e: Exception) {
             logger.error("Error searching album '$query' with provider '$provider': ${e.message}", e)
+            null
+        }
+    }
+
+    suspend fun searchLyrics(query: String, provider: String): List<LyricMetadata>? {
+        val parser = lyricsSearchProviders[provider] ?: return null
+
+        return try {
+            parser.searchLyrics(query)
+        }
+        catch (e: Exception) {
+            logger.error("Error searching lyrics for '$query' with provider '$provider': ${e.message}", e)
             null
         }
     }

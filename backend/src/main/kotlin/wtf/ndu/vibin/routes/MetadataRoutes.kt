@@ -1,13 +1,10 @@
 package wtf.ndu.vibin.routes
 
-import io.ktor.server.application.Application
-import io.ktor.server.auth.authenticate
-import io.ktor.server.response.respond
-import io.ktor.server.routing.get
-import io.ktor.server.routing.routing
-import wtf.ndu.vibin.parsing.ArtistMetadata
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import wtf.ndu.vibin.parsing.Parser
-import wtf.ndu.vibin.parsing.TrackInfoMetadata
 
 fun Application.configureMetadataRoutes() = routing {
 
@@ -18,33 +15,23 @@ fun Application.configureMetadataRoutes() = routing {
                 "file" to Parser.getFileProviders(),
                 "track" to Parser.getTrackSearchProviders(),
                 "artist" to Parser.getArtistSearchProviders(),
-                "album" to Parser.getAlbumSearchProviders()
+                "album" to Parser.getAlbumSearchProviders(),
+                "lyrics" to Parser.getLyricsSearchProviders()
             ))
         }
 
-        get("/api/metadata/track") {
+        get("/api/metadata/{type}") {
             val query = call.request.queryParameters["q"]?.takeIf { it.isNotBlank() } ?: return@get call.missingParameter("q")
             val provider = call.request.queryParameters["provider"] ?: return@get call.missingParameter("provider")
 
-            val results = Parser.searchTrack(query, provider) ?: return@get call.respond(emptyList<TrackInfoMetadata>())
-            call.respond(results)
-        }
-
-        get("/api/metadata/artist") {
-            val query = call.request.queryParameters["q"]?.takeIf { it.isNotBlank() } ?: return@get call.missingParameter("q")
-            val provider = call.request.queryParameters["provider"] ?: return@get call.missingParameter("provider")
-
-            val results = Parser.searchArtist(query, provider) ?: return@get call.respond(emptyList<ArtistMetadata>())
-            call.respond(results)
-        }
-
-        get("/api/metadata/album") {
-            val query = call.request.queryParameters["q"]?.takeIf { it.isNotBlank() } ?: return@get call.missingParameter("q")
-            val provider = call.request.queryParameters["provider"] ?: return@get call.missingParameter("provider")
-
-            val results = Parser.searchAlbum(query, provider) ?: return@get call.respond(emptyList<ArtistMetadata>())
+            val results = when (call.parameters["type"]) {
+                "track" -> Parser.searchTrack(query, provider)
+                "artist" -> Parser.searchArtist(query, provider)
+                "album" -> Parser.searchAlbum(query, provider)
+                "lyrics" -> Parser.searchLyrics(query, provider)
+                else -> return@get call.invalidParameter("type", "track", "artist", "album", "lyrics")
+            } ?: return@get call.respond(emptyList<Any>())
             call.respond(results)
         }
     }
-
 }
