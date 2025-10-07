@@ -22,8 +22,9 @@ fun Application.configureAlbumRoutes() = routing {
             val page = call.request.queryParameters["page"]?.toIntOrNull() ?: 1
             val pageSize = call.request.queryParameters["pageSize"]?.toIntOrNull() ?: Settings.get(PageSize)
             val query = call.request.queryParameters["query"]
+            val showSingles = call.request.queryParameters["showSingles"]?.toBoolean() ?: true
 
-            val (albums, total) = AlbumRepo.getAll(page, pageSize, query ?: "")
+            val (albums, total) = AlbumRepo.getAll(page, pageSize, query ?: "", showSingles = showSingles)
 
             call.respond(PaginatedDto(
                 items = AlbumRepo.toDto(albums),

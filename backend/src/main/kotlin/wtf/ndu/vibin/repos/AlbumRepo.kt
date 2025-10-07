@@ -1,12 +1,10 @@
 package wtf.ndu.vibin.repos
 
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.sql.Case
-import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inSubQuery
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.intLiteral
-import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.albums.AlbumEntity
 import wtf.ndu.vibin.db.albums.AlbumTable
@@ -39,8 +37,11 @@ object AlbumRepo {
         return@transaction AlbumEntity.count()
     }
 
-    fun getAll(page: Int, pageSize: Int, query: String = ""): Pair<List<AlbumEntity>, Long> = transaction {
-        val albums = AlbumEntity.find { AlbumTable.title.lowerCase() like "%${query.lowercase()}%" }
+    fun getAll(page: Int, pageSize: Int, query: String = "", showSingles: Boolean = true): Pair<List<AlbumEntity>, Long> = transaction {
+
+        val notSingleOp = if (!showSingles) notSingleOp() else Op.TRUE
+
+        val albums = AlbumEntity.find { (AlbumTable.title.lowerCase() like "%${query.lowercase()}%") and notSingleOp }
         val count = albums.count()
         val results = albums
             .orderBy(AlbumTable.title to SortOrder.ASC)
@@ -102,6 +103,15 @@ object AlbumRepo {
             }
         }
         return@transaction album
+    }
+
+    fun notSingleOp(): Op<Boolean> {
+        return (AlbumTable.single eq false) or
+                (AlbumTable.id inSubQuery TrackTable
+                    .select(TrackTable.albumId)
+                    .groupBy(TrackTable.albumId)
+                    .where { (TrackTable.trackCount greater 1) or (TrackTable.discCount greater 1) }
+                )
     }
 
     fun estimateIsSingle(albumId: Long): Boolean = transaction {
