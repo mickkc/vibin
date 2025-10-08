@@ -152,6 +152,27 @@ class TestSearchBuilder {
     }
 
     @Test
+    fun testHasLyricsSearch() = transaction {
+        val input = "l:yes"
+        val op = SearchQueryBuilder.build(input)
+        assertEquals("TRACK.ID IN (SELECT LYRICS.TRACK_ID FROM LYRICS)", op.toString())
+    }
+
+    @Test
+    fun testHasNoLyricsSearch() = transaction {
+        val input = "l:no"
+        val op = SearchQueryBuilder.build(input)
+        assertEquals("TRACK.ID NOT IN (SELECT LYRICS.TRACK_ID FROM LYRICS)", op.toString())
+    }
+
+    @Test
+    fun testSearchInLyrics() = transaction {
+        val input = "lc:\"never gonna give you up\""
+        val op = SearchQueryBuilder.build(input)
+        assertEquals("TRACK.ID IN (SELECT LYRICS.TRACK_ID FROM LYRICS WHERE LOWER(LYRICS.CONTENT) LIKE '%never gonna give you up%')", op.toString())
+    }
+
+    @Test
     fun testComplexSearch1() = transaction {
         val input = "a:\"Rick Astley\" AND al:\"Whenever You Need Somebody\" AND t:\"Never Gonna Give You Up\" AND y:1987 AND +pop AND -rock AND e:no"
         val op = SearchQueryBuilder.build(input)

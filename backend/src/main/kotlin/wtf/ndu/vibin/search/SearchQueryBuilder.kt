@@ -12,6 +12,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInSubQuery
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.or
+import wtf.ndu.vibin.db.LyricsTable
 import wtf.ndu.vibin.db.albums.AlbumTable
 import wtf.ndu.vibin.db.artists.ArtistTable
 import wtf.ndu.vibin.db.artists.TrackArtistConnection
@@ -207,6 +208,37 @@ object SearchQueryBuilder {
                 } else {
                     (TrackTable.id notInSubQuery connectionQuery)
                 }
+                addWithRelation(nop, relationPart ?: "AND")
+            }
+            // endregion
+            // region Lyrics
+            else if (opPart.startsWith("l:")) {
+                val hasLyrics = opPart.removePrefix("l:").removeSurrounding("\"")
+                val hasLyricsBoolean = when (hasLyrics.lowercase()) {
+                    in trueBooleans -> true
+                    in falseBooleans -> false
+                    else -> null
+                }
+                if (hasLyricsBoolean == null) continue
+
+                val subQuery = LyricsTable.select(LyricsTable.track)
+
+                val nop = if (hasLyricsBoolean) {
+                    (TrackTable.id inSubQuery subQuery)
+                } else {
+                    (TrackTable.id notInSubQuery subQuery)
+                }
+
+                addWithRelation(nop, relationPart ?: "AND")
+            }
+            else if (opPart.startsWith("lc:")) {
+                val lyricsSearch = opPart.removePrefix("lc:").removeSurrounding("\"")
+                val nop = (TrackTable.id inSubQuery (
+                        LyricsTable.select(LyricsTable.track).where {
+                            LyricsTable.content.lowerCase() like "%${lyricsSearch.lowercase()}%"
+                        }
+                    )
+                )
                 addWithRelation(nop, relationPart ?: "AND")
             }
             // endregion

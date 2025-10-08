@@ -74,6 +74,11 @@ Vibin is a self-hosted music streaming server that allows you to upload, manage,
     - `b:128-256` - Between 128 and 256 kbps
     - `b:-192` - Up to 192 kbps
     - `b:320-` - From 320 kbps onwards
+- `l:boolean`
+  - `l:true` or `l:yes` or `l:1`: Search for tracks with lyrics
+  - `l:false` or `l:no` or `l:0`: Search for tracks without lyrics
+- `lc:word` or `lc:"multiple words"`: Search by lyrics content (Placeholders supported)
+    - `lc:"never gonna give you up"`
 - `AND`, `OR`: Combine multiple search criteria
     - `a:"rick astley" AND t:"never gonna give you up"` - All Rick Astley songs titled "Never Gonna Give You Up"
     - `a:"rick astley" AND e:false` - All Rick Astley songs that are not explicit
