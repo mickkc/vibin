@@ -168,13 +168,14 @@ class AlbumRestTest {
 
     @Test
     fun testUpdateAlbum() = testApp { client ->
-        val album = AlbumTestUtils.createAlbum("Old Title", "Old Description", 2000)
+        val album = AlbumTestUtils.createAlbum("Old Title", "Old Description", 2000, false)
 
         val updateData = AlbumEditDto(
             title = "New Title",
             description = "New Description",
             year = 2021,
-            coverUrl = null
+            coverUrl = null,
+            isSingle = true
         )
 
         val response = client.put("/api/albums/${album.id.value}") {
@@ -187,6 +188,7 @@ class AlbumRestTest {
         assertEquals("New Title", updatedAlbum.title)
         assertEquals("New Description", updatedAlbum.description)
         assertEquals(2021, updatedAlbum.year)
+        assertEquals(true, updatedAlbum.single)
     }
 
     @Test
@@ -197,13 +199,14 @@ class AlbumRestTest {
             PermissionType.MANAGE_ALBUMS to false
         )
 
-        val album = AlbumTestUtils.createAlbum("Old Title", "Old Description", 2000)
+        val album = AlbumTestUtils.createAlbum("Old Title", "Old Description", 2000, false)
 
         val updateData = AlbumEditDto(
             title = "New Title",
             description = "New Description",
             year = 2021,
-            coverUrl = null
+            coverUrl = null,
+            isSingle = true
         )
 
         val response = client.put("/api/albums/${album.id.value}") {
@@ -216,13 +219,14 @@ class AlbumRestTest {
 
     @Test
     fun testUpdateAlbum_EmptyTitle() = testApp { client ->
-        val album = AlbumTestUtils.createAlbum("Old Title", "Old Description", 2000)
+        val album = AlbumTestUtils.createAlbum("Old Title", "Old Description", 2000, false)
 
         val updateData = AlbumEditDto(
             title = "",
             description = "New Description",
             year = 2021,
-            coverUrl = null
+            coverUrl = null,
+            isSingle = true
         )
 
         val response = client.put("/api/albums/${album.id.value}") {
@@ -235,6 +239,7 @@ class AlbumRestTest {
         assertEquals("Old Title", updatedAlbum.title) // Title should remain unchanged
         assertEquals("New Description", updatedAlbum.description)
         assertEquals(2021, updatedAlbum.year)
+        assertEquals(true, updatedAlbum.single)
     }
 
     @Test
@@ -243,7 +248,8 @@ class AlbumRestTest {
             title = "New Title",
             description = "New Description",
             year = 2021,
-            coverUrl = null
+            coverUrl = null,
+            isSingle = true
         )
 
         val response = client.put("/api/albums/9999") {
