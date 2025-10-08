@@ -82,7 +82,6 @@ Vibin is a self-hosted music streaming server that allows you to upload, manage,
 - `AND`, `OR`: Combine multiple search criteria
     - `a:"rick astley" AND t:"never gonna give you up"` - All Rick Astley songs titled "Never Gonna Give You Up"
     - `a:"rick astley" AND e:false` - All Rick Astley songs that are not explicit
-    - `+favorite AND g:pop AND y:2010-` - All favorite pop songs from 2010 onwards
     - `+chill AND (+lofi OR +jazz) AND more` - All chill lofi or jazz songs that have "more" as their title, artist, or album
     - Precedence: `AND` > `OR`
 
