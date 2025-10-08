@@ -13,7 +13,11 @@ fun Application.configureTagRoutes() = routing {
     authenticate("tokenAuth") {
 
         getP("/api/tags", PermissionType.VIEW_TAGS) {
-            val allTags = TagRepo.getAll()
+
+            val query = call.request.queryParameters["query"] ?: ""
+            val limit = call.request.queryParameters["limit"]?.toIntOrNull()?.takeIf { it > 0 }
+
+            val allTags = TagRepo.getAll(query, limit)
             call.respond(TagRepo.toDto(allTags))
         }
 

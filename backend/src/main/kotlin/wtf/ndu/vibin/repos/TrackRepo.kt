@@ -109,9 +109,9 @@ object TrackRepo {
             track.artists = SizedCollection(artists)
         }
 
-        editDto.tagNames?.filter { it.isNotBlank() }?.let { tagNames ->
-            if (tagNames == track.tags.map { it.name }) return@let
-            val tags = tagNames.map { name -> TagRepo.getOrCreateTag(name) }
+        editDto.tagIds?.let { tagIds ->
+            if (tagIds == track.tags.map { it.id.value }) return@let
+            val tags = tagIds.mapNotNull { id -> TagRepo.getById(id) }
             track.tags = SizedCollection(tags)
         }
 

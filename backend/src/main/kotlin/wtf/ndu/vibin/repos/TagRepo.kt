@@ -21,8 +21,18 @@ object TagRepo {
         return@transaction TagEntity.all().count()
     }
 
-    fun getAll(): List<TagEntity> = transaction {
-        return@transaction TagEntity.all().toList()
+    fun getAll(query: String = "", limit: Int? = null): List<TagEntity> = transaction {
+        val tags = TagEntity.find { TagTable.name.lowerCase() like "%${query.lowercase()}%" }
+        val results = tags
+            .orderBy(
+                (Case()
+                    .When(TagTable.name.lowerCase() like "${query.lowercase()}%", intLiteral(1))
+                    .Else(intLiteral(0))) to SortOrder.DESC,
+                TagTable.name to SortOrder.ASC
+            )
+            .let { if (limit != null) it.limit(limit) else it }
+            .toList()
+        return@transaction results
     }
 
     fun getOrCreateTag(name: String): TagEntity = transaction {
