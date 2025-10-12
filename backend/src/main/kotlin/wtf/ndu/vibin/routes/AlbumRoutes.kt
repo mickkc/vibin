@@ -5,10 +5,12 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.receive
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import wtf.ndu.vibin.dto.KeyValueDto
 import wtf.ndu.vibin.dto.PaginatedDto
 import wtf.ndu.vibin.dto.albums.AlbumEditDto
 import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.repos.AlbumRepo
+import wtf.ndu.vibin.repos.TrackRepo
 import wtf.ndu.vibin.settings.PageSize
 import wtf.ndu.vibin.settings.Settings
 import wtf.ndu.vibin.utils.ImageUtils
@@ -50,6 +52,21 @@ fun Application.configureAlbumRoutes() = routing {
             val album = AlbumRepo.getById(albumId) ?: return@getP call.notFound()
 
             call.respond(AlbumRepo.toDataDto(album))
+        }
+
+        getP("/api/albums/artists/{artistId}", PermissionType.VIEW_ALBUMS, PermissionType.VIEW_TRACKS) {
+
+            val artistId = call.parameters["artistId"]?.toLongOrNull() ?: return@getP call.missingParameter("artistId")
+            val albums = AlbumRepo.getByArtistId(artistId)
+
+            val dtos = albums.map { (album, tracks) ->
+                KeyValueDto(
+                    key = AlbumRepo.toDto(album),
+                    value = TrackRepo.toMinimalDto(tracks)
+                )
+            }
+
+            call.respond(dtos)
         }
 
         putP("/api/albums/{albumId}", PermissionType.MANAGE_ALBUMS) {

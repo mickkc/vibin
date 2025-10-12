@@ -5,6 +5,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class KeyValueDto(
-    val key: String,
+    val key: @Contextual @Serializable Any,
     val value: @Contextual @Serializable Any
 )

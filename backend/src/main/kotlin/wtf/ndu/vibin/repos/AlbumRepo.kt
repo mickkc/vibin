@@ -84,6 +84,27 @@ object AlbumRepo {
         return@transaction AlbumEntity.findById(id)
     }
 
+    fun getByArtistId(artistId: Long): Map<AlbumEntity, List<TrackEntity>> = transaction {
+        val albumIds = TrackTable.select(TrackTable.albumId).where {
+            TrackTable.id inSubQuery (
+                TrackArtistConnection
+                    .select(TrackArtistConnection.track)
+                    .where { TrackArtistConnection.artist eq artistId }
+            )
+        }.map { it[TrackTable.albumId] }
+
+        return@transaction AlbumEntity.find { AlbumTable.id inList albumIds }
+            .associateWith { album ->
+                TrackEntity.find {
+                    (TrackTable.albumId eq album.id) and (TrackTable.id inSubQuery (
+                        TrackArtistConnection
+                            .select(TrackArtistConnection.track)
+                            .where { TrackArtistConnection.artist eq artistId }
+                    ))
+                }.toList()
+            }
+    }
+
     fun update(albumId: Long, editDto: AlbumEditDto): AlbumEntity? = transaction {
         val album = AlbumEntity.findById(albumId) ?: return@transaction null
         editDto.title?.takeIf { it.isNotBlank() }?.let { album.title = it }
