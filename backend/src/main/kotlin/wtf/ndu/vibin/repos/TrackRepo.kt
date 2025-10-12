@@ -39,6 +39,14 @@ object TrackRepo {
         return@transaction TrackEntity.findById(id)
     }
 
+    fun getByArtistId(artistId: Long): List<TrackEntity> = transaction {
+        val trackIds = TrackArtistConnection.select(TrackArtistConnection.track).where { TrackArtistConnection.artist eq artistId }
+            .map { it[TrackArtistConnection.track].value }
+        return@transaction TrackEntity.find { TrackTable.id inList trackIds }
+            .orderBy(TrackTable.title to SortOrder.ASC)
+            .toList()
+    }
+
     fun getCover(track: TrackEntity): ImageEntity? = transaction {
         return@transaction track.cover
     }

@@ -32,6 +32,12 @@ fun Application.configureArtistRoutes() = routing {
             ))
         }
 
+        getP("/api/artists/{id}", PermissionType.VIEW_ARTISTS) {
+            val id = call.parameters["id"]?.toLongOrNull() ?: return@getP call.missingParameter("id")
+            val artist = ArtistRepo.getById(id) ?: return@getP call.notFound()
+            call.respond(ArtistRepo.toDto(artist))
+        }
+
         postP("/api/artists", PermissionType.MANAGE_ARTISTS) {
             val data = call.receive<ArtistEditData>()
             try {

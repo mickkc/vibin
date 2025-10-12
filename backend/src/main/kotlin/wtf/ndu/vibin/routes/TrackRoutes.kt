@@ -46,6 +46,13 @@ fun Application.configureTrackRoutes() = routing {
             call.respond(TrackRepo.toDto(track))
         }
 
+        // Get tracks by artist ID
+        getP("/api/tracks/artists/{artistId}", PermissionType.VIEW_TRACKS) {
+            val artistId = call.parameters["artistId"]?.toLongOrNull() ?: return@getP call.missingParameter("artistId")
+            val tracks = TrackRepo.getByArtistId(artistId)
+            call.respond(TrackRepo.toDto(tracks))
+        }
+
         // Edit track details
         putP("/api/tracks/{trackId}", PermissionType.MANAGE_TRACKS) {
             val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@putP call.missingParameter("trackId")

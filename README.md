@@ -12,7 +12,7 @@ Vibin is a self-hosted music streaming server that allows you to upload, manage,
   * [Basic Features](#basic-features)
   * [Music search language](#music-search-language)
     * [Basic Syntax](#basic-syntax)
-      * [Placeholders](#placeholders)
+    * [Placeholders](#placeholders)
 * [Installation](#installation)
   * [Manual Installation](#manual-installation)
   * [Docker](#docker)
@@ -93,7 +93,7 @@ Conditions without a prefix are treated as `AND` by default.
 
 Use parentheses `()` to group conditions and control the order of evaluation.
 
-#### Placeholders
+### Placeholders
 
 - `%`: Matches any sequence of characters (including an empty sequence)
 - `_`: Matches any single character
