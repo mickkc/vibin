@@ -45,6 +45,15 @@ fun Application.configurePlaylistRoutes() = routing {
             call.respond(PlaylistRepo.toDataDto(playlist, tracks))
         }
 
+        getP("/api/playlists/users/{userId}", PermissionType.VIEW_PLAYLISTS, PermissionType.VIEW_USERS) {
+            val requestingUserId = call.getUserId() ?: return@getP call.unauthorized()
+            val userId = call.parameters["userId"]?.toLongOrNull() ?: return@getP call.missingParameter("userId")
+
+            val playlists = PlaylistRepo.getAllForUser(userId, userId == requestingUserId)
+
+            call.respond(PlaylistRepo.toDto(playlists))
+        }
+
         getP("/api/playlists/random", PermissionType.VIEW_PLAYLISTS) {
             val userId = call.getUserId() ?: return@getP call.unauthorized()
             val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 1

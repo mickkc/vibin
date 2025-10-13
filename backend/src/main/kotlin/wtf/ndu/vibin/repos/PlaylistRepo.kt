@@ -44,6 +44,11 @@ object PlaylistRepo {
         return@transaction results to count
     }
 
+    fun getAllForUser(userId: Long, isSelf: Boolean): List<PlaylistEntity> = transaction {
+        val op = if (isSelf) createCollaborationOp(userId) else createPublicCollaborationOp(userId)
+        PlaylistEntity.find(op).toList()
+    }
+
     fun getRandom(limit: Int, userId: Long): List<PlaylistEntity> = transaction {
         val allIds = PlaylistTable
             .select(PlaylistTable.id)
@@ -222,6 +227,18 @@ object PlaylistRepo {
         return (PlaylistTable.public eq true) or (PlaylistTable.id inSubQuery (PlaylistCollaborator.select(
             PlaylistCollaborator.playlist
         ).where { PlaylistCollaborator.user eq userId }) or (PlaylistTable.owner eq userId))
+    }
+
+    /**
+     * Creates an Op to filter public playlists that the given user is part of.
+     * (collaborator or owner)
+     *
+     * @param userId The ID of the user for whom to filter public collaborative playlists.
+     */
+    private fun createPublicCollaborationOp(userId: Long): Op<Boolean> {
+        return (PlaylistTable.public eq true) and ((PlaylistTable.id inSubQuery (PlaylistCollaborator.select(
+            PlaylistCollaborator.playlist
+        ).where { PlaylistCollaborator.user eq userId }) or (PlaylistTable.owner eq userId)))
     }
 
     /**
