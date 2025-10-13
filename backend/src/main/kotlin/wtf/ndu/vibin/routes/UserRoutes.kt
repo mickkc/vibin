@@ -6,17 +6,32 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import wtf.ndu.vibin.auth.CryptoUtil
+import wtf.ndu.vibin.dto.PaginatedDto
 import wtf.ndu.vibin.dto.users.UserEditDto
 import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.repos.UserRepo
+import wtf.ndu.vibin.settings.PageSize
+import wtf.ndu.vibin.settings.Settings
 import wtf.ndu.vibin.utils.ImageUtils
 
 fun Application.configureUserRoutes() = routing {
     authenticate("tokenAuth") {
 
         getP("/api/users", PermissionType.VIEW_USERS) {
-            val users = UserRepo.getAllUsers()
-            call.respond(UserRepo.toDto(users))
+
+            val page = call.request.queryParameters["page"]?.toIntOrNull() ?: 1
+            val pageSize = call.request.queryParameters["pageSize"]?.toIntOrNull() ?: Settings.get(PageSize)
+            val query = call.request.queryParameters["query"] ?: ""
+
+            val (users, count) = UserRepo.getAllUsers(page, pageSize, query)
+            call.respond(
+                PaginatedDto(
+                    items = UserRepo.toDto(users),
+                    total = count,
+                    currentPage = page,
+                    pageSize = pageSize
+                )
+            )
         }
 
         getP("/api/users/me", PermissionType.VIEW_USERS) {

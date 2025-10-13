@@ -1,8 +1,14 @@
 package wtf.ndu.vibin.repos
 
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.exposed.sql.Case
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.intLiteral
+import org.jetbrains.exposed.sql.lowerCase
+import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.auth.CryptoUtil
 import wtf.ndu.vibin.db.GrantedPermissionTable
@@ -111,8 +117,26 @@ object UserRepo {
      *
      * @return A list of all [UserEntity] instances.
      */
-    fun getAllUsers(): List<UserEntity> = transaction {
-        UserEntity.all().toList()
+    fun getAllUsers(page: Int, pageSize: Int, query: String = ""): Pair<List<UserEntity>, Int> = transaction {
+        val users = UserEntity
+            .find {
+                (UserTable.displayName.lowerCase() like "%${query.lowercase()}%") or
+                (UserTable.username.lowerCase() like "%${query.lowercase()}%")
+            }
+            .orderBy(
+                (Case()
+                    .When(UserTable.displayName like "${query.lowercase()}%", intLiteral(2))
+                    .When(UserTable.username like "${query.lowercase()}%", intLiteral(1))
+                    .Else(intLiteral(0))) to SortOrder.DESC,
+                UserTable.displayName to SortOrder.ASC,
+                UserTable.username to SortOrder.ASC
+            )
+        val count = users.count().toInt()
+        val results = users
+            .limit(pageSize)
+            .offset(((page - 1) * pageSize).toLong())
+            .toList()
+        return@transaction results to count
     }
 
     /**

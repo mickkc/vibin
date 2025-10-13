@@ -92,9 +92,9 @@ class UserRestTest {
         }
         assertTrue(response.status.isSuccess())
 
-        val users = UserRepo.getAllUsers()
+        val users = UserRepo.getAllUsers(1, 10)
         transaction {
-            val user = users.find { it.username == "testuser" }
+            val user = users.first.find { it.username == "testuser" }
             assertNotNull(user)
 
             assertEquals(user.displayName, "Test User")
