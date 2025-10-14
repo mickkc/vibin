@@ -2,18 +2,15 @@ package wtf.ndu.vibin.permissions
 
 enum class PermissionType(val id: String, val grantedByDefault: Boolean) {
 
-    ADMIN("admin", false),
 
     CHANGE_SERVER_SETTINGS("change_server_settings", false),
-    CHANGE_OWN_SETTINGS("change_own_settings", true),
-    CHANGE_USER_SETTINGS("change_user_settings", false),
-
     MANAGE_PERMISSIONS("manage_permissions", false),
 
     VIEW_TRACKS("view_tracks", true),
     STREAM_TRACKS("stream_tracks", true),
     MANAGE_TRACKS("manage_tracks", false),
     UPLOAD_TRACKS("upload_tracks", true),
+    DOWNLOAD_TRACKS("download_tracks", true),
     DELETE_TRACKS("delete_tracks", false),
 
     VIEW_ALBUMS("view_albums", true),

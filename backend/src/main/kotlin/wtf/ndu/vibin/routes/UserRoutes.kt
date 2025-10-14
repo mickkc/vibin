@@ -74,7 +74,7 @@ fun Application.configureUserRoutes() = routing {
             if (userEditDto.password != null) {
                 val oldHashedPassword = userEditDto.password.let { CryptoUtil.hashPassword(it, user.salt) }
                 if (!oldHashedPassword.contentEquals(user.passwordHash) && !currentUser.isAdmin) {
-                    return@putP call.forbidden(PermissionType.ADMIN)
+                    return@putP call.forbidden()
                 }
             }
 
