@@ -5,6 +5,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.response.respond
 import io.ktor.server.routing.*
 import wtf.ndu.vibin.db.ListenType
+import wtf.ndu.vibin.dto.UserActivityDto
 import wtf.ndu.vibin.repos.AlbumRepo
 import wtf.ndu.vibin.repos.ArtistRepo
 import wtf.ndu.vibin.repos.ListenRepo
@@ -99,6 +100,22 @@ fun Application.configureStatisticRoutes() = routing {
             call.success(success)
         }
 
-    }
+        get("/api/stats/users/{userId}/activity") {
+            val userId = call.parameters["userId"]?.toLongOrNull() ?: return@get call.missingParameter("userId")
+            val since = call.request.queryParameters["since"]?.toLongOrNull() ?: DateTimeUtils.startOfMonth()
+            val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 10
 
+            if (limit <= 0) {
+                return@get call.invalidParameter("limit", "limit > 0")
+            }
+
+            val activity = ListenRepo.getActivityForUser(userId, since, limit)
+
+            call.respond(UserActivityDto(
+                recentTracks = TrackRepo.toMinimalDto(activity.recentTracks),
+                topTracks = TrackRepo.toMinimalDto(activity.topTracks),
+                topArtists = ArtistRepo.toDto(activity.topArtists)
+            ))
+        }
+    }
 }

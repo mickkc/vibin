@@ -15,6 +15,7 @@ import wtf.ndu.vibin.db.tags.TagEntity
 import wtf.ndu.vibin.db.tracks.TrackEntity
 import wtf.ndu.vibin.dto.KeyValueDto
 import wtf.ndu.vibin.utils.DateTimeUtils
+import wtf.ndu.vibin.utils.UserActivity
 
 object ListenRepo {
 
@@ -173,5 +174,27 @@ object ListenRepo {
             } ?: return@mapNotNull null) }
             .distinct()
             .take(limit)
+    }
+
+    fun getActivityForUser(userId: Long, since: Long, limit: Int): UserActivity {
+        val recentTracks = getRecentTracks(userId, limit)
+
+        val topTracks = getMostListenedTracks(userId, since)
+            .toList()
+            .sortedByDescending { it.second }
+            .take(limit)
+            .map { it.first }
+
+        val topArtists = getMostListenedArtistsByTracks(userId, since)
+            .toList()
+            .sortedByDescending { it.second }
+            .take(limit)
+            .map { it.first }
+
+        return UserActivity(
+            recentTracks = recentTracks,
+            topTracks = topTracks,
+            topArtists = topArtists
+        )
     }
 }
