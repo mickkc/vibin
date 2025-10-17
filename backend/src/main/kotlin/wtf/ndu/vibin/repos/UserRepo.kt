@@ -130,6 +130,10 @@ object UserRepo {
         return@transaction results to count
     }
 
+    fun checkUsernameExists(username: String): Boolean = transaction {
+        return@transaction UserEntity.find { UserTable.username.lowerCase() eq username.lowercase() }.count() > 0
+    }
+
     /**
      * Converts a UserEntity to a UserDto.
      * Loads all lazy fields within a transaction.

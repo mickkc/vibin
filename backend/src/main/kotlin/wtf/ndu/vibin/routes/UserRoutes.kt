@@ -45,11 +45,19 @@ fun Application.configureUserRoutes() = routing {
             call.respond(UserRepo.toDto(user))
         }
 
+        getP("/api/users/username/{username}/exists") {
+            val username = call.parameters["username"] ?: return@getP call.missingParameter("username")
+            val exists = UserRepo.checkUsernameExists(username)
+            call.success(exists)
+        }
+
         postP("/api/users", PermissionType.CREATE_USERS) {
             val userEditDto = call.receive<UserEditDto>()
 
             if (userEditDto.username == null)
                 return@postP call.missingParameter("username")
+            else if (UserRepo.checkUsernameExists(userEditDto.username))
+                return@postP call.invalidParameter("username")
 
             val created = UserRepo.updateOrCreateUser(null, userEditDto)!!
             call.respond(UserRepo.toDto(created))
@@ -70,6 +78,11 @@ fun Application.configureUserRoutes() = routing {
             val user = UserRepo.getById(userId) ?: return@putP call.notFound()
 
             val userEditDto = call.receive<UserEditDto>()
+
+            if (userEditDto.username != null && userEditDto.username != user.username) {
+                if (UserRepo.checkUsernameExists(userEditDto.username))
+                    return@putP call.invalidParameter("username")
+            }
 
             if (userEditDto.password != null) {
                 val oldHashedPassword = userEditDto.password.let { CryptoUtil.hashPassword(it, user.salt) }
