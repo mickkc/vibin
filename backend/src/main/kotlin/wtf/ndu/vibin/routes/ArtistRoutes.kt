@@ -10,25 +10,21 @@ import wtf.ndu.vibin.dto.PaginatedDto
 import wtf.ndu.vibin.dto.artists.ArtistEditData
 import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.repos.ArtistRepo
-import wtf.ndu.vibin.settings.PageSize
-import wtf.ndu.vibin.settings.Settings
 import wtf.ndu.vibin.utils.ImageUtils
 
 fun Application.configureArtistRoutes() = routing {
 
     authenticate("tokenAuth") {
         getP("/api/artists", PermissionType.VIEW_ARTISTS) {
-            val page = call.parameters["page"]?.toIntOrNull() ?: 1
-            val pageSize = call.parameters["pageSize"]?.toIntOrNull() ?: Settings.get(PageSize)
-            val query = call.request.queryParameters["query"]
+            val params = call.getPaginatedSearchParams() ?: return@getP
 
-            val (artists, total) = ArtistRepo.getAll(page, pageSize, query ?: "")
+            val (artists, total) = ArtistRepo.getAll(params)
 
             call.respond(PaginatedDto(
                 items = ArtistRepo.toDto(artists),
                 total = total.toInt(),
-                currentPage = page,
-                pageSize = pageSize
+                currentPage = params.page,
+                pageSize = params.pageSize
             ))
         }
 

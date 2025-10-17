@@ -19,6 +19,7 @@ import wtf.ndu.vibin.dto.albums.AlbumDto
 import wtf.ndu.vibin.dto.albums.AlbumEditDto
 import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.processing.ThumbnailProcessor
+import wtf.ndu.vibin.routes.PaginatedSearchParams
 
 object AlbumRepo {
 
@@ -37,16 +38,16 @@ object AlbumRepo {
         return@transaction AlbumEntity.count()
     }
 
-    fun getAll(page: Int, pageSize: Int, query: String = "", showSingles: Boolean = true): Pair<List<AlbumEntity>, Long> = transaction {
+    fun getAll(params: PaginatedSearchParams, showSingles: Boolean = true): Pair<List<AlbumEntity>, Long> = transaction {
 
         val notSingleOp = if (!showSingles) notSingleOp() else Op.TRUE
 
-        val albums = AlbumEntity.find { (AlbumTable.title.lowerCase() like "%${query.lowercase()}%") and notSingleOp }
+        val albums = AlbumEntity.find { (AlbumTable.title.lowerCase() like "%${params.query.lowercase()}%") and notSingleOp }
         val count = albums.count()
         val results = albums
             .orderBy(AlbumTable.title to SortOrder.ASC)
-            .limit(pageSize)
-            .offset(((page - 1) * pageSize).toLong())
+            .limit(params.pageSize)
+            .offset(params.offset)
             .toList()
         return@transaction results to count
     }

@@ -10,6 +10,8 @@ import wtf.ndu.vibin.dto.errors.ErrorDtoType
 import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.repos.PermissionRepo
 import wtf.ndu.vibin.repos.UserRepo
+import wtf.ndu.vibin.settings.PageSize
+import wtf.ndu.vibin.settings.Settings
 
 suspend fun RoutingCall.success(success: Boolean = true) {
     respond(mapOf("success" to success))
@@ -99,4 +101,35 @@ fun Route.deleteP(path: String, vararg permissions: PermissionType, body: suspen
         }
         body()
     }
+}
+
+data class PaginatedSearchParams(
+    val query: String,
+    val page: Int,
+    val pageSize: Int
+) {
+    val offset: Long
+        get() = ((page - 1) * pageSize).toLong()
+}
+
+suspend fun RoutingCall.getPaginatedSearchParams(): PaginatedSearchParams? {
+    val query = request.queryParameters["query"] ?: ""
+    val page = request.queryParameters["page"]?.toIntOrNull() ?: 1
+    val pageSize = request.queryParameters["pageSize"]?.toIntOrNull() ?: Settings.get(PageSize)
+
+    if (page <= 0) {
+        invalidParameter("page", "page > 0")
+        return null
+    }
+
+    if (pageSize !in 1..100) {
+        invalidParameter("pageSize", "0 < pageSize <= 100")
+        return null
+    }
+
+    return PaginatedSearchParams(
+        query = query,
+        page = page,
+        pageSize = pageSize
+    )
 }

@@ -2,7 +2,7 @@ package wtf.ndu.vibin.routes
 
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.request.receive
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import wtf.ndu.vibin.dto.KeyValueDto
@@ -11,8 +11,6 @@ import wtf.ndu.vibin.dto.albums.AlbumEditDto
 import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.repos.AlbumRepo
 import wtf.ndu.vibin.repos.TrackRepo
-import wtf.ndu.vibin.settings.PageSize
-import wtf.ndu.vibin.settings.Settings
 import wtf.ndu.vibin.utils.ImageUtils
 
 fun Application.configureAlbumRoutes() = routing {
@@ -21,18 +19,16 @@ fun Application.configureAlbumRoutes() = routing {
 
         getP("/api/albums", PermissionType.VIEW_ALBUMS) {
 
-            val page = call.request.queryParameters["page"]?.toIntOrNull() ?: 1
-            val pageSize = call.request.queryParameters["pageSize"]?.toIntOrNull() ?: Settings.get(PageSize)
-            val query = call.request.queryParameters["query"]
+            val params = call.getPaginatedSearchParams() ?: return@getP
             val showSingles = call.request.queryParameters["showSingles"]?.toBoolean() ?: true
 
-            val (albums, total) = AlbumRepo.getAll(page, pageSize, query ?: "", showSingles = showSingles)
+            val (albums, total) = AlbumRepo.getAll(params, showSingles = showSingles)
 
             call.respond(PaginatedDto(
                 items = AlbumRepo.toDto(albums),
                 total = total.toInt(),
-                pageSize = pageSize,
-                currentPage = page
+                pageSize = params.pageSize,
+                currentPage = params.page
             ))
         }
 

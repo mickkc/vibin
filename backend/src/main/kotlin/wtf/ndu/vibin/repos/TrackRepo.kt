@@ -19,6 +19,7 @@ import wtf.ndu.vibin.dto.tracks.TrackEditDto
 import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.parsing.TrackMetadata
 import wtf.ndu.vibin.processing.ThumbnailProcessor
+import wtf.ndu.vibin.routes.PaginatedSearchParams
 import wtf.ndu.vibin.search.SearchQueryBuilder
 import wtf.ndu.vibin.utils.ChecksumUtil
 import wtf.ndu.vibin.utils.DateTimeUtils
@@ -161,19 +162,17 @@ object TrackRepo {
     /**
      * Searches for tracks based on the provided query string.
      *
-     * @param query The search query string.
+     * @param params The paginated search parameters.
      * @param advanced If true, uses advanced search parsing; otherwise, performs a simple case-insensitive title search.
-     * @param page The page number for pagination (1-based).
-     * @param pageSize The number of items per page.
      * @return A list of [TrackEntity] matching the search criteria.
      */
-    fun getSearched(query: String, advanced: Boolean, page: Int, pageSize: Int): Pair<List<TrackEntity>, Long> = transaction {
-        val tracks = TrackEntity.find { buildQuery(query, advanced) }
+    fun getSearched(params: PaginatedSearchParams, advanced: Boolean): Pair<List<TrackEntity>, Long> = transaction {
+        val tracks = TrackEntity.find { buildQuery(params.query, advanced) }
         val count = tracks.count()
         val results = tracks
             .orderBy(TrackTable.title to SortOrder.ASC)
-            .limit(pageSize)
-            .offset(((page - 1) * pageSize).toLong())
+            .limit(params.pageSize)
+            .offset(params.offset)
             .toList()
         return@transaction results to count
     }

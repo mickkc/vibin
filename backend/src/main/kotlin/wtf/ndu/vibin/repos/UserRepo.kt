@@ -19,6 +19,7 @@ import wtf.ndu.vibin.dto.users.UserDto
 import wtf.ndu.vibin.dto.users.UserEditDto
 import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.processing.ThumbnailProcessor
+import wtf.ndu.vibin.routes.PaginatedSearchParams
 import wtf.ndu.vibin.utils.DateTimeUtils
 
 /**
@@ -108,24 +109,24 @@ object UserRepo {
      *
      * @return A list of all [UserEntity] instances.
      */
-    fun getAllUsers(page: Int, pageSize: Int, query: String = ""): Pair<List<UserEntity>, Int> = transaction {
+    fun getAllUsers(params: PaginatedSearchParams): Pair<List<UserEntity>, Int> = transaction {
         val users = UserEntity
             .find {
-                (UserTable.displayName.lowerCase() like "%${query.lowercase()}%") or
-                (UserTable.username.lowerCase() like "%${query.lowercase()}%")
+                (UserTable.displayName.lowerCase() like "%${params.query.lowercase()}%") or
+                (UserTable.username.lowerCase() like "%${params.query.lowercase()}%")
             }
             .orderBy(
                 (Case()
-                    .When(UserTable.displayName like "${query.lowercase()}%", intLiteral(2))
-                    .When(UserTable.username like "${query.lowercase()}%", intLiteral(1))
+                    .When(UserTable.displayName like "${params.query.lowercase()}%", intLiteral(2))
+                    .When(UserTable.username like "${params.query.lowercase()}%", intLiteral(1))
                     .Else(intLiteral(0))) to SortOrder.DESC,
                 UserTable.displayName to SortOrder.ASC,
                 UserTable.username to SortOrder.ASC
             )
         val count = users.count().toInt()
         val results = users
-            .limit(pageSize)
-            .offset(((page - 1) * pageSize).toLong())
+            .limit(params.pageSize)
+            .offset(params.offset)
             .toList()
         return@transaction results to count
     }

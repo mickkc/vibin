@@ -1,6 +1,6 @@
 package wtf.ndu.vibin.routes
 
-import io.ktor.http.ContentType
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
@@ -10,8 +10,6 @@ import wtf.ndu.vibin.dto.PaginatedDto
 import wtf.ndu.vibin.dto.playlists.PlaylistEditDto
 import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.repos.PlaylistRepo
-import wtf.ndu.vibin.settings.PageSize
-import wtf.ndu.vibin.settings.Settings
 
 fun Application.configurePlaylistRoutes() = routing {
     authenticate("tokenAuth") {
@@ -19,19 +17,17 @@ fun Application.configurePlaylistRoutes() = routing {
         getP("/api/playlists", PermissionType.VIEW_PLAYLISTS) {
 
             val userId = call.getUserId() ?: return@getP call.unauthorized()
-            val page = call.request.queryParameters["p"]?.toIntOrNull() ?: 1
-            val pageSize = call.request.queryParameters["pageSize"]?.toIntOrNull() ?: Settings.get(PageSize)
-            val query = call.request.queryParameters["query"]
+            val params = call.getPaginatedSearchParams() ?: return@getP
             val onlyOwn = call.request.queryParameters["onlyOwn"]?.toBoolean() ?: false
 
             // Get the playlists for the requested page
-            val (playlists, total) = PlaylistRepo.getAll(page, pageSize, userId, query ?: "", onlyOwn)
+            val (playlists, total) = PlaylistRepo.getAll(params, userId, onlyOwn)
 
             call.respond(PaginatedDto(
                 items = PlaylistRepo.toDto(playlists),
                 total = total.toInt(),
-                pageSize = pageSize,
-                currentPage = page
+                pageSize = params.pageSize,
+                currentPage = params.page
             ))
         }
 

@@ -82,18 +82,17 @@ fun Application.configureTrackRoutes() = routing {
 
         // Search tracks
         getP("/api/tracks/search", PermissionType.VIEW_TRACKS) {
-            val query = call.request.queryParameters["query"] ?: return@getP call.missingParameter("query")
-            val advanced = call.request.queryParameters["advanced"]?.toBooleanStrictOrNull() ?: false
-            val page = call.request.queryParameters["page"]?.toIntOrNull() ?: 1
-            val pageSize = call.request.queryParameters["pageSize"]?.toIntOrNull() ?: Settings.get(PageSize)
 
-            val (results, count) = TrackRepo.getSearched(query, advanced, page, pageSize)
+            val params = call.getPaginatedSearchParams() ?: return@getP
+            val advanced = call.request.queryParameters["advanced"]?.toBooleanStrictOrNull() ?: false
+
+            val (results, count) = TrackRepo.getSearched(params, advanced)
 
             call.respond(PaginatedDto(
                 items = TrackRepo.toMinimalDto(results),
                 total = count.toInt(),
-                pageSize = pageSize,
-                currentPage = page
+                pageSize = params.pageSize,
+                currentPage = params.page
             ))
         }
 

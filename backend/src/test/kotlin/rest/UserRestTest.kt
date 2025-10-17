@@ -10,6 +10,7 @@ import wtf.ndu.vibin.auth.CryptoUtil
 import wtf.ndu.vibin.dto.users.UserDto
 import wtf.ndu.vibin.dto.users.UserEditDto
 import wtf.ndu.vibin.repos.UserRepo
+import wtf.ndu.vibin.routes.PaginatedSearchParams
 import kotlin.test.*
 
 class UserRestTest {
@@ -92,7 +93,7 @@ class UserRestTest {
         }
         assertTrue(response.status.isSuccess())
 
-        val users = UserRepo.getAllUsers(1, 10)
+        val users = UserRepo.getAllUsers(PaginatedSearchParams("", 1, 10))
         transaction {
             val user = users.first.find { it.username == "testuser" }
             assertNotNull(user)

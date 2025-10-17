@@ -12,6 +12,7 @@ import wtf.ndu.vibin.dto.ArtistDto
 import wtf.ndu.vibin.dto.artists.ArtistEditData
 import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.processing.ThumbnailProcessor
+import wtf.ndu.vibin.routes.PaginatedSearchParams
 import wtf.ndu.vibin.utils.DateTimeUtils
 
 object ArtistRepo {
@@ -94,13 +95,13 @@ object ArtistRepo {
         return@transaction true
     }
 
-    fun getAll(page: Int, pageSize: Int, query: String = ""): Pair<List<ArtistEntity>, Long> = transaction {
-        val artists = ArtistEntity.find { ArtistTable.name.lowerCase() like "%${query.lowercase()}%" }
+    fun getAll(params: PaginatedSearchParams): Pair<List<ArtistEntity>, Long> = transaction {
+        val artists = ArtistEntity.find { ArtistTable.name.lowerCase() like "%${params.query.lowercase()}%" }
         val count = artists.count()
         val results = artists
             .orderBy(ArtistTable.name to SortOrder.ASC)
-            .limit(pageSize)
-            .offset(((page - 1) * pageSize).toLong())
+            .limit(params.pageSize)
+            .offset(params.offset)
             .toList()
         return@transaction results to count
     }

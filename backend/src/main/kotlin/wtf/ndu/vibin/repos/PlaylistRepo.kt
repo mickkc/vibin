@@ -20,6 +20,7 @@ import wtf.ndu.vibin.dto.playlists.PlaylistTrackDto
 import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.processing.ThumbnailProcessor
+import wtf.ndu.vibin.routes.PaginatedSearchParams
 import wtf.ndu.vibin.utils.DateTimeUtils
 import wtf.ndu.vibin.utils.ImageUtils
 import wtf.ndu.vibin.utils.PathUtils
@@ -32,14 +33,14 @@ object PlaylistRepo {
         PlaylistEntity.find (createOp(userId)).count()
     }
 
-    fun getAll(page: Int, pageSize: Int, userId: Long, query: String = "", onlyOwn: Boolean = false): Pair<List<PlaylistEntity>, Long> = transaction {
+    fun getAll(params: PaginatedSearchParams, userId: Long, onlyOwn: Boolean = false): Pair<List<PlaylistEntity>, Long> = transaction {
         val op = if (onlyOwn) createCollaborationOp(userId) else createOp(userId)
-        val playlists = PlaylistEntity.find (op and (PlaylistTable.name.lowerCase() like "%${query.lowercase()}%"))
+        val playlists = PlaylistEntity.find (op and (PlaylistTable.name.lowerCase() like "%${params.query.lowercase()}%"))
         val count = playlists.count()
         val results = playlists
             .orderBy(PlaylistTable.name to SortOrder.DESC)
-            .limit(pageSize)
-            .offset(((page - 1) * pageSize).toLong())
+            .limit(params.pageSize)
+            .offset(params.offset)
             .toList()
         return@transaction results to count
     }

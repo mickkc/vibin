@@ -10,8 +10,6 @@ import wtf.ndu.vibin.dto.PaginatedDto
 import wtf.ndu.vibin.dto.users.UserEditDto
 import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.repos.UserRepo
-import wtf.ndu.vibin.settings.PageSize
-import wtf.ndu.vibin.settings.Settings
 import wtf.ndu.vibin.utils.ImageUtils
 
 fun Application.configureUserRoutes() = routing {
@@ -19,17 +17,15 @@ fun Application.configureUserRoutes() = routing {
 
         getP("/api/users", PermissionType.VIEW_USERS) {
 
-            val page = call.request.queryParameters["page"]?.toIntOrNull() ?: 1
-            val pageSize = call.request.queryParameters["pageSize"]?.toIntOrNull() ?: Settings.get(PageSize)
-            val query = call.request.queryParameters["query"] ?: ""
+            val params = call.getPaginatedSearchParams() ?: return@getP
 
-            val (users, count) = UserRepo.getAllUsers(page, pageSize, query)
+            val (users, count) = UserRepo.getAllUsers(params)
             call.respond(
                 PaginatedDto(
                     items = UserRepo.toDto(users),
                     total = count,
-                    currentPage = page,
-                    pageSize = pageSize
+                    currentPage = params.page,
+                    pageSize = params.pageSize
                 )
             )
         }
