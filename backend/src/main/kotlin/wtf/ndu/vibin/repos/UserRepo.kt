@@ -84,27 +84,18 @@ object UserRepo {
         }
 
         if (editDto.profilePictureUrl != null) {
+
+            val oldProfilePicture = user.profilePicture
+            user.profilePicture = null
+            oldProfilePicture?.delete()
+
             val data = runBlocking { Parser.downloadCoverImage(editDto.profilePictureUrl) }
             val image = data?.let { ThumbnailProcessor.getImage(data, ThumbnailProcessor.ThumbnailType.USER, user.id.value.toString()) }
-            user.profilePicture?.delete()
             user.profilePicture = image
         }
 
         user.updatedAt = DateTimeUtils.now()
         return@transaction user
-    }
-
-    /**
-     * Updates the specified user with the provided block of code.
-     *
-     * @param user The user to update.
-     * @param block The block of code to execute on the user for updating fields.
-     */
-    fun updateUser(user: UserEntity, block: UserEntity.() -> Unit): UserEntity = transaction {
-        user.apply {
-            this.block()
-            this.updatedAt = DateTimeUtils.now()
-        }
     }
 
     fun deleteUser(user: UserEntity) = transaction {
