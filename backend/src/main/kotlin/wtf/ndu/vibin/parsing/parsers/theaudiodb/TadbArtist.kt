@@ -25,5 +25,5 @@ data class TadbArtist (
 
 @Serializable
 data class TadbArtistResponse (
-    val artists: List<TadbArtist>
+    val artists: List<TadbArtist>?
 )

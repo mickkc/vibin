@@ -30,9 +30,9 @@ class TheAudioDbProvider(val client: HttpClient) : ArtistSearchProvider {
             }
 
             val result = response.body<TadbArtistResponse>()
-            logger.info("TheAudioDb API response for '$query': found ${result.artists.size} results")
+            logger.info("TheAudioDb API response for '$query': found ${result.artists?.size} results")
 
-            return result.artists.map {
+            return result.artists?.map {
                 ArtistMetadata(
                     name = it.strArtist,
                     pictureUrl = it.strArtistThumb?.replace("500x500", "512x512"),
