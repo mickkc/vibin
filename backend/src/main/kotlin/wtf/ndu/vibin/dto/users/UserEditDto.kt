@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class UserEditDto(
     val username: String?,
     val displayName: String?,
+    val description: String?,
     val email: String?,
     val isAdmin: Boolean?,
     val isActive: Boolean?,

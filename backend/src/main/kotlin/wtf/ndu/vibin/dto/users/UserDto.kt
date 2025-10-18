@@ -7,7 +7,8 @@ import wtf.ndu.vibin.dto.ImageDto
 data class UserDto(
     val id: Long,
     val username: String,
-    val displayName: String,
+    val displayName: String?,
+    val description: String,
     val email: String?,
     val isActive: Boolean,
     val isAdmin: Boolean,

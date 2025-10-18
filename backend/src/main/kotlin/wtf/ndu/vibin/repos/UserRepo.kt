@@ -59,6 +59,7 @@ object UserRepo {
         val user = if (id != null) UserEntity.findById(id) else UserEntity.new {
             username = editDto.username!!
             displayName = editDto.displayName
+            description = editDto.description ?: ""
             email = editDto.email
             isActive = editDto.isActive ?: true
             isAdmin = editDto.isAdmin ?: false
@@ -78,6 +79,7 @@ object UserRepo {
                 editDto.password?.let {
                     this.passwordHash = CryptoUtil.hashPassword(it, this.salt)
                 }
+                editDto.description?.let { this.description = it }
             }
         }
         else {
@@ -154,7 +156,8 @@ object UserRepo {
         return UserDto(
             id = entity.id.value,
             username = entity.username,
-            displayName = entity.displayName ?: entity.username,
+            description = entity.description,
+            displayName = entity.displayName,
             email = entity.email,
             isActive = entity.isActive,
             isAdmin = entity.isAdmin,

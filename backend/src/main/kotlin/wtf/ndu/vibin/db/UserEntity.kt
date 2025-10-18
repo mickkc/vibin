@@ -6,11 +6,12 @@ import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.db.images.ImageTable
 
 object UserTable : ModifiableLongIdTable("user") {
-    val username = varchar("username", 50).uniqueIndex()
-    val displayName = varchar("display_name", 100).nullable()
+    val username = varchar("username", 255).uniqueIndex()
+    val displayName = varchar("display_name", 255).nullable()
+    val description = text("description").default("")
     val passwordHash = binary("password_hash", 256)
     val salt = binary("salt", 16)
-    val email = varchar("email", 100).nullable()
+    val email = varchar("email", 255).nullable()
     val isActive = bool("is_active").default(true)
     val isAdmin = bool("is_admin").default(false)
     val lastLogin = long("last_login").nullable()
@@ -36,6 +37,7 @@ class UserEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, UserTable) {
 
     var username by UserTable.username
     var displayName by UserTable.displayName
+    var description by UserTable.description
     var passwordHash by UserTable.passwordHash
     var salt by UserTable.salt
     var email by UserTable.email
