@@ -45,6 +45,10 @@ object SessionRepo {
         SessionEntity.find { SessionTable.userId eq userId }.forEach { it.delete() }
     }
 
+    fun invalidateAllMediaTokensForUser(userId: Long) = transaction {
+        MediaTokenEntity.find { MediaTokenTable.user eq userId }.forEach { it.delete() }
+    }
+
     fun createMediaToken(user: UserEntity, deviceId: String): MediaTokenEntity = transaction {
         val token = CryptoUtil.createToken()
 

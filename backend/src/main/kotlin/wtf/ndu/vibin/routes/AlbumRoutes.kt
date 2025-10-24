@@ -50,6 +50,17 @@ fun Application.configureAlbumRoutes() = routing {
             call.respond(AlbumRepo.toDataDto(album))
         }
 
+        deleteP("/api/albums/{albumId}", PermissionType.DELETE_ALBUMS) {
+            val albumId = call.parameters["albumId"]?.toLongOrNull() ?: return@deleteP call.missingParameter("albumId")
+            val deleted = AlbumRepo.delete(albumId)
+
+            if (!deleted) {
+                return@deleteP call.notFound()
+            }
+
+            call.success()
+        }
+
         getP("/api/albums/artists/{artistId}", PermissionType.VIEW_ALBUMS, PermissionType.VIEW_TRACKS) {
 
             val artistId = call.parameters["artistId"]?.toLongOrNull() ?: return@getP call.missingParameter("artistId")

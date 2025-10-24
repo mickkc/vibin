@@ -143,6 +143,14 @@ object AlbumRepo {
         return@transaction trackCounts.all { it == 1 }
     }
 
+    fun delete(albumId: Long): Boolean = transaction {
+
+        val album = AlbumEntity.findById(albumId) ?: return@transaction false
+        album.delete()
+
+        return@transaction true
+    }
+
     fun estimateReleaseYear(albumId: Long): Int? = transaction {
         val years = TrackTable.select(TrackTable.year).where {
             (TrackTable.albumId eq albumId) and (TrackTable.year neq null)

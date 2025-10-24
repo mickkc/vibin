@@ -89,6 +89,12 @@ object PlaylistTrackRepo {
         return@transaction deleted > 0
     }
 
+    fun deleteTrackFromAllPlaylists(track: TrackEntity) = transaction {
+        PlaylistTrackTable.deleteWhere {
+            PlaylistTrackTable.track eq track.id.value
+        }
+    }
+
     /**
      * Move a track to a new position within the playlist.
      *

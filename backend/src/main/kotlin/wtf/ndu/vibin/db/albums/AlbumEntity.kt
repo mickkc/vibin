@@ -6,6 +6,8 @@ import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.db.images.ImageTable
 import wtf.ndu.vibin.db.ModifiableLongIdEntity
 import wtf.ndu.vibin.db.ModifiableLongIdTable
+import wtf.ndu.vibin.db.tracks.TrackEntity
+import wtf.ndu.vibin.db.tracks.TrackTable
 
 object AlbumTable : ModifiableLongIdTable("album") {
     val title = varchar("title", 255)
@@ -30,4 +32,19 @@ class AlbumEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, AlbumTable) {
     var releaseYear by AlbumTable.releaseYear
     var single by AlbumTable.single
     var cover by ImageEntity.Companion optionalReferencedOn AlbumTable.cover
+
+    override fun delete() {
+
+        // Delete the cover image if it exists
+        val cover = this.cover
+        this.cover = null
+        cover?.delete()
+
+        val albumId = this.id.value
+
+        // Delete tracks associated with this album
+        TrackEntity.find { TrackTable.albumId eq albumId }.forEach { it.delete() }
+
+        super.delete()
+    }
 }

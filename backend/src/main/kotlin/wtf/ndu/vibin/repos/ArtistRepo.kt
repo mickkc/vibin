@@ -90,7 +90,6 @@ object ArtistRepo {
 
     fun deleteArtist(artistId: Long): Boolean = transaction {
         val artist = ArtistEntity.findById(artistId) ?: return@transaction false
-        artist.image?.delete()
         artist.delete()
         return@transaction true
     }

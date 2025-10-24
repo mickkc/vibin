@@ -94,6 +94,7 @@ fun Application.configureUserRoutes() = routing {
 
         deleteP("/api/users/{userId}") {
             val userId = call.parameters["userId"]?.toLongOrNull() ?: return@deleteP call.missingParameter("userId")
+            val deleteData = call.parameters["deleteData"]?.toBoolean() ?: false
 
             if (userId == call.getUserId()) {
                 if (!call.hasPermissions(PermissionType.DELETE_OWN_USER))
@@ -104,9 +105,12 @@ fun Application.configureUserRoutes() = routing {
                     return@deleteP call.forbidden(PermissionType.DELETE_USERS)
             }
 
-            val user = UserRepo.getById(userId) ?: return@deleteP call.notFound()
+            val deleted = UserRepo.deleteUser(userId, deleteData)
 
-            UserRepo.deleteUser(user)
+            if (!deleted) {
+                return@deleteP call.notFound()
+            }
+
             call.success()
         }
 

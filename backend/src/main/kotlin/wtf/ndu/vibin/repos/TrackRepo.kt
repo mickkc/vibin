@@ -155,6 +155,12 @@ object TrackRepo {
             .toList()
     }
 
+    fun getUploadedByUser(userId: Long): List<TrackEntity> = transaction {
+        return@transaction TrackEntity.find { TrackTable.uploader eq userId }
+            .orderBy(TrackTable.createdAt to SortOrder.DESC)
+            .toList()
+    }
+
     fun getColorScheme(track: TrackEntity): ColorSchemeEntity? = transaction {
         return@transaction track.cover?.colorScheme
     }
@@ -245,7 +251,6 @@ object TrackRepo {
     }
 
     fun delete(track: TrackEntity) = transaction {
-        track.cover?.delete()
         track.delete()
     }
 

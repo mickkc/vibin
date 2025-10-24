@@ -11,7 +11,6 @@ import wtf.ndu.vibin.db.UserEntity
 import wtf.ndu.vibin.db.playlists.PlaylistCollaborator
 import wtf.ndu.vibin.db.playlists.PlaylistEntity
 import wtf.ndu.vibin.db.playlists.PlaylistTable
-import wtf.ndu.vibin.db.playlists.PlaylistTrackTable
 import wtf.ndu.vibin.db.tracks.TrackEntity
 import wtf.ndu.vibin.dto.playlists.PlaylistDataDto
 import wtf.ndu.vibin.dto.playlists.PlaylistDto
@@ -48,6 +47,10 @@ object PlaylistRepo {
     fun getAllForUser(userId: Long, isSelf: Boolean): List<PlaylistEntity> = transaction {
         val op = if (isSelf) createCollaborationOp(userId) else createPublicCollaborationOp(userId)
         PlaylistEntity.find(op).toList()
+    }
+
+    fun getOwnedByUser(userId: Long): List<PlaylistEntity> = transaction {
+        PlaylistEntity.find { PlaylistTable.owner eq userId }.toList()
     }
 
     fun getRandom(limit: Int, userId: Long): List<PlaylistEntity> = transaction {
@@ -147,17 +150,6 @@ object PlaylistRepo {
 
     fun deletePlaylist(playlistId: Long) = transaction {
         val playlist = PlaylistEntity.findById(playlistId) ?: return@transaction
-
-        // Delete links to collaborators and tracks
-        PlaylistCollaborator.deleteWhere { PlaylistCollaborator.playlist eq playlistId }
-        PlaylistTrackTable.deleteWhere { PlaylistTrackTable.playlist eq playlistId }
-
-        // Delete cover image if exists
-        val cover = playlist.cover
-        playlist.cover = null
-        cover?.delete()
-
-        // Finally, delete the playlist
         playlist.delete()
     }
 

@@ -2,6 +2,8 @@ package wtf.ndu.vibin.db.playlists
 
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
 import wtf.ndu.vibin.db.ModifiableLongIdEntity
 import wtf.ndu.vibin.db.ModifiableLongIdTable
 import wtf.ndu.vibin.db.tracks.TrackEntity
@@ -42,4 +44,21 @@ class PlaylistEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, PlaylistTa
     var tracks by TrackEntity.Companion via PlaylistTrackTable orderBy PlaylistTrackTable.position
     var collaborators by UserEntity.Companion via PlaylistCollaborator
     var owner by UserEntity referencedOn PlaylistTable.owner
+
+    override fun delete() {
+        // Delete the cover image if it exists
+        val cover = this.cover
+        this.cover = null
+        cover?.delete()
+
+        val playlistId = this.id.value
+
+        // Remove associated playlist collaborators
+        PlaylistCollaborator.deleteWhere { PlaylistCollaborator.playlist eq playlistId }
+
+        // Remove associated playlist tracks
+        PlaylistTrackTable.deleteWhere { PlaylistTrackTable.playlist eq playlistId }
+
+        super.delete()
+    }
 }

@@ -1,17 +1,10 @@
 package wtf.ndu.vibin.repos
 
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.sql.Case
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.intLiteral
-import org.jetbrains.exposed.sql.lowerCase
-import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.auth.CryptoUtil
-import wtf.ndu.vibin.db.GrantedPermissionTable
 import wtf.ndu.vibin.db.UserEntity
 import wtf.ndu.vibin.db.UserTable
 import wtf.ndu.vibin.db.images.ImageEntity
@@ -101,9 +94,21 @@ object UserRepo {
         return@transaction user
     }
 
-    fun deleteUser(user: UserEntity) = transaction {
-        GrantedPermissionTable.deleteWhere { GrantedPermissionTable.user eq user.id.value }
+    fun deleteUser(userId: Long, deleteData: Boolean): Boolean = transaction {
+
+        val user = UserEntity.findById(userId) ?: return@transaction false
+
+        val uploadedTracks = TrackRepo.getUploadedByUser(userId)
+        uploadedTracks.forEach { track ->
+            if (deleteData) {
+                TrackRepo.delete(track)
+            } else {
+                track.uploader = null
+            }
+        }
+
         user.delete()
+        return@transaction true
     }
 
     /**

@@ -2,6 +2,8 @@ package wtf.ndu.vibin.db.tracks
 
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
 import wtf.ndu.vibin.db.ModifiableLongIdEntity
 import wtf.ndu.vibin.db.ModifiableLongIdTable
 import wtf.ndu.vibin.db.UserEntity
@@ -14,6 +16,8 @@ import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.db.images.ImageTable
 import wtf.ndu.vibin.db.tags.TagEntity
 import wtf.ndu.vibin.db.tags.TrackTagConnection
+import wtf.ndu.vibin.repos.LyricsRepo
+import wtf.ndu.vibin.repos.PlaylistTrackRepo
 import wtf.ndu.vibin.utils.PathUtils
 
 object TrackTable : ModifiableLongIdTable("track") {
@@ -77,7 +81,29 @@ class TrackEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, TrackTable) {
     var uploader by UserEntity.Companion optionalReferencedOn TrackTable.uploader
 
     override fun delete() {
+
+        // Delete the cover image if it exists
+        val cover = this.cover
+        this.cover = null
+        cover?.delete()
+
+        val trackId = this.id.value
+
+        // Remove associations to artists
+        TrackArtistConnection.deleteWhere { TrackArtistConnection.track eq trackId }
+
+        // Remove associations to tags
+        TrackTagConnection.deleteWhere { TrackTagConnection.track eq trackId }
+
+        // Remove associations to playlists
+        PlaylistTrackRepo.deleteTrackFromAllPlaylists(this)
+
+        // Delete the track file from the filesystem
         PathUtils.getTrackFileFromPath(path).delete()
+
+        // Remove associations to lyrics
+        LyricsRepo.deleteLyrics(this)
+
         super.delete()
     }
 }

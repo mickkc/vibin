@@ -2,6 +2,8 @@ package wtf.ndu.vibin.db.artists
 
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
 import wtf.ndu.vibin.db.ModifiableLongIdEntity
 import wtf.ndu.vibin.db.ModifiableLongIdTable
 import wtf.ndu.vibin.db.images.ImageEntity
@@ -28,4 +30,19 @@ class ArtistEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, ArtistTable)
     var name by ArtistTable.name
     var description by ArtistTable.description
     var image by ImageEntity.Companion optionalReferencedOn ArtistTable.image
+
+    override fun delete() {
+
+        // Delete the image if it exists
+        val image = this.image
+        this.image = null
+        image?.delete()
+
+        val artistId = this.id.value
+
+        // Delete any connections to tracks
+        TrackArtistConnection.deleteWhere { TrackArtistConnection.artist eq artistId }
+
+        super.delete()
+    }
 }
