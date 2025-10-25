@@ -8,6 +8,7 @@ import wtf.ndu.vibin.db.MediaTokenTable
 import wtf.ndu.vibin.db.SessionEntity
 import wtf.ndu.vibin.db.SessionTable
 import wtf.ndu.vibin.db.UserEntity
+import wtf.ndu.vibin.dto.SessionDto
 import wtf.ndu.vibin.utils.DateTimeUtils
 
 /**
@@ -49,6 +50,16 @@ object SessionRepo {
         MediaTokenEntity.find { MediaTokenTable.user eq userId }.forEach { it.delete() }
     }
 
+    fun invalidateAllOtherSessionsForUser(userId: Long, excludedToken: String) = transaction {
+        SessionEntity.find { (SessionTable.userId eq userId) and (SessionTable.token neq excludedToken) }
+            .forEach { it.delete() }
+    }
+
+    fun invalidateAllOtherMediaTokensForUser(userId: Long, excludedDeviceId: String) = transaction {
+        MediaTokenEntity.find { (MediaTokenTable.user eq userId) and (MediaTokenTable.deviceId neq excludedDeviceId) }
+            .forEach { it.delete() }
+    }
+
     fun createMediaToken(user: UserEntity, deviceId: String): MediaTokenEntity = transaction {
         val token = CryptoUtil.createToken()
 
@@ -70,5 +81,33 @@ object SessionRepo {
     fun deleteMediaToken(userId: Long, deviceId: String) = transaction {
         MediaTokenEntity.find { (MediaTokenTable.user eq userId) and (MediaTokenTable.deviceId eq deviceId) }
             .forEach { it.delete() }
+    }
+
+    fun getAllSessionsForUser(userId: Long): List<SessionEntity> = transaction {
+        SessionEntity.find { SessionTable.userId eq userId }.toList()
+    }
+
+    fun getUserFromSessionId(sessionId: Long): UserEntity? = transaction {
+        SessionEntity.findById(sessionId)?.user
+    }
+
+    fun invalidateSessionById(sessionId: Long) = transaction {
+        SessionEntity.findById(sessionId)?.delete()
+    }
+
+    fun toSessionDto(entity: SessionEntity): SessionDto {
+        return toSessionDtoInternal(entity)
+    }
+
+    fun toSessionDto(entities: List<SessionEntity>): List<SessionDto> {
+        return entities.map { toSessionDtoInternal(it) }
+    }
+
+    private fun toSessionDtoInternal(entity: SessionEntity): SessionDto {
+        return SessionDto(
+            id = entity.id.value,
+            createdAt = entity.createdAt,
+            lastUsed = entity.lastUsed
+        )
     }
 }

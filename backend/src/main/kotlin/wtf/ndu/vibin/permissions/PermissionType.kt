@@ -40,7 +40,9 @@ enum class PermissionType(val id: String, val grantedByDefault: Boolean) {
     VIEW_TAGS("view_tags", true),
     MANAGE_TAGS("manage_tags", false),
     DELETE_TAGS("delete_tags", false),
-    CREATE_TAGS("create_tags", false);
+    CREATE_TAGS("create_tags", false),
+
+    MANAGE_SESSIONS("manage_sessions", true);
 
     companion object {
         private val map = entries.associateBy(PermissionType::id)

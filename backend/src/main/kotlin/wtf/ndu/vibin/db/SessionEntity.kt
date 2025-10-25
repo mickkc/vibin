@@ -4,10 +4,13 @@ import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
+import wtf.ndu.vibin.utils.DateTimeUtils
 
 object SessionTable : LongIdTable("session") {
     val userId = reference("user_id", UserTable)
     val token = varchar("token", 64).uniqueIndex()
+    val createdAt = long("created_at").clientDefault { DateTimeUtils.now() }
+    val lastUsed = long("last_used").clientDefault { DateTimeUtils.now() }
 }
 
 /**
@@ -22,4 +25,6 @@ class SessionEntity(id: EntityID<Long>) : LongEntity(id) {
 
     var user by UserEntity referencedOn SessionTable.userId
     var token by SessionTable.token
+    var createdAt by SessionTable.createdAt
+    var lastUsed by SessionTable.lastUsed
 }

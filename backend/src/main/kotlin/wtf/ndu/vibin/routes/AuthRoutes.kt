@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.auth.CryptoUtil
 import wtf.ndu.vibin.auth.UserPrincipal
 import wtf.ndu.vibin.dto.LoginResultDto
+import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.repos.PermissionRepo
 import wtf.ndu.vibin.repos.SessionRepo
 import wtf.ndu.vibin.repos.UserRepo
@@ -102,6 +103,56 @@ fun Application.configureAuthRoutes() = routing {
                 ?: return@deleteP call.missingParameter("deviceId")
 
             SessionRepo.deleteMediaToken(userId, deviceId)
+
+            call.success()
+        }
+
+        getP("/api/auth/sessions", PermissionType.MANAGE_SESSIONS) {
+
+            val userId = call.getUserId()
+                ?: return@getP call.unauthorized()
+
+            val token = call.getToken() ?: return@getP call.unauthorized()
+
+            val sessions = SessionRepo.getAllSessionsForUser(userId)
+
+
+            call.respond(mapOf(
+                "sessions" to SessionRepo.toSessionDto(sessions),
+                "currentSessionIndex" to sessions.indexOfFirst { it.token == token }
+            ))
+        }
+
+        deleteP("/api/auth/sessions/{id}", PermissionType.MANAGE_SESSIONS) {
+
+            val sessionId = call.parameters["id"]?.toLongOrNull()
+                ?: return@deleteP call.missingParameter("id")
+
+            val userId = call.getUserId()
+                ?: return@deleteP call.unauthorized()
+
+            val sessionUserId = SessionRepo.getUserFromSessionId(sessionId)?.id?.value ?: return@deleteP call.notFound()
+
+            if (sessionUserId != userId) {
+                return@deleteP call.forbidden()
+            }
+
+            SessionRepo.invalidateSessionById(sessionId)
+
+            call.success()
+        }
+
+        deleteP("/api/auth/sessions/all", PermissionType.MANAGE_SESSIONS) {
+
+            val deviceId = call.parameters["excludeDeviceId"] ?: return@deleteP call.missingParameter("excludeDeviceId")
+
+            val userId = call.getUserId()
+                ?: return@deleteP call.unauthorized()
+
+            val token = call.getToken() ?: return@deleteP call.unauthorized()
+
+            SessionRepo.invalidateAllOtherSessionsForUser(userId, token)
+            SessionRepo.invalidateAllOtherMediaTokensForUser(userId, deviceId)
 
             call.success()
         }
