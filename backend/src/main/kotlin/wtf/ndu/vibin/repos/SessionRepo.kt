@@ -38,8 +38,19 @@ object SessionRepo {
         SessionEntity.find { SessionTable.token eq token }.forEach { it.delete() }
     }
 
-    fun getUserIdFromToken(token: String): Long? = transaction {
-        SessionEntity.find { SessionTable.token eq token }.firstOrNull()?.user?.id?.value
+    /**
+     * Validates the provided session token and returns the associated user ID if valid.
+     * Updates the last used timestamp of the session upon successful validation.
+     *
+     * @param token The session token to validate.
+     * @return The user ID associated with the token if valid, or null if invalid.
+     */
+    fun validateAndUpdateToken(token: String): Long? = transaction {
+        SessionEntity
+            .find { SessionTable.token eq token }
+            .firstOrNull()
+            ?.also { it.lastUsed = DateTimeUtils.now() }
+            ?.user?.id?.value
     }
 
     fun invalidateAllSessionsForUser(userId: Long) = transaction {

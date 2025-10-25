@@ -18,7 +18,7 @@ class TokenAuthenticationProvider(config: TokenAuthenticationProviderConfig = To
         val call = context.call
         val token = call.request.headers["Authorization"]?.removePrefix("Bearer ")
 
-        val userId = token?.let { SessionRepo.getUserIdFromToken(it) }
+        val userId = token?.let { SessionRepo.validateAndUpdateToken(it) }
 
         if (userId != null) {
             context.principal(UserPrincipal(userId, token))

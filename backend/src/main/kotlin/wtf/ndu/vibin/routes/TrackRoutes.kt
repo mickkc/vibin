@@ -130,7 +130,7 @@ fun Application.configureTrackRoutes() = routing {
     }
 
     fun getUserIdFromCall(call: ApplicationCall): Long? {
-        return call.request.headers["Authorization"]?.removePrefix("Bearer ")?.let { SessionRepo.getUserIdFromToken(it) }
+        return call.request.headers["Authorization"]?.removePrefix("Bearer ")?.let { SessionRepo.validateAndUpdateToken(it) }
             ?: call.parameters["mediaToken"]?.let { SessionRepo.getUserFromMediaToken(it)?.id?.value }
     }
 
