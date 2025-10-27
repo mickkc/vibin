@@ -7,7 +7,7 @@ import wtf.ndu.vibin.utils.ImageUtils
 
 object ImageRepo {
 
-    fun createImage(originalUrl: String, smallUrl: String, largeUrl: String?, colorScheme: ImageUtils.ColorScheme? = null): ImageEntity = transaction {
+    fun createImage(smallUrl: String, mediumUrl: String?, largeUrl: String?, colorScheme: ImageUtils.ColorScheme? = null): ImageEntity = transaction {
         val colorSchemeEntity = colorScheme?.let {
             ColorSchemeRepo.createColorSchemeInternal(
                 primary = ImageUtils.getHexFromColor(it.primary),
@@ -16,8 +16,8 @@ object ImageRepo {
             )
         }
         ImageEntity.new {
-            this.originalPath = originalUrl
             this.smallPath = smallUrl
+            this.mediumPath = mediumUrl
             this.largePath = largeUrl
             this.colorScheme = colorSchemeEntity
         }
@@ -32,8 +32,8 @@ object ImageRepo {
      */
     fun toDto(entity: ImageEntity): ImageDto = transaction {
         ImageDto(
-            originalUrl = entity.originalPath,
             smallUrl = entity.smallPath,
+            mediumUrl = entity.mediumPath,
             largeUrl = entity.largePath,
             colorScheme = entity.colorScheme?.let { ColorSchemeRepo.toDto(it) }
         )

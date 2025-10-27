@@ -171,9 +171,10 @@ object PlaylistRepo {
         if (playlist.cover != null) {
             val path = when(quality) {
                 "small" -> playlist.cover!!.smallPath
+                "medium" -> playlist.cover!!.mediumPath
                 "large" -> playlist.cover!!.largePath
-                else -> playlist.cover!!.originalPath
-            } ?: playlist.cover!!.originalPath
+                else -> playlist.cover!!.largePath
+            } ?: playlist.cover!!.smallPath
 
             val file = PathUtils.getThumbnailFileFromPath(path)
             if (file.exists()) {
@@ -188,9 +189,10 @@ object PlaylistRepo {
             val cover = firstTrack.cover!!
             val path = when(quality) {
                 "small" -> cover.smallPath
+                "medium" -> cover.mediumPath
                 "large" -> cover.largePath
-                else -> cover.originalPath
-            } ?: cover.originalPath
+                else -> cover.largePath
+            } ?: cover.smallPath
 
             val file = PathUtils.getThumbnailFileFromPath(path)
             if (file.exists()) {

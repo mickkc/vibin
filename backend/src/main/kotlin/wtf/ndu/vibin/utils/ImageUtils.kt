@@ -125,9 +125,10 @@ object ImageUtils {
         else {
             val path = when (quality.lowercase()) {
                 "large" -> image.largePath
+                "medium" -> image.mediumPath
                 "small" -> image.smallPath
-                else -> image.originalPath
-            } ?: image.originalPath
+                else -> image.largePath
+            } ?: image.smallPath
             return PathUtils.getThumbnailFileFromPath(path)
         }
     }

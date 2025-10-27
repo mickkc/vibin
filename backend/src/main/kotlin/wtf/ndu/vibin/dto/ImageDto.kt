@@ -4,8 +4,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ImageDto(
-    val originalUrl: String,
     val smallUrl: String,
+    val mediumUrl: String?,
     val largeUrl: String?,
     val colorScheme: ColorSchemeDto? = null
 )

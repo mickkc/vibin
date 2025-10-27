@@ -7,8 +7,8 @@ import org.jetbrains.exposed.dao.id.LongIdTable
 import wtf.ndu.vibin.utils.PathUtils
 
 object ImageTable : LongIdTable("image") {
-    val originalPath = varchar("original_url", 1024)
     val smallPath = varchar("small_url", 1024)
+    val mediumPath = varchar("medium_url", 1024).nullable()
     val largePath = varchar("large_url", 1024).nullable()
     val colorScheme = reference("color_scheme_id", ColorSchemeTable).nullable().default(null)
 }
@@ -23,15 +23,15 @@ object ImageTable : LongIdTable("image") {
 class ImageEntity(id: EntityID<Long>) : LongEntity(id) {
     companion object : LongEntityClass<ImageEntity>(ImageTable)
 
-    var originalPath by ImageTable.originalPath
     var smallPath by ImageTable.smallPath
+    var mediumPath by ImageTable.mediumPath
     var largePath by ImageTable.largePath
     var colorScheme by ColorSchemeEntity optionalReferencedOn ImageTable.colorScheme
 
     override fun delete() {
 
-        PathUtils.getThumbnailFileFromPath(originalPath).delete()
         PathUtils.getThumbnailFileFromPath(smallPath).delete()
+        mediumPath?.let { PathUtils.getThumbnailFileFromPath(it).delete() }
         largePath?.let { PathUtils.getThumbnailFileFromPath(it).delete() }
 
         super.delete()

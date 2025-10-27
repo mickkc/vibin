@@ -33,23 +33,23 @@ object ThumbnailProcessor {
             val img = getImage(imageData)
             val size = max(img.width, img.height)
 
-            val original = scaleImage(img)
             val small = scaleImage(img, 128, square = true)
+            val medium = if (size > 256) scaleImage(img, 256, square = true) else null
             val large = if (size > 512) scaleImage(img, 512, square = true) else null
 
             val colorScheme = ImageUtils.getColorThemeFromImage(img)
 
-            val originalFile = PathUtils.getThumbnailPath(type, "$name.jpg")
+            val mediumFile = PathUtils.getThumbnailPath(type, "$name-256.jpg")
             val smallFile = PathUtils.getThumbnailPath(type, "$name-128.jpg")
             val largeFile = large?.let { PathUtils.getThumbnailPath(type, "$name-512.jpg") }
 
-            originalFile.writeBytes(original)
             smallFile.writeBytes(small)
+            medium?.let { mediumFile.writeBytes(it) }
             large?.let { largeFile?.writeBytes(it) }
 
             return ImageRepo.createImage(
-                originalUrl = "${type.dir}/$name.jpg",
                 smallUrl = "${type.dir}/$name-128.jpg",
+                mediumUrl = medium?.let { "${type.dir}/$name-256.jpg" },
                 largeUrl = large?.let { "${type.dir}/$name-512.jpg" },
                 colorScheme = colorScheme
             )
