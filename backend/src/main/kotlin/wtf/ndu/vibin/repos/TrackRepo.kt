@@ -49,7 +49,8 @@ object TrackRepo {
     }
 
     fun getCover(track: TrackEntity): ImageEntity? = transaction {
-        return@transaction track.cover
+        if (track.cover != null) return@transaction track.cover
+        return@transaction track.album.cover
     }
 
     fun createTrack(file: File, metadata: TrackMetadata, album: AlbumEntity, artists: List<ArtistEntity>?, checksum: String? = null): TrackEntity = transaction {
