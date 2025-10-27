@@ -102,7 +102,7 @@ object TrackRepo {
 
         editDto.imageUrl?.let { imageUrl ->
             val imageData = runBlocking { Parser.downloadCoverImage(imageUrl) } ?: return@let
-            val image = ThumbnailProcessor.getImage(imageData, ThumbnailProcessor.ThumbnailType.TRACK, track.id.value.toString())
+            val image = ThumbnailProcessor.getImage(imageData)
             image?.let { track.cover = it}
         }
 

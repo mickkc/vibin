@@ -82,11 +82,6 @@ class TrackEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, TrackTable) {
 
     override fun delete() {
 
-        // Delete the cover image if it exists
-        val cover = this.cover
-        this.cover = null
-        cover?.delete()
-
         val trackId = this.id.value
 
         // Remove associations to artists

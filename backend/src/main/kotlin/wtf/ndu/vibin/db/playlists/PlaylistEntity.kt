@@ -46,10 +46,6 @@ class PlaylistEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, PlaylistTa
     var owner by UserEntity referencedOn PlaylistTable.owner
 
     override fun delete() {
-        // Delete the cover image if it exists
-        val cover = this.cover
-        this.cover = null
-        cover?.delete()
 
         val playlistId = this.id.value
 

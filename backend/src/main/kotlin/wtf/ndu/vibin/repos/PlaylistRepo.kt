@@ -130,14 +130,12 @@ object PlaylistRepo {
         }
 
         editDto.coverImageUrl?.let {
-            val cover = playlist.cover
             playlist.cover = null
-            cover?.delete()
 
             if (it.isNotEmpty()) {
                 val image = runBlocking { Parser.downloadCoverImage(editDto.coverImageUrl) }
                 if (image != null) {
-                    val processedImage = ThumbnailProcessor.getImage(image, ThumbnailProcessor.ThumbnailType.PLAYLIST, playlist.id.value.toString())
+                    val processedImage = ThumbnailProcessor.getImage(image)
                     playlist.cover = processedImage
                 }
             }

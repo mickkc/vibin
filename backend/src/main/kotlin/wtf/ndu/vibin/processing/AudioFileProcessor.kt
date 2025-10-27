@@ -132,7 +132,7 @@ object AudioFileProcessor {
             val coverImageData = Parser.downloadCoverImage(metadata.trackInfo.coverImageUrl)
             if (coverImageData != null) {
                 logger.info("Processing cover image for track ID: ${track.id.value}, title: '${track.title}'")
-                val image = ThumbnailProcessor.getImage(coverImageData, ThumbnailProcessor.ThumbnailType.TRACK, track.id.value.toString())
+                val image = ThumbnailProcessor.getImage(coverImageData)
                 track = TrackRepo.update(track) { this.cover = image }
             }
         }

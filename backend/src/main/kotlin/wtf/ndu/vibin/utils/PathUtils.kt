@@ -1,7 +1,6 @@
 package wtf.ndu.vibin.utils
 
 import wtf.ndu.vibin.config.EnvUtil
-import wtf.ndu.vibin.processing.ThumbnailProcessor
 import java.io.File
 
 object PathUtils {
@@ -9,13 +8,12 @@ object PathUtils {
     /**
      * Gets a path for storing a thumbnail of the specified type and name.
      *
-     * @param type The type of thumbnail (e.g., artist, album).
      * @param name The name of the thumbnail file.
      * @return A File object representing the path to the thumbnail.
      */
-    fun getThumbnailPath(type: ThumbnailProcessor.ThumbnailType, name: String): File {
+    fun getThumbnailPath(name: String): File {
         val basePath = EnvUtil.getOrDefault(EnvUtil.THUMBNAIL_DIR, EnvUtil.DEFAULT_THUMBNAIL_DIR)
-        return File(basePath, type.dir).apply { if (!exists()) mkdirs() }
+        return File(basePath).apply { if (!exists()) mkdirs() }
             .resolve(name)
     }
 

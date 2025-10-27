@@ -35,11 +35,6 @@ class AlbumEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, AlbumTable) {
 
     override fun delete() {
 
-        // Delete the cover image if it exists
-        val cover = this.cover
-        this.cover = null
-        cover?.delete()
-
         val albumId = this.id.value
 
         // Delete tracks associated with this album

@@ -3,6 +3,7 @@ package wtf.ndu.vibin.processing
 import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.repos.ImageRepo
+import wtf.ndu.vibin.utils.ChecksumUtil
 import wtf.ndu.vibin.utils.ImageUtils
 import wtf.ndu.vibin.utils.PathUtils
 import java.awt.Image
@@ -15,22 +16,23 @@ object ThumbnailProcessor {
 
     private val logger = LoggerFactory.getLogger(ThumbnailProcessor::class.java)
 
-    enum class ThumbnailType(val dir: String) {
-        USER("users"), TRACK("tracks"), PLAYLIST("playlists"), ALBUM("albums"), ARTIST("artists")
-    }
-
     /**
      * Processes the given image data to create thumbnails of various sizes and stores them.
      *
      * @param imageData The byte array of the original image data.
-     * @param type The type of thumbnail to create.
-     * @param name The base name to use for the thumbnail files.
      * @return An ImageEntity representing the stored thumbnails, or null if processing fails.
      */
-    fun getImage(imageData: ByteArray, type: ThumbnailType, name: String): ImageEntity? {
+    fun getImage(imageData: ByteArray): ImageEntity? {
 
         try {
-            val img = getImage(imageData)
+            val checksum = ChecksumUtil.getChecksum(imageData)
+            val existing = ImageRepo.getBySourceChecksum(checksum)
+
+            if (existing != null) {
+                return existing
+            }
+
+            val img = getImageFromByteArray(imageData)
             val size = max(img.width, img.height)
 
             val small = scaleImage(img, 128, square = true)
@@ -39,23 +41,24 @@ object ThumbnailProcessor {
 
             val colorScheme = ImageUtils.getColorThemeFromImage(img)
 
-            val mediumFile = PathUtils.getThumbnailPath(type, "$name-256.jpg")
-            val smallFile = PathUtils.getThumbnailPath(type, "$name-128.jpg")
-            val largeFile = large?.let { PathUtils.getThumbnailPath(type, "$name-512.jpg") }
+            val mediumFile = PathUtils.getThumbnailPath("$checksum-256.jpg")
+            val smallFile = PathUtils.getThumbnailPath("$checksum-128.jpg")
+            val largeFile = large?.let { PathUtils.getThumbnailPath("$checksum-512.jpg") }
 
             smallFile.writeBytes(small)
             medium?.let { mediumFile.writeBytes(it) }
             large?.let { largeFile?.writeBytes(it) }
 
             return ImageRepo.createImage(
-                smallUrl = "${type.dir}/$name-128.jpg",
-                mediumUrl = medium?.let { "${type.dir}/$name-256.jpg" },
-                largeUrl = large?.let { "${type.dir}/$name-512.jpg" },
+                checksum = checksum,
+                smallUrl = "$checksum-128.jpg",
+                mediumUrl = medium?.let { "$checksum-256.jpg" },
+                largeUrl = large?.let { "$checksum-512.jpg" },
                 colorScheme = colorScheme
             )
         }
         catch (e: Exception) {
-            logger.error("Error processing image for $type with name $name", e)
+            logger.error("Error processing image", e)
             return null
         }
     }
@@ -66,7 +69,7 @@ object ThumbnailProcessor {
      * @param imageData The byte array containing the image data.
      * @return A BufferedImage representation of the image data.
      */
-    fun getImage(imageData: ByteArray): BufferedImage {
+    fun getImageFromByteArray(imageData: ByteArray): BufferedImage {
         val image = ImageIO.read(imageData.inputStream())
         return convertUsingConstructor(image)
     }

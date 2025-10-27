@@ -113,13 +113,11 @@ object AlbumRepo {
         album.releaseYear = editDto.year
         album.single = editDto.isSingle
         editDto.coverUrl?.let { url ->
-            val cover = album.cover
             album.cover = null
-            cover?.delete()
             if (url.isNotEmpty()) {
                 val data = runBlocking { Parser.downloadCoverImage(url) }
                 if (data != null) {
-                    val image = ThumbnailProcessor.getImage(data, ThumbnailProcessor.ThumbnailType.ALBUM, album.id.value.toString())
+                    val image = ThumbnailProcessor.getImage(data)
                     album.cover = image
                 }
             }

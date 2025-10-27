@@ -19,10 +19,8 @@ object ArtistTable : ModifiableLongIdTable("artist") {
  * Artist entity representing a musical artist.
  *
  * @property name The name of the artist.
- * @property originalName The original name of the artist, before any modifications. (optional)
+ * @property description A description of the artist.
  * @property image The image associated with the artist. (optional)
- * @property sortName The sort name of the artist. (optional)
- * @property tags The tags associated with the artist.
  */
 class ArtistEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, ArtistTable) {
     companion object : LongEntityClass<ArtistEntity>(ArtistTable)
@@ -32,11 +30,6 @@ class ArtistEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, ArtistTable)
     var image by ImageEntity.Companion optionalReferencedOn ArtistTable.image
 
     override fun delete() {
-
-        // Delete the image if it exists
-        val image = this.image
-        this.image = null
-        image?.delete()
 
         val artistId = this.id.value
 

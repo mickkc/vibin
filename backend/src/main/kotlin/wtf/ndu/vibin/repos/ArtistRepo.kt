@@ -67,8 +67,7 @@ object ArtistRepo {
 
         if (data.imageUrl != null && data.imageUrl.isNotEmpty()) {
             val data = runBlocking { Parser.downloadCoverImage(data.imageUrl) }
-            val image = data?.let { ThumbnailProcessor.getImage(data, ThumbnailProcessor.ThumbnailType.ARTIST, artist.id.value.toString()) }
-            artist.image?.delete()
+            val image = data?.let { ThumbnailProcessor.getImage(data) }
             artist.image = image
         }
 

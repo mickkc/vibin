@@ -2,12 +2,13 @@ package wtf.ndu.vibin.repos
 
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.images.ImageEntity
+import wtf.ndu.vibin.db.images.ImageTable
 import wtf.ndu.vibin.dto.ImageDto
 import wtf.ndu.vibin.utils.ImageUtils
 
 object ImageRepo {
 
-    fun createImage(smallUrl: String, mediumUrl: String?, largeUrl: String?, colorScheme: ImageUtils.ColorScheme? = null): ImageEntity = transaction {
+    fun createImage(smallUrl: String, mediumUrl: String?, largeUrl: String?, checksum: String, colorScheme: ImageUtils.ColorScheme? = null): ImageEntity = transaction {
         val colorSchemeEntity = colorScheme?.let {
             ColorSchemeRepo.createColorSchemeInternal(
                 primary = ImageUtils.getHexFromColor(it.primary),
@@ -16,11 +17,16 @@ object ImageRepo {
             )
         }
         ImageEntity.new {
+            this.sourceChecksum = checksum
             this.smallPath = smallUrl
             this.mediumPath = mediumUrl
             this.largePath = largeUrl
             this.colorScheme = colorSchemeEntity
         }
+    }
+
+    fun getBySourceChecksum(checksum: String): ImageEntity? = transaction {
+        ImageEntity.find { ImageTable.sourceChecksum eq checksum }.firstOrNull()
     }
 
     /**

@@ -52,11 +52,6 @@ class UserEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, UserTable) {
 
     override fun delete() {
 
-        // Delete the profile picture if it exists
-        val profilePicture = this.profilePicture
-        this.profilePicture = null
-        profilePicture?.delete()
-
         val userId = this.id.value
 
         // Delete any granted permissions associated with this user

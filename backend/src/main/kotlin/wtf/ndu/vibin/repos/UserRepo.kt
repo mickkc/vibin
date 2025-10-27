@@ -80,13 +80,8 @@ object UserRepo {
         }
 
         if (editDto.profilePictureUrl != null) {
-
-            val oldProfilePicture = user.profilePicture
-            user.profilePicture = null
-            oldProfilePicture?.delete()
-
             val data = runBlocking { Parser.downloadCoverImage(editDto.profilePictureUrl) }
-            val image = data?.let { ThumbnailProcessor.getImage(data, ThumbnailProcessor.ThumbnailType.USER, user.id.value.toString()) }
+            val image = data?.let { ThumbnailProcessor.getImage(data) }
             user.profilePicture = image
         }
 
