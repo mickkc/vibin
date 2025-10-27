@@ -127,6 +127,18 @@ fun Application.configureTrackRoutes() = routing {
             val hasLyrics = LyricsRepo.hasLyrics(trackId)
             call.success(hasLyrics)
         }
+
+        getP("/api/tracks/{trackId}/download", PermissionType.DOWNLOAD_TRACKS) {
+            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
+            val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
+
+            val audioFile = PathUtils.getTrackFileFromPath(track.path)
+            if (!audioFile.exists()) {
+                return@getP call.notFound()
+            }
+
+            call.respondFile(audioFile)
+        }
     }
 
     fun getUserIdFromCall(call: ApplicationCall): Long? {
