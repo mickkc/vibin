@@ -19,14 +19,14 @@ abstract class BaseTask {
 
     protected val logger: Logger = LoggerFactory.getLogger("Task: $id")
 
-    abstract suspend fun runTask()
+    abstract suspend fun runTask(): TaskResult
 
     init {
         nextRun = DateTimeUtils.now() + interval.inWholeSeconds
     }
 
-    suspend fun run(setNext: Boolean = true) {
-        if (!enabled.get()) return
+    suspend fun run(setNext: Boolean = true, force: Boolean = false): TaskResult? {
+        if (!enabled.get() && !force) return null
 
         lastRun = DateTimeUtils.now()
 
@@ -34,8 +34,10 @@ abstract class BaseTask {
             setNextRun()
 
         logger.info("Running task $id")
-        runTask()
+        val result = runTask()
         logger.info("Finished task $id")
+
+        return result
     }
 
     fun setNextRun() {
@@ -50,7 +52,9 @@ abstract class BaseTask {
             id = id,
             enabled = enabled.get(),
             lastRun = lastRun,
-            nextRun = nextRun
+            nextRun = nextRun!!,
+            interval = interval.inWholeSeconds,
+            lastResult = TaskManager.getTaskResult(id)
         )
     }
 }

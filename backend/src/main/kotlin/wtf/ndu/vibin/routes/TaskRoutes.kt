@@ -30,13 +30,9 @@ fun Application.configureTaskRoutes() = routing {
         postP("/api/tasks/{taskId}/run", PermissionType.MANAGE_TASKS) {
             val taskId = call.parameters["taskId"] ?: return@postP call.missingParameter("taskId")
 
-            val success = TaskScheduler.forceRunTask(taskId)
+            val result = TaskScheduler.forceRunTask(taskId) ?: return@postP call.notFound()
 
-            if (!success) {
-                return@postP call.notFound()
-            }
-
-            call.success()
+            call.respond(result)
         }
     }
 

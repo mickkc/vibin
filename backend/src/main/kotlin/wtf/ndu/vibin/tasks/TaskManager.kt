@@ -1,10 +1,12 @@
 package wtf.ndu.vibin.tasks
 
 import wtf.ndu.vibin.repos.TaskSettingsRepo
+import java.util.concurrent.ConcurrentHashMap
 
 object TaskManager {
 
     private val tasks = mutableMapOf<String, BaseTask>()
+    private val results = ConcurrentHashMap<String, TaskResult>()
 
     fun registerTask(task: BaseTask) {
 
@@ -39,4 +41,11 @@ object TaskManager {
         tasks[taskId]?.enabled?.set(enabled)
     }
 
+    fun setTaskResult(taskId: String, result: TaskResult) {
+        results[taskId] = result
+    }
+
+    fun getTaskResult(taskId: String): TaskResult? {
+        return results[taskId]
+    }
 }

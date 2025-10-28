@@ -25,10 +25,13 @@ object TaskScheduler {
                     val nextRun = task.nextRun
                     if (task.enabled.get() && (nextRun == null || nextRun <= now)) {
                         try {
-                            task.run()
+                            val result = task.run()
+                            if (result != null)
+                                TaskManager.setTaskResult(task.id, result)
                         }
                         catch (e: Exception) {
                             logger.error("Error running task ${task.id}: ${e.message}", e)
+                            TaskManager.setTaskResult(task.id, TaskResult.failure(e.toString()))
                         }
                     }
                 }
@@ -45,16 +48,22 @@ object TaskScheduler {
         }
     }
 
-    fun forceRunTask(taskId: String): Boolean {
-        val task = TaskManager.getById(taskId) ?: return false
-        scope.launch {
-            try {
-                task.run(setNext = false)
-            } catch (e: Exception) {
-                logger.error("Error force running task ${task.id}: ${e.message}", e)
+    suspend fun forceRunTask(taskId: String): TaskResult? {
+        val task = TaskManager.getById(taskId) ?: return null
+        try {
+            val result = task.run(setNext = false, force = true)
+            if (result != null) {
+                TaskManager.setTaskResult(task.id, result)
             }
+            return result
+
+        } catch (e: Exception) {
+            logger.error("Error force running task ${task.id}: ${e.message}", e)
+
+            val result = TaskResult.failure(e.toString())
+            TaskManager.setTaskResult(task.id, result)
+            return result
         }
-        return true
     }
 
     fun stop() {
