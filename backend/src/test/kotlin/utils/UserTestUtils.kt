@@ -20,7 +20,8 @@ object UserTestUtils {
             isActive = true,
             displayName = null,
             profilePictureUrl = null,
-            oldPassword = null
+            oldPassword = null,
+            description = null
         ))
         assertNotNull(user)
         return user

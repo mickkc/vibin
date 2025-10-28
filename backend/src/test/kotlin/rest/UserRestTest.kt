@@ -1,12 +1,13 @@
 package rest
 
-import io.ktor.client.call.body
+import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import utils.UserTestUtils
 import utils.testApp
 import wtf.ndu.vibin.auth.CryptoUtil
+import wtf.ndu.vibin.dto.PaginatedDto
 import wtf.ndu.vibin.dto.users.UserDto
 import wtf.ndu.vibin.dto.users.UserEditDto
 import wtf.ndu.vibin.repos.UserRepo
@@ -23,10 +24,11 @@ class UserRestTest {
         val response = client.get("/api/users")
         assertTrue(response.status.isSuccess())
 
-        val users = response.body<List<UserDto>>()
-        assertTrue(users.size == 3) // including default admin user
-        assertTrue(users.any { it.username == "user1" })
-        assertTrue(users.any { it.username == "user2" })
+        val users = response.body<PaginatedDto<UserDto>>()
+        assertEquals(3, users.total) // including default admin user
+        assertEquals(3, users.items.size)
+        assertTrue(users.items.any { it.username == "user1" })
+        assertTrue(users.items.any { it.username == "user2" })
     }
 
     @Test
@@ -48,12 +50,13 @@ class UserRestTest {
         assertTrue(response.status.isSuccess())
 
         val user = response.body<UserDto>()
-        assertEquals(user.username, "singleuser")
-        assertEquals(user.displayName, "singleuser")
-        assertEquals(user.email, null)
-        assertEquals(user.isAdmin, false)
-        assertEquals(user.isActive, true)
-        assertEquals(user.profilePicture, null)
+        assertEquals("singleuser", user.username)
+        assertNull(user.displayName)
+        assertEquals("", user.description)
+        assertNull(user.email)
+        assertFalse(user.isAdmin)
+        assertTrue(user.isActive)
+        assertNull(user.profilePicture)
     }
 
     @Test
@@ -83,6 +86,7 @@ class UserRestTest {
             setBody(UserEditDto(
                 username = "testuser",
                 displayName = "Test User",
+                description = "A test user",
                 email = null,
                 isAdmin = false,
                 isActive = null,
@@ -98,12 +102,13 @@ class UserRestTest {
             val user = users.first.find { it.username == "testuser" }
             assertNotNull(user)
 
-            assertEquals(user.displayName, "Test User")
+            assertEquals("Test User", user.displayName)
+            assertEquals("A test user", user.description)
             assertNull(user.email)
             assertFalse(user.isAdmin)
             assertTrue(user.isActive)
             assertNull(user.profilePicture)
-            assertContentEquals(user.passwordHash, CryptoUtil.hashPassword("password123", user.salt))
+            assertContentEquals(CryptoUtil.hashPassword("password123", user.salt), user.passwordHash)
         }
     }
 
@@ -118,6 +123,7 @@ class UserRestTest {
             setBody(UserEditDto(
                 username = "testuser",
                 displayName = "Test User",
+                description = "A test user",
                 email = null,
                 isAdmin = false,
                 isActive = null,
@@ -138,6 +144,7 @@ class UserRestTest {
             setBody(UserEditDto(
                 username = "editeduser",
                 displayName = "Edited User",
+                description = "An edited user",
                 email = "edited.user@example.com",
                 isAdmin = true,
                 isActive = null,
@@ -152,13 +159,14 @@ class UserRestTest {
         transaction {
             assertNotNull(user)
 
-            assertEquals(user.username, "editeduser")
-            assertEquals(user.displayName, "Edited User")
-            assertEquals(user.email, "edited.user@example.com")
+            assertEquals("editeduser", user.username)
+            assertEquals("Edited User", user.displayName)
+            assertEquals("An edited user", user.description)
+            assertEquals("edited.user@example.com", user.email)
             assertTrue(user.isAdmin)
             assertEquals(testUser.isActive, user.isActive) // unchanged
             assertNull(user.profilePicture)
-            assertContentEquals(user.passwordHash, CryptoUtil.hashPassword("newpassword", user.salt))
+            assertContentEquals(CryptoUtil.hashPassword("newpassword", user.salt), user.passwordHash)
         }
     }
 
@@ -171,6 +179,7 @@ class UserRestTest {
                 UserEditDto(
                     username = null,
                     displayName = null,
+                    description = null,
                     email = null,
                     isAdmin = null,
                     isActive = null,
@@ -192,6 +201,7 @@ class UserRestTest {
                 UserEditDto(
                     username = null,
                     displayName = null,
+                    description = null,
                     email = null,
                     isAdmin = null,
                     isActive = null,
@@ -206,7 +216,7 @@ class UserRestTest {
         val user = UserRepo.getById(testUser.id.value)
         transaction {
             assertNotNull(user)
-            assertContentEquals(user.passwordHash, CryptoUtil.hashPassword("newpassword", user.salt))
+            assertContentEquals(CryptoUtil.hashPassword("newpassword", user.salt), user.passwordHash)
         }
     }
 
@@ -218,6 +228,7 @@ class UserRestTest {
                 UserEditDto(
                     username = null,
                     displayName = null,
+                    description = null,
                     email = null,
                     isAdmin = null,
                     isActive = null,
@@ -235,6 +246,7 @@ class UserRestTest {
 
             assertEquals(testUser.username, user.username) // unchanged
             assertEquals(testUser.displayName, user.displayName) // unchanged
+            assertEquals(testUser.description, user.description) // unchanged
             assertEquals(testUser.email, user.email) // unchanged
             assertEquals(testUser.isAdmin, user.isAdmin) // unchanged
             assertEquals(testUser.isActive, user.isActive) // unchanged
@@ -256,6 +268,7 @@ class UserRestTest {
             setBody(UserEditDto(
                 username = "editeduser",
                 displayName = "Edited User",
+                description = "An edited user",
                 email = "edited@example.cokm",
                 isAdmin = true,
                 isActive = null,
@@ -270,13 +283,14 @@ class UserRestTest {
         transaction {
             assertNotNull(user)
 
-            assertEquals(user.username, "nopermsedit")
+            assertEquals("nopermsedit", user.username)
             assertNull(user.displayName)
+            assertEquals("", user.description)
             assertNull(user.email)
             assertFalse(user.isAdmin)
             assertTrue(user.isActive)
             assertNull(user.profilePicture)
-            assertContentEquals(user.passwordHash, CryptoUtil.hashPassword("password123", user.salt))
+            assertContentEquals(CryptoUtil.hashPassword("password123", user.salt), user.passwordHash)
         }
     }
 
