@@ -79,6 +79,11 @@ object TrackRepo {
         return@transaction track
     }
 
+    fun getTrackIdsWithPath(): List<Pair<Long, String>> = transaction {
+        return@transaction TrackTable.select(TrackTable.id, TrackTable.path)
+            .map { it[TrackTable.id].value to it[TrackTable.path] }
+    }
+
     fun update(track: TrackEntity, block: TrackEntity.() -> Unit): TrackEntity = transaction {
         val updated = track.apply(block)
         updated.updatedAt = DateTimeUtils.now()
@@ -253,6 +258,10 @@ object TrackRepo {
 
     fun delete(track: TrackEntity) = transaction {
         track.delete()
+    }
+
+    fun deleteTracksByIds(trackIds: List<Long>) = transaction {
+        TrackEntity.find { TrackTable.id inList trackIds }.forEach { it.delete() }
     }
 
     private fun toDtoInternal(trackEntity: TrackEntity): TrackDto {
