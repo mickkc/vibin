@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.transactions.transaction
+import wtf.ndu.vibin.db.UserEntity
 import wtf.ndu.vibin.db.albums.AlbumEntity
 import wtf.ndu.vibin.db.artists.ArtistEntity
 import wtf.ndu.vibin.db.artists.TrackArtistConnection
@@ -53,7 +54,7 @@ object TrackRepo {
         return@transaction track.album.cover
     }
 
-    fun createTrack(file: File, metadata: TrackMetadata, album: AlbumEntity, artists: List<ArtistEntity>?, checksum: String? = null): TrackEntity = transaction {
+    fun createTrack(file: File, metadata: TrackMetadata, album: AlbumEntity, artists: List<ArtistEntity>?, checksum: String? = null, uploader: UserEntity? = null): TrackEntity = transaction {
         val track = TrackEntity.new {
             this.title = metadata.trackInfo.title
             this.trackNumber = metadata.trackInfo.trackNumber
@@ -69,6 +70,7 @@ object TrackRepo {
             this.explicit = metadata.trackInfo.explicit ?: false
             this.path = PathUtils.getTrackPathFromFile(file)
             this.checksum = checksum ?: ChecksumUtil.getChecksum(file)
+            this.uploader = uploader
 
             this.album = album
             this.artists = SizedCollection(artists ?: emptyList())

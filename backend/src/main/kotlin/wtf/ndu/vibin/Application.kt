@@ -50,6 +50,7 @@ fun Application.module() {
     configureStatisticRoutes()
 
     configureTaskRoutes()
+    configureUploadRoutes()
 
     GlobalScope.launch {
         AudioFileProcessor.initialProcess()

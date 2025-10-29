@@ -69,3 +69,10 @@ object PageSize : Setting<Int>(
     serializer = { value -> value.toString() },
     defaultValue = 50
 )
+
+object UploadPath : Setting<String>(
+    key = "upload_path",
+    parser = { value -> value },
+    serializer = { value -> value },
+    defaultValue = "{album}{sep}{artist} - {title}.{ext}"
+)

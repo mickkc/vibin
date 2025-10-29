@@ -17,6 +17,9 @@ import wtf.ndu.vibin.db.playlists.PlaylistTrackTable
 import wtf.ndu.vibin.db.tags.TagTable
 import wtf.ndu.vibin.db.tags.TrackTagConnection
 import wtf.ndu.vibin.db.tracks.TrackTable
+import wtf.ndu.vibin.db.uploads.PendingArtistTable
+import wtf.ndu.vibin.db.uploads.PendingTagConnection
+import wtf.ndu.vibin.db.uploads.PendingUploadTable
 
 private val logger = LoggerFactory.getLogger("Database initialization")
 
@@ -66,7 +69,8 @@ val allTables = arrayOf(
     PlaylistTable, PlaylistTrackTable, PlaylistCollaborator,
     ListenTable,
     LyricsTable,
-    TaskSettingTable
+    TaskSettingTable,
+    PendingUploadTable, PendingArtistTable, PendingTagConnection
 )
 
 fun createTables() = transaction {

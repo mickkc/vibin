@@ -33,6 +33,10 @@ suspend fun RoutingCall.unauthorized(reason: String = "Unauthorized") {
     respond(ErrorDto.fromType(ErrorDtoType.UNAUTHORIZED, "reason" to reason))
 }
 
+suspend fun RoutingCall.conflict() {
+    respond(ErrorDto.fromType(ErrorDtoType.CONFLICT))
+}
+
 suspend fun RoutingCall.forbidden(vararg requiredPermissions: PermissionType) {
     respond(ErrorDto.fromType(
         ErrorDtoType.NO_PERMISSION,

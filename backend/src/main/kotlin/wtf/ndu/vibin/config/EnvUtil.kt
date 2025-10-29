@@ -42,6 +42,8 @@ object EnvUtil {
 
     const val MUSIC_DIR = "MUSIC_DIR"
     const val DEFAULT_MUSIC_DIR = "/opt/vibin/music"
+    const val UPLOADS_DIR = "UPLOADS_DIR"
+    const val DEFAULT_UPLOADS_DIR = "/opt/vibin/uploads"
 
     const val THUMBNAIL_DIR = "THUMBNAIL_DIR"
     const val DEFAULT_THUMBNAIL_DIR = "/opt/vibin/thumbnails"
