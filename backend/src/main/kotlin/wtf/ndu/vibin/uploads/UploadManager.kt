@@ -8,8 +8,7 @@ import wtf.ndu.vibin.parsing.TrackInfoMetadata
 import wtf.ndu.vibin.parsing.TrackMetadata
 import wtf.ndu.vibin.parsing.parsers.preparser.PreParser
 import wtf.ndu.vibin.processing.ThumbnailProcessor
-import wtf.ndu.vibin.repos.TrackRepo
-import wtf.ndu.vibin.repos.UserRepo
+import wtf.ndu.vibin.repos.*
 import wtf.ndu.vibin.settings.Settings
 import wtf.ndu.vibin.settings.UploadPath
 import wtf.ndu.vibin.utils.ChecksumUtil
@@ -109,9 +108,7 @@ object UploadManager {
         upload.coverUrl = metadata.imageUrl ?: upload.coverUrl
         upload.lyrics = metadata.lyrics ?: upload.lyrics
 
-        upload.lastUpdated = DateTimeUtils.now()
-
-        storage[upload.id] = upload
+        refresh(upload)
         return upload
     }
 
@@ -123,6 +120,8 @@ object UploadManager {
      * @throws FileAlreadyExistsException if the target file already exists.
      */
     suspend fun apply(upload: PendingUpload): TrackEntity {
+
+        refresh(upload)
 
         val file = PathUtils.getUploadFileFromPath(upload.filePath)
 
@@ -183,6 +182,16 @@ object UploadManager {
         storage.remove(upload.id)
     }
 
+    fun refresh(upload: PendingUpload) {
+
+        upload.album = AlbumRepo.refreshAlbumName(upload.album) ?: IdOrNameDto.nameWithFallback("Unknown Album")
+        upload.artists = ArtistRepo.refreshArtistNames(upload.artists)
+        upload.tags = TagRepo.refreshTagNames(upload.tags)
+
+        upload.lastUpdated = DateTimeUtils.now()
+        storage[upload.id] = upload
+    }
+
     private fun getTargetFile(pendingUploadEntity: PendingUpload): File {
         val pathTemplate = Settings.get(UploadPath)
 
@@ -203,10 +212,12 @@ object UploadManager {
     }
 
     fun getUploadsByUser(userId: Long): List<PendingUpload> {
-        return storage.values.filter { it.uploaderId == userId }
+        return storage.values.filter { it.uploaderId == userId }.onEach { refresh(it) }
     }
 
     fun getById(id: String): PendingUpload? {
-        return storage[id]
+        return storage[id]?.apply {
+            refresh(this)
+        }
     }
 }

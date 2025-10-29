@@ -58,6 +58,37 @@ object ArtistRepo {
         return@transaction getOrCreateArtist(idName.name)
     }
 
+    fun fillInArtistIds(idNames: List<IdOrNameDto>): List<IdOrNameDto> = transaction {
+        return@transaction idNames.map { idName ->
+            if (idName.id != null) {
+                val artist = ArtistEntity.findById(idName.id)
+                if (artist != null) {
+                    return@map IdOrNameDto(id = artist.id.value, name = artist.name, fallbackName = false)
+                }
+            }
+            if (idName.fallbackName) {
+                val artist = ArtistEntity.find { ArtistTable.name.lowerCase() eq idName.name.lowercase() }.firstOrNull()
+                if (artist != null) {
+                    return@map IdOrNameDto(id = artist.id.value, name = artist.name, fallbackName = false)
+                }
+            }
+            return@map idName
+        }
+    }
+
+    fun refreshArtistNames(idNames: List<IdOrNameDto>): List<IdOrNameDto> = transaction {
+        return@transaction idNames.mapNotNull { idName ->
+            if (idName.id != null) {
+                val artist = ArtistEntity.findById(idName.id)
+                if (artist != null) {
+                    return@mapNotNull IdOrNameDto(id = artist.id.value, name = artist.name, fallbackName = false)
+                }
+                return@mapNotNull null
+            }
+            return@mapNotNull idName
+        }
+    }
+
     fun updateOrCreateArtist(id: Long?, data: ArtistEditData): ArtistEntity = transaction {
         val artist = if (id == null) {
             if (data.name == null) {

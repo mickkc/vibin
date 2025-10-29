@@ -47,6 +47,38 @@ object AlbumRepo {
         return@transaction AlbumEntity.new { this.title = idOrName.name }
     }
 
+    /**
+     * Fills in missing album ID in a [IdOrNameDto] object by looking up albums in the database.
+     * @param idName A [IdOrNameDto] object to process.
+     * @return A [IdOrNameDto] object with filled-in ID where possible.
+     */
+    fun fillInAlbumId(idName: IdOrNameDto): IdOrNameDto = transaction {
+        if (idName.id != null) {
+            val album = AlbumEntity.findById(idName.id)
+            if (album != null) {
+                return@transaction IdOrNameDto(id = album.id.value, name = album.title, fallbackName = false)
+            }
+        }
+        if (idName.fallbackName) {
+            val album = AlbumEntity.find { AlbumTable.title.lowerCase() eq idName.name.lowercase() }.firstOrNull()
+            if (album != null) {
+                return@transaction IdOrNameDto(id = album.id.value, name = album.title, fallbackName = false)
+            }
+        }
+        return@transaction idName
+    }
+
+    fun refreshAlbumName(idName: IdOrNameDto): IdOrNameDto? = transaction {
+        if (idName.id != null) {
+            val album = AlbumEntity.findById(idName.id)
+            if (album != null) {
+                return@transaction IdOrNameDto(id = album.id.value, name = album.title, fallbackName = false)
+            }
+            return@transaction null
+        }
+        return@transaction idName
+    }
+
     fun count(): Long = transaction {
         return@transaction AlbumEntity.count()
     }

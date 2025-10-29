@@ -21,6 +21,9 @@ import wtf.ndu.vibin.parsing.parsers.metadata.MetadataProvider
 import wtf.ndu.vibin.parsing.parsers.preparser.PreParser
 import wtf.ndu.vibin.parsing.parsers.spotify.SpotifyProvider
 import wtf.ndu.vibin.parsing.parsers.theaudiodb.TheAudioDbProvider
+import wtf.ndu.vibin.repos.AlbumRepo
+import wtf.ndu.vibin.repos.ArtistRepo
+import wtf.ndu.vibin.repos.TagRepo
 import wtf.ndu.vibin.settings.FallbackMetadataSource
 import wtf.ndu.vibin.settings.PrimaryMetadataSource
 import wtf.ndu.vibin.settings.Settings
@@ -89,6 +92,12 @@ object Parser {
         for (source in sources) {
             val metadata = fileParsers[source]?.parse(preParsed)
             if (metadata != null) {
+
+                // Fill in IDs for tags, artists, and album by name
+                metadata.tags = metadata.tags?.let { TagRepo.fillInTagIds(it) }
+                metadata.artists = metadata.artists?.let { ArtistRepo.fillInArtistIds(it) }
+                metadata.album = metadata.album?.let { AlbumRepo.fillInAlbumId(it) }
+
                 return TrackMetadata(preParsed, metadata)
             }
         }

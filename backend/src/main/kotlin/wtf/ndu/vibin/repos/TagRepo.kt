@@ -36,12 +36,6 @@ object TagRepo {
         return@transaction results
     }
 
-    fun getOrCreateTag(name: String): TagEntity = transaction {
-        TagEntity.find { TagTable.name.lowerCase() eq name.lowercase() }.firstOrNull() ?: TagEntity.new {
-            this.name = name
-        }
-    }
-
     fun getOrCreateTag(idName: IdOrNameDto): TagEntity = transaction {
         if (idName.id != null) {
             val tag = TagEntity.findById(idName.id)
@@ -57,6 +51,37 @@ object TagRepo {
         }
         return@transaction TagEntity.new {
             this.name = idName.name
+        }
+    }
+
+    fun fillInTagIds(idNames: List<IdOrNameDto>): List<IdOrNameDto> = transaction {
+        return@transaction idNames.map { idName ->
+            if (idName.id != null) {
+                val tag = TagEntity.findById(idName.id)
+                if (tag != null) {
+                    return@map IdOrNameDto(id = tag.id.value, name = tag.name, fallbackName = false)
+                }
+            }
+            if (idName.fallbackName) {
+                val tag = TagEntity.find { TagTable.name.lowerCase() eq idName.name.lowercase() }.firstOrNull()
+                if (tag != null) {
+                    return@map IdOrNameDto(id = tag.id.value, name = tag.name, fallbackName = false)
+                }
+            }
+            return@map idName
+        }
+    }
+
+    fun refreshTagNames(idNames: List<IdOrNameDto>): List<IdOrNameDto> = transaction {
+        return@transaction idNames.mapNotNull { idName ->
+            if (idName.id != null) {
+                val tag = TagEntity.findById(idName.id)
+                if (tag != null) {
+                    return@mapNotNull IdOrNameDto(id = tag.id.value, name = tag.name, fallbackName = false)
+                }
+                return@mapNotNull null
+            }
+            return@mapNotNull idName
         }
     }
 
