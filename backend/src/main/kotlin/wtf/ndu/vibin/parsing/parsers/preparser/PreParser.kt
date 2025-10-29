@@ -9,7 +9,7 @@ object PreParser {
 
     private val logger = LoggerFactory.getLogger(PreParser::class.java)
 
-    fun preParse(file: File): PreparseData? {
+    fun preParse(file: File): PreparseData {
         try {
             val audioFile = AudioFileIO.read(file)
 
@@ -29,7 +29,7 @@ object PreParser {
         }
         catch (e: Exception) {
             logger.error("Failed to pre-parse file ${file.absolutePath}: ${e.message}", e)
-            return null
+            throw PreParseException("Failed to pre-parse file ${file.absolutePath}")
         }
     }
 }

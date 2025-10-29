@@ -8,6 +8,7 @@ import io.ktor.server.routing.*
 import wtf.ndu.vibin.db.uploads.PendingUploadEntity
 import wtf.ndu.vibin.dto.UploadResultDto
 import wtf.ndu.vibin.dto.tracks.TrackEditDto
+import wtf.ndu.vibin.parsing.parsers.preparser.PreParseException
 import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.repos.UploadRepo
 import kotlin.io.encoding.Base64
@@ -70,8 +71,11 @@ fun Application.configureUploadRoutes() = routing {
 
                 call.respond(UploadRepo.toDto(upload))
             }
-            catch (e: FileAlreadyExistsException) {
+            catch (_: FileAlreadyExistsException) {
                 call.conflict()
+            }
+            catch (_: PreParseException) {
+                call.invalidParameter("file")
             }
         }
 

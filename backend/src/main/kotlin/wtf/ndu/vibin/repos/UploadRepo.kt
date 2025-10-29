@@ -25,6 +25,15 @@ import java.nio.file.Files
 
 object UploadRepo {
 
+    /**
+     * Adds a new pending upload.
+     *
+     * @param data The byte array of the file to upload.
+     * @param fileName The name of the file.
+     * @param userId The ID of the user uploading the file.
+     * @return The created PendingUploadEntity, or null if the user does not exist.
+     * @throws FileAlreadyExistsException if a track with the same checksum already exists.
+     */
     suspend fun addUpload(data: ByteArray, fileName: String, userId: Long): PendingUploadEntity? {
 
         val user = UserRepo.getById(userId) ?: return null
@@ -42,38 +51,44 @@ object UploadRepo {
 
         file.writeBytes(data)
 
-        val parsed = Parser.parse(file)
+        try {
+            val parsed = Parser.parse(file)
 
-        val pendingUpload = transaction {
+            val pendingUpload = transaction {
 
-            val upload = PendingUploadEntity.new {
-                this.filePath = filePath
-                title = parsed.trackInfo.title
-                album = parsed.trackInfo.albumName ?: "Unknown Album"
-                explicit = parsed.trackInfo.explicit ?: false
-                trackNumber = parsed.trackInfo.trackNumber
-                trackCount = parsed.trackInfo.trackCount
-                discNumber = parsed.trackInfo.discNumber
-                discCount = parsed.trackInfo.discCount
-                year = parsed.trackInfo.year
-                comment = parsed.trackInfo.comment ?: ""
-                coverUrl = parsed.trackInfo.coverImageUrl
-                uploader = user
-                tags = SizedCollection(parsed.trackInfo.tags?.mapNotNull { TagRepo.getByName(it) } ?: emptyList())
-                lyrics = parsed.trackInfo.lyrics
-            }
-
-            parsed.trackInfo.artistNames?.forEach {
-                PendingArtistEntity.new {
-                    this.name = it
-                    this.upload = upload
+                val upload = PendingUploadEntity.new {
+                    this.filePath = filePath
+                    title = parsed.trackInfo.title
+                    album = parsed.trackInfo.albumName ?: "Unknown Album"
+                    explicit = parsed.trackInfo.explicit ?: false
+                    trackNumber = parsed.trackInfo.trackNumber
+                    trackCount = parsed.trackInfo.trackCount
+                    discNumber = parsed.trackInfo.discNumber
+                    discCount = parsed.trackInfo.discCount
+                    year = parsed.trackInfo.year
+                    comment = parsed.trackInfo.comment ?: ""
+                    coverUrl = parsed.trackInfo.coverImageUrl
+                    uploader = user
+                    tags = SizedCollection(parsed.trackInfo.tags?.mapNotNull { TagRepo.getByName(it) } ?: emptyList())
+                    lyrics = parsed.trackInfo.lyrics
                 }
+
+                parsed.trackInfo.artistNames?.forEach {
+                    PendingArtistEntity.new {
+                        this.name = it
+                        this.upload = upload
+                    }
+                }
+
+                return@transaction upload
             }
 
-            return@transaction upload
+            return pendingUpload
         }
-
-        return pendingUpload
+        catch (e: Exception) {
+            file.delete()
+            throw e
+        }
     }
 
     fun setMetadata(upload: PendingUploadEntity, metadata: TrackEditDto): PendingUploadEntity = transaction {

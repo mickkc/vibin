@@ -85,16 +85,11 @@ object Parser {
         val sources = listOf(Settings.get(PrimaryMetadataSource), Settings.get(FallbackMetadataSource))
         val preParsed = PreParser.preParse(file)
 
-        if (preParsed != null) {
-            for (source in sources) {
-                val metadata = fileParsers[source]?.parse(preParsed)
-                if (metadata != null) {
-                    return TrackMetadata(preParsed, metadata)
-                }
+        for (source in sources) {
+            val metadata = fileParsers[source]?.parse(preParsed)
+            if (metadata != null) {
+                return TrackMetadata(preParsed, metadata)
             }
-        }
-        else {
-            logger.error("Pre-parsing failed for file: ${file.absolutePath}")
         }
 
         return TrackMetadata(null, TrackInfoMetadata(

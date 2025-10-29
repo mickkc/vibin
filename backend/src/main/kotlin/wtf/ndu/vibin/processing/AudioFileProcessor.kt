@@ -5,6 +5,8 @@ import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.config.EnvUtil
 import wtf.ndu.vibin.db.tracks.TrackEntity
 import wtf.ndu.vibin.parsing.Parser
+import wtf.ndu.vibin.parsing.TrackMetadata
+import wtf.ndu.vibin.parsing.parsers.preparser.PreParseException
 import wtf.ndu.vibin.repos.AlbumRepo
 import wtf.ndu.vibin.repos.ArtistRepo
 import wtf.ndu.vibin.repos.TagRepo
@@ -115,7 +117,15 @@ object AudioFileProcessor {
             return null
         }
 
-        val metadata = Parser.parse(file)
+        var metadata: TrackMetadata
+
+        try {
+            metadata = Parser.parse(file)
+        }
+        catch (e: PreParseException) {
+            logger.error("Pre-parse failed for file: ${file.absolutePath}, skipping file. Error: ${e.message}", e)
+            return null
+        }
 
         val album = metadata.trackInfo.albumName?.let { AlbumRepo.getOrCreateAlbum(it) }
         if (album == null) {
