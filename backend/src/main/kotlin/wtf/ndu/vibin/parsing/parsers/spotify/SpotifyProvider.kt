@@ -7,6 +7,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import wtf.ndu.vibin.dto.IdOrNameDto
 import wtf.ndu.vibin.parsing.AlbumMetadata
 import wtf.ndu.vibin.parsing.ArtistMetadata
 import wtf.ndu.vibin.parsing.TrackInfoMetadata
@@ -109,8 +110,8 @@ class SpotifyProvider(val client: HttpClient) : ArtistSearchProvider, TrackSearc
             return result.items.map {
                 TrackInfoMetadata(
                     title = it.name,
-                    artistNames = it.artists.map { artist -> artist.name },
-                    albumName = it.album.name,
+                    artists = it.artists.map { artist -> IdOrNameDto.nameWithFallback(artist.name) },
+                    album = IdOrNameDto.nameWithFallback(it.album.name),
                     trackNumber = it.track_number,
                     trackCount = if (it.album.album_type == "single") 1 else it.album.total_tracks,
                     discNumber = it.disc_number,

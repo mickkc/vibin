@@ -5,8 +5,6 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.UserEntity
-import wtf.ndu.vibin.db.albums.AlbumEntity
-import wtf.ndu.vibin.db.artists.ArtistEntity
 import wtf.ndu.vibin.db.artists.TrackArtistConnection
 import wtf.ndu.vibin.db.images.ColorSchemeEntity
 import wtf.ndu.vibin.db.images.ImageEntity
@@ -54,7 +52,7 @@ object TrackRepo {
         return@transaction track.album.cover
     }
 
-    fun createTrack(file: File, metadata: TrackMetadata, album: AlbumEntity, artists: List<ArtistEntity>?, checksum: String? = null, uploader: UserEntity? = null): TrackEntity = transaction {
+    fun createTrack(file: File, metadata: TrackMetadata, checksum: String? = null, uploader: UserEntity? = null, cover: ImageEntity? = null): TrackEntity = transaction {
         val track = TrackEntity.new {
             this.title = metadata.trackInfo.title
             this.trackNumber = metadata.trackInfo.trackNumber
@@ -71,9 +69,10 @@ object TrackRepo {
             this.path = PathUtils.getTrackPathFromFile(file)
             this.checksum = checksum ?: ChecksumUtil.getChecksum(file)
             this.uploader = uploader
+            this.cover = cover
 
-            this.album = album
-            this.artists = SizedCollection(artists ?: emptyList())
+            this.album = metadata.trackInfo.album?.let { AlbumRepo.getOrCreateAlbum(it) } ?: AlbumRepo.getOrCreateAlbum("Unknown Album")
+            this.artists = SizedCollection(metadata.trackInfo.artists?.map { ArtistRepo.getOrCreateArtist(it) } ?: emptyList())
         }
         if (metadata.trackInfo.lyrics != null) {
             LyricsRepo.setLyrics(track, metadata.trackInfo.lyrics)
@@ -113,22 +112,22 @@ object TrackRepo {
             image?.let { track.cover = it}
         }
 
-        editDto.albumName?.takeIf { it.isNotBlank() }?.let { albumName ->
-            if (albumName != track.album.title) {
-                val album = AlbumRepo.getOrCreateAlbum(albumName)
+        editDto.album?.let { albumNameId ->
+            if (albumNameId.id != track.album.id.value) {
+                val album = AlbumRepo.getOrCreateAlbum(albumNameId)
                 track.album = album
             }
         }
 
-        editDto.artistNames?.filter { it.isNotBlank() }?.let { artistNames ->
+        editDto.artists?.let { artistNames ->
             if (artistNames == track.artists.map { it.name }) return@let
-            val artists = artistNames.map { name -> ArtistRepo.getOrCreateArtist(name) }
+            val artists = artistNames.map { idName -> ArtistRepo.getOrCreateArtist(idName) }
             track.artists = SizedCollection(artists)
         }
 
-        editDto.tagIds?.let { tagIds ->
+        editDto.tags?.let { tagIds ->
             if (tagIds == track.tags.map { it.id.value }) return@let
-            val tags = tagIds.mapNotNull { id -> TagRepo.getById(id) }
+            val tags = tagIds.map { id -> TagRepo.getOrCreateTag(id) }
             track.tags = SizedCollection(tags)
         }
 

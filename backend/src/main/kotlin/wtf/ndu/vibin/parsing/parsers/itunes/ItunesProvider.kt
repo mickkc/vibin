@@ -6,6 +6,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
+import wtf.ndu.vibin.dto.IdOrNameDto
 import wtf.ndu.vibin.parsing.AlbumMetadata
 import wtf.ndu.vibin.parsing.ParsingUtils
 import wtf.ndu.vibin.parsing.TrackInfoMetadata
@@ -46,14 +47,16 @@ class ItunesProvider(val client: HttpClient) : TrackSearchProvider, AlbumSearchP
             return itunesResponse.results.map {
                 TrackInfoMetadata(
                     title = it.trackName,
-                    artistNames = ParsingUtils.splitArtistNames(it.artistName),
-                    albumName = it.collectionName,
+                    artists = ParsingUtils.splitArtistNames(it.artistName).map { artistName ->
+                        IdOrNameDto.nameWithFallback(artistName)
+                    },
+                    album = it.collectionName?.let { albumName -> IdOrNameDto.nameWithFallback(albumName) },
                     trackNumber = it.trackNumber,
                     trackCount = it.trackCount,
                     discNumber = it.discNumber,
                     discCount = it.discCount,
                     year = it.releaseDate?.substringBefore("-")?.toIntOrNull(),
-                    tags = it.primaryGenreName?.let { genre -> listOf(genre) },
+                    tags = it.primaryGenreName?.let { genre -> listOf(IdOrNameDto.nameWithFallback(genre)) },
                     explicit = it.trackExplicitness == "explicit",
                     coverImageUrl = it.artworkUrl100?.replace("100x100bb", "512x512bb")
                 )
@@ -89,7 +92,7 @@ class ItunesProvider(val client: HttpClient) : TrackSearchProvider, AlbumSearchP
                 AlbumMetadata(
                     title = it.collectionName,
                     artistName = it.artistName,
-                    year = it.releaseDate?.substringBefore("-")?.toIntOrNull(),
+                    year = it.releaseDate.substringBefore("-").toIntOrNull(),
                     coverImageUrl = it.artworkUrl100?.replace("100x100bb", "512x512bb"),
                     description = null,
                     isSingle = it.collectionName.endsWith(" - Single")

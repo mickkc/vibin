@@ -14,6 +14,7 @@ import wtf.ndu.vibin.db.artists.TrackArtistConnection
 import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.db.tracks.TrackEntity
 import wtf.ndu.vibin.db.tracks.TrackTable
+import wtf.ndu.vibin.dto.IdOrNameDto
 import wtf.ndu.vibin.dto.albums.AlbumDataDto
 import wtf.ndu.vibin.dto.albums.AlbumDto
 import wtf.ndu.vibin.dto.albums.AlbumEditDto
@@ -32,6 +33,18 @@ object AlbumRepo {
     fun getOrCreateAlbum(title: String): AlbumEntity = transaction {
         return@transaction AlbumEntity.find { AlbumTable.title.lowerCase() eq title.lowercase() }.firstOrNull()
             ?: AlbumEntity.new { this.title = title }
+    }
+
+    fun getOrCreateAlbum(idOrName: IdOrNameDto): AlbumEntity = transaction {
+        if (idOrName.id != null) {
+            AlbumEntity.findById(idOrName.id)?.let { return@transaction it }
+        }
+        if (idOrName.fallbackName) {
+            AlbumEntity.find { AlbumTable.title.lowerCase() eq idOrName.name.lowercase() }.firstOrNull()?.let {
+                return@transaction it
+            }
+        }
+        return@transaction AlbumEntity.new { this.title = idOrName.name }
     }
 
     fun count(): Long = transaction {

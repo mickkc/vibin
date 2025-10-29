@@ -3,6 +3,7 @@ package wtf.ndu.vibin.parsing.parsers.metadata
 import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.Tag
 import org.slf4j.LoggerFactory
+import wtf.ndu.vibin.dto.IdOrNameDto
 import wtf.ndu.vibin.parsing.ParsingUtils
 import wtf.ndu.vibin.parsing.TrackInfoMetadata
 import wtf.ndu.vibin.parsing.parsers.FileParser
@@ -102,14 +103,16 @@ class MetadataProvider : FileParser {
 
             return TrackInfoMetadata(
                 title = title,
-                artistNames = artist?.let { ParsingUtils.splitArtistNames(it) },
-                albumName = album,
+                artists = artist?.let { ParsingUtils.splitArtistNames(it).map { artistName ->
+                    IdOrNameDto.nameWithFallback(artistName)
+                } },
+                album = album?.let { IdOrNameDto.nameWithFallback(it) },
                 trackNumber = parsedTrackNo,
                 trackCount = parsedTrackCount,
                 discNumber = parsedDiscNo,
                 discCount = parsedDiscCount,
                 year = parsedYear,
-                tags = tags.map { textTagRegex.find(it)?.groups?.get("value")?.value ?: it }.distinct(),
+                tags = tags.map { IdOrNameDto.nameWithFallback(textTagRegex.find(it)?.groups?.get("value")?.value ?: it) }.distinct(),
                 comment = comment,
                 coverImageUrl = "data:${tag.firstArtwork?.mimeType};base64,$base64Cover",
                 explicit = rating?.lowercase() == "explicit",

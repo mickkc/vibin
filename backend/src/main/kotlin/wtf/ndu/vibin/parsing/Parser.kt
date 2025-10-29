@@ -9,6 +9,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
 import io.ktor.serialization.gson.gson
 import org.slf4j.LoggerFactory
+import wtf.ndu.vibin.dto.IdOrNameDto
 import wtf.ndu.vibin.parsing.parsers.AlbumSearchProvider
 import wtf.ndu.vibin.parsing.parsers.ArtistSearchProvider
 import wtf.ndu.vibin.parsing.parsers.FileParser
@@ -94,8 +95,8 @@ object Parser {
 
         return TrackMetadata(null, TrackInfoMetadata(
             title = file.nameWithoutExtension,
-            artistNames = emptyList(),
-            albumName = "Unknown Album",
+            artists = emptyList(),
+            album = IdOrNameDto(null, "Unknown Album", true),
             explicit = false,
             coverImageUrl = null
         ))

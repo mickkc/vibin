@@ -7,8 +7,6 @@ import wtf.ndu.vibin.db.tracks.TrackEntity
 import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.parsing.TrackMetadata
 import wtf.ndu.vibin.parsing.parsers.preparser.PreParseException
-import wtf.ndu.vibin.repos.AlbumRepo
-import wtf.ndu.vibin.repos.ArtistRepo
 import wtf.ndu.vibin.repos.TagRepo
 import wtf.ndu.vibin.repos.TrackRepo
 import wtf.ndu.vibin.settings.AddGenreAsTag
@@ -127,16 +125,12 @@ object AudioFileProcessor {
             return null
         }
 
-        val album = metadata.trackInfo.albumName?.let { AlbumRepo.getOrCreateAlbum(it) }
-        if (album == null) {
+        if (metadata.trackInfo.album == null) {
             logger.warn("No album name found in metadata for file: ${file.absolutePath}")
             return null
         }
 
-        val artists = metadata.trackInfo.artistNames?.map { ArtistRepo.getOrCreateArtist(it) }
-        val uniqueArtists = artists?.distinctBy { it.id.value } ?: emptyList()
-
-        var track = TrackRepo.createTrack(file, metadata, album, uniqueArtists, checksum)
+        var track = TrackRepo.createTrack(file, metadata)
 
         if (metadata.trackInfo.coverImageUrl != null) {
             val coverImageData = Parser.downloadCoverImage(metadata.trackInfo.coverImageUrl)

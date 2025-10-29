@@ -8,6 +8,7 @@ import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.tags.TagEntity
 import wtf.ndu.vibin.db.tags.TagTable
+import wtf.ndu.vibin.dto.IdOrNameDto
 import wtf.ndu.vibin.dto.tags.TagDto
 import wtf.ndu.vibin.dto.tags.TagEditDto
 
@@ -38,6 +39,24 @@ object TagRepo {
     fun getOrCreateTag(name: String): TagEntity = transaction {
         TagEntity.find { TagTable.name.lowerCase() eq name.lowercase() }.firstOrNull() ?: TagEntity.new {
             this.name = name
+        }
+    }
+
+    fun getOrCreateTag(idName: IdOrNameDto): TagEntity = transaction {
+        if (idName.id != null) {
+            val tag = TagEntity.findById(idName.id)
+            if (tag != null) {
+                return@transaction tag
+            }
+        }
+        if (idName.fallbackName) {
+            val tag = TagEntity.find { TagTable.name.lowerCase() eq idName.name.lowercase() }.firstOrNull()
+            if (tag != null) {
+                return@transaction tag
+            }
+        }
+        return@transaction TagEntity.new {
+            this.name = idName.name
         }
     }
 

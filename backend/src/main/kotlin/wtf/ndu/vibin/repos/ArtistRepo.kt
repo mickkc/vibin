@@ -2,13 +2,17 @@ package wtf.ndu.vibin.repos
 
 import io.ktor.server.plugins.*
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Case
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
+import org.jetbrains.exposed.sql.intLiteral
+import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.artists.ArtistEntity
 import wtf.ndu.vibin.db.artists.ArtistTable
 import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.dto.ArtistDto
+import wtf.ndu.vibin.dto.IdOrNameDto
 import wtf.ndu.vibin.dto.artists.ArtistEditData
 import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.processing.ThumbnailProcessor
@@ -41,6 +45,17 @@ object ArtistRepo {
                 this.name = name
                 this.image = null
             }
+    }
+
+    fun getOrCreateArtist(idName: IdOrNameDto): ArtistEntity = transaction {
+        if (idName.id != null) {
+            ArtistEntity.findById(idName.id)?.let { return@transaction it }
+        }
+        if (idName.fallbackName) {
+            ArtistEntity.find { ArtistTable.name.lowerCase() eq idName.name.lowercase() }.firstOrNull()
+                ?.let { return@transaction it }
+        }
+        return@transaction getOrCreateArtist(idName.name)
     }
 
     fun updateOrCreateArtist(id: Long?, data: ArtistEditData): ArtistEntity = transaction {

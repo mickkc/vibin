@@ -5,27 +5,27 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import wtf.ndu.vibin.db.uploads.PendingUploadEntity
 import wtf.ndu.vibin.dto.UploadResultDto
 import wtf.ndu.vibin.dto.tracks.TrackEditDto
 import wtf.ndu.vibin.parsing.parsers.preparser.PreParseException
 import wtf.ndu.vibin.permissions.PermissionType
-import wtf.ndu.vibin.repos.UploadRepo
+import wtf.ndu.vibin.uploads.PendingUpload
+import wtf.ndu.vibin.uploads.UploadManager
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 @OptIn(ExperimentalEncodingApi::class)
 fun Application.configureUploadRoutes() = routing {
 
-    suspend fun RoutingCall.getValidatedUpload(): PendingUploadEntity? {
-        val uploadId = this.parameters["uploadId"]?.toLongOrNull()
+    suspend fun RoutingCall.getValidatedUpload(): PendingUpload? {
+        val uploadId = this.parameters["uploadId"]
 
         if (uploadId == null) {
             missingParameter("uploadId")
             return null
         }
 
-        val upload = UploadRepo.getById(uploadId)
+        val upload = UploadManager.getById(uploadId)
 
         if (upload == null) {
             notFound()
@@ -39,7 +39,7 @@ fun Application.configureUploadRoutes() = routing {
             return null
         }
 
-        if (!UploadRepo.checkUploader(upload, userId)) {
+        if (upload.uploaderId != userId) {
             forbidden()
             return null
         }
@@ -53,9 +53,9 @@ fun Application.configureUploadRoutes() = routing {
 
             val userId = call.getUserId() ?: return@getP call.unauthorized()
 
-            val uploads = UploadRepo.getUploadsByUser(userId)
+            val uploads = UploadManager.getUploadsByUser(userId)
 
-            call.respond(UploadRepo.toDto(uploads))
+            call.respond(uploads)
         }
 
         postP("/api/uploads", PermissionType.UPLOAD_TRACKS) {
@@ -67,9 +67,9 @@ fun Application.configureUploadRoutes() = routing {
             try {
                 val data = Base64.decode(base64data)
 
-                val upload = UploadRepo.addUpload(data, filename, userId) ?: return@postP call.unauthorized()
+                val upload = UploadManager.addUpload(data, filename, userId) ?: return@postP call.unauthorized()
 
-                call.respond(UploadRepo.toDto(upload))
+                call.respond(upload)
             }
             catch (_: FileAlreadyExistsException) {
                 call.conflict()
@@ -85,16 +85,16 @@ fun Application.configureUploadRoutes() = routing {
 
             val metadata = call.receive<TrackEditDto>()
 
-            val updatedUpload = UploadRepo.setMetadata(upload, metadata)
+            val updatedUpload = UploadManager.setMetadata(upload, metadata)
 
-            call.respond(UploadRepo.toDto(updatedUpload))
+            call.respond(updatedUpload)
         }
 
         deleteP("/api/uploads/{uploadId}", PermissionType.UPLOAD_TRACKS) {
 
             val upload = call.getValidatedUpload() ?: return@deleteP
 
-            UploadRepo.delete(upload)
+            UploadManager.delete(upload)
 
             call.success()
         }
@@ -104,7 +104,7 @@ fun Application.configureUploadRoutes() = routing {
             val upload = call.getValidatedUpload() ?: return@postP
 
             try {
-                val track = UploadRepo.apply(upload)
+                val track = UploadManager.apply(upload)
                 call.respond(UploadResultDto(success = true, id = track.id.value))
             }
             catch (_: FileAlreadyExistsException) {
