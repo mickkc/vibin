@@ -175,6 +175,18 @@ object AlbumRepo {
         return@transaction true
     }
 
+    fun getUnusedAlbums(): Pair<SizedIterable<AlbumEntity>, Long> = transaction {
+        val unusedAlbums = AlbumEntity.find {
+            AlbumTable.id notInSubQuery (TrackTable.select(TrackTable.albumId))
+        }
+        val count = unusedAlbums.count()
+        return@transaction unusedAlbums to count
+    }
+
+    fun deleteAll(albums: SizedIterable<AlbumEntity>) = transaction {
+        albums.forEach { it.delete() }
+    }
+
     fun estimateReleaseYear(albumId: Long): Int? = transaction {
         val years = TrackTable.select(TrackTable.year).where {
             (TrackTable.albumId eq albumId) and (TrackTable.year neq null)

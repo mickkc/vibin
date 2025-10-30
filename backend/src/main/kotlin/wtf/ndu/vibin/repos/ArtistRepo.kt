@@ -3,6 +3,7 @@ package wtf.ndu.vibin.repos
 import io.ktor.server.plugins.*
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.Case
+import org.jetbrains.exposed.sql.SizedIterable
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.intLiteral
@@ -10,6 +11,7 @@ import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.artists.ArtistEntity
 import wtf.ndu.vibin.db.artists.ArtistTable
+import wtf.ndu.vibin.db.artists.TrackArtistConnection
 import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.dto.ArtistDto
 import wtf.ndu.vibin.dto.artists.ArtistEditData
@@ -94,6 +96,18 @@ object ArtistRepo {
         val artist = ArtistEntity.findById(artistId) ?: return@transaction false
         artist.delete()
         return@transaction true
+    }
+
+    fun getUnusedArtists(): Pair<SizedIterable<ArtistEntity>, Long> = transaction {
+        val unusedArtists = ArtistEntity.find {
+            ArtistTable.id notInSubQuery (TrackArtistConnection.select(TrackArtistConnection.artist))
+        }
+        val count = unusedArtists.count()
+        return@transaction unusedArtists to count
+    }
+
+    fun deleteAll(artists: SizedIterable<ArtistEntity>) = transaction {
+        artists.forEach { it.delete() }
     }
 
     fun getAll(params: PaginatedSearchParams): Pair<List<ArtistEntity>, Long> = transaction {
