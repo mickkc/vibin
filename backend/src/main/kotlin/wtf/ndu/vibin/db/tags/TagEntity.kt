@@ -6,7 +6,7 @@ import wtf.ndu.vibin.db.ModifiableLongIdEntity
 import wtf.ndu.vibin.db.ModifiableLongIdTable
 
 object TagTable : ModifiableLongIdTable("tag") {
-    val name = varchar("name", 255).uniqueIndex()
+    val name = varchar("name", 255).index()
     val description = text("description").default("")
     val color = varchar("color", 7).nullable()
 }

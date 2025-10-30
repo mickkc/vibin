@@ -10,7 +10,7 @@ import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.db.images.ImageTable
 
 object ArtistTable : ModifiableLongIdTable("artist") {
-    val name = varchar("name", 255).uniqueIndex()
+    val name = varchar("name", 255).index()
     val description = text("description").default("")
     val image = reference("image_url", ImageTable).nullable()
 }
