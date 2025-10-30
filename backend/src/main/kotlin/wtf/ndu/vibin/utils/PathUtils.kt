@@ -64,7 +64,7 @@ object PathUtils {
             throw SecurityException("Attempted directory traversal attack: $relativePath")
         }
 
-        return path.toFile()
+        return path.toFile().also { it.parentFile.mkdirs() }
     }
 
     fun getDefaultImage(type: String, quality: String = "large"): File {
