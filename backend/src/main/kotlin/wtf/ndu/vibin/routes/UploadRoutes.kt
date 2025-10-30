@@ -2,6 +2,7 @@ package wtf.ndu.vibin.routes
 
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
+import io.ktor.server.plugins.NotFoundException
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -85,18 +86,27 @@ fun Application.configureUploadRoutes() = routing {
 
             val metadata = call.receive<TrackEditDto>()
 
-            val updatedUpload = UploadManager.setMetadata(upload, metadata)
-
-            call.respond(updatedUpload)
+            try {
+                val updatedUpload = UploadManager.setMetadata(upload.id, metadata)
+                call.respond(updatedUpload)
+            }
+            catch (_: NotFoundException) {
+                call.notFound()
+            }
         }
 
         deleteP("/api/uploads/{uploadId}", PermissionType.UPLOAD_TRACKS) {
 
             val upload = call.getValidatedUpload() ?: return@deleteP
 
-            UploadManager.delete(upload)
+            try {
+                UploadManager.delete(upload.id)
+                call.success()
+            }
+            catch (_: NotFoundException) {
+                call.notFound()
+            }
 
-            call.success()
         }
 
         postP("/api/uploads/{uploadId}/apply", PermissionType.UPLOAD_TRACKS) {
@@ -104,11 +114,14 @@ fun Application.configureUploadRoutes() = routing {
             val upload = call.getValidatedUpload() ?: return@postP
 
             try {
-                val track = UploadManager.apply(upload)
+                val track = UploadManager.apply(upload.id)
                 call.respond(UploadResultDto(success = true, id = track.id.value))
             }
             catch (_: FileAlreadyExistsException) {
                 call.respond(UploadResultDto(success = false, didFileAlreadyExist = true))
+            }
+            catch (_: NotFoundException) {
+                call.notFound()
             }
         }
     }

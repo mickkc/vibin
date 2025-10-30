@@ -1,5 +1,9 @@
 package wtf.ndu.vibin.uploads
 
+import io.ktor.server.plugins.NotFoundException
+import kotlinx.coroutines.sync.Mutex
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.db.tracks.TrackEntity
 import wtf.ndu.vibin.dto.IdOrNameDto
 import wtf.ndu.vibin.dto.tracks.TrackEditDto
@@ -22,6 +26,8 @@ import java.util.concurrent.ConcurrentHashMap
 object UploadManager {
 
     private val storage = ConcurrentHashMap<String, PendingUpload>()
+    private val mutex = Mutex()
+    private val logger: Logger = LoggerFactory.getLogger(UploadManager::class.java)
 
     /**
      * Adds a new pending upload.
@@ -34,54 +40,61 @@ object UploadManager {
      */
     suspend fun addUpload(data: ByteArray, fileName: String, userId: Long): PendingUpload? {
 
-        val user = UserRepo.getById(userId) ?: return null
-
-        val checksum = ChecksumUtil.getChecksum(data)
-
-        val filePath = PathUtils.sanitizePath("$userId${File.separator}$fileName")
-
-        val file = PathUtils.getUploadFileFromPath(filePath)
-
-        if (TrackRepo.getByChecksum(checksum) != null) {
-            throw FileAlreadyExistsException(file)
-        }
-        file.parentFile.mkdirs()
-
-        file.writeBytes(data)
-
-        val id = UUID.randomUUID().toString()
+        mutex.lock()
 
         try {
-            val parsed = Parser.parse(file)
+            val user = UserRepo.getById(userId) ?: return null
 
-            val pendingUpload = PendingUpload(
-                id = id,
-                filePath = filePath,
-                title = parsed.trackInfo.title,
-                album = parsed.trackInfo.album ?: IdOrNameDto.nameWithFallback("Unknown Album"),
-                artists = parsed.trackInfo.artists ?: mutableListOf(),
-                tags = parsed.trackInfo.tags ?: mutableListOf(),
-                explicit = parsed.trackInfo.explicit ?: false,
-                trackNumber = parsed.trackInfo.trackNumber,
-                trackCount = parsed.trackInfo.trackCount,
-                discNumber = parsed.trackInfo.discNumber,
-                discCount = parsed.trackInfo.discCount,
-                year = parsed.trackInfo.year,
-                comment = parsed.trackInfo.comment ?: "",
-                lyrics = parsed.trackInfo.lyrics,
-                coverUrl = parsed.trackInfo.coverImageUrl,
-                uploaderId = user.id.value,
-                lastUpdated = DateTimeUtils.now()
-            )
+            val checksum = ChecksumUtil.getChecksum(data)
 
-            storage[id] = pendingUpload
+            val filePath = PathUtils.sanitizePath("$userId${File.separator}$fileName")
 
-            return pendingUpload
+            val file = PathUtils.getUploadFileFromPath(filePath)
+
+            if (TrackRepo.getByChecksum(checksum) != null) {
+                throw FileAlreadyExistsException(file)
+            }
+            file.parentFile.mkdirs()
+
+            file.writeBytes(data)
+
+            val id = UUID.randomUUID().toString()
+
+            try {
+                val parsed = Parser.parse(file)
+
+                val pendingUpload = PendingUpload(
+                    id = id,
+                    filePath = filePath,
+                    title = parsed.trackInfo.title,
+                    album = parsed.trackInfo.album ?: IdOrNameDto.nameWithFallback("Unknown Album"),
+                    artists = parsed.trackInfo.artists ?: mutableListOf(),
+                    tags = parsed.trackInfo.tags ?: mutableListOf(),
+                    explicit = parsed.trackInfo.explicit ?: false,
+                    trackNumber = parsed.trackInfo.trackNumber,
+                    trackCount = parsed.trackInfo.trackCount,
+                    discNumber = parsed.trackInfo.discNumber,
+                    discCount = parsed.trackInfo.discCount,
+                    year = parsed.trackInfo.year,
+                    comment = parsed.trackInfo.comment ?: "",
+                    lyrics = parsed.trackInfo.lyrics,
+                    coverUrl = parsed.trackInfo.coverImageUrl,
+                    uploaderId = user.id.value,
+                    lastUpdated = DateTimeUtils.now()
+                )
+
+                storage[id] = pendingUpload
+
+                return pendingUpload
+            } catch (e: Exception) {
+                logger.error("Error parsing uploaded file for user ID $userId: ${e.message}", e)
+                file.delete()
+                storage.remove(id)
+                throw e
+            }
         }
-        catch (e: Exception) {
-            file.delete()
-            storage.remove(id)
-            throw e
+        finally {
+            mutex.unlock()
         }
     }
 
@@ -92,24 +105,33 @@ object UploadManager {
      * @param metadata The TrackEditDto containing the new metadata.
      * @return The updated PendingUploadEntity.
      */
-    fun setMetadata(upload: PendingUpload, metadata: TrackEditDto): PendingUpload {
+    suspend fun setMetadata(id: String, metadata: TrackEditDto): PendingUpload {
 
-        upload.title = metadata.title ?: upload.title
-        upload.album = metadata.album ?: upload.album
-        upload.artists = metadata.artists ?: upload.artists
-        upload.tags = metadata.tags ?: upload.tags
-        upload.explicit = metadata.explicit ?: upload.explicit
-        upload.trackNumber = metadata.trackNumber
-        upload.trackCount = metadata.trackCount
-        upload.discNumber = metadata.discNumber
-        upload.discCount = metadata.discCount
-        upload.year = metadata.year
-        upload.comment = metadata.comment ?: upload.comment
-        upload.coverUrl = metadata.imageUrl ?: upload.coverUrl
-        upload.lyrics = metadata.lyrics ?: upload.lyrics
+        mutex.lock()
 
-        refresh(upload)
-        return upload
+        try {
+            val upload = storage[id] ?: throw NotFoundException()
+
+            upload.title = metadata.title ?: upload.title
+            upload.album = metadata.album ?: upload.album
+            upload.artists = metadata.artists ?: upload.artists
+            upload.tags = metadata.tags ?: upload.tags
+            upload.explicit = metadata.explicit ?: upload.explicit
+            upload.trackNumber = metadata.trackNumber
+            upload.trackCount = metadata.trackCount
+            upload.discNumber = metadata.discNumber
+            upload.discCount = metadata.discCount
+            upload.year = metadata.year
+            upload.comment = metadata.comment ?: upload.comment
+            upload.coverUrl = metadata.imageUrl ?: upload.coverUrl
+            upload.lyrics = metadata.lyrics ?: upload.lyrics
+
+            refresh(upload)
+            return upload
+        }
+        finally {
+            mutex.unlock()
+        }
     }
 
     /**
@@ -119,70 +141,90 @@ object UploadManager {
      * @return The created TrackEntity, or null if the operation failed.
      * @throws FileAlreadyExistsException if the target file already exists.
      */
-    suspend fun apply(upload: PendingUpload): TrackEntity {
+    suspend fun apply(id: String): TrackEntity {
 
-        refresh(upload)
+        mutex.lock()
 
-        val file = PathUtils.getUploadFileFromPath(upload.filePath)
+        try {
 
-        if (!file.exists()) {
-            throw IllegalStateException("Upload file does not exist: ${file.absolutePath}")
-        }
+            val upload = storage[id] ?: throw NotFoundException()
 
-        val fileInfo = PreParser.preParse(file)
+            refresh(upload)
 
-        val targetFile = getTargetFile(upload)
-        targetFile.parentFile.mkdirs()
+            val file = PathUtils.getUploadFileFromPath(upload.filePath)
 
-        if (targetFile.exists()) {
-            throw FileAlreadyExistsException(targetFile)
-        }
+            if (!file.exists()) {
+                throw IllegalStateException("Upload file does not exist: ${file.absolutePath}")
+            }
 
-        Files.move(file.toPath(), targetFile.toPath())
+            val fileInfo = PreParser.preParse(file)
 
-        val cover = upload.coverUrl?.let { url ->
-            val data = Parser.downloadCoverImage(url)
-            data?.let { ThumbnailProcessor.getImage(it) }
-        }
+            val targetFile = getTargetFile(upload)
+            targetFile.parentFile.mkdirs()
 
-        val track = TrackRepo.createTrack(
-            file = targetFile,
-            metadata = TrackMetadata(
-                fileInfo = fileInfo,
-                trackInfo = TrackInfoMetadata(
-                    title = upload.title,
-                    album = upload.album,
-                    artists = upload.artists,
-                    explicit = upload.explicit,
-                    trackNumber = upload.trackNumber,
-                    trackCount = upload.trackCount,
-                    discNumber = upload.discNumber,
-                    discCount = upload.discCount,
-                    year = upload.year,
-                    comment = upload.comment,
-                    coverImageUrl = upload.coverUrl,
-                    lyrics = upload.lyrics,
-                    tags = upload.tags,
+            if (targetFile.exists()) {
+                throw FileAlreadyExistsException(targetFile)
+            }
+
+            Files.move(file.toPath(), targetFile.toPath())
+
+            val cover = upload.coverUrl?.let { url ->
+                val data = Parser.downloadCoverImage(url)
+                data?.let { ThumbnailProcessor.getImage(it) }
+            }
+
+            val track = TrackRepo.createTrack(
+                file = targetFile,
+                metadata = TrackMetadata(
+                    fileInfo = fileInfo,
+                    trackInfo = TrackInfoMetadata(
+                        title = upload.title,
+                        album = upload.album,
+                        artists = upload.artists,
+                        explicit = upload.explicit,
+                        trackNumber = upload.trackNumber,
+                        trackCount = upload.trackCount,
+                        discNumber = upload.discNumber,
+                        discCount = upload.discCount,
+                        year = upload.year,
+                        comment = upload.comment,
+                        coverImageUrl = upload.coverUrl,
+                        lyrics = upload.lyrics,
+                        tags = upload.tags,
+                    ),
                 ),
-            ),
-            cover = cover,
-            uploader = UserRepo.getById(upload.uploaderId)
-        )
+                cover = cover,
+                uploader = UserRepo.getById(upload.uploaderId)
+            )
 
-        storage.remove(upload.id)
+            storage.remove(upload.id)
 
-        return track
-    }
-
-    fun delete(upload: PendingUpload) {
-        val file = PathUtils.getUploadFileFromPath(upload.filePath)
-        if (file.exists()) {
-            file.delete()
+            return track
         }
-        storage.remove(upload.id)
+        finally {
+            mutex.unlock()
+        }
     }
 
-    fun refresh(upload: PendingUpload) {
+    suspend fun delete(id: String) {
+
+        mutex.lock()
+
+        try {
+            val upload = storage[id] ?: throw NotFoundException()
+
+            val file = PathUtils.getUploadFileFromPath(upload.filePath)
+            if (file.exists()) {
+                file.delete()
+            }
+            storage.remove(upload.id)
+        }
+        finally {
+            mutex.unlock()
+        }
+    }
+
+    private fun refresh(upload: PendingUpload) {
 
         upload.album = AlbumRepo.refreshAlbumName(upload.album) ?: IdOrNameDto.nameWithFallback("Unknown Album")
         upload.artists = ArtistRepo.refreshArtistNames(upload.artists)
