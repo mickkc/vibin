@@ -90,13 +90,14 @@ object Parser {
         val preParsed = PreParser.preParse(file)
 
         for (source in sources) {
-            val metadata = fileParsers[source]?.parse(preParsed)
+            var metadata = fileParsers[source]?.parse(preParsed)
             if (metadata != null) {
 
-                // Fill in IDs for tags, artists, and album by name
-                metadata.tags = metadata.tags?.let { TagRepo.fillInTagIds(it) }
-                metadata.artists = metadata.artists?.let { ArtistRepo.fillInArtistIds(it) }
-                metadata.album = metadata.album?.let { AlbumRepo.fillInAlbumId(it) }
+                metadata = metadata.copy(
+                    tags = metadata.tags?.let { TagRepo.fillInTagIds(it) },
+                    artists = metadata.artists?.let { ArtistRepo.fillInArtistIds(it) },
+                    album = metadata.album?.let { AlbumRepo.fillInAlbumId(it) }
+                )
 
                 return TrackMetadata(preParsed, metadata)
             }
@@ -121,7 +122,13 @@ object Parser {
         val parser = trackSearchProviders[provider] ?: return null
 
         return try {
-            parser.searchTrack(query)
+            parser.searchTrack(query)?.map {
+                it.copy(
+                    artists = it.artists?.let { ArtistRepo.fillInArtistIds(it) },
+                    album = it.album?.let { AlbumRepo.fillInAlbumId(it) },
+                    tags = it.tags?.let { TagRepo.fillInTagIds(it) }
+                )
+            }
         }
         catch (e: Exception) {
             logger.error("Error searching track '$query' with provider '$provider': ${e.message}", e)
