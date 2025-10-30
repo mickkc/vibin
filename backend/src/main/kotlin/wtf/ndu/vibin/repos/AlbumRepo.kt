@@ -65,7 +65,7 @@ object AlbumRepo {
                 return@transaction IdOrNameDto(id = album.id.value, name = album.title, fallbackName = false)
             }
         }
-        return@transaction idName
+        return@transaction idName.copy(fallbackName = false)
     }
 
     fun refreshAlbumName(idName: IdOrNameDto): IdOrNameDto? = transaction {

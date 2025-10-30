@@ -68,7 +68,7 @@ object TagRepo {
                     return@map IdOrNameDto(id = tag.id.value, name = tag.name, fallbackName = false)
                 }
             }
-            return@map idName
+            return@map idName.copy(fallbackName = false)
         }
     }
 

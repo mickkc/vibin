@@ -72,7 +72,7 @@ object ArtistRepo {
                     return@map IdOrNameDto(id = artist.id.value, name = artist.name, fallbackName = false)
                 }
             }
-            return@map idName
+            return@map idName.copy(fallbackName = false)
         }
     }
 
