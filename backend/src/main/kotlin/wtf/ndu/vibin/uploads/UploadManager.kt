@@ -1,15 +1,13 @@
 package wtf.ndu.vibin.uploads
 
-import io.ktor.server.plugins.NotFoundException
+import io.ktor.server.plugins.*
 import kotlinx.coroutines.sync.Mutex
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.db.tracks.TrackEntity
-import wtf.ndu.vibin.dto.IdOrNameDto
+import wtf.ndu.vibin.dto.PendingUploadDto
 import wtf.ndu.vibin.dto.tracks.TrackEditDto
 import wtf.ndu.vibin.parsing.Parser
-import wtf.ndu.vibin.parsing.TrackInfoMetadata
-import wtf.ndu.vibin.parsing.TrackMetadata
 import wtf.ndu.vibin.parsing.parsers.preparser.PreParser
 import wtf.ndu.vibin.processing.ThumbnailProcessor
 import wtf.ndu.vibin.repos.*
@@ -67,9 +65,9 @@ object UploadManager {
                     id = id,
                     filePath = filePath,
                     title = parsed.trackInfo.title,
-                    album = parsed.trackInfo.album ?: IdOrNameDto.nameWithFallback("Unknown Album"),
-                    artists = parsed.trackInfo.artists ?: mutableListOf(),
-                    tags = parsed.trackInfo.tags ?: mutableListOf(),
+                    album = AlbumRepo.getOrCreateAlbum(parsed.trackInfo.album ?: AlbumRepo.UNKNOWN_ALBUM_NAME).id.value,
+                    artists = parsed.trackInfo.artists?.map { ArtistRepo.getOrCreateArtist(it).id.value } ?: emptyList(),
+                    tags = parsed.trackInfo.tags?.map { TagRepo.getOrCreateTag(it).id.value } ?: mutableListOf(),
                     explicit = parsed.trackInfo.explicit ?: false,
                     trackNumber = parsed.trackInfo.trackNumber,
                     trackCount = parsed.trackInfo.trackCount,
@@ -126,7 +124,6 @@ object UploadManager {
             upload.coverUrl = metadata.imageUrl ?: upload.coverUrl
             upload.lyrics = metadata.lyrics ?: upload.lyrics
 
-            refresh(upload)
             return upload
         }
         finally {
@@ -148,8 +145,6 @@ object UploadManager {
         try {
 
             val upload = storage[id] ?: throw NotFoundException()
-
-            refresh(upload)
 
             val file = PathUtils.getUploadFileFromPath(upload.filePath)
 
@@ -175,26 +170,9 @@ object UploadManager {
 
             val track = TrackRepo.createTrack(
                 file = targetFile,
-                metadata = TrackMetadata(
-                    fileInfo = fileInfo,
-                    trackInfo = TrackInfoMetadata(
-                        title = upload.title,
-                        album = upload.album,
-                        artists = upload.artists,
-                        explicit = upload.explicit,
-                        trackNumber = upload.trackNumber,
-                        trackCount = upload.trackCount,
-                        discNumber = upload.discNumber,
-                        discCount = upload.discCount,
-                        year = upload.year,
-                        comment = upload.comment,
-                        coverImageUrl = upload.coverUrl,
-                        lyrics = upload.lyrics,
-                        tags = upload.tags,
-                    ),
-                ),
-                cover = cover,
-                uploader = UserRepo.getById(upload.uploaderId)
+                preparseData = fileInfo,
+                upload = upload,
+                cover = cover
             )
 
             storage.remove(upload.id)
@@ -224,16 +202,6 @@ object UploadManager {
         }
     }
 
-    private fun refresh(upload: PendingUpload) {
-
-        upload.album = AlbumRepo.refreshAlbumName(upload.album) ?: IdOrNameDto.nameWithFallback("Unknown Album")
-        upload.artists = ArtistRepo.refreshArtistNames(upload.artists)
-        upload.tags = TagRepo.refreshTagNames(upload.tags)
-
-        upload.lastUpdated = DateTimeUtils.now()
-        storage[upload.id] = upload
-    }
-
     private fun getTargetFile(pendingUploadEntity: PendingUpload): File {
         val pathTemplate = Settings.get(UploadPath)
 
@@ -241,10 +209,10 @@ object UploadManager {
 
         val replacedPath = pathTemplate
             .replace("{uploaderId}", pendingUploadEntity.uploaderId.toString())
-            .replace("{album}", pendingUploadEntity.album.name)
+            .replace("{album}", AlbumRepo.getById(pendingUploadEntity.album)?.title ?: AlbumRepo.UNKNOWN_ALBUM_NAME)
             .replace("{title}", pendingUploadEntity.title)
-            .replace("{artist}", pendingUploadEntity.artists.joinToString(", ") { it.name })
-            .replace("{artists}", pendingUploadEntity.artists.joinToString(", ") { it.name })
+            .replace("{artist}", ArtistRepo.idsToDisplayString(pendingUploadEntity.artists))
+            .replace("{artists}", ArtistRepo.idsToDisplayString(pendingUploadEntity.artists))
             .replace("{name}", uploadedFile.nameWithoutExtension)
             .replace("{ext}", uploadedFile.extension)
             .replace("{sep}", File.separator)
@@ -254,12 +222,42 @@ object UploadManager {
     }
 
     fun getUploadsByUser(userId: Long): List<PendingUpload> {
-        return storage.values.filter { it.uploaderId == userId }.onEach { refresh(it) }
+        return storage.values.filter { it.uploaderId == userId }
     }
 
     fun getById(id: String): PendingUpload? {
-        return storage[id]?.apply {
-            refresh(this)
-        }
+        return storage[id]
+    }
+
+    fun toDto(upload: PendingUpload): PendingUploadDto {
+        return PendingUploadDto(
+            id = upload.id,
+            filePath = upload.filePath,
+            title = upload.title,
+            album = AlbumRepo.getById(upload.album)?.let {
+                AlbumRepo.toDto(it)
+            },
+            artists = upload.artists.mapNotNull {
+                ArtistRepo.getById(it)
+            }.let {
+                ArtistRepo.toDto(it)
+            },
+            tags = upload.tags.mapNotNull {
+                TagRepo.getById(it)
+            }.let {
+                    TagRepo.toDto(it)
+            },
+            explicit = upload.explicit,
+            trackNumber = upload.trackNumber,
+            trackCount = upload.trackCount,
+            discNumber = upload.discNumber,
+            discCount = upload.discCount,
+            year = upload.year,
+            comment = upload.comment,
+            lyrics = upload.lyrics,
+            coverUrl = upload.coverUrl,
+            uploaderId = upload.uploaderId,
+            lastUpdated = upload.lastUpdated
+        )
     }
 }

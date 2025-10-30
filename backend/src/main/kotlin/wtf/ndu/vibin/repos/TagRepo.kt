@@ -8,7 +8,6 @@ import org.jetbrains.exposed.sql.lowerCase
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.tags.TagEntity
 import wtf.ndu.vibin.db.tags.TagTable
-import wtf.ndu.vibin.dto.IdOrNameDto
 import wtf.ndu.vibin.dto.tags.TagDto
 import wtf.ndu.vibin.dto.tags.TagEditDto
 
@@ -36,52 +35,13 @@ object TagRepo {
         return@transaction results
     }
 
-    fun getOrCreateTag(idName: IdOrNameDto): TagEntity = transaction {
-        if (idName.id != null) {
-            val tag = TagEntity.findById(idName.id)
-            if (tag != null) {
-                return@transaction tag
-            }
-        }
-        if (idName.fallbackName) {
-            val tag = TagEntity.find { TagTable.name.lowerCase() eq idName.name.lowercase() }.firstOrNull()
-            if (tag != null) {
-                return@transaction tag
-            }
+    fun getOrCreateTag(name: String): TagEntity = transaction {
+        val existingTag = TagEntity.find { TagTable.name.lowerCase() eq name.lowercase() }.firstOrNull()
+        if (existingTag != null) {
+            return@transaction existingTag
         }
         return@transaction TagEntity.new {
-            this.name = idName.name
-        }
-    }
-
-    fun fillInTagIds(idNames: List<IdOrNameDto>): List<IdOrNameDto> = transaction {
-        return@transaction idNames.map { idName ->
-            if (idName.id != null) {
-                val tag = TagEntity.findById(idName.id)
-                if (tag != null) {
-                    return@map IdOrNameDto(id = tag.id.value, name = tag.name, fallbackName = false)
-                }
-            }
-            if (idName.fallbackName) {
-                val tag = TagEntity.find { TagTable.name.lowerCase() eq idName.name.lowercase() }.firstOrNull()
-                if (tag != null) {
-                    return@map IdOrNameDto(id = tag.id.value, name = tag.name, fallbackName = false)
-                }
-            }
-            return@map idName.copy(fallbackName = false)
-        }
-    }
-
-    fun refreshTagNames(idNames: List<IdOrNameDto>): List<IdOrNameDto> = transaction {
-        return@transaction idNames.mapNotNull { idName ->
-            if (idName.id != null) {
-                val tag = TagEntity.findById(idName.id)
-                if (tag != null) {
-                    return@mapNotNull IdOrNameDto(id = tag.id.value, name = tag.name, fallbackName = false)
-                }
-                return@mapNotNull null
-            }
-            return@mapNotNull idName
+            this.name = name
         }
     }
 

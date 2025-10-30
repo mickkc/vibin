@@ -32,6 +32,13 @@ fun Application.configureAlbumRoutes() = routing {
             ))
         }
 
+        postP("/api/albums", PermissionType.MANAGE_ALBUMS) {
+            val createDto = call.receive<AlbumEditDto>()
+
+            val newAlbum = AlbumRepo.create(createDto)
+            call.respond(AlbumRepo.toDto(newAlbum))
+        }
+
         getP("/api/albums/autocomplete", PermissionType.VIEW_ALBUMS) {
 
             val query = call.request.queryParameters["query"] ?: return@getP call.missingParameter("query")

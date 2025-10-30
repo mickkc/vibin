@@ -14,7 +14,6 @@ import wtf.ndu.vibin.db.artists.TrackArtistConnection
 import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.db.tracks.TrackEntity
 import wtf.ndu.vibin.db.tracks.TrackTable
-import wtf.ndu.vibin.dto.IdOrNameDto
 import wtf.ndu.vibin.dto.albums.AlbumDataDto
 import wtf.ndu.vibin.dto.albums.AlbumDto
 import wtf.ndu.vibin.dto.albums.AlbumEditDto
@@ -23,6 +22,8 @@ import wtf.ndu.vibin.processing.ThumbnailProcessor
 import wtf.ndu.vibin.routes.PaginatedSearchParams
 
 object AlbumRepo {
+
+    const val UNKNOWN_ALBUM_NAME = "Unknown Album"
 
     /**
      * Retrieves an existing album by title or creates a new one if it doesn't exist.
@@ -33,50 +34,6 @@ object AlbumRepo {
     fun getOrCreateAlbum(title: String): AlbumEntity = transaction {
         return@transaction AlbumEntity.find { AlbumTable.title.lowerCase() eq title.lowercase() }.firstOrNull()
             ?: AlbumEntity.new { this.title = title }
-    }
-
-    fun getOrCreateAlbum(idOrName: IdOrNameDto): AlbumEntity = transaction {
-        if (idOrName.id != null) {
-            AlbumEntity.findById(idOrName.id)?.let { return@transaction it }
-        }
-        if (idOrName.fallbackName) {
-            AlbumEntity.find { AlbumTable.title.lowerCase() eq idOrName.name.lowercase() }.firstOrNull()?.let {
-                return@transaction it
-            }
-        }
-        return@transaction AlbumEntity.new { this.title = idOrName.name }
-    }
-
-    /**
-     * Fills in missing album ID in a [IdOrNameDto] object by looking up albums in the database.
-     * @param idName A [IdOrNameDto] object to process.
-     * @return A [IdOrNameDto] object with filled-in ID where possible.
-     */
-    fun fillInAlbumId(idName: IdOrNameDto): IdOrNameDto = transaction {
-        if (idName.id != null) {
-            val album = AlbumEntity.findById(idName.id)
-            if (album != null) {
-                return@transaction IdOrNameDto(id = album.id.value, name = album.title, fallbackName = false)
-            }
-        }
-        if (idName.fallbackName) {
-            val album = AlbumEntity.find { AlbumTable.title.lowerCase() eq idName.name.lowercase() }.firstOrNull()
-            if (album != null) {
-                return@transaction IdOrNameDto(id = album.id.value, name = album.title, fallbackName = false)
-            }
-        }
-        return@transaction idName.copy(fallbackName = false)
-    }
-
-    fun refreshAlbumName(idName: IdOrNameDto): IdOrNameDto? = transaction {
-        if (idName.id != null) {
-            val album = AlbumEntity.findById(idName.id)
-            if (album != null) {
-                return@transaction IdOrNameDto(id = album.id.value, name = album.title, fallbackName = false)
-            }
-            return@transaction null
-        }
-        return@transaction idName
     }
 
     fun count(): Long = transaction {
@@ -95,6 +52,30 @@ object AlbumRepo {
             .offset(params.offset)
             .toList()
         return@transaction results to count
+    }
+
+    fun create(createDto: AlbumEditDto): AlbumEntity {
+
+        val cover = createDto.coverUrl?.let { url ->
+            if (url.isNotEmpty()) {
+                val data = runBlocking { Parser.downloadCoverImage(url) }
+                if (data != null) {
+                    val image = ThumbnailProcessor.getImage(data)
+                    return@let image
+                }
+            }
+            return@let null
+        }
+
+        return transaction {
+            AlbumEntity.new {
+                this.title = createDto.title!!
+                this.description = createDto.description ?: ""
+                this.releaseYear = createDto.year
+                this.single = createDto.isSingle
+                this.cover = cover
+            }
+        }
     }
 
     fun autocomplete(query: String, limit: Int): List<String> = transaction {

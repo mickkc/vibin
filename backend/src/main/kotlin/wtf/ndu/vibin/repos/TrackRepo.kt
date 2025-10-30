@@ -17,9 +17,11 @@ import wtf.ndu.vibin.dto.tracks.TrackDto
 import wtf.ndu.vibin.dto.tracks.TrackEditDto
 import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.parsing.TrackMetadata
+import wtf.ndu.vibin.parsing.parsers.PreparseData
 import wtf.ndu.vibin.processing.ThumbnailProcessor
 import wtf.ndu.vibin.routes.PaginatedSearchParams
 import wtf.ndu.vibin.search.SearchQueryBuilder
+import wtf.ndu.vibin.uploads.PendingUpload
 import wtf.ndu.vibin.utils.ChecksumUtil
 import wtf.ndu.vibin.utils.DateTimeUtils
 import wtf.ndu.vibin.utils.PathUtils
@@ -71,12 +73,45 @@ object TrackRepo {
             this.uploader = uploader
             this.cover = cover
 
-            this.album = metadata.trackInfo.album?.let { AlbumRepo.getOrCreateAlbum(it) } ?: AlbumRepo.getOrCreateAlbum("Unknown Album")
+            this.album = metadata.trackInfo.album
+                ?.let { AlbumRepo.getOrCreateAlbum(it) }
+                ?: AlbumRepo.getOrCreateAlbum(AlbumRepo.UNKNOWN_ALBUM_NAME)
             this.artists = SizedCollection(metadata.trackInfo.artists?.map { ArtistRepo.getOrCreateArtist(it) } ?: emptyList())
         }
         if (metadata.trackInfo.lyrics != null) {
             LyricsRepo.setLyrics(track, metadata.trackInfo.lyrics)
         }
+        return@transaction track
+    }
+
+    fun createTrack(file: File, preparseData: PreparseData, upload: PendingUpload, cover: ImageEntity?): TrackEntity = transaction {
+        val track = TrackEntity.new {
+            this.title = upload.title
+            this.trackNumber = upload.trackNumber
+            this.trackCount = upload.trackCount
+            this.discNumber = upload.discNumber
+            this.discCount = upload.discCount
+            this.year = upload.year
+            this.duration = preparseData.durationMs
+            this.comment = upload.comment
+            this.bitrate = preparseData.bitrate?.toIntOrNull()
+            this.sampleRate = preparseData.sampleRate?.toIntOrNull()
+            this.channels = preparseData.channels?.toIntOrNull()
+            this.explicit = upload.explicit
+            this.path = PathUtils.getTrackPathFromFile(file)
+            this.checksum = ChecksumUtil.getChecksum(file)
+            this.uploader = UserRepo.getById(upload.uploaderId)
+            this.cover = cover
+
+            this.album = AlbumRepo.getById(upload.album) ?: AlbumRepo.getOrCreateAlbum(AlbumRepo.UNKNOWN_ALBUM_NAME)
+            this.artists = SizedCollection(upload.artists.mapNotNull { ArtistRepo.getById(it) })
+            this.tags = SizedCollection(upload.tags.mapNotNull { TagRepo.getById(it) })
+        }
+
+        if (upload.lyrics != null) {
+            LyricsRepo.setLyrics(track, upload.lyrics)
+        }
+
         return@transaction track
     }
 
@@ -113,21 +148,22 @@ object TrackRepo {
         }
 
         editDto.album?.let { albumNameId ->
-            if (albumNameId.id != track.album.id.value) {
-                val album = AlbumRepo.getOrCreateAlbum(albumNameId)
-                track.album = album
+            if (albumNameId != track.album.id.value) {
+                AlbumRepo.getById(albumNameId)?.let {
+                    track.album = it
+                }
             }
         }
 
         editDto.artists?.let { artistNames ->
             if (artistNames == track.artists.map { it.name }) return@let
-            val artists = artistNames.map { idName -> ArtistRepo.getOrCreateArtist(idName) }
+            val artists = artistNames.mapNotNull { idName -> ArtistRepo.getById(idName) }
             track.artists = SizedCollection(artists)
         }
 
         editDto.tags?.let { tagIds ->
             if (tagIds == track.tags.map { it.id.value }) return@let
-            val tags = tagIds.map { id -> TagRepo.getOrCreateTag(id) }
+            val tags = tagIds.mapNotNull { id -> TagRepo.getById(id) }
             track.tags = SizedCollection(tags)
         }
 

@@ -12,7 +12,6 @@ import wtf.ndu.vibin.db.artists.ArtistEntity
 import wtf.ndu.vibin.db.artists.ArtistTable
 import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.dto.ArtistDto
-import wtf.ndu.vibin.dto.IdOrNameDto
 import wtf.ndu.vibin.dto.artists.ArtistEditData
 import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.processing.ThumbnailProcessor
@@ -45,48 +44,6 @@ object ArtistRepo {
                 this.name = name
                 this.image = null
             }
-    }
-
-    fun getOrCreateArtist(idName: IdOrNameDto): ArtistEntity = transaction {
-        if (idName.id != null) {
-            ArtistEntity.findById(idName.id)?.let { return@transaction it }
-        }
-        if (idName.fallbackName) {
-            ArtistEntity.find { ArtistTable.name.lowerCase() eq idName.name.lowercase() }.firstOrNull()
-                ?.let { return@transaction it }
-        }
-        return@transaction getOrCreateArtist(idName.name)
-    }
-
-    fun fillInArtistIds(idNames: List<IdOrNameDto>): List<IdOrNameDto> = transaction {
-        return@transaction idNames.map { idName ->
-            if (idName.id != null) {
-                val artist = ArtistEntity.findById(idName.id)
-                if (artist != null) {
-                    return@map IdOrNameDto(id = artist.id.value, name = artist.name, fallbackName = false)
-                }
-            }
-            if (idName.fallbackName) {
-                val artist = ArtistEntity.find { ArtistTable.name.lowerCase() eq idName.name.lowercase() }.firstOrNull()
-                if (artist != null) {
-                    return@map IdOrNameDto(id = artist.id.value, name = artist.name, fallbackName = false)
-                }
-            }
-            return@map idName.copy(fallbackName = false)
-        }
-    }
-
-    fun refreshArtistNames(idNames: List<IdOrNameDto>): List<IdOrNameDto> = transaction {
-        return@transaction idNames.mapNotNull { idName ->
-            if (idName.id != null) {
-                val artist = ArtistEntity.findById(idName.id)
-                if (artist != null) {
-                    return@mapNotNull IdOrNameDto(id = artist.id.value, name = artist.name, fallbackName = false)
-                }
-                return@mapNotNull null
-            }
-            return@mapNotNull idName
-        }
     }
 
     fun updateOrCreateArtist(id: Long?, data: ArtistEditData): ArtistEntity = transaction {
@@ -148,6 +105,13 @@ object ArtistRepo {
             .offset(params.offset)
             .toList()
         return@transaction results to count
+    }
+
+    fun idsToDisplayString(ids: List<Long>): String = transaction {
+        val names = ArtistEntity.find { ArtistTable.id inList ids }
+            .orderBy(ArtistTable.name to SortOrder.ASC)
+            .map { it.name }
+        return@transaction names.joinToString(", ")
     }
 
     fun toDto(artistEntity: ArtistEntity): ArtistDto = transaction {

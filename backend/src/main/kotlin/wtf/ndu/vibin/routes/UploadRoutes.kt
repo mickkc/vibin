@@ -56,7 +56,7 @@ fun Application.configureUploadRoutes() = routing {
 
             val uploads = UploadManager.getUploadsByUser(userId)
 
-            call.respond(uploads)
+            call.respond(uploads.map { UploadManager.toDto(it) })
         }
 
         postP("/api/uploads", PermissionType.UPLOAD_TRACKS) {
@@ -70,7 +70,7 @@ fun Application.configureUploadRoutes() = routing {
 
                 val upload = UploadManager.addUpload(data, filename, userId) ?: return@postP call.unauthorized()
 
-                call.respond(upload)
+                call.respond(UploadManager.toDto(upload))
             }
             catch (_: FileAlreadyExistsException) {
                 call.conflict()
@@ -88,7 +88,7 @@ fun Application.configureUploadRoutes() = routing {
 
             try {
                 val updatedUpload = UploadManager.setMetadata(upload.id, metadata)
-                call.respond(updatedUpload)
+                call.respond(UploadManager.toDto(updatedUpload))
             }
             catch (_: NotFoundException) {
                 call.notFound()

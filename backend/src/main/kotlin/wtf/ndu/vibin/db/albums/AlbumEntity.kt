@@ -10,7 +10,7 @@ import wtf.ndu.vibin.db.tracks.TrackEntity
 import wtf.ndu.vibin.db.tracks.TrackTable
 
 object AlbumTable : ModifiableLongIdTable("album") {
-    val title = varchar("title", 255)
+    val title = varchar("title", 255).index()
     val description = text("description").default("")
     val releaseYear = integer("release_year").nullable()
     val single = bool("single").nullable()

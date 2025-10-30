@@ -1,7 +1,6 @@
 package wtf.ndu.vibin.dto.tracks
 
 import kotlinx.serialization.Serializable
-import wtf.ndu.vibin.dto.IdOrNameDto
 
 @Serializable
 data class TrackEditDto(
@@ -14,8 +13,8 @@ data class TrackEditDto(
     val year: Int?,
     val comment: String?,
     val imageUrl: String?,
-    val album: IdOrNameDto?,
-    val artists: List<IdOrNameDto>?,
-    val tags: List<IdOrNameDto>?,
+    val album: Long?,
+    val artists: List<Long>?,
+    val tags: List<Long>?,
     val lyrics: String?
 )

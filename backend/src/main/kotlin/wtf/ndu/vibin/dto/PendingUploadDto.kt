@@ -1,15 +1,17 @@
-package wtf.ndu.vibin.uploads
+package wtf.ndu.vibin.dto
 
 import kotlinx.serialization.Serializable
+import wtf.ndu.vibin.dto.albums.AlbumDto
+import wtf.ndu.vibin.dto.tags.TagDto
 
 @Serializable
-data class PendingUpload(
+data class PendingUploadDto(
     val id: String,
     val filePath: String,
     var title: String,
-    var album: Long,
-    var artists: List<Long>,
-    var tags: List<Long>,
+    var album: AlbumDto?,
+    var artists: List<ArtistDto>,
+    var tags: List<TagDto>,
     var explicit: Boolean,
     var trackNumber: Int?,
     var trackCount: Int?,

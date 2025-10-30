@@ -1,15 +1,13 @@
 package wtf.ndu.vibin.parsing
 
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.request.get
-import io.ktor.client.statement.bodyAsBytes
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.isSuccess
-import io.ktor.serialization.gson.gson
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.serialization.gson.*
 import org.slf4j.LoggerFactory
-import wtf.ndu.vibin.dto.IdOrNameDto
 import wtf.ndu.vibin.parsing.parsers.AlbumSearchProvider
 import wtf.ndu.vibin.parsing.parsers.ArtistSearchProvider
 import wtf.ndu.vibin.parsing.parsers.FileParser
@@ -22,8 +20,6 @@ import wtf.ndu.vibin.parsing.parsers.preparser.PreParser
 import wtf.ndu.vibin.parsing.parsers.spotify.SpotifyProvider
 import wtf.ndu.vibin.parsing.parsers.theaudiodb.TheAudioDbProvider
 import wtf.ndu.vibin.repos.AlbumRepo
-import wtf.ndu.vibin.repos.ArtistRepo
-import wtf.ndu.vibin.repos.TagRepo
 import wtf.ndu.vibin.settings.FallbackMetadataSource
 import wtf.ndu.vibin.settings.PrimaryMetadataSource
 import wtf.ndu.vibin.settings.Settings
@@ -90,15 +86,8 @@ object Parser {
         val preParsed = PreParser.preParse(file)
 
         for (source in sources) {
-            var metadata = fileParsers[source]?.parse(preParsed)
+            val metadata = fileParsers[source]?.parse(preParsed)
             if (metadata != null) {
-
-                metadata = metadata.copy(
-                    tags = metadata.tags?.let { TagRepo.fillInTagIds(it) },
-                    artists = metadata.artists?.let { ArtistRepo.fillInArtistIds(it) },
-                    album = metadata.album?.let { AlbumRepo.fillInAlbumId(it) }
-                )
-
                 return TrackMetadata(preParsed, metadata)
             }
         }
@@ -106,7 +95,7 @@ object Parser {
         return TrackMetadata(null, TrackInfoMetadata(
             title = file.nameWithoutExtension,
             artists = emptyList(),
-            album = IdOrNameDto(null, "Unknown Album", true),
+            album = AlbumRepo.UNKNOWN_ALBUM_NAME,
             explicit = false,
             coverImageUrl = null
         ))
@@ -122,13 +111,7 @@ object Parser {
         val parser = trackSearchProviders[provider] ?: return null
 
         return try {
-            parser.searchTrack(query)?.map {
-                it.copy(
-                    artists = it.artists?.let { ArtistRepo.fillInArtistIds(it) },
-                    album = it.album?.let { AlbumRepo.fillInAlbumId(it) },
-                    tags = it.tags?.let { TagRepo.fillInTagIds(it) }
-                )
-            }
+            parser.searchTrack(query)
         }
         catch (e: Exception) {
             logger.error("Error searching track '$query' with provider '$provider': ${e.message}", e)

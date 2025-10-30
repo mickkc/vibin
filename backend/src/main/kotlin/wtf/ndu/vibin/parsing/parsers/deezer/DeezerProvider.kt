@@ -6,7 +6,6 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import org.slf4j.LoggerFactory
-import wtf.ndu.vibin.dto.IdOrNameDto
 import wtf.ndu.vibin.parsing.AlbumMetadata
 import wtf.ndu.vibin.parsing.ArtistMetadata
 import wtf.ndu.vibin.parsing.ParsingUtils
@@ -29,10 +28,8 @@ class DeezerProvider(val client: HttpClient) : FileParser, ArtistSearchProvider,
         return deezerResponse.data.map {
             TrackInfoMetadata(
                 title = it.title,
-                artists = ParsingUtils.splitArtistNames(it.artist.name).map { artistName ->
-                    IdOrNameDto.nameWithFallback(artistName)
-                },
-                album = IdOrNameDto.nameWithFallback(it.album.title),
+                artists = ParsingUtils.splitArtistNames(it.artist.name),
+                album = it.album.title,
                 explicit = it.explicit_lyrics,
                 coverImageUrl = it.album.cover_big.replace("500x500", "512x512")
             )
