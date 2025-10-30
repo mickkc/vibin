@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.SizedIterable
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.UserTable
 import wtf.ndu.vibin.db.albums.AlbumTable
+import wtf.ndu.vibin.db.artists.ArtistTable
 import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.db.images.ImageTable
 import wtf.ndu.vibin.db.playlists.PlaylistTable
@@ -58,6 +59,10 @@ object ImageRepo {
         usedImageIds.addAll(
             PlaylistTable.select(PlaylistTable.cover)
                 .mapNotNull { it[PlaylistTable.cover]?.value }
+        )
+        usedImageIds.addAll(
+            ArtistTable.select(ArtistTable.image)
+                .mapNotNull { it[ArtistTable.image]?.value }
         )
 
         if (usedImageIds.isEmpty()) {
