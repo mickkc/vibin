@@ -52,6 +52,8 @@ fun Application.module() {
     configureTaskRoutes()
     configureUploadRoutes()
 
+    configureFrontendRoutes()
+
     GlobalScope.launch {
         AudioFileProcessor.initialProcess()
     }
