@@ -11,6 +11,15 @@ application {
     mainClass = "wtf.ndu.vibin.ApplicationKt"
 }
 
+
+repositories {
+    mavenCentral()
+    maven {
+        name = "jitpack"
+        url = uri("https://jitpack.io")
+    }
+}
+
 dependencies {
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.serialization.gson)
