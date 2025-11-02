@@ -1,0 +1,32 @@
+services:
+  vibin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vibin
+    ports:
+      - "8080:8080"
+    volumes:
+      - /opt/vibin/music:/opt/vibin/music
+      - /opt/vibin/thumbnails:/opt/vibin/thumbnails
+    env_file:
+      - .env
+    restart: unless-stopped
+    depends_on:
+      - vibin_db
+    networks:
+      - vibin_net
+
+  vibin_db:
+    image: postgres:18
+    container_name: vibin_db
+    env_file:
+      - .env
+    volumes:
+      - /opt/vibin/db:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - vibin_net
+
+networks:
+  vibin_net:
