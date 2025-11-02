@@ -9,14 +9,7 @@ import wtf.ndu.vibin.db.ListenType
 import wtf.ndu.vibin.dto.PaginatedDto
 import wtf.ndu.vibin.dto.tracks.TrackEditDto
 import wtf.ndu.vibin.permissions.PermissionType
-import wtf.ndu.vibin.repos.ColorSchemeRepo
-import wtf.ndu.vibin.repos.ListenRepo
-import wtf.ndu.vibin.repos.LyricsRepo
-import wtf.ndu.vibin.repos.PermissionRepo
-import wtf.ndu.vibin.repos.SessionRepo
-import wtf.ndu.vibin.repos.TrackRepo
-import wtf.ndu.vibin.settings.PageSize
-import wtf.ndu.vibin.settings.Settings
+import wtf.ndu.vibin.repos.*
 import wtf.ndu.vibin.utils.ImageUtils
 import wtf.ndu.vibin.utils.PathUtils
 
@@ -27,7 +20,7 @@ fun Application.configureTrackRoutes() = routing {
         // Get all tracks (paginated)
         getP("/api/tracks", PermissionType.VIEW_TRACKS) {
             val page = call.request.queryParameters["page"]?.toIntOrNull() ?: 1
-            val pageSize = call.request.queryParameters["pageSize"]?.toIntOrNull() ?: Settings.get(PageSize)
+            val pageSize = call.request.queryParameters["pageSize"]?.toIntOrNull() ?: 50
 
             val (tracks, total) = TrackRepo.getAll(page, pageSize)
 

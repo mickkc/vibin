@@ -5,5 +5,4 @@ open class Setting<T>(
     val parser: (String) -> T,
     val serializer: (T) -> String,
     val defaultValue: T,
-    val generator: (() -> Collection<T>)? = null
 )

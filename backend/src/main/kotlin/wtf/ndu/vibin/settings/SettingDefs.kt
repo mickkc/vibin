@@ -1,14 +1,23 @@
 package wtf.ndu.vibin.settings
 
 import kotlinx.serialization.json.Json
-import wtf.ndu.vibin.parsing.Parser
 
-private val json = Json {}
+val serverSettings = listOf(
+    ArtistNameDelimiters,
+    MetadataLanguage,
+    SpotifyClientId,
+    SpotifyClientSecret,
+    LyricFilePathTemplate,
+    PrimaryMetadataSource,
+    FallbackMetadataSource,
+    AddGenreAsTag,
+    UploadPath
+)
 
 object ArtistNameDelimiters : Setting<List<String>>(
     key = "artist_name_delimiters",
-    parser = { value -> json.decodeFromString<List<String>>(value) },
-    serializer = { value -> json.encodeToString(value) },
+    parser = { value -> Json.decodeFromString<List<String>>(value) },
+    serializer = { value -> Json.encodeToString(value) },
     defaultValue = listOf(", ", " & ", " feat. ", " ft. ", "; ")
 )
 
@@ -45,7 +54,6 @@ object PrimaryMetadataSource : Setting<String>(
     parser = { value -> value },
     serializer = { value -> value },
     defaultValue = "Metadata",
-    generator = { Parser.getFileProviders() }
 )
 
 object FallbackMetadataSource : Setting<String>(
@@ -53,7 +61,6 @@ object FallbackMetadataSource : Setting<String>(
     parser = { value -> value },
     serializer = { value -> value },
     defaultValue = "None",
-    generator = { Parser.getFileProviders() }
 )
 
 object AddGenreAsTag : Setting<Boolean>(
@@ -61,13 +68,6 @@ object AddGenreAsTag : Setting<Boolean>(
     parser = { value -> value.toBoolean() },
     serializer = { value -> value.toString() },
     defaultValue = true
-)
-
-object PageSize : Setting<Int>(
-    key = "page_size",
-    parser = { value -> value.toIntOrNull() ?: 50 },
-    serializer = { value -> value.toString() },
-    defaultValue = 50
 )
 
 object UploadPath : Setting<String>(

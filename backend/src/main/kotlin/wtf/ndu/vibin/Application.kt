@@ -51,6 +51,7 @@ fun Application.module() {
 
     configureTaskRoutes()
     configureUploadRoutes()
+    configureSettingRoutes()
 
     configureFrontendRoutes()
 
