@@ -35,6 +35,8 @@ fun Application.module() {
 
     configureOpenApi()
 
+    configureMiscRoutes()
+
     configureAuthRoutes()
     configureUserRoutes()
 

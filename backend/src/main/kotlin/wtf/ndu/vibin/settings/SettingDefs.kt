@@ -11,7 +11,21 @@ val serverSettings = listOf(
     PrimaryMetadataSource,
     FallbackMetadataSource,
     AddGenreAsTag,
-    UploadPath
+    UploadPath,
+    WelcomeTexts
+)
+
+object WelcomeTexts : Setting<List<String>>(
+    key = "welcome_texts",
+    parser = { value -> Json.decodeFromString<List<String>>(value) },
+    serializer = { value -> Json.encodeToString(value) },
+    defaultValue = listOf(
+        "Welcome to Vibin'!",
+        "Hey there!",
+        "Ready to vibe?",
+        "Ｖｉｂｉｎ＇！",
+        "Welcome back!",
+    )
 )
 
 object ArtistNameDelimiters : Setting<List<String>>(
