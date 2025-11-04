@@ -30,6 +30,10 @@ object ArtistRepo {
         return@transaction ArtistEntity.findById(id)
     }
 
+    fun getByIds(ids: List<Long>): List<ArtistEntity> = transaction {
+        return@transaction ArtistEntity.find { ArtistTable.id inList ids }.orderBy(ArtistTable.name to SortOrder.ASC).toList()
+    }
+
     fun getImage(artist: ArtistEntity): ImageEntity? = transaction {
         return@transaction artist.image
     }

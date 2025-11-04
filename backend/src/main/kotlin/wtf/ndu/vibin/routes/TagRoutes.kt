@@ -21,6 +21,13 @@ fun Application.configureTagRoutes() = routing {
             call.respond(TagRepo.toDto(allTags))
         }
 
+        getP("/api/tags/ids", PermissionType.VIEW_TAGS) {
+            val idsParam = call.request.queryParameters["ids"] ?: return@getP call.missingParameter("ids")
+            val ids = idsParam.split(",").mapNotNull { it.toLongOrNull() }
+            val tags = TagRepo.getByIds(ids)
+            call.respond(TagRepo.toDto(tags))
+        }
+
         postP("/api/tags", PermissionType.CREATE_TAGS) {
 
             val editDto = call.receive<TagEditDto>()

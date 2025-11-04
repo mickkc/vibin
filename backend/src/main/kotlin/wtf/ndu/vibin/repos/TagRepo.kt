@@ -17,6 +17,12 @@ object TagRepo {
         return@transaction TagEntity.findById(id)
     }
 
+    fun getByIds(ids: List<Long>): List<TagEntity> = transaction {
+        return@transaction TagEntity.find { TagTable.id inList ids }
+            .orderBy(TagTable.name to SortOrder.ASC)
+            .toList()
+    }
+
     fun count(): Long = transaction {
         return@transaction TagEntity.all().count()
     }
