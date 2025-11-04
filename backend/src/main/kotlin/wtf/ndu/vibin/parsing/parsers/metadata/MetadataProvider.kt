@@ -7,7 +7,7 @@ import wtf.ndu.vibin.parsing.ParsingUtils
 import wtf.ndu.vibin.parsing.TrackInfoMetadata
 import wtf.ndu.vibin.parsing.parsers.FileParser
 import wtf.ndu.vibin.parsing.parsers.PreparseData
-import wtf.ndu.vibin.settings.LyricFilePathTemplate
+import wtf.ndu.vibin.settings.server.LyricFilePathTemplate
 import wtf.ndu.vibin.settings.Settings
 import java.io.File
 import kotlin.io.encoding.Base64

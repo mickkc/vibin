@@ -12,8 +12,8 @@ import wtf.ndu.vibin.parsing.ArtistMetadata
 import wtf.ndu.vibin.parsing.TrackInfoMetadata
 import wtf.ndu.vibin.parsing.parsers.*
 import wtf.ndu.vibin.settings.Settings
-import wtf.ndu.vibin.settings.SpotifyClientId
-import wtf.ndu.vibin.settings.SpotifyClientSecret
+import wtf.ndu.vibin.settings.server.SpotifyClientId
+import wtf.ndu.vibin.settings.server.SpotifyClientSecret
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 

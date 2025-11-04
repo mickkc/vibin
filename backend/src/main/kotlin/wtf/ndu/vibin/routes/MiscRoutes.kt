@@ -1,11 +1,10 @@
 package wtf.ndu.vibin.routes
 
-import io.ktor.server.application.Application
-import io.ktor.server.response.respond
-import io.ktor.server.routing.get
-import io.ktor.server.routing.routing
+import io.ktor.server.application.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import wtf.ndu.vibin.settings.Settings
-import wtf.ndu.vibin.settings.WelcomeTexts
+import wtf.ndu.vibin.settings.server.WelcomeTexts
 
 fun Application.configureMiscRoutes() = routing {
 

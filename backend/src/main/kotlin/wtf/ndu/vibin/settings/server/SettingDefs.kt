@@ -1,4 +1,4 @@
-package wtf.ndu.vibin.settings
+package wtf.ndu.vibin.settings.server
 
 import kotlinx.serialization.json.Json
 
@@ -15,7 +15,7 @@ val serverSettings = listOf(
     WelcomeTexts
 )
 
-object WelcomeTexts : Setting<List<String>>(
+object WelcomeTexts : ServerSetting<List<String>>(
     key = "welcome_texts",
     parser = { value -> Json.decodeFromString<List<String>>(value) },
     serializer = { value -> Json.encodeToString(value) },
@@ -28,63 +28,63 @@ object WelcomeTexts : Setting<List<String>>(
     )
 )
 
-object ArtistNameDelimiters : Setting<List<String>>(
+object ArtistNameDelimiters : ServerSetting<List<String>>(
     key = "artist_name_delimiters",
     parser = { value -> Json.decodeFromString<List<String>>(value) },
     serializer = { value -> Json.encodeToString(value) },
     defaultValue = listOf(", ", " & ", " feat. ", " ft. ", "; ")
 )
 
-object MetadataLanguage : Setting<String>(
+object MetadataLanguage : ServerSetting<String>(
     key = "metadata_language",
     parser = { value -> value },
     serializer = { value -> value },
     defaultValue = "en"
 )
 
-object SpotifyClientId : Setting<String>(
+object SpotifyClientId : ServerSetting<String>(
     key = "spotify_client_id",
     parser = { value -> value },
     serializer = { value -> value },
     defaultValue = ""
 )
 
-object SpotifyClientSecret : Setting<String>(
+object SpotifyClientSecret : ServerSetting<String>(
     key = "spotify_client_secret",
     parser = { value -> value },
     serializer = { value -> value },
     defaultValue = ""
 )
 
-object LyricFilePathTemplate : Setting<String>(
+object LyricFilePathTemplate : ServerSetting<String>(
     key = "lyric_file_path_template",
     parser = { value -> value },
     serializer = { value -> value },
     defaultValue = "{parentPath}{sep}{name}.lrc"
 )
 
-object PrimaryMetadataSource : Setting<String>(
+object PrimaryMetadataSource : ServerSetting<String>(
     key = "primary_metadata_source",
     parser = { value -> value },
     serializer = { value -> value },
     defaultValue = "Metadata",
 )
 
-object FallbackMetadataSource : Setting<String>(
+object FallbackMetadataSource : ServerSetting<String>(
     key = "fallback_metadata_source",
     parser = { value -> value },
     serializer = { value -> value },
     defaultValue = "None",
 )
 
-object AddGenreAsTag : Setting<Boolean>(
+object AddGenreAsTag : ServerSetting<Boolean>(
     key = "add_genre_as_tag",
     parser = { value -> value.toBoolean() },
     serializer = { value -> value.toString() },
     defaultValue = true
 )
 
-object UploadPath : Setting<String>(
+object UploadPath : ServerSetting<String>(
     key = "upload_path",
     parser = { value -> value },
     serializer = { value -> value },

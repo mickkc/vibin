@@ -9,7 +9,7 @@ import wtf.ndu.vibin.parsing.TrackMetadata
 import wtf.ndu.vibin.parsing.parsers.preparser.PreParseException
 import wtf.ndu.vibin.repos.TagRepo
 import wtf.ndu.vibin.repos.TrackRepo
-import wtf.ndu.vibin.settings.AddGenreAsTag
+import wtf.ndu.vibin.settings.server.AddGenreAsTag
 import wtf.ndu.vibin.settings.Settings
 import wtf.ndu.vibin.utils.ChecksumUtil
 import java.io.File

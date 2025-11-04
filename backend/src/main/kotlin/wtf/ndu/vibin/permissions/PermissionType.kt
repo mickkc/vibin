@@ -4,6 +4,7 @@ enum class PermissionType(val id: String, val grantedByDefault: Boolean) {
 
 
     CHANGE_SERVER_SETTINGS("change_server_settings", false),
+    CHANGE_OWN_USER_SETTINGS("change_own_user_settings", true),
     MANAGE_PERMISSIONS("manage_permissions", false),
 
     VIEW_TRACKS("view_tracks", true),

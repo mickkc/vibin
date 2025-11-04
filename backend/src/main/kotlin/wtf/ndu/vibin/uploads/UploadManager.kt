@@ -12,7 +12,7 @@ import wtf.ndu.vibin.parsing.parsers.preparser.PreParser
 import wtf.ndu.vibin.processing.ThumbnailProcessor
 import wtf.ndu.vibin.repos.*
 import wtf.ndu.vibin.settings.Settings
-import wtf.ndu.vibin.settings.UploadPath
+import wtf.ndu.vibin.settings.server.UploadPath
 import wtf.ndu.vibin.utils.ChecksumUtil
 import wtf.ndu.vibin.utils.DateTimeUtils
 import wtf.ndu.vibin.utils.PathUtils

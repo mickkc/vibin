@@ -10,7 +10,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.parsing.ArtistMetadata
 import wtf.ndu.vibin.parsing.parsers.ArtistSearchProvider
-import wtf.ndu.vibin.settings.MetadataLanguage
+import wtf.ndu.vibin.settings.server.MetadataLanguage
 import wtf.ndu.vibin.settings.Settings
 
 class TheAudioDbProvider(val client: HttpClient) : ArtistSearchProvider {

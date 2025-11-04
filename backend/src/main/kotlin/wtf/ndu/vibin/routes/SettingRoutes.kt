@@ -1,14 +1,15 @@
 package wtf.ndu.vibin.routes
 
-import io.ktor.server.application.Application
-import io.ktor.server.auth.authenticate
-import io.ktor.server.request.receive
-import io.ktor.server.response.respond
-import io.ktor.server.routing.routing
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import wtf.ndu.vibin.dto.KeyValueDto
 import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.repos.SettingsRepo
-import wtf.ndu.vibin.settings.serverSettings
+import wtf.ndu.vibin.settings.server.serverSettings
+import wtf.ndu.vibin.settings.user.userSettings
 
 fun Application.configureSettingRoutes() = routing {
     authenticate("tokenAuth") {
@@ -18,15 +19,37 @@ fun Application.configureSettingRoutes() = routing {
             call.respond(settings)
         }
 
-        putP("/api/settings/server/{settingKey}", PermissionType.CHANGE_SERVER_SETTINGS) {
-
-            val settingKey = call.parameters["settingKey"] ?: return@putP call.missingParameter("settingKey")
-            val setting = SettingsRepo.getServerSetting(settingKey) ?: return@putP call.notFound()
-
-            val settingValue = call.receive<String>()
-            SettingsRepo.updateSetting(setting, settingValue)
-            call.respond(KeyValueDto(setting.key, setting.parser(settingValue)))
+        getP("/api/settings/user", PermissionType.CHANGE_OWN_USER_SETTINGS) {
+            val userId = call.getUserId() ?: return@getP call.unauthorized()
+            val settings = SettingsRepo.getAllValues(userId, userSettings)
+            call.respond(settings)
         }
 
+        putP("/api/settings/{settingKey}") {
+
+            val settingKey = call.parameters["settingKey"] ?: return@putP call.missingParameter("settingKey")
+            val setting = SettingsRepo.getServerSetting(settingKey)
+
+            if (setting == null) {
+                val userSetting = SettingsRepo.getUserSetting(settingKey) ?: return@putP call.notFound()
+
+                if (!call.hasPermissions(PermissionType.CHANGE_OWN_USER_SETTINGS))
+                    return@putP call.forbidden()
+
+                val userId = call.getUserId() ?: return@putP call.unauthorized()
+                val settingValue = call.receive<String>()
+                SettingsRepo.updateUserSetting(userSetting, userId, settingValue)
+                return@putP call.respond(KeyValueDto(userSetting.key, userSetting.parser(settingValue)))
+            }
+            else {
+                if (!call.hasPermissions(PermissionType.CHANGE_SERVER_SETTINGS))
+                    return@putP call.forbidden()
+
+                val settingValue = call.receive<String>()
+                SettingsRepo.updateServerSetting(setting, settingValue)
+                call.respond(KeyValueDto(setting.key, setting.parser(settingValue)))
+            }
+
+        }
     }
 }

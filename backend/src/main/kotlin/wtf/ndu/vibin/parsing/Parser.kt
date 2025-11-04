@@ -20,8 +20,8 @@ import wtf.ndu.vibin.parsing.parsers.preparser.PreParser
 import wtf.ndu.vibin.parsing.parsers.spotify.SpotifyProvider
 import wtf.ndu.vibin.parsing.parsers.theaudiodb.TheAudioDbProvider
 import wtf.ndu.vibin.repos.AlbumRepo
-import wtf.ndu.vibin.settings.FallbackMetadataSource
-import wtf.ndu.vibin.settings.PrimaryMetadataSource
+import wtf.ndu.vibin.settings.server.FallbackMetadataSource
+import wtf.ndu.vibin.settings.server.PrimaryMetadataSource
 import wtf.ndu.vibin.settings.Settings
 import java.io.File
 import kotlin.io.encoding.Base64

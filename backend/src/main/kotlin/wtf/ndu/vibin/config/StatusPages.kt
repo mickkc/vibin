@@ -4,12 +4,18 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.respond
+import io.ktor.util.logging.Logger
+import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.dto.errors.ErrorDto
 import wtf.ndu.vibin.dto.errors.ErrorDtoType
 
 fun Application.configureStatusPages() {
+
+    val logger: Logger = LoggerFactory.getLogger("StatusPages")
+
     install(StatusPages) {
         exception<Throwable> { call, cause ->
+            logger.error("Unhandled exception occurred", cause)
             call.respond(
                 status = HttpStatusCode.InternalServerError,
                 message = ErrorDto.fromType(

@@ -1,6 +1,6 @@
 package wtf.ndu.vibin.parsing
 
-import wtf.ndu.vibin.settings.ArtistNameDelimiters
+import wtf.ndu.vibin.settings.server.ArtistNameDelimiters
 import wtf.ndu.vibin.settings.Settings
 
 object ParsingUtils {
