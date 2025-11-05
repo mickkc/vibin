@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap
 object UploadManager {
 
     private val storage = ConcurrentHashMap<String, PendingUpload>()
-    private val mutex = Mutex()
+    private val mutexMap = ConcurrentHashMap<String, Mutex>()
     private val logger: Logger = LoggerFactory.getLogger(UploadManager::class.java)
 
     /**
@@ -37,6 +37,10 @@ object UploadManager {
      * @throws FileAlreadyExistsException if a track with the same checksum already exists.
      */
     suspend fun addUpload(data: ByteArray, fileName: String, userId: Long): PendingUpload? {
+
+        val id = UUID.randomUUID().toString()
+
+        val mutex = getMutex(id)
 
         mutex.lock()
 
@@ -56,7 +60,6 @@ object UploadManager {
 
             file.writeBytes(data)
 
-            val id = UUID.randomUUID().toString()
 
             try {
                 val parsed = Parser.parse(file)
@@ -88,6 +91,7 @@ object UploadManager {
                 logger.error("Error parsing uploaded file for user ID $userId: ${e.message}", e)
                 file.delete()
                 storage.remove(id)
+                mutexMap.remove(id)
                 throw e
             }
         }
@@ -99,12 +103,13 @@ object UploadManager {
     /**
      * Sets the metadata for a pending upload.
      *
-     * @param upload The PendingUploadEntity to update.
+     * @param id The ID of the pending upload.
      * @param metadata The TrackEditDto containing the new metadata.
      * @return The updated PendingUploadEntity.
      */
     suspend fun setMetadata(id: String, metadata: TrackEditDto): PendingUpload {
 
+        val mutex = getMutex(id)
         mutex.lock()
 
         try {
@@ -134,12 +139,13 @@ object UploadManager {
     /**
      * Applies the pending upload by moving the file to its final location and creating a TrackEntity.
      *
-     * @param upload The PendingUploadEntity to apply.
+     * @param id The ID of the pending upload.
      * @return The created TrackEntity, or null if the operation failed.
      * @throws FileAlreadyExistsException if the target file already exists.
      */
     suspend fun apply(id: String): TrackEntity {
 
+        val mutex = getMutex(id)
         mutex.lock()
 
         try {
@@ -184,8 +190,14 @@ object UploadManager {
         }
     }
 
+    /**
+     * Deletes a pending upload and its associated file.
+     *
+     * @param id The ID of the pending upload.
+     */
     suspend fun delete(id: String) {
 
+        val mutex = getMutex(id)
         mutex.lock()
 
         try {
@@ -199,9 +211,16 @@ object UploadManager {
         }
         finally {
             mutex.unlock()
+            mutexMap.remove(id)
         }
     }
 
+    /**
+     * Generates the target file path for a pending upload based on the upload path template.
+     *
+     * @param pendingUploadEntity The pending upload entity.
+     * @return The target File object representing the final location of the uploaded track.
+     */
     private fun getTargetFile(pendingUploadEntity: PendingUpload): File {
         val pathTemplate = Settings.get(UploadPath)
 
@@ -221,10 +240,32 @@ object UploadManager {
         return PathUtils.getTrackFileFromPath(safeReplacedPath)
     }
 
+    /**
+     * Retrieves or creates a mutex for the given upload ID.
+     *
+     * @param id The ID of the pending upload.
+     * @return The Mutex associated with the given ID.
+     */
+    private fun getMutex(id: String): Mutex {
+        return mutexMap.computeIfAbsent(id) { Mutex() }
+    }
+
+    /**
+     * Retrieves all pending uploads for a specific user.
+     *
+     * @param userId The ID of the user.
+     * @return A list of PendingUploadEntity objects uploaded by the specified user.
+     */
     fun getUploadsByUser(userId: Long): List<PendingUpload> {
         return storage.values.filter { it.uploaderId == userId }
     }
 
+    /**
+     * Retrieves a pending upload by its ID.
+     *
+     * @param id The ID of the pending upload.
+     * @return The PendingUploadEntity if found, otherwise null.
+     */
     fun getById(id: String): PendingUpload? {
         return storage[id]
     }
