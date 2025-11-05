@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inSubQuery
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInSubQuery
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.albums.AlbumEntity
 import wtf.ndu.vibin.db.albums.AlbumTable
@@ -12,6 +13,7 @@ import wtf.ndu.vibin.db.artists.ArtistEntity
 import wtf.ndu.vibin.db.artists.ArtistTable
 import wtf.ndu.vibin.db.artists.TrackArtistConnection
 import wtf.ndu.vibin.db.images.ImageEntity
+import wtf.ndu.vibin.db.tags.TrackTagConnection
 import wtf.ndu.vibin.db.tracks.TrackEntity
 import wtf.ndu.vibin.db.tracks.TrackTable
 import wtf.ndu.vibin.dto.albums.AlbumDataDto
@@ -20,6 +22,9 @@ import wtf.ndu.vibin.dto.albums.AlbumEditDto
 import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.processing.ThumbnailProcessor
 import wtf.ndu.vibin.routes.PaginatedSearchParams
+import wtf.ndu.vibin.settings.Settings
+import wtf.ndu.vibin.settings.user.BlockedArtists
+import wtf.ndu.vibin.settings.user.BlockedTags
 
 object AlbumRepo {
 
@@ -40,11 +45,11 @@ object AlbumRepo {
         return@transaction AlbumEntity.count()
     }
 
-    fun getAll(params: PaginatedSearchParams, showSingles: Boolean = true): Pair<List<AlbumEntity>, Long> = transaction {
+    fun getAll(params: PaginatedSearchParams, showSingles: Boolean = true, userId: Long? = null): Pair<List<AlbumEntity>, Long> = transaction {
 
         val notSingleOp = if (!showSingles) notSingleOp() else Op.TRUE
 
-        val albums = AlbumEntity.find { (AlbumTable.title.lowerCase() like "%${params.query.lowercase()}%") and notSingleOp }
+        val albums = AlbumEntity.find { notBlockedByUserOp(userId) and (AlbumTable.title.lowerCase() like "%${params.query.lowercase()}%") and notSingleOp }
         val count = albums.count()
         val results = albums
             .orderBy(AlbumTable.title to SortOrder.ASC)
@@ -91,14 +96,6 @@ object AlbumRepo {
             .map { it[AlbumTable.title] }
     }
 
-    fun getTracks(albumId: Long): List<TrackEntity> {
-        return transaction {
-            return@transaction TrackEntity.find { TrackTable.albumId eq albumId }
-                .orderBy(TrackTable.discNumber to SortOrder.ASC_NULLS_LAST, TrackTable.trackNumber to SortOrder.ASC_NULLS_LAST)
-                .toList()
-        }
-    }
-
     fun getAlbumCover(album: AlbumEntity): ImageEntity? = transaction {
         if (album.cover != null) return@transaction album.cover
         val trackWithCover = TrackEntity.find { (TrackTable.albumId eq album.id) and (TrackTable.coverId neq null) }
@@ -111,24 +108,20 @@ object AlbumRepo {
         return@transaction AlbumEntity.findById(id)
     }
 
-    fun getByArtistId(artistId: Long): Map<AlbumEntity, List<TrackEntity>> = transaction {
+    fun getByArtistId(artistId: Long, userId: Long? = null): Map<AlbumEntity, List<TrackEntity>> = transaction {
         val albumIds = TrackTable.select(TrackTable.albumId).where {
-            TrackTable.id inSubQuery (
+            (TrackTable.id inSubQuery (
                 TrackArtistConnection
                     .select(TrackArtistConnection.track)
                     .where { TrackArtistConnection.artist eq artistId }
-            )
+            ))
         }.map { it[TrackTable.albumId] }
 
-        return@transaction AlbumEntity.find { AlbumTable.id inList albumIds }
+        return@transaction AlbumEntity.find { (notBlockedByUserOp(userId)) and (AlbumTable.id inList albumIds) }
             .associateWith { album ->
-                TrackEntity.find {
-                    (TrackTable.albumId eq album.id) and (TrackTable.id inSubQuery (
-                        TrackArtistConnection
-                            .select(TrackArtistConnection.track)
-                            .where { TrackArtistConnection.artist eq artistId }
-                    ))
-                }.toList()
+                TrackRepo
+                    .getAllFromAlbum(album.id.value, userId)
+                    .filter { it.artists.any { artist -> artist.id.value == artistId } }
             }
     }
 
@@ -194,6 +187,63 @@ object AlbumRepo {
         return@transaction years.maxOrNull()
     }
 
+    private fun notBlockedByUserOp(userId: Long? = null): Op<Boolean> {
+
+        if (userId == null) {
+            return Op.TRUE
+        }
+
+        return notBlockedByTagsOp(userId) and notBlockedByArtistsOp(userId)
+    }
+
+    private fun notBlockedByTagsOp(userId: Long? = null): Op<Boolean> {
+
+        if (userId == null) {
+            return Op.TRUE
+        }
+
+        val blockedTagIds = Settings.get(BlockedTags, userId)
+        if (blockedTagIds.isEmpty()) {
+            return Op.TRUE
+        }
+
+        return AlbumTable.id notInSubQuery (
+            TrackTable
+                .select(TrackTable.albumId)
+                .where {
+                    TrackTable.id inSubQuery (
+                        TrackTagConnection
+                            .select(TrackTagConnection.track)
+                            .where { TrackTagConnection.tag inList blockedTagIds }
+                    )
+                }
+        )
+    }
+
+    private fun notBlockedByArtistsOp(userId: Long? = null): Op<Boolean> {
+
+        if (userId == null) {
+            return Op.TRUE
+        }
+
+        val blockedArtistIds = Settings.get(BlockedArtists, userId)
+        if (blockedArtistIds.isEmpty()) {
+            return Op.TRUE
+        }
+
+        return AlbumTable.id notInSubQuery (
+            TrackTable
+                .select(TrackTable.albumId)
+                .where {
+                    TrackTable.id inSubQuery (
+                        TrackArtistConnection
+                            .select(TrackArtistConnection.track)
+                            .where { TrackArtistConnection.artist inList blockedArtistIds }
+                    )
+                }
+        )
+    }
+
     fun toDto(albumEntity: AlbumEntity): AlbumDto = transaction {
         return@transaction toDtoInternal(albumEntity)
     }
@@ -202,10 +252,10 @@ object AlbumRepo {
         return@transaction albumEntities.map { toDtoInternal(it) }
     }
 
-    fun toDataDto(albumEntity: AlbumEntity): AlbumDataDto = transaction {
+    fun toDataDto(albumEntity: AlbumEntity, userId: Long? = null): AlbumDataDto = transaction {
         return@transaction AlbumDataDto(
             album = toDtoInternal(albumEntity),
-            tracks = TrackRepo.toDto(getTracks(albumEntity.id.value))
+            tracks = TrackRepo.toDto(TrackRepo.getAllFromAlbum(albumEntity.id.value, userId))
         )
     }
 

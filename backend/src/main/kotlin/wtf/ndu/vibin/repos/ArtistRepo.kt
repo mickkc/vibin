@@ -2,12 +2,9 @@ package wtf.ndu.vibin.repos
 
 import io.ktor.server.plugins.*
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.sql.Case
-import org.jetbrains.exposed.sql.SizedIterable
-import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
-import org.jetbrains.exposed.sql.intLiteral
-import org.jetbrains.exposed.sql.lowerCase
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInList
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.artists.ArtistEntity
 import wtf.ndu.vibin.db.artists.ArtistTable
@@ -18,6 +15,8 @@ import wtf.ndu.vibin.dto.artists.ArtistEditData
 import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.processing.ThumbnailProcessor
 import wtf.ndu.vibin.routes.PaginatedSearchParams
+import wtf.ndu.vibin.settings.Settings
+import wtf.ndu.vibin.settings.user.BlockedArtists
 import wtf.ndu.vibin.utils.DateTimeUtils
 
 object ArtistRepo {
@@ -114,8 +113,8 @@ object ArtistRepo {
         artists.forEach { it.delete() }
     }
 
-    fun getAll(params: PaginatedSearchParams): Pair<List<ArtistEntity>, Long> = transaction {
-        val artists = ArtistEntity.find { ArtistTable.name.lowerCase() like "%${params.query.lowercase()}%" }
+    fun getAll(params: PaginatedSearchParams, userId: Long? = null): Pair<List<ArtistEntity>, Long> = transaction {
+        val artists = ArtistEntity.find { notBlockedByUserOp(userId) and (ArtistTable.name.lowerCase() like "%${params.query.lowercase()}%") }
         val count = artists.count()
         val results = artists
             .orderBy(ArtistTable.name to SortOrder.ASC)
@@ -130,6 +129,16 @@ object ArtistRepo {
             .orderBy(ArtistTable.name to SortOrder.ASC)
             .map { it.name }
         return@transaction names.joinToString(", ")
+    }
+
+    private fun notBlockedByUserOp(userId: Long? = null): Op<Boolean> {
+        if (userId == null) {
+            return Op.TRUE
+        }
+
+        val blockedArtistIds = Settings.get(BlockedArtists, userId)
+
+        return ArtistTable.id notInList blockedArtistIds
     }
 
     fun toDto(artistEntity: ArtistEntity): ArtistDto = transaction {

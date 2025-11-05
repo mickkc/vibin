@@ -21,8 +21,9 @@ fun Application.configureAlbumRoutes() = routing {
 
             val params = call.getPaginatedSearchParams() ?: return@getP
             val showSingles = call.request.queryParameters["showSingles"]?.toBoolean() ?: true
+            val userId = call.getUserId() ?: return@getP call.unauthorized()
 
-            val (albums, total) = AlbumRepo.getAll(params, showSingles = showSingles)
+            val (albums, total) = AlbumRepo.getAll(params, showSingles = showSingles, userId)
 
             call.respond(PaginatedDto(
                 items = AlbumRepo.toDto(albums),
@@ -53,8 +54,9 @@ fun Application.configureAlbumRoutes() = routing {
 
             val albumId = call.parameters["albumId"]?.toLongOrNull() ?: return@getP call.missingParameter("albumId")
             val album = AlbumRepo.getById(albumId) ?: return@getP call.notFound()
+            val userId = call.getUserId() ?: return@getP call.unauthorized()
 
-            call.respond(AlbumRepo.toDataDto(album))
+            call.respond(AlbumRepo.toDataDto(album, userId))
         }
 
         deleteP("/api/albums/{albumId}", PermissionType.DELETE_ALBUMS) {

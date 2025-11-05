@@ -151,14 +151,14 @@ object PlaylistRepo {
         playlist.delete()
     }
 
-    fun getTracksWithSource(playlist: PlaylistEntity): Map<String, List<TrackEntity>> = transaction {
+    fun getTracksWithSource(playlist: PlaylistEntity, userId: Long? = null): Map<String, List<TrackEntity>> = transaction {
 
         val result = mutableMapOf<String, List<TrackEntity>>()
 
         result["manual"] = playlist.tracks.toList()
 
         playlist.vibeDef?.takeIf { it.isNotBlank() }?.let { vibeDef ->
-            val vibeTracks = TrackRepo.getSearched(vibeDef, true)
+            val vibeTracks = TrackRepo.getSearched(vibeDef, true, userId)
             result["vibe"] = vibeTracks
         }
 

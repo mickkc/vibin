@@ -3,6 +3,7 @@ package wtf.ndu.vibin.repos
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInSubQuery
 import org.jetbrains.exposed.sql.transactions.transaction
 import wtf.ndu.vibin.db.UserEntity
 import wtf.ndu.vibin.db.artists.TrackArtistConnection
@@ -21,6 +22,9 @@ import wtf.ndu.vibin.parsing.parsers.PreparseData
 import wtf.ndu.vibin.processing.ThumbnailProcessor
 import wtf.ndu.vibin.routes.PaginatedSearchParams
 import wtf.ndu.vibin.search.SearchQueryBuilder
+import wtf.ndu.vibin.settings.Settings
+import wtf.ndu.vibin.settings.user.BlockedArtists
+import wtf.ndu.vibin.settings.user.BlockedTags
 import wtf.ndu.vibin.uploads.PendingUpload
 import wtf.ndu.vibin.utils.ChecksumUtil
 import wtf.ndu.vibin.utils.DateTimeUtils
@@ -41,12 +45,12 @@ object TrackRepo {
         return@transaction TrackEntity.findById(id)
     }
 
-    fun getByArtistId(artistId: Long): List<TrackEntity> = transaction {
-        val trackIds = TrackArtistConnection.select(TrackArtistConnection.track).where { TrackArtistConnection.artist eq artistId }
-            .map { it[TrackArtistConnection.track].value }
-        return@transaction TrackEntity.find { TrackTable.id inList trackIds }
-            .orderBy(TrackTable.title to SortOrder.ASC)
-            .toList()
+    fun getByArtistId(artistId: Long, userId: Long? = null): List<TrackEntity> = transaction {
+        TrackEntity.find {
+            notBlockedByUserOp(userId) and (TrackTable.id inSubQuery
+                TrackArtistConnection.select(TrackArtistConnection.track).where { TrackArtistConnection.artist eq artistId }
+            )
+        }.toList()
     }
 
     fun getCover(track: TrackEntity): ImageEntity? = transaction {
@@ -174,8 +178,8 @@ object TrackRepo {
         return@transaction track
     }
 
-    fun getAll(page: Int, pageSize: Int): Pair<List<TrackEntity>, Long> = transaction {
-        val tracks = TrackEntity.all()
+    fun getAll(page: Int, pageSize: Int, userId: Long? = null): Pair<List<TrackEntity>, Long> = transaction {
+        val tracks = TrackEntity.find(notBlockedByUserOp(userId))
         val count = tracks.count()
         val results = tracks
             .orderBy(TrackTable.title to SortOrder.ASC)
@@ -185,21 +189,26 @@ object TrackRepo {
         return@transaction results to count
     }
 
-    fun getRandom(limit: Int): List<TrackEntity> = transaction {
-        val ids = TrackTable.select(TrackTable.id).map { it[TrackTable.id].value }
+    fun getRandom(limit: Int, userId: Long? = null): List<TrackEntity> = transaction {
+        val ids = TrackTable
+            .select(TrackTable.id)
+            .where(notBlockedByUserOp(userId))
+            .map { it[TrackTable.id].value }
+
         val randomIds = ids.shuffled().take(limit)
         return@transaction TrackEntity.find { TrackTable.id inList randomIds }.shuffled()
     }
 
-    fun getNewest(limit: Int): List<TrackEntity> = transaction {
-        return@transaction TrackEntity.all()
+    fun getNewest(limit: Int, userId: Long? = null): List<TrackEntity> = transaction {
+        return@transaction TrackEntity.find(notBlockedByUserOp(userId))
             .orderBy(TrackTable.createdAt to SortOrder.DESC)
             .limit(limit)
             .toList()
     }
 
-    fun getUploadedByUser(userId: Long): List<TrackEntity> = transaction {
-        return@transaction TrackEntity.find { TrackTable.uploader eq userId }
+    fun getUploadedByUser(fromUserId: Long, requestingUserId: Long? = null): List<TrackEntity> = transaction {
+        return@transaction TrackEntity
+            .find { notBlockedByUserOp(requestingUserId) and (TrackTable.uploader eq fromUserId) }
             .orderBy(TrackTable.createdAt to SortOrder.DESC)
             .toList()
     }
@@ -215,8 +224,8 @@ object TrackRepo {
      * @param advanced If true, uses advanced search parsing; otherwise, performs a simple case-insensitive title search.
      * @return A list of [TrackEntity] matching the search criteria.
      */
-    fun getSearched(params: PaginatedSearchParams, advanced: Boolean): Pair<List<TrackEntity>, Long> = transaction {
-        val tracks = TrackEntity.find { buildQuery(params.query, advanced) }
+    fun getSearched(params: PaginatedSearchParams, advanced: Boolean, userId: Long? = null): Pair<List<TrackEntity>, Long> = transaction {
+        val tracks = TrackEntity.find { notBlockedByUserOp(userId) and buildQuery(params.query, advanced) }
         val count = tracks.count()
         val results = tracks
             .orderBy(TrackTable.title to SortOrder.ASC)
@@ -226,8 +235,8 @@ object TrackRepo {
         return@transaction results to count
     }
 
-    fun getSearched(query: String, advanced: Boolean): List<TrackEntity> = transaction {
-        return@transaction TrackEntity.find { buildQuery(query, advanced) }
+    fun getSearched(query: String, advanced: Boolean, userId: Long? = null): List<TrackEntity> = transaction {
+        return@transaction TrackEntity.find { notBlockedByUserOp(userId) and buildQuery(query, advanced) }
             .toList()
     }
 
@@ -243,6 +252,44 @@ object TrackRepo {
             SearchQueryBuilder.build(query)
         } else {
             (TrackTable.title.lowerCase() like "%${query.lowercase()}%")
+        }
+    }
+
+    private fun notBlockedByUserOp(userId: Long?): Op<Boolean> {
+        if (userId == null) {
+            return Op.TRUE
+        }
+
+        return notBlockedByTagsOp(userId) and notBlockedByArtistsOp(userId)
+    }
+
+    private fun notBlockedByTagsOp(userId: Long?): Op<Boolean> {
+        if (userId == null) {
+            return Op.TRUE
+        }
+
+        val blockedTagIds = Settings.get(BlockedTags, userId)
+        if (blockedTagIds.isEmpty()) {
+            return Op.TRUE
+        }
+
+        return TrackTable.id notInSubQuery TrackTagConnection.select(TrackTagConnection.track).where {
+            TrackTagConnection.tag inList blockedTagIds
+        }
+    }
+
+    private fun notBlockedByArtistsOp(userId: Long?): Op<Boolean> {
+        if (userId == null) {
+            return Op.TRUE
+        }
+
+        val blockedArtistIds = Settings.get(BlockedArtists, userId)
+        if (blockedArtistIds.isEmpty()) {
+            return Op.TRUE
+        }
+
+        return TrackTable.id notInSubQuery TrackArtistConnection.select(TrackArtistConnection.track).where {
+            TrackArtistConnection.artist inList blockedArtistIds
         }
     }
 
@@ -281,8 +328,11 @@ object TrackRepo {
         return score
     }
 
-    fun getAllFromAlbum(albumId: Long): List<TrackEntity> = transaction {
-        return@transaction TrackEntity.find { TrackTable.albumId eq albumId }.toList()
+    fun getAllFromAlbum(albumId: Long, userId: Long? = null): List<TrackEntity> = transaction {
+        return@transaction TrackEntity
+            .find { notBlockedByUserOp(userId) and (TrackTable.albumId eq albumId) }
+            .orderBy(TrackTable.discNumber to SortOrder.ASC_NULLS_LAST, TrackTable.trackNumber to SortOrder.ASC_NULLS_LAST)
+            .toList()
     }
 
     fun toDto(trackEntity: TrackEntity): TrackDto = transaction {

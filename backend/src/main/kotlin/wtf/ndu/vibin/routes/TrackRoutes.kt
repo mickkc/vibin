@@ -21,8 +21,9 @@ fun Application.configureTrackRoutes() = routing {
         getP("/api/tracks", PermissionType.VIEW_TRACKS) {
             val page = call.request.queryParameters["page"]?.toIntOrNull() ?: 1
             val pageSize = call.request.queryParameters["pageSize"]?.toIntOrNull() ?: 50
+            val userId = call.getUserId() ?: return@getP call.unauthorized()
 
-            val (tracks, total) = TrackRepo.getAll(page, pageSize)
+            val (tracks, total) = TrackRepo.getAll(page, pageSize, userId)
 
             call.respond(PaginatedDto(
                 items = TrackRepo.toMinimalDto(tracks),
@@ -42,7 +43,9 @@ fun Application.configureTrackRoutes() = routing {
         // Get tracks by artist ID
         getP("/api/tracks/artists/{artistId}", PermissionType.VIEW_TRACKS) {
             val artistId = call.parameters["artistId"]?.toLongOrNull() ?: return@getP call.missingParameter("artistId")
-            val tracks = TrackRepo.getByArtistId(artistId)
+            val userId = call.getUserId() ?: return@getP call.unauthorized()
+
+            val tracks = TrackRepo.getByArtistId(artistId, userId)
             call.respond(TrackRepo.toDto(tracks))
         }
 
@@ -78,8 +81,9 @@ fun Application.configureTrackRoutes() = routing {
 
             val params = call.getPaginatedSearchParams() ?: return@getP
             val advanced = call.request.queryParameters["advanced"]?.toBooleanStrictOrNull() ?: false
+            val userId = call.getUserId() ?: return@getP call.unauthorized()
 
-            val (results, count) = TrackRepo.getSearched(params, advanced)
+            val (results, count) = TrackRepo.getSearched(params, advanced, userId)
 
             call.respond(PaginatedDto(
                 items = TrackRepo.toMinimalDto(results),
@@ -91,13 +95,18 @@ fun Application.configureTrackRoutes() = routing {
 
         getP("/api/tracks/random", PermissionType.VIEW_TRACKS) {
             val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 1
-            val track = TrackRepo.getRandom(limit)
+            val userId = call.getUserId() ?: return@getP call.unauthorized()
+
+            val track = TrackRepo.getRandom(limit, userId)
+
             call.respond(TrackRepo.toMinimalDto(track))
         }
 
         getP("/api/tracks/newest", PermissionType.VIEW_TRACKS) {
             val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 10
-            val tracks = TrackRepo.getNewest(limit)
+            val userId = call.getUserId() ?: return@getP call.unauthorized()
+
+            val tracks = TrackRepo.getNewest(limit, userId)
             call.respond(TrackRepo.toMinimalDto(tracks))
         }
 

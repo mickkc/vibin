@@ -16,9 +16,11 @@ fun Application.configureArtistRoutes() = routing {
 
     authenticate("tokenAuth") {
         getP("/api/artists", PermissionType.VIEW_ARTISTS) {
-            val params = call.getPaginatedSearchParams() ?: return@getP
 
-            val (artists, total) = ArtistRepo.getAll(params)
+            val params = call.getPaginatedSearchParams() ?: return@getP
+            val userId = call.getUserId() ?: return@getP call.unauthorized()
+
+            val (artists, total) = ArtistRepo.getAll(params, userId)
 
             call.respond(PaginatedDto(
                 items = ArtistRepo.toDto(artists),
