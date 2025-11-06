@@ -16,35 +16,36 @@ pipeline {
             }
         }
 
-        dir("backend") {
-
-            stage('Build') {
-                steps {
-                    script {
+        stage('Build') {
+            steps {
+                script {
+                    dir("backend") {
                         sh './gradlew clean build -x test'
                     }
                 }
             }
+        }
 
-            stage('Test') {
-                steps {
-                    script {
+        stage('Test') {
+            steps {
+                script {
+                    dir("backend") {
                         sh './gradlew test'
                     }
                 }
-                post {
-                    always {
-                        // Publish test results
-                        junit '**/build/test-results/test/*.xml'
-                    }
+            }
+            post {
+                always {
+                    // Publish test results
+                    junit 'backend/**/build/test-results/test/*.xml'
                 }
             }
+        }
 
-            stage('Archive') {
-                steps {
-                    // Archive the built artifacts
-                    archiveArtifacts artifacts: '**/build/libs/*.jar', fingerprint: true
-                }
+        stage('Archive') {
+            steps {
+                // Archive the built artifacts
+                archiveArtifacts artifacts: 'backend/**/build/libs/*.jar', fingerprint: true
             }
         }
     }
