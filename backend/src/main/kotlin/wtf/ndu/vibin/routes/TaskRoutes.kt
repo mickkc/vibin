@@ -21,6 +21,10 @@ fun Application.configureTaskRoutes() = routing {
             val taskId = call.parameters["taskId"] ?: return@putP call.missingParameter("taskId")
             val enable = call.parameters["enable"] ?: return@putP call.missingParameter("enable")
 
+            if (TaskManager.getById(taskId) == null) {
+                return@putP call.notFound()
+            }
+
             val enableBool = enable.toBooleanStrictOrNull() ?: return@putP call.invalidParameter("enable", "true", "false")
 
             TaskManager.setTaskEnabled(taskId, enableBool)
