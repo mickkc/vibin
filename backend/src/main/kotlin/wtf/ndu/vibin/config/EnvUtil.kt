@@ -2,6 +2,8 @@ package wtf.ndu.vibin.config
 
 object EnvUtil {
 
+    private val overrides: MutableMap<String, String> = mutableMapOf()
+
     /**
      * Retrieves the value of an environment variable.
      *
@@ -9,7 +11,7 @@ object EnvUtil {
      * @return The value of the environment variable, or null if it is not set.
      */
     fun get(key: String): String? {
-        return System.getenv(key)
+        return overrides[key] ?: System.getenv(key)
     }
 
     /**
@@ -20,7 +22,7 @@ object EnvUtil {
      * @throws IllegalStateException if the environment variable is not set.
      */
     fun getOrError(key: String): String {
-        return System.getenv(key) ?: throw IllegalStateException("Environment variable $key is not set")
+        return overrides[key] ?: System.getenv(key) ?: throw IllegalStateException("Environment variable $key is not set")
     }
 
     /**
@@ -31,7 +33,17 @@ object EnvUtil {
      * @return The value of the environment variable, or the default value if it is not set.
      */
     fun getOrDefault(key: String, default: String): String {
-        return System.getenv(key) ?: default
+        return overrides[key] ?: System.getenv(key) ?: default
+    }
+
+    /**
+     * Adds an override for an environment variable (used for testing).
+     *
+     * @param key The name of the environment variable.
+     * @param value The value to override with.
+     */
+    fun addOverride(key: String, value: String) {
+        overrides[key] = value
     }
 
     const val DB_HOST = "DB_HOST"
