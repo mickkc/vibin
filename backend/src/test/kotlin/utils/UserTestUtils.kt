@@ -38,9 +38,11 @@ object UserTestUtils {
         val (user, token) = createUserWithSession(username, password)
         permissions.forEach { (permission, granted) ->
             if (granted) {
-                PermissionRepo.addPermission(user.id.value, permission)
+                if (!PermissionRepo.hasPermission(user.id.value, permission))
+                    PermissionRepo.addPermission(user.id.value, permission)
             } else {
-                PermissionRepo.removePermission(user.id.value, permission)
+                if (PermissionRepo.hasPermission(user.id.value, permission))
+                    PermissionRepo.removePermission(user.id.value, permission)
             }
         }
         return user to token

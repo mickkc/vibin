@@ -26,6 +26,9 @@ object PermissionRepo {
         return@transaction permissions.all { it in grantedPermissions }
     }
 
+    fun hasPermission(userId: Long, permission: PermissionType): Boolean =
+        hasPermissions(userId, listOf(permission))
+
     fun getPermittedListenTypes(userId: Long): List<ListenType> = transaction {
         val user = UserEntity.findById(userId) ?: return@transaction emptyList()
 
