@@ -1,0 +1,10 @@
+Error:
+  type: object
+  properties:
+    type:
+      type: string
+      example: "MISSING_PARAMETER"
+    data:
+      type: object
+      additionalProperties: true
+      example: {"parameterName": "username"}

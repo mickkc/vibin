@@ -1,0 +1,231 @@
+Base:
+  get:
+    summary: Get all users
+    operationId: getUsers
+    tags:
+      - Users
+    security:
+      - tokenAuth: [ ]
+    responses:
+      200:
+        description: List of users
+        content:
+          application/json:
+            schema:
+              $ref: '../models/paginations.yaml#/PaginatedUserResponse'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+  post:
+    summary: Create a new user
+    operationId: createUser
+    tags:
+      - Users
+    security:
+      - tokenAuth: [ ]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../models/user.yaml#/UserEditData'
+    responses:
+      200:
+        description: User created successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../models/user.yaml#/User'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Id:
+  get:
+    summary: Get user by ID
+    operationId: getUserById
+    tags:
+      - Users
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: ID of the user to retrieve
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: User data
+        content:
+          application/json:
+            schema:
+              $ref: '../models/user.yaml#/User'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+  put:
+    summary: Updates a user
+    operationId: updateUser
+    tags:
+      - Users
+    security:
+      - tokenAuth: [ ]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../models/user.yaml#/UserEditData'
+    responses:
+      200:
+        description: User updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../models/user.yaml#/User'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+  delete:
+    summary: Deletes a user
+    operationId: deleteUser
+    tags:
+      - Users
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: ID of the user to delete
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: deleteData
+        description: Whether to delete data associated with the user
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+    responses:
+      200:
+        description: User deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../models/success.yaml#/Success"
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Image:
+  get:
+    summary: Get user profile picture
+    operationId: getUserProfilePicture
+    tags:
+      - Users
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: id
+        in: path
+        description: ID of the user to retrieve the profile picture for
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: quality
+        in: query
+        description: Size of the profile picture (small, large or original (default))
+        required: false
+        schema:
+          type: string
+          enum: [small, large, original]
+          default: original
+    responses:
+      200:
+        description: User profile picture
+        content:
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Me:
+  get:
+    summary: Get current authenticated user
+    operationId: getCurrentUser
+    tags:
+      - Users
+    security:
+      - tokenAuth: []
+    responses:
+      200:
+        description: Current user data
+        content:
+          application/json:
+            schema:
+              $ref: '../models/user.yaml#/User'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+CheckUsername:
+  get:
+    summary: Check if a username exists
+    operationId: checkUsernameExists
+    tags:
+      - Users
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: username
+        in: path
+        description: Username to check
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Username existence
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

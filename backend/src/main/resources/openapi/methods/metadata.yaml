@@ -1,0 +1,144 @@
+Providers:
+  get:
+    summary: Get available metadata providers
+    operationId: getMetadataProviders
+    tags:
+      - Metadata
+    security:
+      - tokenAuth: [ ]
+    responses:
+      200:
+        description: List of metadata providers
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: array
+                  items:
+                    type: string
+                track:
+                  type: array
+                  items:
+                    type: string
+                artist:
+                  type: array
+                  items:
+                    type: string
+                album:
+                  type: array
+                  items:
+                    type: string
+                lyrics:
+                  type: array
+                  items:
+                    type: string
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Fetch:
+  get:
+    summary: Fetch metadata for the specified type
+    operationId: fetchMetadata
+    tags:
+      - Metadata
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: type
+        in: path
+        description: The type of metadata to search for
+        required: true
+        schema:
+          enum:
+            - track
+            - artist
+            - album
+            - lyrics
+      - name: q
+        in: query
+        description: The Query to search for
+        required: true
+        schema:
+          type: string
+      - name: provider
+        in: query
+        description: Metadata provider to use
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Track metadata fetched successfully
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                oneOf:
+                  - $ref: '../models/track.yaml#/TrackMetadata'
+                  - $ref: '../models/artist.yaml#/ArtistMetadata'
+                  - $ref: '../models/album.yaml#/AlbumMetadata'
+                  - $ref: '../models/lyrics.yaml#/LyricsMetadata'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Create:
+  post:
+    summary: Create entities from metadata
+    operationId: createMetadata
+    tags:
+      - Metadata
+    security:
+      - tokenAuth: [ ]
+    requestBody:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              artistNames:
+                type: array
+                items:
+                  type: string
+              tagNames:
+                type: array
+                items:
+                  type: string
+              albumName:
+                type: string
+                nullable: true
+    responses:
+      200:
+        description: The created entities
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                artists:
+                  type: array
+                  items:
+                    $ref: '../models/artist.yaml#/Artist'
+                tags:
+                  type: array
+                  items:
+                    $ref: '../models/tag.yaml#/Tag'
+                album:
+                  $ref: '../models/album.yaml#/Album'
+                  nullable: true
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

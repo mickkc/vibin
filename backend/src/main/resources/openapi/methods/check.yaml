@@ -1,0 +1,21 @@
+Check:
+  get:
+    summary: healthcheck endpoint
+    operationId: checkHealth
+    tags:
+      - Misc
+      - Healthcheck
+    responses:
+      200:
+        description: Healthcheck successful
+        content:
+          application/json:
+            type: object
+            properties:
+              status:
+                type: string
+                nullable: false
+                example: "ok"
+              version:
+                type: string
+                example: "0.0.1"

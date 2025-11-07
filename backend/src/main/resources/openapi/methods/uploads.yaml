@@ -1,0 +1,164 @@
+Base:
+  get:
+    summary: Get all pending uploads for the current user
+    operationId: getPendingUploads
+    tags:
+      - Uploads
+    security:
+      - tokenAuth: [ ]
+    responses:
+      200:
+        description: Pending Uploads
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../models/upload.yaml#/Upload'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+  post:
+    summary: Creates a new Upload
+    operationId: uploadFile
+    tags:
+      - Uploads
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: filename
+        in: query
+        required: true
+        schema:
+          type: string
+    requestBody:
+      required: true
+      description: the file content encoded in Base64
+      content:
+        application/json:
+          schema:
+            type: string
+    responses:
+      200:
+        description: The created Upload
+        content:
+          application/json:
+            schema:
+              $ref: '../models/upload.yaml#/Upload'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+AddMetadata:
+  put:
+    summary: Update the metadata for an upload
+    operationId: updateUploadMetadata
+    tags:
+      - Uploads
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: The ID of the pending upload
+        required: true
+        schema:
+          type: string
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '../models/track.yaml#/TrackEditData'
+    responses:
+      200:
+        description: The updated Upload
+        content:
+          application/json:
+            schema:
+              $ref: '../models/upload.yaml#/Upload'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Delete:
+  delete:
+    summary: Delete a pending upload and the associated file
+    operationId: deleteUpload
+    tags:
+      - Uploads
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: The ID of the pending upload
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Apply:
+  post:
+    summary: Apply an upload to become an actual track
+    operationId: applyUpload
+    tags:
+      - Uploads
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: The ID of the pending upload
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  description: Indicates if the upload was successfully applied
+                  example: true
+                didFileAlreadyExist:
+                  type: boolean
+                  description: True if the upload failed because a file already exists in the created path
+                  example: false
+                id:
+                  type: integer
+                  format: int64
+                  nullable: true
+                  description: Contains the id of the created track or null if it failed
+                  example: 123
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

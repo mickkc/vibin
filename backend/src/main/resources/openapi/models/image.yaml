@@ -1,0 +1,18 @@
+Image:
+  type: object
+  nullable: true
+  properties:
+    originalUrl:
+      type: string
+      example: "tracks/1.jpg"
+      nullable: true
+    smallUrl:
+      type: string
+      example: "tracks/1-128.jpg"
+      nullable: true
+    largeUrl:
+      type: string
+      example: "tracks/1-512.jpg"
+      nullable: true
+    colorScheme:
+      $ref: 'colorScheme.yaml#/ColorScheme'

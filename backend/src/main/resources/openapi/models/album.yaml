@@ -1,0 +1,72 @@
+Album:
+  type: object
+  properties:
+    id:
+      type: integer
+      format: int64
+    title:
+      type: string
+    artists:
+      type: array
+      items:
+        $ref: 'artist.yaml#/Artist'
+    cover:
+      $ref: 'image.yaml#/Image'
+    songsAmount:
+      type: integer
+      format: int64
+    createdAt:
+      type: integer
+      format: int64
+    updatedAt:
+      type: integer
+      format: int64
+      nullable: true
+
+AlbumData:
+  type: object
+  properties:
+    album:
+      $ref: '#/Album'
+    tracks:
+      type: array
+      items:
+        $ref: 'track.yaml#/MinimalTrack'
+
+AlbumMetadata:
+  type: object
+  properties:
+    title:
+      type: string
+      nullable: false
+    description:
+      type: string
+      nullable: true
+    coverImageUrl:
+      type: string
+      nullable: true
+    year:
+      type: integer
+      nullable: true
+    isSingle:
+      type: boolean
+      nullable: true
+
+AlbumEditData:
+  type: object
+  properties:
+    title:
+      type: string
+      nullable: true
+    coverUrl:
+      type: string
+      nullable: true
+    description:
+      type: string
+      nullable: true
+    year:
+      type: integer
+      nullable: true
+    isSingle:
+      type: boolean
+      nullable: true

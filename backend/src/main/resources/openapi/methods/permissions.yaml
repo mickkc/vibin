@@ -1,0 +1,93 @@
+GetCurrent:
+  get:
+    summary: Get all permissions for the authenticated user
+    operationId: getUserPermissions
+    tags:
+      - Permissions
+    security:
+      - tokenAuth: [ ]
+    responses:
+      200:
+        description: List of permissions
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+ForUser:
+  get:
+    summary: Get all permissions for a specific user
+    operationId: getPermissionsForUser
+    tags:
+      - Permissions
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: userId
+        in: path
+        description: ID of the user to retrieve permissions for
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: List of permissions for the user
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+  put:
+    summary: Toggle a permission for a user
+    operationId: toggleUserPermission
+    tags:
+      - Permissions
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: userId
+        in: path
+        description: ID of the user to update permissions for
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: permissionId
+        in: query
+        description: ID of the permission to update
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Permissions updated successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                granted:
+                  type: boolean
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

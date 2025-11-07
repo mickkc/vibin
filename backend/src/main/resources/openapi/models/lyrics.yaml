@@ -1,0 +1,22 @@
+LyricsMetadata:
+  type: object
+  properties:
+    title:
+      type: string
+      nullable: true
+    artistName:
+      type: string
+      nullable: true
+    albumName:
+      type: string
+      nullable: true
+    content:
+      type: string
+      nullable: false
+    synced:
+      type: boolean
+      nullable: false
+    duration:
+      type: integer
+      format: int64
+      nullable: true

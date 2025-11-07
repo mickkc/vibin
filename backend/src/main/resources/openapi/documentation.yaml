@@ -6,970 +6,262 @@ info:
   contact:
     name: "Vibin' Project"
     url: "https://github.com/mickkc/vibin"
-    email: "mickkcx@proton.me"
+    email: "tim@vibin.wtf"
   license:
     name: Licensed under VPL v1.0
     url: "https://github.com/mickkc/vibin/blob/main/LICENSE.md"
 servers:
   - url: 'http://localhost:8080'
 paths:
+  
+  # ▄▀█ █░█ ▀█▀ █░█
+  # █▀█ █▄█ ░█░ █▀█
 
   /api/auth/login:
-    post:
-      summary: User login
-      operationId: loginUser
-      tags:
-        - Auth
-      parameters:
-        - name: username
-          in: query
-          description: Username of the user
-          required: true
-          schema:
-            type: string
-        - name: password
-          in: query
-          description: Password of the user
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: Login result
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LoginResult'
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                  $ref: '#/components/schemas/Error'
+    $ref: 'methods/auth.yaml#/Login'
 
   /api/auth/validate:
-    post:
-      summary: Validate token
-      operationId: validateToken
-      tags:
-        - Auth
-      security:
-        - tokenAuth: []
-      responses:
-        200:
-          description: Token is valid
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        401:
-          description: Token is invalid or expired
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+    $ref: 'methods/auth.yaml#/Validate'
 
   /api/auth/logout:
-    post:
-      summary: User logout
-      operationId: logoutUser
-      tags:
-        - Auth
-      security:
-        - tokenAuth: []
-      responses:
-        200:
-          description: Logout successful
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Success'
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+    $ref: 'methods/auth.yaml#/Logout'
+
+  # █▀▄▀█ █▀▀ █▀▄ █ ▄▀█ ▀█▀ █▀█ █▄▀ █▀▀ █▄░█
+  # █░▀░█ ██▄ █▄▀ █ █▀█ ░█░ █▄█ █░█ ██▄ █░▀█
+
+  /api/auth/media/token:
+    $ref: 'methods/mediaTokens.yaml#/MediaToken'
+
+  /api/auth/media:
+    $ref: 'methods/mediaTokens.yaml#/Validate'
+
+  # █▀ █▀▀ █▀ █▀ █ █▀█ █▄░█ █▀
+  # ▄█ ██▄ ▄█ ▄█ █ █▄█ █░▀█ ▄█
+
+  /api/auth/sessions:
+    $ref: 'methods/sessions.yaml#/GetAll'
+
+  /api/auth/sessions/{sessionId}:
+    $ref: 'methods/sessions.yaml#/Invalidate'
+
+  /api/auth/sessions/all:
+    $ref: 'methods/sessions.yaml#/InvalidateAll'
+  
+  # ▄▀█ █░░ █▄▄ █░█ █▀▄▀█ █▀
+  # █▀█ █▄▄ █▄█ █▄█ █░▀░█ ▄█
 
   /api/albums:
-    get:
-      summary: Get all albums
-      operationId: getAlbums
-      tags:
-        - Albums
-      security:
-        - tokenAuth: []
-      parameters:
-        - name: page
-          in: query
-          description: Page number (default is 1)
-          required: false
-          schema:
-              type: integer
-              format: int32
-              default: 1
-        - name: pageSize
-          in: query
-          description: Number of items per page (default is the configured page size)
-          required: false
-          schema:
-              type: integer
-              format: int32
-      responses:
-        200:
-          description: A paginated list of albums
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedAlbumResponse'
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+    $ref: 'methods/albums.yaml#/Base'
 
   /api/albums/{id}:
-    get:
-      summary: Get album by ID
-      operationId: getAlbumById
-      tags:
-        - Albums
-      security:
-        - tokenAuth: []
-      parameters:
-        - name: id
-          in: path
-          description: ID of the album to retrieve
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        200:
-          description: Album data
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AlbumData'
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+    $ref: 'methods/albums.yaml#/Id'
+
+  /api/albums/artists/{id}:
+    $ref: 'methods/albums.yaml#/ByArtist'
 
   /api/albums/{id}/cover:
-    get:
-      summary: Get album cover image
-      operationId: getAlbumCover
-      tags:
-        - Albums
-      security:
-        - tokenAuth: []
-      parameters:
-        - name: id
-          in: path
-          description: ID of the album to retrieve the cover for
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: quality
-          in: query
-          description: Size of the cover image (small, large or original (default))
-          required: false
-          schema:
-            type: string
-            enum: [small, large, original]
-            default: original
-      responses:
-        200:
-          description: Album cover image
-          content:
-            image/jpeg:
-              schema:
-                type: string
-                format: binary
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+    $ref: 'methods/albums.yaml#/Cover'
+  
+  # ▄▀█ █▀█ ▀█▀ █ █▀ ▀█▀ █▀
+  # █▀█ █▀▄ ░█░ █ ▄█ ░█░ ▄█
+  
+  /api/artists:
+    $ref: 'methods/artists.yaml#/Base'
+  
+  /api/artists/{id}:
+    $ref: 'methods/artists.yaml#/Id'
+
+  /api/artists/ids:
+    $ref: 'methods/artists.yaml#/Ids'
+  
+  /api/artists/autocomplete:
+    $ref: 'methods/artists.yaml#/Autocomplete'
+
+  # █▀▀ █░█ █▀▀ █▀▀ █▄▀
+  # █▄▄ █▀█ ██▄ █▄▄ █░█
+
+  /api/check:
+    $ref: 'methods/check.yaml#/Check'
+
+  # █▀▄▀█ █▀▀ ▀█▀ ▄▀█ █▀▄ ▄▀█ ▀█▀ ▄▀█
+  # █░▀░█ ██▄ ░█░ █▀█ █▄▀ █▀█ ░█░ █▀█
 
   /api/metadata/providers:
-    get:
-      summary: Get available metadata providers
-      operationId: getMetadataProviders
-      tags:
-        - Metadata
-      security:
-        - tokenAuth: []
-      responses:
-        200:
-          description: List of metadata providers
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  file:
-                    type: array
-                    items:
-                      type: string
-                  track:
-                    type: array
-                    items:
-                      type: string
-                  artist:
-                    type: array
-                    items:
-                      type: string
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+    $ref: 'methods/metadata.yaml#/Providers'
 
-  /api/metadata/track:
-    get:
-      summary: Fetch metadata for a track
-      operationId: fetchTrackMetadata
-      tags:
-        - Metadata
-      security:
-        - tokenAuth: []
-      parameters:
-        - name: q
-          in: query
-          description: The Query to search for
-          required: true
-          schema:
-            type: string
-        - name: provider
-          in: query
-          description: Metadata provider to use
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: Track metadata fetched successfully
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TrackMetadata'
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+  /api/metadata/{type}:
+    $ref: 'methods/metadata.yaml#/Fetch'
 
-  /api/metadata/artist:
-    get:
-      summary: Fetch metadata for an artist
-      operationId: fetchArtistMetadata
-      tags:
-          - Metadata
-      security:
-          - tokenAuth: []
-      parameters:
-        - name: q
-          in: query
-          description: The Query to search for
-          required: true
-          schema:
-              type: string
-        - name: provider
-          in: query
-          description: Metadata provider to use
-          required: true
-          schema:
-              type: string
-      responses:
-        200:
-          description: Artist metadata fetched successfully
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ArtistMetada'
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+  /api/metadata/create:
+    $ref: 'methods/metadata.yaml#/Create'
+
+  # █▀▄▀█ █ █▀ █▀▀
+  # █░▀░█ █ ▄█ █▄▄
+
+  /api/misc/welcome:
+    $ref: 'methods/misc.yaml#/Welcome'
+
+  # █▀█ █▀▀ █▀█ █▀▄▀█ █ █▀ █▀ █ █▀█ █▄░█ █▀
+  # █▀▀ ██▄ █▀▄ █░▀░█ █ ▄█ ▄█ █ █▄█ █░▀█ ▄█
 
   /api/permissions:
-    get:
-      summary: Get all permissions for the authenticated user
-      operationId: getUserPermissions
-      tags:
-        - Permissions
-      security:
-        - tokenAuth: []
-      responses:
-        200:
-          description: List of permissions
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: string
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+    $ref: 'methods/permissions.yaml#/GetCurrent'
 
   /api/permissions/{userId}:
-    get:
-      summary: Get all permissions for a specific user
-      operationId: getPermissionsForUser
-      tags:
-        - Permissions
-      security:
-        - tokenAuth: []
-      parameters:
-        - name: userId
-          in: path
-          description: ID of the user to retrieve permissions for
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        200:
-          description: List of permissions for the user
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: string
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+    $ref: 'methods/permissions.yaml#/ForUser'
 
-    put:
-      summary: Toggle a permission for a user
-      operationId: toggleUserPermission
-      tags:
-          - Permissions
-      security:
-          - tokenAuth: []
-      parameters:
-        - name: userId
-          in: path
-          description: ID of the user to update permissions for
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: permissionId
-          in: query
-          description: ID of the permission to update
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        200:
-          description: Permissions updated successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  granted:
-                    type: boolean
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+  # █▀█ █░░ ▄▀█ █▄█ █░░ █ █▀ ▀█▀ █▀
+  # █▀▀ █▄▄ █▀█ ░█░ █▄▄ █ ▄█ ░█░ ▄█
 
   /api/playlists:
-    get:
-      summary: Get all playlists
-      operationId: getPlaylists
-      tags:
-        - Playlists
-      security:
-        - tokenAuth: []
-      parameters:
-        - name: page
-          in: query
-          description: Page number (default is 1)
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 1
-        - name: pageSize
-          in: query
-          description: Number of items per page (default is the configured page size)
-          required: false
-          schema:
-            type: integer
-            format: int32
-      responses:
-        200:
-          description: A paginated list of playlists
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedPlaylistResponse'
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-    post:
-      summary: Create a new playlist
-      operationId: createPlaylist
-      tags:
-        - Playlists
-      security:
-        - tokenAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PlaylistEdit'
-      responses:
-        200:
-          description: Playlist created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Playlist'
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+    $ref: 'methods/playlists.yaml#/Base'
 
   /api/playlists/{id}:
-    put:
-      summary: Updates a playlist
-      operationId: updatePlaylist
-      tags:
-        - Playlists
-      security:
-        - tokenAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PlaylistEdit'
-      responses:
-        200:
-          description: Playlist updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Playlist'
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+    $ref: 'methods/playlists.yaml#/Id'
+  
+  /api/playlists/{id}/image:
+    $ref: 'methods/playlists.yaml#/Image'
+  
+  /api/playlists/random:
+    $ref: 'methods/playlists.yaml#/Random'
 
-    delete:
-      summary: Deletes a playlist
-      operationId: deletePlaylist
-      tags:
-        - Playlists
-      security:
-        - tokenAuth: []
-      parameters:
-        - name: id
-          in: path
-          description: ID of the playlist to delete
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        200:
-          description: Playlist deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Success"
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+  /api/playlists/{playlistId}/tracks:
+    $ref: 'methods/playlistTracks.yaml#/Base'
 
-  /api/tracks:
-    get:
-      summary: Get all tracks
-      operationId: getTracks
-      tags:
-        - Tracks
-      security:
-        - tokenAuth: []
-      parameters:
-        - name: page
-          in: query
-          description: Page number (default is 1)
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 1
-        - name: pageSize
-          in: query
-          description: Number of items per page (default is the configured page size)
-          required: false
-          schema:
-            type: integer
-            format: int32
-      responses:
-        200:
-          description: A paginated list of minimal track info
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedMinimalTrackResponse'
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+  /api/playlists/containing/{trackId}:
+    $ref: 'methods/playlistTracks.yaml#/ContainingTrack'
 
-  /api/tracks/{id}:
-    get:
-      summary: Get track by ID
-      operationId: getTrackById
-      tags:
-        - Tracks
-      security:
-        - tokenAuth: []
-      parameters:
-        - name: id
-          in: path
-          description: ID of the track to retrieve
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        200:
-          description: Track data
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Track'
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+  # █▀ █▀▀ ▀█▀ ▀█▀ █ █▄░█ █▀▀ █▀
+  # ▄█ ██▄ ░█░ ░█░ █ █░▀█ █▄█ ▄█
+  
+  /api/settings/server:
+    $ref: 'methods/settings.yaml#/Server'
 
-    put:
-      summary: Updates a track
-      operationId: updateTrack
-      tags:
-        - Tracks
-      security:
-        - tokenAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TrackEdit'
-      responses:
-        200:
-          description: Track updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Track'
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+  /api/settings/user:
+    $ref: 'methods/settings.yaml#/User'
+  
+  /api/settings/{key}:
+    $ref: 'methods/settings.yaml#/Update'
 
-    delete:
-      summary: Deletes a track
-      operationId: deleteTrack
-      tags:
-        - Tracks
-      security:
-        - tokenAuth: []
-      parameters:
-        - name: id
-          in: path
-          description: ID of the track to delete
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        200:
-          description: Track deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Success"
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/tracks/{id}/cover:
-    get:
-      summary: Get track cover image
-      operationId: getTrackCover
-      tags:
-        - Tracks
-      security:
-        - tokenAuth: []
-      parameters:
-        - name: id
-          in: path
-          description: ID of the track to retrieve the cover for
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: quality
-          in: query
-          description: Size of the cover image (small, large or original (default))
-          required: false
-          schema:
-            type: string
-            enum: [small, large, original]
-            default: original
-      responses:
-        200:
-          description: Track cover image
-          content:
-            image/jpeg:
-              schema:
-                type: string
-                format: binary
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/users:
-    get:
-      summary: Get all users
-      operationId: getUsers
-      tags:
-        - Users
-      security:
-        - tokenAuth: []
-      responses:
-        200:
-          description: List of users
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-    post:
-      summary: Create a new user
-      operationId: createUser
-      tags:
-          - Users
-      security:
-          - tokenAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserEdit'
-      responses:
-        200:
-          description: User created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/users/{id}:
-    get:
-      summary: Get user by ID
-      operationId: getUserById
-      tags:
-        - Users
-      security:
-        - tokenAuth: []
-      parameters:
-        - name: id
-          in: path
-          description: ID of the user to retrieve
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        200:
-          description: User data
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-    put:
-      summary: Updates a user
-      operationId: updateUser
-      tags:
-        - Users
-      security:
-        - tokenAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserEdit'
-      responses:
-        200:
-          description: User updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          
-    delete:
-      summary: Deletes a user
-      operationId: deleteUser
-      tags:
-        - Users
-      security:
-        - tokenAuth: []
-      parameters:
-        - name: id
-          in: path
-          description: ID of the user to delete
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        200:
-          description: User deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Success"
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/users/{id}/pfp:
-    get:
-      summary: Get user profile picture
-      operationId: getUserProfilePicture
-      tags:
-        - Users
-      security:
-        - tokenAuth: []
-      parameters:
-        - name: id
-          in: path
-          description: ID of the user to retrieve the profile picture for
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: quality
-          in: query
-          description: Size of the profile picture (small, large or original (default))
-          required: false
-          schema:
-            type: string
-            enum: [small, large, original]
-            default: original
-      responses:
-        200:
-          description: User profile picture
-          content:
-            image/jpeg:
-              schema:
-                type: string
-                format: binary
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /api/users/me:
-    get:
-      summary: Get current authenticated user
-      operationId: getCurrentUser
-      tags:
-        - Users
-      security:
-        - tokenAuth: []
-      responses:
-        200:
-          description: Current user data
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+  # █▀ ▀█▀ ▄▀█ ▀█▀ █▀
+  # ▄█ ░█░ █▀█ ░█░ ▄█
 
   /api/stats/recent:
-    get:
-      summary: Get the most recently listened to tracks
-      operationId: getRecentTracks
-      tags:
-        - Stats
-      security:
-        - tokenAuth: []
-      parameters:
-        - name: limit
-          in: query
-          description: Number of recent tracks to retrieve
-          required: false
-          schema:
-              type: integer
-              format: int32
-              default: 5
-      responses:
-        200:
-          description: List of recent tracks
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/MinimalTrack'
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+    $ref: 'methods/stats.yaml#/Recent'
 
   /api/stats/{type}/top{limit}:
-    get:
-      summary: Get the top listened to tracks or artists
-      operationId: getTopStats
-      tags:
-        - Stats
-      security:
-        - tokenAuth: []
-      parameters:
-        - name: type
-          in: path
-          description: Type of stats to retrieve
-          required: true
-          schema:
-            type: string
-            enum: [tracks, artists, albums, tags]
-        - name: limit
-          in: path
-          description: Number of top items to retrieve
-          required: true
-          schema:
-            type: integer
-            format: int32
-        - name: since
-          in: query
-          description: The timestamp in seconds since epoch to get stats since
-          required: false
-          schema:
-            type: integer
-            format: int64
-            default: Start of month
-      responses:
-        200:
-          description: List of top tracks or artists
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  oneOf:
-                    - $ref: '#/components/schemas/MinimalTrack'
-                    - $ref: '#/components/schemas/Artist'
-                    - $ref: '#/components/schemas/Album'
-                    - $ref: '#/components/schemas/Tag'
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+    $ref: 'methods/stats.yaml#/Top'
+
+  /api/stats/listen/{type}/{id}:
+    $ref: 'methods/stats.yaml#/Report'
+  
+  /api/stats/users/{id}/activity:
+    $ref: 'methods/stats.yaml#/Activity'
+
+  # ▀█▀ ▄▀█ █▀▀ █▀
+  # ░█░ █▀█ █▄█ ▄█
+
+  /api/tags:
+    $ref: 'methods/tags.yaml#/Base'
+  
+  /api/tags/{id}:
+    $ref: 'methods/tags.yaml#/Id'
+  
+  /api/tags/ids:
+    $ref: 'methods/tags.yaml#/Ids'
+    
+  /api/tags/named/{name}:
+    $ref: 'methods/tags.yaml#/ByName'
+  
+  /api/tags/check/{name}:
+    $ref: 'methods/tags.yaml#/CheckName'
+
+  # ▀█▀ ▄▀█ █▀ █▄▀ █▀
+  # ░█░ █▀█ ▄█ █░█ ▄█
+
+  /api/tasks:
+    $ref: 'methods/tasks.yaml#/Get'
+
+  /api/tasks/{taskId}/enable:
+    $ref: 'methods/tasks.yaml#/Enable'
+
+  /api/tasks/{id}/run:
+    $ref: 'methods/tasks.yaml#/Run'
+
+  # █░█ █▀█ █░░ █▀█ ▄▀█ █▀▄ █▀
+  # █▄█ █▀▀ █▄▄ █▄█ █▀█ █▄▀ ▄█
+
+  /api/uploads:
+    $ref: 'methods/uploads.yaml#/Base'
+
+  /api/uploads/{id}/metadata:
+    $ref: 'methods/uploads.yaml#/AddMetadata'
+
+  /api/uploads/{id}:
+    $ref: 'methods/uploads.yaml#/Delete'
+
+  /api/uploads/{id}/apply:
+    $ref: 'methods/uploads.yaml#/Apply'
+
+  # ▀█▀ █▀█ ▄▀█ █▀▀ █▄▀ █▀
+  # ░█░ █▀▄ █▀█ █▄▄ █░█ ▄█
+
+  /api/tracks:
+    $ref: 'methods/tracks.yaml#/Base'
+
+  /api/tracks/{id}:
+    $ref: 'methods/tracks.yaml#/Id'
+
+  /api/tracks/artists/{id}:
+    $ref: 'methods/tracks.yaml#/ByArtist'
+
+  /api/tracks/{id}/related:
+    $ref: 'methods/tracks.yaml#/Related'
+
+  /api/tracks/search:
+    $ref: 'methods/tracks.yaml#/Search'
+
+  /api/tracks/random:
+    $ref: 'methods/tracks.yaml#/Random'
+
+  /api/tracks/newest:
+    $ref: 'methods/tracks.yaml#/Newest'
+
+  /api/tracks/{id}/lyrics:
+    $ref: 'methods/lyrics.yaml#/Get'
+
+  /api/tracks/{id}/lyrics/check:
+    $ref: 'methods/lyrics.yaml#/Check'
+
+  /api/tracks/{id}/download:
+    $ref: 'methods/tracks.yaml#/Download'
+
+  /api/tracks/{id}/cover:
+    $ref: 'methods/tracks.yaml#/Cover'
+
+  /api/tracks/{id}/stream:
+    $ref: 'methods/tracks.yaml#/Stream'
+
+  # █░█ █▀ █▀▀ █▀█ █▀
+  # █▄█ ▄█ ██▄ █▀▄ ▄█
+
+  /api/users:
+    $ref: 'methods/users.yaml#/Base'
+
+  /api/users/{id}:
+    $ref: 'methods/users.yaml#/Id'
+
+  /api/users/{id}/pfp:
+    $ref: 'methods/users.yaml#/Image'
+
+  /api/users/me:
+    $ref: 'methods/users.yaml#/Me'
+  
+  /api/users/username/{username}/exists:
+    $ref: 'methods/users.yaml#/CheckUsername'
+
+
+
 
 components:
   securitySchemes:
@@ -977,526 +269,3 @@ components:
       type: apiKey
       in: header
       name: Authorization
-
-  schemas:
-
-    Success:
-      type: object
-      properties:
-        success:
-          type: boolean
-
-    Error:
-      type: object
-      properties:
-        type:
-          type: string
-          example: "MISSING_PARAMETER"
-        data:
-          type: object
-          additionalProperties: true
-          example: {"parameterName": "username"}
-
-    PaginatedAlbumResponse:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-              $ref: '#/components/schemas/Album'
-        total:
-          type: integer
-          format: int64
-        page:
-          type: integer
-          format: int32
-        pageSize:
-          type: integer
-          format: int32
-        hasNext:
-          type: boolean
-        hasPrevious:
-          type: boolean
-
-    PaginatedPlaylistResponse:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Playlist'
-        total:
-          type: integer
-          format: int64
-        page:
-          type: integer
-          format: int32
-        pageSize:
-          type: integer
-          format: int32
-        hasNext:
-          type: boolean
-        hasPrevious:
-          type: boolean
-
-    PaginatedMinimalTrackResponse:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/MinimalTrack'
-        total:
-          type: integer
-          format: int64
-        page:
-          type: integer
-          format: int32
-        pageSize:
-          type: integer
-          format: int32
-        hasNext:
-          type: boolean
-        hasPrevious:
-          type: boolean
-
-    Album:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        title:
-          type: string
-        artists:
-          type: array
-          items:
-            $ref: '#/components/schemas/Artist'
-        cover:
-          $ref: '#/components/schemas/Image'
-        songsAmount:
-          type: integer
-          format: int64
-        createdAt:
-          type: integer
-          format: int64
-        updatedAt:
-          type: integer
-          format: int64
-          nullable: true
-
-    Artist:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        name:
-          type: string
-        image:
-          $ref: '#/components/schemas/Image'
-        sortName:
-          type: string
-          nullable: true
-        tags:
-          type: array
-          items:
-            $ref: '#/components/schemas/Tag'
-        createdAt:
-          type: integer
-          format: int64
-        updatedAt:
-          type: integer
-          format: int64
-          nullable: true
-
-    Image:
-      type: object
-      nullable: true
-      properties:
-        originalUrl:
-          type: string
-          example: "tracks/1.jpg"
-          nullable: true
-        smallUrl:
-          type: string
-          example: "tracks/1-128.jpg"
-          nullable: true
-        largeUrl:
-          type: string
-          example: "tracks/1-512.jpg"
-          nullable: true
-        colorScheme:
-          $ref: '#/components/schemas/ColorScheme'
-
-    ColorScheme:
-      type: object
-      nullable: true
-      properties:
-        primary:
-          type: string
-          example: "#ff0000"
-        light:
-          type: string
-          example: "#ffffff"
-        dark:
-          type: string
-          example: "#000000"
-
-    Tag:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        name:
-          type: string
-        color:
-          type: string
-          example: "#ff0000"
-        createdAt:
-          type: integer
-          format: int64
-        updatedAt:
-          type: integer
-          format: int64
-          nullable: true
-
-    AlbumData:
-      type: object
-      properties:
-        album:
-          $ref: '#/components/schemas/Album'
-        tracks:
-          type: array
-          items:
-            $ref: '#/components/schemas/MinimalTrack'
-
-    MinimalTrack:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        title:
-          type: string
-        artists:
-          type: array
-          items:
-            $ref: '#/components/schemas/IdName'
-        album:
-          $ref: '#/components/schemas/IdName'
-        duration:
-          type: integer
-          format: int64
-          nullable: true
-        cover:
-          $ref: '#/components/schemas/Image'
-        uploader:
-          $ref: '#/components/schemas/IdName'
-
-    Track:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        title:
-          type: string
-        album:
-          $ref: '#/components/schemas/Album'
-        artists:
-          type: array
-          items:
-            $ref: '#/components/schemas/Artist'
-        explicit:
-          type: boolean
-        trackNumber:
-          type: integer
-          format: int32
-          nullable: true
-        trackCount:
-          type: integer
-          format: int32
-          nullable: true
-        discNumber:
-          type: integer
-          format: int32
-          nullable: true
-        discCount:
-          type: integer
-          format: int32
-          nullable: true
-        year:
-          type: integer
-          format: int32
-          nullable: true
-        duration:
-          type: integer
-          format: int64
-          nullable: true
-        comment:
-          type: string
-          nullable: true
-        cover:
-          $ref: '#/components/schemas/Image'
-        path:
-          type: string
-        checksum:
-          type: string
-        tags:
-          type: array
-          items:
-            $ref: '#/components/schemas/Tag'
-        uploader:
-          $ref: '#/components/schemas/User'
-        createdAt:
-          type: integer
-          format: int64
-        updatedAt:
-          type: integer
-          format: int64
-          nullable: true
-
-    IdName:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        name:
-          type: string
-
-    User:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        username:
-          type: string
-        displayName:
-          type: string
-          nullable: true
-        email:
-          type: string
-          nullable: true
-        isAdmin:
-          type: boolean
-        isActive:
-          type: boolean
-        lastLogin:
-          type: integer
-          format: int64
-          nullable: true
-        profilePicture:
-          $ref: '#/components/schemas/Image'
-        createdAt:
-          type: integer
-          format: int64
-        updatedAt:
-          type: integer
-          format: int64
-          nullable: true
-
-    LoginResult:
-      type: object
-      properties:
-        success:
-          type: boolean
-        token:
-          type: string
-        user:
-          $ref: '#/components/schemas/User'
-        permissions:
-          type: array
-          items:
-            type: string
-
-    TrackMetadata:
-      type: object
-      properties:
-        title:
-          type: string
-        artistNames:
-          type: array
-          items:
-            type: string
-          nullable: true
-        albumName:
-          type: string
-          nullable: true
-        trackNumber:
-          type: integer
-          format: int32
-          nullable: true
-        trackCount:
-          type: integer
-          format: int32
-          nullable: true
-        discNumber:
-          type: integer
-          format: int32
-          nullable: true
-        discCount:
-          type: integer
-          format: int32
-          nullable: true
-        year:
-          type: integer
-          format: int32
-          nullable: true
-        genre:
-          type: string
-          nullable: true
-        durationMs:
-          type: integer
-          format: int64
-          nullable: true
-        comment:
-          type: string
-          nullable: true
-        coverImageUrl:
-          type: string
-          nullable: true
-        explicit:
-          type: boolean
-          nullable: true
-
-    ArtistMetada:
-      type: object
-      properties:
-        name:
-          type: string
-        pictureUrl:
-          type: string
-          nullable: true
-
-    Playlist:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        name:
-          type: string
-        description:
-          type: string
-        public:
-          type: boolean
-        collaborators:
-          type: array
-          items:
-            $ref: '#/components/schemas/User'
-        cover:
-          $ref: '#/components/schemas/Image'
-        hasVibeDef:
-          type: boolean
-        owner:
-          $ref: '#/components/schemas/User'
-        createdAt:
-          type: integer
-          format: int64
-        updatedAt:
-          type: integer
-          format: int64
-          nullable: true
-
-    PlaylistEdit:
-      type: object
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-          nullable: true
-        isPublic:
-          type: boolean
-          nullable: true
-        coverImageUrl:
-          type: string
-          nullable: true
-        collaboratorIds:
-          type: array
-          items:
-            type: integer
-            format: int64
-          nullable: true
-        vibeDef:
-          type: string
-          nullable: true
-
-    TrackEdit:
-      type: object
-      properties:
-        title:
-          type: string
-          nullable: true
-        explicit:
-          type: boolean
-          nullable: true
-        trackNumber:
-          type: integer
-          format: int32
-          nullable: true
-        trackCount:
-          type: integer
-          format: int32
-          nullable: true
-        discNumber:
-          type: integer
-          format: int32
-          nullable: true
-        discCount:
-          type: integer
-          format: int32
-          nullable: true
-        year:
-          type: integer
-          format: int32
-          nullable: true
-        comment:
-          type: string
-          nullable: true
-        imageUrl:
-          type: string
-          nullable: true
-        albumId:
-          type: integer
-          format: int64
-          nullable: true
-        artistIds:
-          type: array
-          items:
-            type: integer
-            format: int64
-          nullable: true
-          
-    UserEdit:
-      type: object
-      properties: 
-        username:
-          type: string
-          nullable: true
-        displayName:
-          type: string
-          nullable: true
-        email:
-          type: string
-          nullable: true
-        isAdmin:
-          type: boolean
-          nullable: true
-        isActive:
-          type: boolean
-          nullable: true
-        profilePictureUrl:
-          type: string
-          nullable: true
-        oldPassword:
-          type: string
-          nullable: true
-          description: Must be provided when changing the password
-        password:
-          type: string
-          nullable: true

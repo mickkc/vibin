@@ -1,0 +1,56 @@
+Upload:
+  type: object
+  properties:
+    id:
+      type: string
+      nullable: false
+    filePath:
+      type: string
+      nullable: false
+    title:
+      type: string
+      nullable: false
+    album:
+      $ref: 'album.yaml#/Album'
+      nullable: true
+    artists:
+      type: array
+      items:
+        $ref: 'artist.yaml#/Artist'
+    tags:
+      type: array
+      items:
+        $ref: 'tag.yaml#/Tag'
+    explicit:
+      type: boolean
+      nullable: false
+    trackNumber:
+      type: integer
+      nullable: true
+    trackCount:
+      type: integer
+      nullable: true
+    discNumber:
+      type: integer
+      nullable: true
+    discCount:
+      type: integer
+      nullable: true
+    year:
+      type: integer
+      nullable: true
+    comment:
+      type: string
+      nullable: false
+    lyrics:
+      type: string
+      nullable: true
+    coverUrl:
+      type: string
+      nullable: true
+    uploaderId:
+      type: integer
+      format: int64
+    lastUpdate:
+      type: integer
+      format: int64

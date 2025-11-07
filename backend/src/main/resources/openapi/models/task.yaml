@@ -1,0 +1,33 @@
+Task:
+  type: object
+  properties:
+    id:
+      type: string
+    enabled:
+      type: boolean
+    lastRun:
+      type: integer
+      format: int64
+      nullable: true
+      description: Timestamp of the last run (in seconds since epoch)
+    nextRun:
+      type: integer
+      format: int64
+      nullable: false
+      description: Timestamp of the next scheduled run (in seconds since epoch)
+    interval:
+      type: integer
+      format: int64
+      description: Interval in seconds
+    lastResult:
+      $ref: '#/TaskResult'
+      nullable: true
+
+TaskResult:
+    type: object
+    properties:
+      success:
+        type: boolean
+      message:
+        type: string
+        nullable: true

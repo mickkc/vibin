@@ -1,0 +1,68 @@
+Get:
+  get:
+    summary: Get track lyrics
+    operationId: getTrackLyrics
+    tags:
+      - Tracks
+      - Lyrics
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: ID of the track to retrieve lyrics for
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: Track lyrics
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lyrics:
+                  type: string
+                  nullable: true
+                colorScheme:
+                  $ref: '../models/colorScheme.yaml#/ColorScheme'
+                  nullable: true
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Check:
+  get:
+    summary: Check if lyrics are available for a track
+    operationId: checkTrackLyrics
+    tags:
+      - Tracks
+      - Lyrics
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: ID of the track to check lyrics for
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: Lyrics availability
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

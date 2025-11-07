@@ -1,0 +1,13 @@
+ColorScheme:
+  type: object
+  nullable: true
+  properties:
+    primary:
+      type: string
+      example: "#ff0000"
+    light:
+      type: string
+      example: "#ffffff"
+    dark:
+      type: string
+      example: "#000000"

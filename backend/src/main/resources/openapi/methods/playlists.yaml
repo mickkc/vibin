@@ -1,0 +1,204 @@
+Base:
+  get:
+    summary: Get all playlists
+    operationId: getPlaylists
+    tags:
+      - Playlists
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: page
+        in: query
+        description: Page number (default is 1)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 1
+      - name: pageSize
+        in: query
+        description: Number of items per page (default is 50)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      - name: query
+        in: query
+        description: An optional search query
+        required: false
+        schema:
+          type: string
+          default: ""
+      - name: onlyOwn
+        in: query
+        description: Return only playlists from the current user (not all public playlists)
+        required: false
+        schema:
+          type: boolean
+          default: false
+    responses:
+      200:
+        description: A paginated list of playlists
+        content:
+          application/json:
+            schema:
+              $ref: '../models/paginations.yaml#/PaginatedPlaylistResponse'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+  post:
+    summary: Create a new playlist
+    operationId: createPlaylist
+    tags:
+      - Playlists
+    security:
+      - tokenAuth: [ ]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../models/playlist.yaml#/PlaylistEditData'
+    responses:
+      200:
+        description: Playlist created successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../models/playlist.yaml#/Playlist'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Id:
+  put:
+    summary: Updates a playlist
+    operationId: updatePlaylist
+    tags:
+      - Playlists
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../models/playlist.yaml#/PlaylistEditData'
+    responses:
+      200:
+        description: Playlist updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../models/playlist.yaml#/Playlist'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+  delete:
+    summary: Deletes a playlist
+    operationId: deletePlaylist
+    tags:
+      - Playlists
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: ID of the playlist to delete
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: Playlist deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../models/success.yaml#/Success"
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Image:
+  get:
+    summary: Get the image for a playlist
+    operationId: getPlaylistImage
+    tags:
+      - Playlists
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: Playlist image data
+        content:
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Random:
+  get:
+    summary: Get random playlists
+    operationId: getRandomPlaylists
+    tags:
+      - Playlists
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+    responses:
+      200:
+        description: Random playlists
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../models/playlist.yaml#/Playlist'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

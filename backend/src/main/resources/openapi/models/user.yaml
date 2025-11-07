@@ -1,0 +1,60 @@
+User:
+  type: object
+  properties:
+    id:
+      type: integer
+      format: int64
+    username:
+      type: string
+    displayName:
+      type: string
+      nullable: true
+    email:
+      type: string
+      nullable: true
+    isAdmin:
+      type: boolean
+    isActive:
+      type: boolean
+    lastLogin:
+      type: integer
+      format: int64
+      nullable: true
+    profilePicture:
+      $ref: 'image.yaml#/Image'
+    createdAt:
+      type: integer
+      format: int64
+    updatedAt:
+      type: integer
+      format: int64
+      nullable: true
+
+UserEditData:
+  type: object
+  properties:
+    username:
+      type: string
+      nullable: true
+    displayName:
+      type: string
+      nullable: true
+    email:
+      type: string
+      nullable: true
+    isAdmin:
+      type: boolean
+      nullable: true
+    isActive:
+      type: boolean
+      nullable: true
+    profilePictureUrl:
+      type: string
+      nullable: true
+    oldPassword:
+      type: string
+      nullable: true
+      description: Must be provided when changing the password
+    password:
+      type: string
+      nullable: true

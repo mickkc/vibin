@@ -1,0 +1,80 @@
+GetAll:
+  get:
+    summary: Get all sessions for the current user
+    operationId: getCurrentUserSessions
+    tags:
+      - Sessions
+    security:
+      - bearerAuth: [ ]
+    responses:
+      200:
+        description: A list of sessions and the index of the current session
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sessions:
+                  type: array
+                  items:
+                    $ref: '../models/auth.yaml#/Session'
+                currentSessionIndex:
+                  type: integer
+                  description: the index of the current session inside the `sessions`-list
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Invalidate:
+  delete:
+    summary: Invalidate a session
+    operationId: invalidateSession
+    tags:
+      - Sessions
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: sessionId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+InvalidateAll:
+  delete:
+    summary: Invalidate all sessions except the current one
+    operationId: invalidateAllSession
+    tags:
+      - Sessions
+    security:
+      - bearerAuth: [ ]
+    responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

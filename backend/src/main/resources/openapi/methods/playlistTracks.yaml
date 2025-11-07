@@ -1,0 +1,150 @@
+Base:
+  post:
+    summary: Add a track to a playlist
+    operationId: addTrackToPlaylist
+    tags:
+      - Playlists
+      - Tracks
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: playlistId
+        in: path
+        description: ID of the playlist to add the track to
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: trackId
+        in: query
+        description: ID of the track to add
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+  delete:
+    summary: Remove a track from a playlist
+    operationId: removeTrackFromPlaylist
+    tags:
+      - Playlists
+      - Tracks
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: playlistId
+        in: path
+        description: ID of the playlist to remove the track from
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: trackId
+        in: query
+        description: ID of the track to remove
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+  put:
+    summary: Move a track within a playlist
+    operationId: moveTrackInPlaylist
+    tags:
+      - Playlists
+      - Tracks
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: playlistId
+        in: path
+        description: ID of the playlist to remove the track from
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: trackId
+        in: query
+        description: ID of the track to remove
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: newPosition
+        in: query
+        description: New position of the track in the playlist (0-based index)
+        required: true
+        schema:
+          type: integer
+    responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+ContainingTrack:
+  get:
+    summary: Get all playlists containing a specific track
+    operationId: getPlaylistsContainingTrack
+    tags:
+      - Playlists
+      - Tracks
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: trackId
+        in: path
+        description: ID of the track
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: List of playlists containing the track
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../models/playlist.yaml#/Playlist'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

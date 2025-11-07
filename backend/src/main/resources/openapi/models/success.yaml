@@ -1,0 +1,5 @@
+Success:
+  type: object
+  properties:
+    success:
+      type: boolean

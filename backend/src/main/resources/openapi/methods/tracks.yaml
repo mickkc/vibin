@@ -1,0 +1,405 @@
+Base:
+  get:
+    summary: Get all tracks
+    operationId: getTracks
+    tags:
+      - Tracks
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: page
+        in: query
+        description: Page number (default is 1)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 1
+      - name: pageSize
+        in: query
+        description: Number of items per page (default is the configured page size)
+        required: false
+        schema:
+          type: integer
+          format: int32
+    responses:
+      200:
+        description: A paginated list of minimal track info
+        content:
+          application/json:
+            schema:
+              $ref: '../models/paginations.yaml#/PaginatedMinimalTrackResponse'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Id:
+  get:
+    summary: Get track by ID
+    operationId: getTrackById
+    tags:
+      - Tracks
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: ID of the track to retrieve
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: Track data
+        content:
+          application/json:
+            schema:
+              $ref: '../models/track.yaml#/Track'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+  put:
+    summary: Updates a track
+    operationId: updateTrack
+    tags:
+      - Tracks
+    security:
+      - tokenAuth: [ ]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../models/track.yaml#/TrackEditData'
+    responses:
+      200:
+        description: Track updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../models/track.yaml#/Track'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+  delete:
+    summary: Deletes a track
+    operationId: deleteTrack
+    tags:
+      - Tracks
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: ID of the track to delete
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: Track deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../models/success.yaml#/Success"
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+ByArtist:
+  get:
+    summary: Get all tracks by a specific artist
+    operationId: getTracksByArtist
+    tags:
+      - Tracks
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: ID of the artist
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: List of tracks by the artist
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../models/track.yaml#/Track'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Related:
+  get:
+    summary: Get related tracks
+    operationId: getRelatedTracks
+    tags:
+      - Tracks
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: id
+        in: path
+        description: ID of the track to find related tracks for
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: List of related tracks
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../models/track.yaml#/MinimalTrack'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Search:
+  get:
+    summary: Search for tracks
+    operationId: searchTracks
+    tags:
+      - Tracks
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: query
+        in: query
+        description: The search query
+        required: true
+        schema:
+          type: string
+      - name: page
+        in: query
+        description: Page number (default is 1)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 1
+      - name: pageSize
+        in: query
+        description: Number of items per page (default is the configured page size)
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: advanced
+        in: query
+        description: Whether to use advanced search (default is false)
+        required: false
+        schema:
+          type: boolean
+          default: false
+    responses:
+      200:
+        description: List of tracks matching the search query
+        content:
+          application/json:
+            schema:
+              $ref: '../models/paginations.yaml#/PaginatedMinimalTrackResponse'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Random:
+  get:
+    summary: Get random tracks
+    operationId: getRandomTracks
+    tags:
+      - Tracks
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: limit
+        in: query
+        description: Number of random tracks to retrieve
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 1
+    responses:
+      200:
+        description: List of random tracks
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../models/track.yaml#/MinimalTrack'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Newest:
+  get:
+    summary: Get the newest tracks
+    operationId: getNewestTracks
+    tags:
+      - Tracks
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: limit
+        in: query
+        description: Number of newest tracks to retrieve
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 10
+    responses:
+      200:
+        description: List of newest tracks
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../models/track.yaml#/MinimalTrack'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Download:
+  get:
+    summary: Download track file
+    operationId: downloadTrackFile
+    tags:
+      - Tracks
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: ID of the track to download
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: Track file
+        content:
+          audio/any:
+            schema:
+              type: string
+              format: binary
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Stream:
+  get:
+    summary: Stream track file
+    operationId: streamTrackFile
+    tags:
+      - Tracks
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: ID of the track to stream
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: Track stream
+        content:
+          audio/any:
+            schema:
+              type: string
+              format: binary
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Cover:
+  get:
+    summary: Get track cover image
+    operationId: getTrackCover
+    tags:
+      - Tracks
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: ID of the track to retrieve the cover for
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: quality
+        in: query
+        description: Size of the cover image (small, large or original (default))
+        required: false
+        schema:
+          type: string
+          enum: [ small, large, original ]
+          default: original
+    responses:
+      200:
+        description: Track cover image
+        content:
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

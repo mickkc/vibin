@@ -1,0 +1,178 @@
+Recent:
+  get:
+    summary: Get the most recently listened to tracks
+    operationId: getRecentTracks
+    tags:
+      - Stats
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: limit
+        in: query
+        description: Number of recent tracks to retrieve
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 5
+    responses:
+      200:
+        description: List of recent tracks
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../models/track.yaml#/MinimalTrack'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Top:
+  get:
+    summary: Get the top listened to tracks or artists
+    operationId: getTopStats
+    tags:
+      - Stats
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: type
+        in: path
+        description: Type of stats to retrieve
+        required: true
+        schema:
+          type: string
+          enum: [ tracks, artists, albums, tags ]
+      - name: limit
+        in: path
+        description: Number of top items to retrieve
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: since
+        in: query
+        description: The timestamp in seconds since epoch to get stats since
+        required: false
+        schema:
+          type: integer
+          format: int64
+          default: Start of month
+    responses:
+      200:
+        description: List of top tracks or artists
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                oneOf:
+                  - $ref: '../models/track.yaml#/MinimalTrack'
+                  - $ref: '../models/artist.yaml#/Artist'
+                  - $ref: '../models/album.yaml#/Album'
+                  - $ref: '../models/tag.yaml#/Tag'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Report:
+  post:
+    summary: Report a listen for a track, album, artist or playlist
+    operationId: reportListen
+    tags:
+      - Stats
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: type
+        in: path
+        description: Type of item to report a listen for
+        required: true
+        schema:
+          type: string
+          enum: [ TRACK, ALBUM, ARTIST, PLAYLIST ]
+      - name: id
+        in: path
+        description: The ID of the item to report a listen for
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Activity:
+  get:
+    summary: Get the activity of a user
+    operationId: getActivity
+    tags:
+      - Stats
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: The Id of the user
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: since
+        in: query
+        description: The timestamp in seconds since epoch to get the activity since
+        required: false
+        schema:
+          type: integer
+          format: int64
+          default: Start of month
+      - name: limit
+        in: query
+        description: The maximum number of items per category
+        required: false
+        schema:
+          type: integer
+          default: 10
+    responses:
+      200:
+        description: The users activity
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recentTracks:
+                  type: array
+                  items:
+                    $ref: '../models/track.yaml#/MinimalTrack'
+                topTracks:
+                  type: array
+                  items:
+                    $ref: '../models/track.yaml#/MinimalTrack'
+                topArtists:
+                  type: array
+                  items:
+                    $ref: '../models/artist.yaml#/Artist'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

@@ -1,0 +1,104 @@
+PaginatedUserResponse:
+  type: object
+  properties:
+    items:
+      type: array
+      items:
+        $ref: 'user.yaml#/User'
+    total:
+      type: integer
+      format: int64
+    page:
+      type: integer
+      format: int32
+    pageSize:
+      type: integer
+      format: int32
+    hasNext:
+      type: boolean
+    hasPrevious:
+      type: boolean
+
+PaginatedAlbumResponse:
+  type: object
+  properties:
+    items:
+      type: array
+      items:
+        $ref: 'album.yaml#/Album'
+    total:
+      type: integer
+      format: int64
+    page:
+      type: integer
+      format: int32
+    pageSize:
+      type: integer
+      format: int32
+    hasNext:
+      type: boolean
+    hasPrevious:
+      type: boolean
+
+PaginatedArtistResponse:
+  type: object
+  properties:
+    items:
+      type: array
+      items:
+        $ref: 'artist.yaml#/Artist'
+    total:
+      type: integer
+      format: int64
+    page:
+      type: integer
+      format: int32
+    pageSize:
+      type: integer
+      format: int32
+    hasNext:
+      type: boolean
+    hasPrevious:
+      type: boolean
+
+PaginatedPlaylistResponse:
+  type: object
+  properties:
+    items:
+      type: array
+      items:
+        $ref: 'playlist.yaml#/Playlist'
+    total:
+      type: integer
+      format: int64
+    page:
+      type: integer
+      format: int32
+    pageSize:
+      type: integer
+      format: int32
+    hasNext:
+      type: boolean
+    hasPrevious:
+      type: boolean
+
+PaginatedMinimalTrackResponse:
+  type: object
+  properties:
+    items:
+      type: array
+      items:
+        $ref: 'track.yaml#/MinimalTrack'
+    total:
+      type: integer
+      format: int64
+    page:
+      type: integer
+      format: int32
+    pageSize:
+      type: integer
+      format: int32
+    hasNext:
+      type: boolean
+    hasPrevious:
+      type: boolean

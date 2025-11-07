@@ -1,0 +1,267 @@
+Base:
+  get:
+    summary: Gets all artists
+    operationId: getArtists
+    tags:
+      - Artists
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: page
+        in: query
+        description: Page number for pagination (default is 1)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 1
+      - name: pageSize
+        in: query
+        description: Number of items per page (default is 50)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 50
+      - name: query
+        in: query
+        description: An optional search query to filter artists by name
+        required: false
+        schema:
+          type: string
+          default: ""
+    responses:
+      200:
+        description: A paginated list of artists
+        content:
+          application/json:
+            schema:
+              $ref: '../models/paginations.yaml#/PaginatedArtistResponse'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+  post:
+    summary: Create a new artist
+    operationId: createArtist
+    tags:
+      - Artists
+    security:
+      - tokenAuth: [ ]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../models/artist.yaml#/ArtistEditData'
+    responses:
+      200:
+        description: The created artist
+        content:
+          application/json:
+            schema:
+              $ref: '../models/artist.yaml#/Artist'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Id:
+  get:
+    summary: Get an artist by ID
+    operationId: getArtistById
+    tags:
+      - Artists
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: The ID of the artist to retrieve
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: The requested artist
+        content:
+          application/json:
+            schema:
+              $ref: '../models/artist.yaml#/Artist'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+  put:
+    summary: Update an existing artist
+    operationId: updateArtist
+    tags:
+      - Artists
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: The ID of the artist to update
+        required: true
+        schema:
+          type: integer
+          format: int64
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../models/artist.yaml#/ArtistEditData'
+    responses:
+      200:
+        description: The updated artist
+        content:
+          application/json:
+            schema:
+              $ref: '../models/artist.yaml#/Artist'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+    delete:
+      summary: Delete an artist
+      operationId: deleteArtist
+      tags:
+        - Artists
+      security:
+        - tokenAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: The ID of the artist to delete
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+        default:
+          description: Error
+          content:
+            application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Ids:
+  get:
+    summary: Get multiple artists by their IDs
+    operationId: getArtistsByIds
+    tags:
+      - Artists
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: ids
+        in: query
+        description: Comma-separated list of artist IDs to retrieve
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: A list of artists
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../models/artist.yaml#/Artist'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Image:
+  get:
+    summary: Get the image for an artist
+    operationId: getArtistImage
+    tags:
+      - Artists
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: The ID of the artist
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: Artist image data
+        content:
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Autocomplete:
+  get:
+    summary: Get artist name autocompletions
+    operationId: getArtistNameAutocompletions
+    tags:
+      - Artists
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: query
+        in: query
+        description: Partial artist name to autocomplete
+        required: true
+        schema:
+          type: string
+      - name: limit
+        in: query
+        description: Maximum number of suggestions to return (default is 10)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 10
+    responses:
+      200:
+        description: List of artist name suggestions
+        content:
+          application/json:
+            schema:
+            type: array
+            items:
+              type: string
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

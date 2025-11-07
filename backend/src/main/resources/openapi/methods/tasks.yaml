@@ -1,0 +1,87 @@
+Get:
+  get:
+    summary: Get all tasks
+    operationId: getTasks
+    tags:
+      - Tasks
+    security:
+      - tokenAuth: [ ]
+    responses:
+      200:
+        description: List of tasks
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../models/task.yaml#/Task'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Enable:
+  put:
+    summary: Enable a task
+    operationId: enableTask
+    tags:
+      - Tasks
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: ID of the task to enable
+        required: true
+        schema:
+          type: string
+      - name: enable
+        in: query
+        description: Whether to enable or disable the task
+        required: true
+        schema:
+          type: boolean
+    responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Run:
+  post:
+    summary: Run a task immediately
+    operationId: runTask
+    tags:
+      - Tasks
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: ID of the task to run
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              $ref: '../models/task.yaml#/TaskResult'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

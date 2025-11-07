@@ -1,0 +1,14 @@
+Welcome:
+  get:
+    summary: Get a random welcome text
+    operationId: getWelcomeText
+    tags:
+      - Misc
+    responses:
+      200:
+        description: A welcome text or an empty string, if none are configured
+        content:
+          application/json:
+            schema:
+              type: string
+              example: "Welcome back!"

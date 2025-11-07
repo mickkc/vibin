@@ -1,0 +1,78 @@
+Login:
+  post:
+    summary: User login
+    operationId: loginUser
+    tags:
+      - Auth
+    parameters:
+      - name: username
+        in: query
+        description: Username of the user
+        required: true
+        schema:
+          type: string
+      - name: password
+        in: query
+        description: Password of the user
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Login result
+        content:
+          application/json:
+            schema:
+              $ref: '../models/auth.yaml#/LoginResult'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Logout:
+  post:
+    summary: User logout
+    operationId: logoutUser
+    tags:
+      - Auth
+    security:
+      - tokenAuth: []
+    responses:
+      200:
+        description: Logout successful
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Validate:
+  post:
+    summary: Validate token
+    operationId: validateToken
+    tags:
+      - Auth
+    security:
+      - tokenAuth: [ ]
+    responses:
+      200:
+        description: Token is valid
+        content:
+          application/json:
+            schema:
+              $ref: '../models/auth.yaml#/LoginResult'
+      401:
+        description: Token is invalid or expired
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

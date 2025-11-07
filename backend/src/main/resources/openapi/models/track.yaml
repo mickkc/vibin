@@ -1,0 +1,181 @@
+Track:
+  type: object
+  properties:
+    id:
+      type: integer
+      format: int64
+    title:
+      type: string
+    album:
+      $ref: 'album.yaml#/Album'
+    artists:
+      type: array
+      items:
+        $ref: 'artist.yaml#/Artist'
+    explicit:
+      type: boolean
+    trackNumber:
+      type: integer
+      format: int32
+      nullable: true
+    trackCount:
+      type: integer
+      format: int32
+      nullable: true
+    discNumber:
+      type: integer
+      format: int32
+      nullable: true
+    discCount:
+      type: integer
+      format: int32
+      nullable: true
+    year:
+      type: integer
+      format: int32
+      nullable: true
+    duration:
+      type: integer
+      format: int64
+      nullable: true
+    comment:
+      type: string
+      nullable: true
+    cover:
+      $ref: 'image.yaml#/Image'
+    path:
+      type: string
+    checksum:
+      type: string
+    tags:
+      type: array
+      items:
+        $ref: 'tag.yaml#/Tag'
+    uploader:
+      $ref: 'user.yaml#/User'
+    createdAt:
+      type: integer
+      format: int64
+    updatedAt:
+      type: integer
+      format: int64
+      nullable: true
+
+TrackMetadata:
+  type: object
+  properties:
+    title:
+      type: string
+    artistNames:
+      type: array
+      items:
+        type: string
+      nullable: true
+    albumName:
+      type: string
+      nullable: true
+    trackNumber:
+      type: integer
+      format: int32
+      nullable: true
+    trackCount:
+      type: integer
+      format: int32
+      nullable: true
+    discNumber:
+      type: integer
+      format: int32
+      nullable: true
+    discCount:
+      type: integer
+      format: int32
+      nullable: true
+    year:
+      type: integer
+      format: int32
+      nullable: true
+    genre:
+      type: string
+      nullable: true
+    durationMs:
+      type: integer
+      format: int64
+      nullable: true
+    comment:
+      type: string
+      nullable: true
+    coverImageUrl:
+      type: string
+      nullable: true
+    explicit:
+      type: boolean
+      nullable: true
+
+TrackEditData:
+  type: object
+  properties:
+    title:
+      type: string
+      nullable: true
+    explicit:
+      type: boolean
+      nullable: true
+    trackNumber:
+      type: integer
+      format: int32
+      nullable: true
+    trackCount:
+      type: integer
+      format: int32
+      nullable: true
+    discNumber:
+      type: integer
+      format: int32
+      nullable: true
+    discCount:
+      type: integer
+      format: int32
+      nullable: true
+    year:
+      type: integer
+      format: int32
+      nullable: true
+    comment:
+      type: string
+      nullable: true
+    imageUrl:
+      type: string
+      nullable: true
+    albumId:
+      type: integer
+      format: int64
+      nullable: true
+    artistIds:
+      type: array
+      items:
+        type: integer
+        format: int64
+      nullable: true
+
+MinimalTrack:
+  type: object
+  properties:
+    id:
+      type: integer
+      format: int64
+    title:
+      type: string
+    artists:
+      type: array
+      items:
+        $ref: 'idName.yaml#/IdName'
+    album:
+      $ref: 'idName.yaml#/IdName'
+    duration:
+      type: integer
+      format: int64
+      nullable: true
+    cover:
+      $ref: 'image.yaml#/Image'
+    uploader:
+      $ref: 'idName.yaml#/IdName'

@@ -1,0 +1,53 @@
+Playlist:
+  type: object
+  properties:
+    id:
+      type: integer
+      format: int64
+    name:
+      type: string
+    description:
+      type: string
+    public:
+      type: boolean
+    collaborators:
+      type: array
+      items:
+        $ref: 'user.yaml#/User'
+    cover:
+      $ref: 'image.yaml#/Image'
+    hasVibeDef:
+      type: boolean
+    owner:
+      $ref: 'user.yaml#/User'
+    createdAt:
+      type: integer
+      format: int64
+    updatedAt:
+      type: integer
+      format: int64
+      nullable: true
+
+PlaylistEditData:
+  type: object
+  properties:
+    name:
+      type: string
+    description:
+      type: string
+      nullable: true
+    isPublic:
+      type: boolean
+      nullable: true
+    coverImageUrl:
+      type: string
+      nullable: true
+    collaboratorIds:
+      type: array
+      items:
+        type: integer
+        format: int64
+      nullable: true
+    vibeDef:
+      type: string
+      nullable: true

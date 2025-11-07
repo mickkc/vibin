@@ -1,0 +1,247 @@
+Base:
+  get:
+    summary: Get all tags
+    operationId: getTags
+    tags:
+      - Tags
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: query
+        in: query
+        required: false
+        description: An optional search query
+        schema:
+          type: string
+          default: ""
+      - name: limit
+        in: query
+        required: false
+        description: An optional limit
+        schema:
+          type: integer
+    responses:
+      200:
+        description: Tags
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../models/tag.yaml#/Tag'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+  post:
+    summary: Create a new tag
+    operationId: createTag
+    tags:
+      - Tags
+    security:
+      - tokenAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../models/tag.yaml#/TagEditData'
+    responses:
+      200:
+        description: The created tag
+        content:
+          application/json:
+            schema:
+              $ref: '../models/tag.yaml#/Tag'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+Id:
+  put:
+    summary: Update a tag
+    operationId: updateTag
+    tags:
+      - Tags
+    security:
+      - tokenAuth: [ ]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../models/tag.yaml#/TagEditData'
+    responses:
+      200:
+        description: The updated tag
+        content:
+          application/json:
+            schema:
+              $ref: '../models/tag.yaml#/Tag'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+  delete:
+    summary: Delete a tag
+    operationId: deleteTag
+    tags:
+      - Tags
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: The ID of the tag to delete
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Ids:
+  get:
+    summary: Get multiple tags by their IDs
+    operationId: getTagsByIds
+    tags:
+      - Tags
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: ids
+        in: query
+        description: Comma-separated list of tag IDs to retrieve
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Tags
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../models/tag.yaml#/Tag'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Autocomplete:
+  get:
+    summary: Get tag autocomplete suggestions
+    operationId: getTagAutocomplete
+    tags:
+      - Tags
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: query
+        in: query
+        description: Partial tag name to get suggestions for
+        required: true
+        schema:
+          type: string
+      - name: limit
+        in: query
+        description: Maximum number of suggestions to return
+        required: false
+        schema:
+          type: integer
+          default: 10
+    responses:
+      200:
+        description: Tag autocomplete suggestions
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+ByName:
+  get:
+    summary: Get a tag by its name
+    operationId: getTagByName
+    tags:
+    - Tags
+    security:
+    - tokenAuth: [ ]
+    parameters:
+      - name: name
+        in: path
+        description: The name of the tag to retrieve
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: The requested tag
+        content:
+          application/json:
+            schema:
+              $ref: '../models/tag.yaml#/Tag'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+CheckName:
+  get:
+    summary: Check if a tag name is available
+    operationId: checkTagNameAvailability
+    tags:
+      - Tags
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: name
+        in: query
+        description: The tag name to check for availability
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Tag name availability
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
