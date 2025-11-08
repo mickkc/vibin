@@ -10,6 +10,7 @@ import wtf.ndu.vibin.dto.UploadResultDto
 import wtf.ndu.vibin.dto.tracks.TrackEditDto
 import wtf.ndu.vibin.parsing.parsers.preparser.PreParseException
 import wtf.ndu.vibin.permissions.PermissionType
+import wtf.ndu.vibin.repos.TrackRepo
 import wtf.ndu.vibin.uploads.PendingUpload
 import wtf.ndu.vibin.uploads.UploadManager
 import kotlin.io.encoding.Base64
@@ -123,6 +124,15 @@ fun Application.configureUploadRoutes() = routing {
             catch (_: NotFoundException) {
                 call.notFound()
             }
+        }
+
+        getP("/api/uploads/tracks/{userId}", PermissionType.VIEW_TRACKS) {
+            val userId = call.parameters["userId"]?.toLongOrNull() ?: return@getP call.missingParameter("userId")
+            val requestingUserId = call.getUserId() ?: return@getP call.unauthorized()
+
+            val uploadedTracks = TrackRepo.getUploadedByUser(userId, requestingUserId)
+
+            call.respond(TrackRepo.toMinimalDto(uploadedTracks))
         }
     }
 }

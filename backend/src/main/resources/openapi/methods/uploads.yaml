@@ -162,3 +162,35 @@ Apply:
           application/json:
             schema:
               $ref: '../models/error.yaml#/Error'
+
+GetUploadedTracks:
+  get:
+    summary: Get all tracks uploaded by a specific user
+    operationId: getTracksByUpload
+    tags:
+      - Uploads
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: The ID of the user
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: Uploaded Tracks
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../models/track.yaml#/MinimalTrack'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

@@ -203,6 +203,9 @@ paths:
   /api/uploads/{id}/apply:
     $ref: 'methods/uploads.yaml#/Apply'
 
+  /api/uploads/tracks/{id}:
+    $ref: 'methods/uploads.yaml#/GetUploadedTracks'
+
   # ▀█▀ █▀█ ▄▀█ █▀▀ █▄▀ █▀
   # ░█░ █▀▄ █▀█ █▄▄ █░█ ▄█
 
