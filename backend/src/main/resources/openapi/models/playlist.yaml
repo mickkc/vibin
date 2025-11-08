@@ -16,8 +16,9 @@ Playlist:
         $ref: 'user.yaml#/User'
     cover:
       $ref: 'image.yaml#/Image'
-    hasVibeDef:
-      type: boolean
+    vibeDef:
+      type: string
+      nullable: true
     owner:
       $ref: 'user.yaml#/User'
     createdAt:

@@ -11,6 +11,7 @@ Tag:
     color:
       type: string
       example: "#ff0000"
+      nullable: true
     createdAt:
       type: integer
       format: int64

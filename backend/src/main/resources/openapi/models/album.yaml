@@ -6,15 +6,22 @@ Album:
       format: int64
     title:
       type: string
+    description:
+      type: string
+    year:
+      type: integer
+      nullable: true
     artists:
       type: array
       items:
         $ref: 'artist.yaml#/Artist'
     cover:
       $ref: 'image.yaml#/Image'
-    songsAmount:
+    trackCount:
       type: integer
       format: int64
+    single:
+      type: boolean
     createdAt:
       type: integer
       format: int64
@@ -43,6 +50,9 @@ AlbumMetadata:
       type: string
       nullable: true
     coverImageUrl:
+      type: string
+      nullable: true
+    artistName:
       type: string
       nullable: true
     year:

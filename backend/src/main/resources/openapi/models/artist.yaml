@@ -26,6 +26,9 @@ ArtistMetadata:
     pictureUrl:
       type: string
       nullable: true
+    biography:
+      type: string
+      nullable: true
 
 ArtistEditData:
   type: object

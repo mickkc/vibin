@@ -9,12 +9,14 @@ User:
     displayName:
       type: string
       nullable: true
+    description:
+      type: string
     email:
       type: string
       nullable: true
-    isAdmin:
-      type: boolean
     isActive:
+      type: boolean
+    isAdmin:
       type: boolean
     lastLogin:
       type: integer
@@ -22,6 +24,7 @@ User:
       nullable: true
     profilePicture:
       $ref: 'image.yaml#/Image'
+      nullable: true
     createdAt:
       type: integer
       format: int64

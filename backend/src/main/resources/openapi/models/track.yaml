@@ -53,6 +53,8 @@ Track:
         $ref: 'tag.yaml#/Tag'
     uploader:
       $ref: 'user.yaml#/User'
+    hasLyrics:
+      type: boolean
     createdAt:
       type: integer
       format: int64
@@ -66,12 +68,12 @@ TrackMetadata:
   properties:
     title:
       type: string
-    artistNames:
+    artists:
       type: array
       items:
         type: string
       nullable: true
-    albumName:
+    album:
       type: string
       nullable: true
     trackNumber:
@@ -94,12 +96,10 @@ TrackMetadata:
       type: integer
       format: int32
       nullable: true
-    genre:
-      type: string
-      nullable: true
-    durationMs:
-      type: integer
-      format: int64
+    tags:
+      type: array
+      items:
+        type: string
       nullable: true
     comment:
       type: string
@@ -109,6 +109,9 @@ TrackMetadata:
       nullable: true
     explicit:
       type: boolean
+      nullable: true
+    lyrics:
+      type: string
       nullable: true
 
 TrackEditData:
@@ -146,15 +149,24 @@ TrackEditData:
     imageUrl:
       type: string
       nullable: true
-    albumId:
+    album:
       type: integer
       format: int64
       nullable: true
-    artistIds:
+    artists:
       type: array
       items:
         type: integer
         format: int64
+      nullable: true
+    tags:
+      type: array
+      items:
+        type: integer
+        format: int64
+      nullable: true
+    lyrics:
+      type: string
       nullable: true
 
 MinimalTrack:
