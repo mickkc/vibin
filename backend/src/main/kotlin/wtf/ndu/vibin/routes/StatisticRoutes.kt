@@ -12,6 +12,8 @@ import wtf.ndu.vibin.repos.ListenRepo
 import wtf.ndu.vibin.repos.PlaylistRepo
 import wtf.ndu.vibin.repos.TagRepo
 import wtf.ndu.vibin.repos.TrackRepo
+import wtf.ndu.vibin.settings.Settings
+import wtf.ndu.vibin.settings.user.ShowActivitiesToOthers
 import wtf.ndu.vibin.utils.DateTimeUtils
 
 fun Application.configureStatisticRoutes() = routing {
@@ -102,6 +104,15 @@ fun Application.configureStatisticRoutes() = routing {
 
         get("/api/stats/users/{userId}/activity") {
             val userId = call.parameters["userId"]?.toLongOrNull() ?: return@get call.missingParameter("userId")
+
+            if (!Settings.get(ShowActivitiesToOthers, userId)) {
+                val callerId = call.getUserId() ?: return@get call.unauthorized()
+                if (callerId != userId) {
+                    // User has diasabled showing activities to others
+                    return@get call.forbidden()
+                }
+            }
+
             val since = call.request.queryParameters["since"]?.toLongOrNull() ?: DateTimeUtils.startOfMonth()
             val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 10
 
