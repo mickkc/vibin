@@ -1,19 +1,39 @@
 package wtf.ndu.vibin.db.playlists
 
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.dao.LongEntity
+import org.jetbrains.exposed.dao.LongEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.LongIdTable
+import wtf.ndu.vibin.db.UserEntity
+import wtf.ndu.vibin.db.UserTable
+import wtf.ndu.vibin.db.tracks.TrackEntity
 import wtf.ndu.vibin.db.tracks.TrackTable
+import wtf.ndu.vibin.utils.DateTimeUtils
 
 /**
  * Connection table between playlists and tracks.
  *
- * @property playlist Reference to the playlist.
- * @property track Reference to the track.
+ * @property playlistId Reference to the playlist.
+ * @property trackId Reference to the track.
+ * @property position Position of the track in the playlist.
+ * @property userId Reference to the user who added the track.
+ * @property addedAt Timestamp when the track was added to the playlist.
  * @primaryKey Composite primary key consisting of playlist and track.
  */
-object PlaylistTrackTable : Table("playlist_track") {
-    val playlist = reference("playlist_id", PlaylistTable)
-    val track = reference("track_id", TrackTable)
+object PlaylistTrackTable : LongIdTable("playlist_track") {
+    val playlistId = reference("playlist_id", PlaylistTable)
+    val trackId = reference("track_id", TrackTable)
     val position = integer("position").default(0)
+    val userId = reference("user_id", UserTable)
+    val addedAt = long("added_at").clientDefault { DateTimeUtils.now() }
+}
 
-    override val primaryKey = PrimaryKey(playlist, track, name = "PK_PlaylistTrack_playlist_track")
+class PlaylistTrackEntity(id: EntityID<Long>) : LongEntity(id) {
+    companion object : LongEntityClass<PlaylistTrackEntity>(PlaylistTrackTable)
+
+    var playlist by PlaylistEntity referencedOn PlaylistTrackTable.playlistId
+    var track by TrackEntity referencedOn PlaylistTrackTable.trackId
+    var position by PlaylistTrackTable.position
+    var user by UserEntity referencedOn PlaylistTrackTable.userId
+    var addedAt by PlaylistTrackTable.addedAt
 }

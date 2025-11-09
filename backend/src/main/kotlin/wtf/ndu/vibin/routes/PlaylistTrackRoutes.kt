@@ -33,9 +33,10 @@ fun Application.configurePlaylistTrackRoutes() = routing {
 
         postP("/api/playlists/{playlistId}/tracks", PermissionType.MANAGE_PLAYLISTS) {
 
+            val user = call.getUser() ?: return@postP call.unauthorized()
             val (playlist, track) = call.getPlaylistAndTrack() ?: return@postP
 
-            PlaylistTrackRepo.addTrackToPlaylist(playlist, track)
+            PlaylistTrackRepo.addTrackToPlaylist(playlist, track, user)
             call.success()
         }
 

@@ -52,3 +52,27 @@ PlaylistEditData:
     vibeDef:
       type: string
       nullable: true
+
+PlaylistTrack:
+  type: object
+  properties:
+    track:
+      $ref: 'track.yaml#/MinimalTrack'
+    position:
+      type: integer
+      format: int32
+    addedBy:
+      $ref: 'idName.yaml#/IdName'
+    addedAt:
+      type: integer
+      format: int64
+
+PlaylistData:
+    type: object
+    properties:
+      playlist:
+        $ref: 'playlist.yaml#/Playlist'
+      tracks:
+        type: array
+        items:
+            $ref: 'playlist.yaml#/PlaylistTrack'

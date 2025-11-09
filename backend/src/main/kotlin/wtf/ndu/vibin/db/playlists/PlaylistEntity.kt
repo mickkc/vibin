@@ -6,7 +6,6 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
 import wtf.ndu.vibin.db.ModifiableLongIdEntity
 import wtf.ndu.vibin.db.ModifiableLongIdTable
-import wtf.ndu.vibin.db.tracks.TrackEntity
 import wtf.ndu.vibin.db.UserEntity
 import wtf.ndu.vibin.db.UserTable
 import wtf.ndu.vibin.db.images.ImageEntity
@@ -29,7 +28,6 @@ object PlaylistTable : ModifiableLongIdTable("playlist") {
  * @property cover The cover image of the playlist. (optional)
  * @property public Whether the playlist is public or private.
  * @property vibeDef The vibe definition of the playlist. (optional)
- * @property tracks The tracks in the playlist.
  * @property collaborators The users who can collaborate on the playlist.
  */
 class PlaylistEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, PlaylistTable) {
@@ -41,7 +39,6 @@ class PlaylistEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, PlaylistTa
     var public by PlaylistTable.public
     var vibeDef by PlaylistTable.vibeDef
 
-    var tracks by TrackEntity.Companion via PlaylistTrackTable orderBy PlaylistTrackTable.position
     var collaborators by UserEntity.Companion via PlaylistCollaborator
     var owner by UserEntity referencedOn PlaylistTable.owner
 
@@ -53,7 +50,7 @@ class PlaylistEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, PlaylistTa
         PlaylistCollaborator.deleteWhere { PlaylistCollaborator.playlist eq playlistId }
 
         // Remove associated playlist tracks
-        PlaylistTrackTable.deleteWhere { PlaylistTrackTable.playlist eq playlistId }
+        PlaylistTrackEntity.find { PlaylistTrackTable.playlistId eq playlistId }.forEach { it.delete() }
 
         super.delete()
     }

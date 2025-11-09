@@ -11,11 +11,9 @@ import wtf.ndu.vibin.db.UserEntity
 import wtf.ndu.vibin.db.playlists.PlaylistCollaborator
 import wtf.ndu.vibin.db.playlists.PlaylistEntity
 import wtf.ndu.vibin.db.playlists.PlaylistTable
-import wtf.ndu.vibin.db.tracks.TrackEntity
 import wtf.ndu.vibin.dto.playlists.PlaylistDataDto
 import wtf.ndu.vibin.dto.playlists.PlaylistDto
 import wtf.ndu.vibin.dto.playlists.PlaylistEditDto
-import wtf.ndu.vibin.dto.playlists.PlaylistTrackDto
 import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.processing.ThumbnailProcessor
@@ -151,19 +149,7 @@ object PlaylistRepo {
         playlist.delete()
     }
 
-    fun getTracksWithSource(playlist: PlaylistEntity, userId: Long? = null): Map<String, List<TrackEntity>> = transaction {
 
-        val result = mutableMapOf<String, List<TrackEntity>>()
-
-        result["manual"] = playlist.tracks.toList()
-
-        playlist.vibeDef?.takeIf { it.isNotBlank() }?.let { vibeDef ->
-            val vibeTracks = TrackRepo.getSearched(vibeDef, true, userId)
-            result["vibe"] = vibeTracks
-        }
-
-        return@transaction result
-    }
 
     fun getCoverImageBytes(playlist: PlaylistEntity, quality: String): ByteArray = transaction {
         if (playlist.cover != null) {
@@ -180,10 +166,11 @@ object PlaylistRepo {
             }
         }
 
-        val tracksWithCover = playlist.tracks.filter { it.cover != null }.toList()
+        val tracksWithCover = PlaylistTrackRepo.getTracksAsList(playlist, null)
+            .filter { it.cover != null }
 
         if (tracksWithCover.size in 1..3) {
-            val firstTrack = playlist.tracks.first()
+            val firstTrack = tracksWithCover.first()
             val cover = firstTrack.cover!!
             val path = when(quality) {
                 "small" -> cover.smallPath
@@ -254,7 +241,7 @@ object PlaylistRepo {
         return@transaction playlistEntities.map { toDtoInternal(it) }
     }
 
-    private fun toDtoInternal(playlistEntity: PlaylistEntity): PlaylistDto {
+    fun toDtoInternal(playlistEntity: PlaylistEntity): PlaylistDto {
         return PlaylistDto(
             id = playlistEntity.id.value,
             name = playlistEntity.name,
@@ -269,11 +256,8 @@ object PlaylistRepo {
         )
     }
 
-    fun toDataDto(playlist: PlaylistEntity, tracks: Map<String, List<TrackEntity>>): PlaylistDataDto = transaction {
-        val tracks = tracks.flatMap {
-            val dtos = TrackRepo.toDto(it.value)
-            dtos.map { dto -> PlaylistTrackDto(source = it.key, track = dto) }
-        }
+    fun toDataDto(playlist: PlaylistEntity, userId: Long? = null): PlaylistDataDto = transaction {
+        val tracks = PlaylistTrackRepo.getTracksAsDtos(playlist, userId)
         return@transaction PlaylistDataDto(
             playlist = toDtoInternal(playlist),
             tracks = tracks

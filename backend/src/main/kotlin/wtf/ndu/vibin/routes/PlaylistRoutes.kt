@@ -37,8 +37,7 @@ fun Application.configurePlaylistRoutes() = routing {
 
             val playlist = PlaylistRepo.getById(playlistId, userId) ?: return@getP call.notFound()
 
-            val tracks = PlaylistRepo.getTracksWithSource(playlist, userId)
-            call.respond(PlaylistRepo.toDataDto(playlist, tracks))
+            call.respond(PlaylistRepo.toDataDto(playlist, userId))
         }
 
         getP("/api/playlists/users/{userId}", PermissionType.VIEW_PLAYLISTS, PermissionType.VIEW_USERS) {

@@ -79,6 +79,34 @@ Base:
               $ref: '../models/error.yaml#/Error'
 
 Id:
+  get:
+    summary: Get a playlist and its tracks by ID
+    operationId: getPlaylistById
+    tags:
+      - Playlists
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: Playlist data
+        content:
+          application/json:
+            schema:
+              $ref: '../models/playlist.yaml#/PlaylistData'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
   put:
     summary: Updates a playlist
     operationId: updatePlaylist
