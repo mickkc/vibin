@@ -168,7 +168,7 @@ object PlaylistTrackRepo {
             .where { PlaylistTrackTable.playlistId eq playlist.id.value }
             .map { it[PlaylistTrackTable.position] }
             .sorted()
-        if (positions != (0 until trackCount).toList()) {
+        if (positions != (0 until trackCount.toInt()).toList()) {
             // Something went wrong, rollback
             rollback()
             return@transaction false
