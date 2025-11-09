@@ -50,12 +50,19 @@ fun Application.configurePlaylistTrackRoutes() = routing {
 
         putP("/api/playlists/{playlistId}/tracks", PermissionType.MANAGE_PLAYLISTS) {
 
-            val newPosition = call.request.queryParameters["newPosition"]?.toIntOrNull()
-                ?: return@putP call.missingParameter("newPosition")
-            val (playlist, track) = call.getPlaylistAndTrack() ?: return@putP
+            val afterTrackId: Long? = call.request.queryParameters["afterTrackId"]?.toLongOrNull()
+                ?: return@putP call.missingParameter("afterTrackId")
 
-            val success = PlaylistTrackRepo.setPosition(playlist, track, newPosition)
-            call.success(success)
+            val (playlist, track) = call.getPlaylistAndTrack() ?: return@putP
+            val afterTrack = afterTrackId?.let { TrackRepo.getById(afterTrackId) ?: return@putP call.notFound() }
+
+            val success = PlaylistTrackRepo.setPosition(playlist, track, afterTrack)
+            if (!success) {
+                return@putP call.invalidParameter("newPosition")
+            }
+
+            val playlistTracks = PlaylistTrackRepo.getTracksAsDtos(playlist)
+            call.respond(playlistTracks)
         }
 
         getP("/api/playlists/containing/{trackId}", PermissionType.VIEW_PLAYLISTS) {

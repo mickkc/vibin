@@ -111,10 +111,11 @@ object PlaylistTrackRepo {
      *
      * @param playlist The playlist entity.
      * @param track The track entity to move.
-     * @param newPosition The new position index (0-based).
+     * @param afterTrack The track entity after which to place the moved track. If null, the track is moved to the start.
      * @return True if the position was updated successfully, false otherwise.
      */
-    fun setPosition(playlist: PlaylistEntity, track: TrackEntity, newPosition: Int): Boolean = transaction {
+    fun setPosition(playlist: PlaylistEntity, track: TrackEntity, afterTrack: TrackEntity?): Boolean = transaction {
+
         val currentPosition = PlaylistTrackTable
             .select(PlaylistTrackTable.position)
             .where {
@@ -123,6 +124,20 @@ object PlaylistTrackRepo {
             }
             .map { it[PlaylistTrackTable.position] }
             .singleOrNull() ?: return@transaction false
+
+        val newPosition = if (afterTrack == null) {
+            0
+        } else {
+            val afterPosition = PlaylistTrackTable
+                .select(PlaylistTrackTable.position)
+                .where {
+                    (PlaylistTrackTable.playlistId eq playlist.id.value) and
+                            (PlaylistTrackTable.trackId eq afterTrack.id.value)
+                }
+                .map { it[PlaylistTrackTable.position] }
+                .singleOrNull() ?: return@transaction false
+            afterPosition + 1
+        }
 
         val trackCount = getManuallyAddedTrackCount(playlist)
         if (newPosition !in 0..<trackCount) return@transaction false

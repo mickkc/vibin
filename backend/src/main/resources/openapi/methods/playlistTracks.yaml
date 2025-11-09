@@ -96,19 +96,22 @@ Base:
         schema:
           type: integer
           format: int64
-      - name: newPosition
+      - name: afterTrackId
         in: query
-        description: New position of the track in the playlist (0-based index)
-        required: true
+        description: ID of the track after which to place the moved track. If not provided, the track will be moved to the start of the playlist.
+        required: false
         schema:
           type: integer
+          format: int64
     responses:
       200:
         description: Success
         content:
           application/json:
             schema:
-              $ref: '../models/success.yaml#/Success'
+              type: array
+              items:
+                $ref: '../models/playlist.yaml#/PlaylistTrack'
       default:
         description: Error
         content:
