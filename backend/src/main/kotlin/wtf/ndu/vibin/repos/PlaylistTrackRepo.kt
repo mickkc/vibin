@@ -123,7 +123,9 @@ object PlaylistTrackRepo {
                         (PlaylistTrackTable.trackId eq track.id.value)
             }
             .map { it[PlaylistTrackTable.position] }
-            .singleOrNull() ?: return@transaction false
+            .singleOrNull() ?: return@transaction false.also {
+                logger.warn("Tried to move track ID ${track.id.value} in playlist ID ${playlist.id.value}, but it was not found.")
+            }
 
         val newPosition = if (afterTrack == null) {
             0
@@ -135,13 +137,19 @@ object PlaylistTrackRepo {
                             (PlaylistTrackTable.trackId eq afterTrack.id.value)
                 }
                 .map { it[PlaylistTrackTable.position] }
-                .singleOrNull() ?: return@transaction false
+                .singleOrNull() ?: return@transaction false.also {
+                    logger.warn("Tried to move track ID ${track.id.value} in playlist ID ${playlist.id.value} after track ID ${afterTrack.id.value}, but the after track was not found.")
+                }
             afterPosition + 1
         }
 
         val trackCount = getManuallyAddedTrackCount(playlist)
-        if (newPosition !in 0..<trackCount) return@transaction false
-        if (newPosition == currentPosition) return@transaction true
+        if (newPosition !in 0..<trackCount) return@transaction false.also {
+            logger.warn("Tried to move track ID ${track.id.value} in playlist ID ${playlist.id.value} to invalid position $newPosition.")
+        }
+        if (newPosition == currentPosition) return@transaction true.also {
+            logger.info("Track ID ${track.id.value} in playlist ID ${playlist.id.value} is already at position $newPosition, no move needed.")
+        }
 
         if (newPosition < currentPosition) {
             // Moving UP: shift down tracks between newPosition and currentPosition - 1
@@ -186,6 +194,7 @@ object PlaylistTrackRepo {
         if (positions != (0 until trackCount.toInt()).toList()) {
             // Something went wrong, rollback
             rollback()
+            logger.error("Failed to move track ID ${track.id.value} in playlist ID ${playlist.id.value}: positions are not sequential after update.")
             return@transaction false
         }
 
