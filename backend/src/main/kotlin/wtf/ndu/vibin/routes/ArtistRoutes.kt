@@ -82,7 +82,7 @@ fun Application.configureArtistRoutes() = routing {
 
         getP("/api/artists/{artistId}/image", PermissionType.VIEW_ARTISTS) {
             val artistId = call.parameters["artistId"]?.toLongOrNull() ?: return@getP call.missingParameter("artistId")
-            val quality = call.request.queryParameters["quality"]?.toIntOrNull() ?: return@getP call.missingParameter("quality")
+            val quality = call.request.queryParameters["quality"]?.toIntOrNull() ?: 0
             val artist = ArtistRepo.getById(artistId) ?: return@getP call.notFound()
             val image = ArtistRepo.getImage(artist)
 

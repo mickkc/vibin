@@ -119,7 +119,7 @@ fun Application.configurePlaylistRoutes() = routing {
         getP("/api/playlists/{playlistId}/image", PermissionType.VIEW_PLAYLISTS) {
             val userId = call.getUserId() ?: return@getP call.unauthorized()
             val playlistId = call.parameters["playlistId"]?.toLongOrNull() ?: return@getP call.missingParameter("playlistId")
-            val quality = call.request.queryParameters["quality"]?.toIntOrNull() ?: return@getP call.missingParameter("quality")
+            val quality = call.request.queryParameters["quality"]?.toIntOrNull() ?: 0
 
             val playlist = PlaylistRepo.getById(playlistId, userId) ?: return@getP call.notFound()
 

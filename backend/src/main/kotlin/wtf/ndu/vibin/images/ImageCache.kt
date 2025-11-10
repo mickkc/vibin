@@ -29,6 +29,11 @@ object ImageCache {
     }
 
     fun getImageFile(originalFile: File, size: Int, name: String): File? {
+
+        if (size <= 0) {
+            return originalFile
+        }
+
         try {
             val imageFile = File(imageCachePath, "${name}_$size.jpg")
             if (imageFile.exists()) {

@@ -158,7 +158,7 @@ fun Application.configureTrackRoutes() = routing {
         }
 
         val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
-        val quality = call.request.queryParameters["quality"]?.toIntOrNull() ?: return@getP call.missingParameter("quality")
+        val quality = call.request.queryParameters["quality"]?.toIntOrNull() ?: 0
         val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
         val cover = TrackRepo.getCover(track)
 

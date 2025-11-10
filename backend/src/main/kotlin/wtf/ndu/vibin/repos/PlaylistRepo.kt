@@ -174,7 +174,7 @@ object PlaylistRepo {
 
         if (tracksWithCover.size > 3) {
             val files = tracksWithCover.take(4).map { PathUtils.getThumbnailFileFromPath(it.cover!!.sourcePath) }
-            val collage = ImageUtils.generateCollage(files, quality)
+            val collage = ImageUtils.generateCollage(files, if (quality <= 0) 1024 else quality, 2)
             if (collage != null) {
                 return@transaction collage
             }

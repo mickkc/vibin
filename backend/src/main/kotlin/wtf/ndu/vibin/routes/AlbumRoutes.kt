@@ -97,7 +97,7 @@ fun Application.configureAlbumRoutes() = routing {
         getP("/api/albums/{albumId}/cover", PermissionType.VIEW_ALBUMS) {
             val albumId = call.parameters["albumId"]?.toLongOrNull() ?: return@getP call.missingParameter("albumId")
             val album = AlbumRepo.getById(albumId) ?: return@getP call.notFound()
-            val quality = call.request.queryParameters["quality"]?.toIntOrNull() ?: return@getP call.missingParameter("quality")
+            val quality = call.request.queryParameters["quality"]?.toIntOrNull() ?: 0
             val cover = AlbumRepo.getAlbumCover(album)
 
             val file = ImageUtils.getFileOrDefault(cover, quality, "album") ?: return@getP call.notFound()
