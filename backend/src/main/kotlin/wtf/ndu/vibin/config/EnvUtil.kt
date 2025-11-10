@@ -60,4 +60,7 @@ object EnvUtil {
     const val THUMBNAIL_DIR = "THUMBNAIL_DIR"
     const val DEFAULT_THUMBNAIL_DIR = "/opt/vibin/thumbnails"
     const val FRONTEND_DIR = "FRONTEND_DIR"
+
+    const val IMAGE_CACHE_DIR = "IMAGE_CACHE_DIR"
+    const val DEFAULT_IMAGE_CACHE_DIR = "/opt/vibin/image_cache"
 }

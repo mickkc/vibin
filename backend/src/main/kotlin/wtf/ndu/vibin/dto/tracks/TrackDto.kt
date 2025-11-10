@@ -2,7 +2,6 @@ package wtf.ndu.vibin.dto.tracks
 
 import kotlinx.serialization.Serializable
 import wtf.ndu.vibin.dto.ArtistDto
-import wtf.ndu.vibin.dto.ImageDto
 import wtf.ndu.vibin.dto.tags.TagDto
 import wtf.ndu.vibin.dto.users.UserDto
 import wtf.ndu.vibin.dto.albums.AlbumDto
@@ -24,9 +23,6 @@ data class TrackDto (
     val bitrate: Int?,
     val sampleRate: Int?,
     val channels: Int?,
-    val cover: ImageDto?,
-    val path: String,
-    val checksum: String,
     val tags: List<TagDto>,
     val uploader: UserDto?,
     val hasLyrics: Boolean,

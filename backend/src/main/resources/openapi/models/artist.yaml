@@ -6,8 +6,6 @@ Artist:
       format: int64
     name:
       type: string
-    image:
-      $ref: 'image.yaml#/Image'
     description:
       type: string
     createdAt:

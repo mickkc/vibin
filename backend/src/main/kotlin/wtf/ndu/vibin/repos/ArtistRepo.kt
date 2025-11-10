@@ -154,7 +154,6 @@ object ArtistRepo {
             id = artistEntity.id.value,
             name = artistEntity.name,
             description = artistEntity.description,
-            image = artistEntity.image?.let { ImageRepo.toDto(it) },
             createdAt = artistEntity.createdAt,
             updatedAt = artistEntity.updatedAt
         )

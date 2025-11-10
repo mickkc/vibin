@@ -264,7 +264,6 @@ object AlbumRepo {
             id = albumEntity.id.value,
             title = albumEntity.title,
             description = albumEntity.description,
-            cover = albumEntity.cover?.let { ImageRepo.toDto(it) },
             artists = ArtistRepo.toDto(getArtistsForAlbum(albumEntity)),
             trackCount = getSongAmountForAlbum(albumEntity),
             year = albumEntity.releaseYear ?: estimateReleaseYear(albumEntity.id.value),

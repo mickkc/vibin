@@ -2,6 +2,7 @@ package wtf.ndu.vibin.utils
 
 import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.db.images.ImageEntity
+import wtf.ndu.vibin.images.ImageCache
 import wtf.ndu.vibin.processing.ThumbnailProcessor
 import java.awt.Color
 import java.awt.Image
@@ -118,18 +119,11 @@ object ImageUtils {
         }
     }
 
-    fun getFileOrDefault(image: ImageEntity?, quality: String, type: String): File {
-        if (image == null) {
-            return PathUtils.getDefaultImage(type, quality)
-        }
-        else {
-            val path = when (quality.lowercase()) {
-                "large" -> image.largePath
-                "medium" -> image.mediumPath
-                "small" -> image.smallPath
-                else -> image.largePath
-            } ?: image.smallPath
-            return PathUtils.getThumbnailFileFromPath(path)
+    fun getFileOrDefault(image: ImageEntity?, quality: Int, type: String): File? {
+        return if (image == null) {
+            PathUtils.getDefaultImage(type, quality)
+        } else {
+            ImageCache.getImageFile(image, quality)
         }
     }
 }

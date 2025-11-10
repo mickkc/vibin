@@ -1,7 +1,6 @@
 package wtf.ndu.vibin.dto.playlists
 
 import kotlinx.serialization.Serializable
-import wtf.ndu.vibin.dto.ImageDto
 import wtf.ndu.vibin.dto.users.UserDto
 
 @Serializable
@@ -11,7 +10,6 @@ data class PlaylistDto(
     val description: String,
     val public: Boolean,
     val collaborators: List<UserDto>,
-    val cover: ImageDto?,
     val vibedef: String?,
     val owner: UserDto,
     val createdAt: Long,

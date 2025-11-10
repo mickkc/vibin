@@ -162,7 +162,6 @@ object UserRepo {
             isActive = entity.isActive,
             isAdmin = entity.isAdmin,
             lastLogin = entity.lastLogin,
-            profilePicture = entity.profilePicture?.let { ImageRepo.toDto(it) },
             createdAt = entity.createdAt,
             updatedAt = entity.updatedAt
         )

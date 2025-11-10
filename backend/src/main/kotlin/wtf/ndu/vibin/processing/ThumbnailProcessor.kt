@@ -9,8 +9,8 @@ import wtf.ndu.vibin.utils.PathUtils
 import java.awt.Image
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
+import java.io.File
 import javax.imageio.ImageIO
-import kotlin.math.max
 
 object ThumbnailProcessor {
 
@@ -33,27 +33,17 @@ object ThumbnailProcessor {
             }
 
             val img = getImageFromByteArray(imageData)
-            val size = max(img.width, img.height)
-
-            val small = scaleImage(img, 128, square = true)
-            val medium = if (size > 256) scaleImage(img, 256, square = true) else null
-            val large = if (size > 512) scaleImage(img, 512, square = true) else null
-
             val colorScheme = ImageUtils.getColorThemeFromImage(img)
 
-            val mediumFile = PathUtils.getThumbnailPath("$checksum-256.jpg")
-            val smallFile = PathUtils.getThumbnailPath("$checksum-128.jpg")
-            val largeFile = large?.let { PathUtils.getThumbnailPath("$checksum-512.jpg") }
+            val originalFile = PathUtils.getThumbnailPath("$checksum.jpg")
 
-            smallFile.writeBytes(small)
-            medium?.let { mediumFile.writeBytes(it) }
-            large?.let { largeFile?.writeBytes(it) }
+            originalFile.outputStream().use {
+                it.write(imageData)
+            }
 
             return ImageRepo.createImage(
                 checksum = checksum,
-                smallUrl = "$checksum-128.jpg",
-                mediumUrl = medium?.let { "$checksum-256.jpg" },
-                largeUrl = large?.let { "$checksum-512.jpg" },
+                sourcePath = originalFile.absolutePath,
                 colorScheme = colorScheme
             )
         }
@@ -70,8 +60,11 @@ object ThumbnailProcessor {
      * @return A BufferedImage representation of the image data.
      */
     fun getImageFromByteArray(imageData: ByteArray): BufferedImage {
-        val image = ImageIO.read(imageData.inputStream())
-        return convertUsingConstructor(image)
+        return ImageIO.read(imageData.inputStream())
+    }
+
+    fun getImageFromFile(imageFile: File): BufferedImage {
+        return ImageIO.read(imageFile)
     }
 
     /**

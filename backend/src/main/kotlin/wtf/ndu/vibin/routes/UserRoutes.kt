@@ -117,10 +117,12 @@ fun Application.configureUserRoutes() = routing {
         getP("/api/users/{userId}/pfp", PermissionType.VIEW_USERS) {
             val userId = call.parameters["userId"]?.toLongOrNull() ?: return@getP call.missingParameter("userId")
             val user = UserRepo.getById(userId) ?: return@getP call.notFound()
-            val quality = call.request.queryParameters["quality"] ?: "original"
+            val quality = call.request.queryParameters["quality"]?.toIntOrNull() ?: return@getP call.missingParameter("quality")
             val profilePicture = UserRepo.getProfilePicture(user)
 
-            call.respondFile(ImageUtils.getFileOrDefault(profilePicture, quality, "user"))
+            val file = ImageUtils.getFileOrDefault(profilePicture, quality, "user") ?: return@getP call.notFound()
+
+            call.respondFile(file)
         }
     }
 }

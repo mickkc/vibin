@@ -22,9 +22,6 @@ User:
       type: integer
       format: int64
       nullable: true
-    profilePicture:
-      $ref: 'image.yaml#/Image'
-      nullable: true
     createdAt:
       type: integer
       format: int64

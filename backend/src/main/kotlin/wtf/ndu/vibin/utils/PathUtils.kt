@@ -1,6 +1,7 @@
 package wtf.ndu.vibin.utils
 
 import wtf.ndu.vibin.config.EnvUtil
+import wtf.ndu.vibin.images.ImageCache
 import java.io.File
 import kotlin.io.path.Path
 
@@ -67,13 +68,13 @@ object PathUtils {
         return path.toFile().also { it.parentFile.mkdirs() }
     }
 
-    fun getDefaultImage(type: String, quality: String = "large"): File {
-        val actualQuality = when (quality.lowercase()) {
-            "large", "small" -> quality.lowercase()
-            else -> "large"
-        }
-        val resource = this::class.java.getResource("/img/default_${type}_$actualQuality.png")
-        return File(resource.toURI())
+    fun getDefaultImage(type: String, quality: Int): File? {
+        val resource = this::class.java.getResource("/img/default_${type}.png") ?: return null
+        return ImageCache.getImageFile(
+            originalFile = File(resource.toURI()),
+            size = quality,
+            name = "default_${type}"
+        )
     }
 
     private val allowedNameChars = ('a'..'z') + ('A'..'Z') + ('0'..'9') + listOf(

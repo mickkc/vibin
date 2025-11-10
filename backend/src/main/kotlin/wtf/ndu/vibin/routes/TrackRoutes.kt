@@ -158,11 +158,13 @@ fun Application.configureTrackRoutes() = routing {
         }
 
         val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
-        val quality = call.request.queryParameters["quality"] ?: "original"
+        val quality = call.request.queryParameters["quality"]?.toIntOrNull() ?: return@getP call.missingParameter("quality")
         val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
         val cover = TrackRepo.getCover(track)
 
-        call.respondFile(ImageUtils.getFileOrDefault(cover, quality, "track") )
+        val file = ImageUtils.getFileOrDefault(cover, quality, "track") ?: return@getP call.notFound()
+
+        call.respondFile(file)
     }
 
     // TODO: Move into authenticated block when headers are fixed on Web

@@ -2,7 +2,6 @@ package wtf.ndu.vibin.dto.albums
 
 import kotlinx.serialization.Serializable
 import wtf.ndu.vibin.dto.ArtistDto
-import wtf.ndu.vibin.dto.ImageDto
 
 @Serializable
 data class AlbumDto (
@@ -11,7 +10,6 @@ data class AlbumDto (
     val description: String,
     val year: Int?,
     val artists: List<ArtistDto>,
-    val cover: ImageDto?,
     val trackCount: Long,
     val single: Boolean,
     val createdAt: Long,

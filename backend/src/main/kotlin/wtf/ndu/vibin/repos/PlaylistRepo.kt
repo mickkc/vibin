@@ -14,6 +14,7 @@ import wtf.ndu.vibin.db.playlists.PlaylistTable
 import wtf.ndu.vibin.dto.playlists.PlaylistDataDto
 import wtf.ndu.vibin.dto.playlists.PlaylistDto
 import wtf.ndu.vibin.dto.playlists.PlaylistEditDto
+import wtf.ndu.vibin.images.ImageCache
 import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.processing.ThumbnailProcessor
@@ -151,18 +152,11 @@ object PlaylistRepo {
 
 
 
-    fun getCoverImageBytes(playlist: PlaylistEntity, quality: String): ByteArray = transaction {
+    fun getCoverImageBytes(playlist: PlaylistEntity, quality: Int): ByteArray? = transaction {
         if (playlist.cover != null) {
-            val path = when(quality) {
-                "small" -> playlist.cover!!.smallPath
-                "medium" -> playlist.cover!!.mediumPath
-                "large" -> playlist.cover!!.largePath
-                else -> playlist.cover!!.largePath
-            } ?: playlist.cover!!.smallPath
-
-            val file = PathUtils.getThumbnailFileFromPath(path)
-            if (file.exists()) {
-                return@transaction file.readBytes()
+            val coverFile = ImageCache.getImageFile(playlist.cover!!, quality)
+            if (coverFile != null) {
+                return@transaction coverFile.readBytes()
             }
         }
 
@@ -171,30 +165,23 @@ object PlaylistRepo {
 
         if (tracksWithCover.size in 1..3) {
             val firstTrack = tracksWithCover.first()
-            val cover = firstTrack.cover!!
-            val path = when(quality) {
-                "small" -> cover.smallPath
-                "medium" -> cover.mediumPath
-                "large" -> cover.largePath
-                else -> cover.largePath
-            } ?: cover.smallPath
 
-            val file = PathUtils.getThumbnailFileFromPath(path)
-            if (file.exists()) {
+            val file = ImageCache.getImageFile(firstTrack.cover!!, quality)
+            if (file != null) {
                 return@transaction file.readBytes()
             }
         }
 
         if (tracksWithCover.size > 3) {
-            val files = tracksWithCover.take(4).map { PathUtils.getThumbnailFileFromPath(it.cover!!.smallPath) }
-            val collage = ImageUtils.generateCollage(files, if (quality == "small") 128 else 512, 2)
+            val files = tracksWithCover.take(4).map { PathUtils.getThumbnailFileFromPath(it.cover!!.sourcePath) }
+            val collage = ImageUtils.generateCollage(files, quality)
             if (collage != null) {
                 return@transaction collage
             }
         }
 
         val placeholder = PathUtils.getDefaultImage("playlist", quality)
-        return@transaction placeholder.readBytes()
+        return@transaction placeholder?.readBytes()
     }
 
     /**
@@ -246,7 +233,6 @@ object PlaylistRepo {
             id = playlistEntity.id.value,
             name = playlistEntity.name,
             description = playlistEntity.description,
-            cover = playlistEntity.cover?.let { ImageRepo.toDto(it) },
             public = playlistEntity.public,
             vibedef = playlistEntity.vibeDef,
             collaborators = UserRepo.toDto(playlistEntity.collaborators.toList()),

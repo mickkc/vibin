@@ -14,8 +14,6 @@ Playlist:
       type: array
       items:
         $ref: 'user.yaml#/User'
-    cover:
-      $ref: 'image.yaml#/Image'
     vibeDef:
       type: string
       nullable: true

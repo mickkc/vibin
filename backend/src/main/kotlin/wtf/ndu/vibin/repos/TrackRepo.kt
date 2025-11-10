@@ -368,9 +368,6 @@ object TrackRepo {
             bitrate = trackEntity.bitrate,
             sampleRate = trackEntity.sampleRate,
             channels = trackEntity.channels,
-            cover = trackEntity.cover?.let { ImageRepo.toDto(it) },
-            path = trackEntity.path,
-            checksum = trackEntity.checksum,
             tags = TagRepo.toDto(trackEntity.tags.toList()),
             hasLyrics = LyricsRepo.hasLyrics(trackEntity.id.value),
             uploader = trackEntity.uploader?.let { UserRepo.toDto(it) },
@@ -394,7 +391,6 @@ object TrackRepo {
             album = IdNameDto(id = trackEntity.album.id.value, trackEntity.album.title),
             artists = trackEntity.artists.map { IdNameDto(it.id.value, it.name) },
             duration = trackEntity.duration,
-            cover = trackEntity.cover?.let { ImageRepo.toDto(it) },
             uploader = trackEntity.uploader?.let { IdNameDto(it.id.value, it.displayName ?: it.username) }
         )
     }

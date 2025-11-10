@@ -15,8 +15,6 @@ Album:
       type: array
       items:
         $ref: 'artist.yaml#/Artist'
-    cover:
-      $ref: 'image.yaml#/Image'
     trackCount:
       type: integer
       format: int64

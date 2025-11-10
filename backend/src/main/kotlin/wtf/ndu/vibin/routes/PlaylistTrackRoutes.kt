@@ -51,7 +51,6 @@ fun Application.configurePlaylistTrackRoutes() = routing {
         putP("/api/playlists/{playlistId}/tracks", PermissionType.MANAGE_PLAYLISTS) {
 
             val afterTrackId: Long? = call.request.queryParameters["afterTrackId"]?.toLongOrNull()
-                ?: return@putP call.missingParameter("afterTrackId")
 
             val (playlist, track) = call.getPlaylistAndTrack() ?: return@putP
             val afterTrack = afterTrackId?.let { TrackRepo.getById(afterTrackId) ?: return@putP call.notFound() }
