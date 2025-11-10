@@ -368,6 +368,7 @@ object TrackRepo {
             bitrate = trackEntity.bitrate,
             sampleRate = trackEntity.sampleRate,
             channels = trackEntity.channels,
+            path = trackEntity.path,
             tags = TagRepo.toDto(trackEntity.tags.toList()),
             hasLyrics = LyricsRepo.hasLyrics(trackEntity.id.value),
             uploader = trackEntity.uploader?.let { UserRepo.toDto(it) },

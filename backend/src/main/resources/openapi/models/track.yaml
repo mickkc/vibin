@@ -43,8 +43,6 @@ Track:
       nullable: true
     path:
       type: string
-    checksum:
-      type: string
     tags:
       type: array
       items:

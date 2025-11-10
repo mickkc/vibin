@@ -21,6 +21,7 @@ data class TrackDto (
     val duration: Long?,
     val comment: String?,
     val bitrate: Int?,
+    val path: String,
     val sampleRate: Int?,
     val channels: Int?,
     val tags: List<TagDto>,
