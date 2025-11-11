@@ -37,6 +37,11 @@ object TrackRepo {
         return@transaction TrackEntity.count()
     }
 
+    fun getTotalRuntimeSeconds(): Long = transaction {
+        val tracksWithDuration = TrackEntity.find { TrackTable.duration.isNotNull() }
+        return@transaction tracksWithDuration.sumOf { it.duration!! / 1000 }
+    }
+
     fun getByChecksum(checksum: String): TrackEntity? = transaction {
         return@transaction TrackEntity.find { TrackTable.checksum eq checksum }.firstOrNull()
     }

@@ -158,6 +158,9 @@ paths:
   /api/stats/users/{id}/activity:
     $ref: 'methods/stats.yaml#/Activity'
 
+  /api/stats/global:
+    $ref: 'methods/stats.yaml#/Global'
+
   # ▀█▀ ▄▀█ █▀▀ █▀
   # ░█░ █▀█ █▄█ ▄█
 

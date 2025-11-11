@@ -27,6 +27,10 @@ object PlaylistRepo {
 
     private val logger = LoggerFactory.getLogger(PlaylistRepo::class.java)
 
+    fun count() : Long = transaction {
+        PlaylistEntity.all().count()
+    }
+
     fun count(userId: Long): Long = transaction {
         PlaylistEntity.find (createOp(userId)).count()
     }

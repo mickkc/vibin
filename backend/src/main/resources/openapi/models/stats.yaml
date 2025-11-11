@@ -1,0 +1,38 @@
+GlobalStats:
+  type: object
+  properties:
+    totalTracks:
+      type: integer
+      format: int64
+      description: Total number of tracks in the library
+      example: 1500
+    totalTrackDuration:
+      type: integer
+      format: int64
+      description: Total duration of all tracks in seconds
+      example: 360000
+    totalArtists:
+      type: integer
+      format: int64
+      description: Total number of unique artists in the library
+      example: 300
+    totalAlbums:
+      type: integer
+      format: int64
+      description: Total number of unique albums in the library
+      example: 200
+    totalPlaylists:
+      type: integer
+      format: int64
+      description: Total number of playlists created by users
+      example: 50
+    totalUsers:
+      type: integer
+      format: int64
+      description: Total number of registered users
+      example: 100
+    totalPlays:
+      type: integer
+      format: int64
+      description: Total number of track plays across all users
+      example: 50000

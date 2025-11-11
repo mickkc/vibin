@@ -197,4 +197,10 @@ object ListenRepo {
             topArtists = topArtists
         )
     }
+
+    fun getTotalListenedTracks(): Long = transaction {
+        return@transaction ListenEntity
+            .find { ListenTable.type eq ListenType.TRACK }
+            .count()
+    }
 }

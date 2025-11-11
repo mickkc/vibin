@@ -176,3 +176,25 @@ Activity:
           application/json:
             schema:
               $ref: '../models/error.yaml#/Error'
+
+Global:
+  get:
+    summary: Get global statistics about the music library
+    operationId: getGlobalStats
+    tags:
+      - Stats
+    security:
+      - tokenAuth: [ ]
+    responses:
+      200:
+        description: Global statistics
+        content:
+          application/json:
+            schema:
+              $ref: '../models/stats.yaml#/GlobalStats'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

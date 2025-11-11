@@ -5,6 +5,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.response.respond
 import io.ktor.server.routing.*
 import wtf.ndu.vibin.db.ListenType
+import wtf.ndu.vibin.dto.StatisticsDto
 import wtf.ndu.vibin.dto.UserActivityDto
 import wtf.ndu.vibin.repos.AlbumRepo
 import wtf.ndu.vibin.repos.ArtistRepo
@@ -12,6 +13,7 @@ import wtf.ndu.vibin.repos.ListenRepo
 import wtf.ndu.vibin.repos.PlaylistRepo
 import wtf.ndu.vibin.repos.TagRepo
 import wtf.ndu.vibin.repos.TrackRepo
+import wtf.ndu.vibin.repos.UserRepo
 import wtf.ndu.vibin.settings.Settings
 import wtf.ndu.vibin.settings.user.ShowActivitiesToOthers
 import wtf.ndu.vibin.utils.DateTimeUtils
@@ -126,6 +128,18 @@ fun Application.configureStatisticRoutes() = routing {
                 recentTracks = TrackRepo.toMinimalDto(activity.recentTracks),
                 topTracks = TrackRepo.toMinimalDto(activity.topTracks),
                 topArtists = ArtistRepo.toDto(activity.topArtists)
+            ))
+        }
+
+        get("/api/stats/global") {
+            return@get call.respond(StatisticsDto(
+                totalTracks = TrackRepo.count(),
+                totalTrackDuration = TrackRepo.getTotalRuntimeSeconds(),
+                totalAlbums = AlbumRepo.count(),
+                totalArtists = ArtistRepo.count(),
+                totalPlaylists = PlaylistRepo.count(),
+                totalUsers = UserRepo.count(),
+                totalPlays = ListenRepo.getTotalListenedTracks()
             ))
         }
     }
