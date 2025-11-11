@@ -369,9 +369,9 @@ object TrackRepo {
             sampleRate = trackEntity.sampleRate,
             channels = trackEntity.channels,
             path = trackEntity.path,
-            tags = TagRepo.toDto(trackEntity.tags.toList()),
+            tags = trackEntity.tags.map { TagRepo.toDtoInternal(it) },
             hasLyrics = LyricsRepo.hasLyrics(trackEntity.id.value),
-            uploader = trackEntity.uploader?.let { UserRepo.toDto(it) },
+            uploader = trackEntity.uploader?.let { UserRepo.toDtoInternal(it) },
             createdAt = trackEntity.createdAt,
             updatedAt = trackEntity.updatedAt
         )
@@ -385,7 +385,7 @@ object TrackRepo {
         return@transaction trackEntities.map { toMinimalDtoInternal(it) }
     }
 
-    private fun toMinimalDtoInternal(trackEntity: TrackEntity): MinimalTrackDto {
+    internal fun toMinimalDtoInternal(trackEntity: TrackEntity): MinimalTrackDto {
         return MinimalTrackDto(
             id = trackEntity.id.value,
             title = trackEntity.title,

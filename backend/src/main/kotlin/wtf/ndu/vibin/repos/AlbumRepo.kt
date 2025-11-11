@@ -244,6 +244,21 @@ object AlbumRepo {
         )
     }
 
+    private fun getArtistsForAlbum(album: AlbumEntity): List<ArtistEntity> {
+        return ArtistEntity.find {
+            ArtistTable.id inSubQuery (
+                    TrackArtistConnection
+                        .select(TrackArtistConnection.artist)
+                        .where { TrackArtistConnection.track inSubQuery (
+                                TrackTable
+                                    .select(TrackTable.id)
+                                    .where { TrackTable.albumId eq album.id })
+                        })
+        }.toList()
+    }
+
+    private fun getSongAmountForAlbum(album: AlbumEntity): Long = TrackEntity.find { TrackTable.albumId eq album.id }.count()
+
     fun toDto(albumEntity: AlbumEntity): AlbumDto = transaction {
         return@transaction toDtoInternal(albumEntity)
     }
@@ -259,12 +274,12 @@ object AlbumRepo {
         )
     }
 
-    private fun toDtoInternal(albumEntity: AlbumEntity): AlbumDto = transaction {
-        return@transaction AlbumDto(
+    internal fun toDtoInternal(albumEntity: AlbumEntity): AlbumDto {
+        return AlbumDto(
             id = albumEntity.id.value,
             title = albumEntity.title,
             description = albumEntity.description,
-            artists = ArtistRepo.toDto(getArtistsForAlbum(albumEntity)),
+            artists = getArtistsForAlbum(albumEntity).map { ArtistRepo.toDtoInternal(it) },
             trackCount = getSongAmountForAlbum(albumEntity),
             year = albumEntity.releaseYear ?: estimateReleaseYear(albumEntity.id.value),
             single = albumEntity.single ?: estimateIsSingle(albumEntity.id.value),
@@ -272,19 +287,4 @@ object AlbumRepo {
             updatedAt = albumEntity.updatedAt
         )
     }
-
-    private fun getArtistsForAlbum(album: AlbumEntity): List<ArtistEntity> {
-        return ArtistEntity.find {
-            ArtistTable.id inSubQuery (
-                    TrackArtistConnection
-                        .select(TrackArtistConnection.artist)
-                        .where { TrackArtistConnection.track inSubQuery (
-                                TrackTable
-                                    .select(TrackTable.id)
-                                    .where { TrackTable.albumId eq album.id })
-                        })
-        }.toList()
-    }
-
-    private fun getSongAmountForAlbum(album: AlbumEntity): Long = TrackEntity.find { TrackTable.albumId eq album.id }.count()
 }

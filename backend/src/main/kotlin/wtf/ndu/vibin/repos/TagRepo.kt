@@ -99,7 +99,7 @@ object TagRepo {
         return@transaction tagEntities.map { toDtoInternal(it) }
     }
 
-    private fun toDtoInternal(tagEntity: TagEntity): TagDto {
+    internal fun toDtoInternal(tagEntity: TagEntity): TagDto {
         return TagDto(
             id = tagEntity.id.value,
             name = tagEntity.name,

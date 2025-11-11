@@ -149,7 +149,7 @@ object ArtistRepo {
         return@transaction artistEntities.map { toDtoInternal(it) }
     }
 
-    private fun toDtoInternal(artistEntity: ArtistEntity): ArtistDto {
+    internal fun toDtoInternal(artistEntity: ArtistEntity): ArtistDto {
         return ArtistDto(
             id = artistEntity.id.value,
             name = artistEntity.name,

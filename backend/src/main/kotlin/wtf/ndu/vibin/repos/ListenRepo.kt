@@ -167,9 +167,9 @@ object ListenRepo {
             .find { (ListenTable.user eq userId) and (ListenTable.type inList allowedTypes) }
             .orderBy(ListenTable.listenedAt to SortOrder.DESC)
             .mapNotNull { KeyValueDto(it.type.name, when (it.type) {
-                ListenType.ALBUM -> AlbumRepo.toDto(AlbumRepo.getById(it.entityId) ?: return@mapNotNull null)
-                ListenType.ARTIST -> ArtistRepo.toDto(ArtistRepo.getById(it.entityId) ?: return@mapNotNull null)
-                ListenType.PLAYLIST -> PlaylistRepo.toDto(PlaylistRepo.getById(it.entityId, userId) ?: return@mapNotNull null)
+                ListenType.ALBUM -> AlbumRepo.toDtoInternal(AlbumRepo.getById(it.entityId) ?: return@mapNotNull null)
+                ListenType.ARTIST -> ArtistRepo.toDtoInternal(ArtistRepo.getById(it.entityId) ?: return@mapNotNull null)
+                ListenType.PLAYLIST -> PlaylistRepo.toDtoInternal(PlaylistRepo.getById(it.entityId, userId) ?: return@mapNotNull null)
                 else -> null
             } ?: return@mapNotNull null) }
             .distinct()

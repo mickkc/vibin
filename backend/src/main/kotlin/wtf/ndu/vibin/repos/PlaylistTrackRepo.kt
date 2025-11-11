@@ -296,9 +296,9 @@ object PlaylistTrackRepo {
         return@transaction entities.map { toDtoInternal(it) }
     }
 
-    private fun toDtoInternal(entity: PlaylistTrackEntity): PlaylistTrackDto {
+    internal fun toDtoInternal(entity: PlaylistTrackEntity): PlaylistTrackDto {
         return PlaylistTrackDto(
-            track = TrackRepo.toMinimalDto(entity.track),
+            track = TrackRepo.toMinimalDtoInternal(entity.track),
             position = entity.position,
             addedBy = IdNameDto(entity.user.id.value, entity.user.displayName ?: entity.user.username),
             addedAt = entity.addedAt

@@ -114,7 +114,7 @@ object SessionRepo {
         return entities.map { toSessionDtoInternal(it) }
     }
 
-    private fun toSessionDtoInternal(entity: SessionEntity): SessionDto {
+    internal fun toSessionDtoInternal(entity: SessionEntity): SessionDto {
         return SessionDto(
             id = entity.id.value,
             createdAt = entity.createdAt,

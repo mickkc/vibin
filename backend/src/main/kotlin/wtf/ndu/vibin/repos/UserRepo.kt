@@ -152,7 +152,7 @@ object UserRepo {
         entities.map { toDtoInternal(it) }
     }
 
-    fun toDtoInternal(entity: UserEntity): UserDto {
+    internal fun toDtoInternal(entity: UserEntity): UserDto {
         return UserDto(
             id = entity.id.value,
             username = entity.username,

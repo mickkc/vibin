@@ -228,15 +228,15 @@ object PlaylistRepo {
         return@transaction playlistEntities.map { toDtoInternal(it) }
     }
 
-    fun toDtoInternal(playlistEntity: PlaylistEntity): PlaylistDto {
+    internal fun toDtoInternal(playlistEntity: PlaylistEntity): PlaylistDto {
         return PlaylistDto(
             id = playlistEntity.id.value,
             name = playlistEntity.name,
             description = playlistEntity.description,
             public = playlistEntity.public,
             vibedef = playlistEntity.vibeDef,
-            collaborators = UserRepo.toDto(playlistEntity.collaborators.toList()),
-            owner = UserRepo.toDto(playlistEntity.owner),
+            collaborators = playlistEntity.collaborators.map { UserRepo.toDtoInternal(it) },
+            owner = UserRepo.toDtoInternal(playlistEntity.owner),
             createdAt = playlistEntity.createdAt,
             updatedAt = playlistEntity.updatedAt
         )
