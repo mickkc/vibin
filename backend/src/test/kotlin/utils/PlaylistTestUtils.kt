@@ -8,7 +8,7 @@ import wtf.ndu.vibin.repos.UserRepo
 
 object PlaylistTestUtils {
 
-    fun createPlaylist(name: String, isPublic: Boolean, ownerId: Long, vararg collaboratorIds: Long): PlaylistEntity {
+    suspend fun createPlaylist(name: String, isPublic: Boolean, ownerId: Long, vararg collaboratorIds: Long): PlaylistEntity {
         val user = UserRepo.getById(ownerId)
         assertNotNull(user)
         val playlist = PlaylistRepo.createOrUpdatePlaylist(user, PlaylistEditDto(

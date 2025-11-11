@@ -213,9 +213,7 @@ class TaskRestTest {
 
         transaction {
             val image = ImageEntity.new {
-                this.smallPath = "/images/test_small.jpg"
-                this.mediumPath = "/images/test_medium.jpg"
-                this.largePath = "/images/test_large.jpg"
+                this.sourcePath = "/images/test_small.jpg"
                 this.sourceChecksum = "test_image_checksum"
             }
             track.cover = image
@@ -238,9 +236,7 @@ class TaskRestTest {
 
         transaction {
             ImageRepo.createImage(
-                smallUrl = "/images/unused_small.jpg",
-                mediumUrl = "/images/unused_medium.jpg",
-                largeUrl = "/images/unused_large.jpg",
+                sourcePath = "/images/unused.jpg",
                 checksum = "unused_image_checksum"
             )
         }

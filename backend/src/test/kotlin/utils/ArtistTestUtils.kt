@@ -5,7 +5,7 @@ import wtf.ndu.vibin.dto.artists.ArtistEditData
 import wtf.ndu.vibin.repos.ArtistRepo
 
 object ArtistTestUtils {
-    fun createArtist(name: String, description: String = ""): ArtistEntity {
+    suspend fun createArtist(name: String, description: String = ""): ArtistEntity {
         return ArtistRepo.updateOrCreateArtist(null, ArtistEditData(name = name, description = description, imageUrl = null))
     }
 }

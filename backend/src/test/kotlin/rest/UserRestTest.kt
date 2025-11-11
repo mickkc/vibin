@@ -56,7 +56,6 @@ class UserRestTest {
         assertNull(user.email)
         assertFalse(user.isAdmin)
         assertTrue(user.isActive)
-        assertNull(user.profilePicture)
     }
 
     @Test

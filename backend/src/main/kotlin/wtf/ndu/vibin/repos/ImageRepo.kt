@@ -9,6 +9,8 @@ import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.db.images.ImageTable
 import wtf.ndu.vibin.db.playlists.PlaylistTable
 import wtf.ndu.vibin.db.tracks.TrackTable
+import wtf.ndu.vibin.parsing.Parser
+import wtf.ndu.vibin.processing.ThumbnailProcessor
 import wtf.ndu.vibin.utils.ImageUtils
 
 object ImageRepo {
@@ -68,6 +70,27 @@ object ImageRepo {
 
         val unusedImages = ImageEntity.find { ImageTable.id notInList usedImageIds }
         return@transaction unusedImages to unusedImages.count()
+    }
+
+    /**
+     * Retrieves an edited image based on the provided URL or returns a default value.
+     *
+     * @param imageUrl The URL of the image to retrieve.
+     * @return A Pair where the first element indicates if an edit was made,
+     *         and the second element is the ImageEntity or null.
+     */
+    suspend fun getUpdatedImage(imageUrl: String?): Pair<Boolean, ImageEntity?> {
+        return if (imageUrl != null) {
+            if (imageUrl.isNotEmpty()) {
+                val imageData = Parser.downloadCoverImage(imageUrl)
+                true to imageData?.let { ThumbnailProcessor.getImage(it) }
+            }
+            else {
+                true to null
+            }
+        } else {
+            false to null
+        }
     }
 
     /**

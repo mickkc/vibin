@@ -1,6 +1,5 @@
 package wtf.ndu.vibin.repos
 
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -10,8 +9,6 @@ import wtf.ndu.vibin.db.UserTable
 import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.dto.users.UserDto
 import wtf.ndu.vibin.dto.users.UserEditDto
-import wtf.ndu.vibin.parsing.Parser
-import wtf.ndu.vibin.processing.ThumbnailProcessor
 import wtf.ndu.vibin.routes.PaginatedSearchParams
 import wtf.ndu.vibin.utils.DateTimeUtils
 
@@ -48,45 +45,52 @@ object UserRepo {
         UserEntity.findById(id)
     }
 
-    fun updateOrCreateUser(id: Long?, editDto: UserEditDto): UserEntity? = transaction {
-        val user = if (id != null) UserEntity.findById(id) else UserEntity.new {
-            username = editDto.username!!
-            displayName = editDto.displayName
-            description = editDto.description ?: ""
-            email = editDto.email
-            isActive = editDto.isActive ?: true
-            isAdmin = editDto.isAdmin ?: false
-            salt = CryptoUtil.getSalt()
-            passwordHash = CryptoUtil.hashPassword(editDto.password!!, salt)
-        }
-
-        if (user == null) return@transaction null
-
-        if (id != null) {
-            user.apply {
-                editDto.username?.takeIf { it.isNotBlank() }?.let { this.username = it }
-                editDto.displayName?.let { this.displayName = it.takeIf { it.isNotBlank() } }
-                editDto.email?.let { this.email = it.takeIf { it.isNotBlank() } }
-                editDto.isActive?.let { this.isActive = it }
-                editDto.isAdmin?.let { this.isAdmin = it }
-                editDto.password?.let {
-                    this.passwordHash = CryptoUtil.hashPassword(it, this.salt)
+    suspend fun updateOrCreateUser(id: Long?, editDto: UserEditDto): UserEntity? {
+        val user = transaction {
+            if (id != null)
+                UserEntity.findById(id)
+            else
+                UserEntity.new {
+                    username = editDto.username!!
+                    displayName = editDto.displayName
+                    description = editDto.description ?: ""
+                    email = editDto.email
+                    isActive = editDto.isActive ?: true
+                    isAdmin = editDto.isAdmin ?: false
+                    salt = CryptoUtil.getSalt()
+                    passwordHash = CryptoUtil.hashPassword(editDto.password!!, salt)
                 }
-                editDto.description?.let { this.description = it }
+        }
+
+        if (user == null) return null
+
+        val (imageUpdated, newImage) = ImageRepo.getUpdatedImage(editDto.profilePictureUrl)
+
+        return transaction {
+            if (id != null) {
+                user.apply {
+                    editDto.username?.takeIf { it.isNotBlank() }?.let { this.username = it }
+                    editDto.displayName?.let { this.displayName = it.takeIf { it.isNotBlank() } }
+                    editDto.email?.let { this.email = it.takeIf { it.isNotBlank() } }
+                    editDto.isActive?.let { this.isActive = it }
+                    editDto.isAdmin?.let { this.isAdmin = it }
+                    editDto.password?.let {
+                        this.passwordHash = CryptoUtil.hashPassword(it, this.salt)
+                    }
+                    editDto.description?.let { this.description = it }
+                }
             }
-        }
-        else {
-            PermissionRepo.addDefaultPermissions(user.id.value)
-        }
+            else {
+                PermissionRepo.addDefaultPermissions(user.id.value)
+            }
 
-        if (editDto.profilePictureUrl != null) {
-            val data = runBlocking { Parser.downloadCoverImage(editDto.profilePictureUrl) }
-            val image = data?.let { ThumbnailProcessor.getImage(data) }
-            user.profilePicture = image
-        }
+            if (imageUpdated) {
+                user.profilePicture = newImage
+            }
 
-        user.updatedAt = DateTimeUtils.now()
-        return@transaction user
+            user.updatedAt = DateTimeUtils.now()
+            user
+        }
     }
 
     fun deleteUser(userId: Long, deleteData: Boolean): Boolean = transaction {

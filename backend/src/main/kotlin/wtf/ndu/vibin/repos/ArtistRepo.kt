@@ -1,7 +1,6 @@
 package wtf.ndu.vibin.repos
 
 import io.ktor.server.plugins.*
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInList
@@ -12,8 +11,6 @@ import wtf.ndu.vibin.db.artists.TrackArtistConnection
 import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.dto.ArtistDto
 import wtf.ndu.vibin.dto.artists.ArtistEditData
-import wtf.ndu.vibin.parsing.Parser
-import wtf.ndu.vibin.processing.ThumbnailProcessor
 import wtf.ndu.vibin.routes.PaginatedSearchParams
 import wtf.ndu.vibin.settings.Settings
 import wtf.ndu.vibin.settings.user.BlockedArtists
@@ -51,21 +48,24 @@ object ArtistRepo {
             }
     }
 
-    fun updateOrCreateArtist(id: Long?, data: ArtistEditData): ArtistEntity = transaction {
-        val artist = if (id == null) {
-            if (data.name == null) {
-                throw IllegalStateException("name")
-            }
-            ArtistEntity.new {
-                this.name = data.name
-                this.description = data.description ?: ""
-                this.image = null
-            }
-        } else {
-            ArtistEntity.findByIdAndUpdate(id) { a ->
-                data.name?.takeIf { it.isNotEmpty() }?.let {  a.name = it; }
-                data.description?.let { a.description = it }
-                a.updatedAt = DateTimeUtils.now()
+    suspend fun updateOrCreateArtist(id: Long?, data: ArtistEditData): ArtistEntity {
+
+        val artist = transaction {
+            if (id == null) {
+                if (data.name == null) {
+                    throw IllegalStateException("name")
+                }
+                ArtistEntity.new {
+                    this.name = data.name
+                    this.description = data.description ?: ""
+                    this.image = null
+                }
+            } else {
+                ArtistEntity.findByIdAndUpdate(id) { a ->
+                    data.name?.takeIf { it.isNotEmpty() }?.let {  a.name = it; }
+                    data.description?.let { a.description = it }
+                    a.updatedAt = DateTimeUtils.now()
+                }
             }
         }
 
@@ -73,13 +73,16 @@ object ArtistRepo {
             throw NotFoundException("Artist with id $id not found")
         }
 
-        if (data.imageUrl != null && data.imageUrl.isNotEmpty()) {
-            val data = runBlocking { Parser.downloadCoverImage(data.imageUrl) }
-            val image = data?.let { ThumbnailProcessor.getImage(data) }
-            artist.image = image
+
+        val (coverUpdated, newCover) = ImageRepo.getUpdatedImage(data.imageUrl)
+
+        if (coverUpdated) {
+            transaction {
+                artist.image = newCover
+            }
         }
 
-        return@transaction artist
+        return artist
     }
 
     fun autocomplete(query: String, limit: Int = 10): List<String> = transaction {

@@ -125,23 +125,21 @@ object AlbumRepo {
             }
     }
 
-    fun update(albumId: Long, editDto: AlbumEditDto): AlbumEntity? = transaction {
-        val album = AlbumEntity.findById(albumId) ?: return@transaction null
-        editDto.title?.takeIf { it.isNotBlank() }?.let { album.title = it }
-        editDto.description?.let { album.description = it }
-        album.releaseYear = editDto.year
-        album.single = editDto.isSingle
-        editDto.coverUrl?.let { url ->
-            album.cover = null
-            if (url.isNotEmpty()) {
-                val data = runBlocking { Parser.downloadCoverImage(url) }
-                if (data != null) {
-                    val image = ThumbnailProcessor.getImage(data)
-                    album.cover = image
-                }
+    suspend fun update(albumId: Long, editDto: AlbumEditDto): AlbumEntity? {
+        val album = getById(albumId) ?: return null
+
+        val (update, newCover) = ImageRepo.getUpdatedImage(editDto.coverUrl)
+
+        return transaction {
+            editDto.title?.takeIf { it.isNotBlank() }?.let { album.title = it }
+            editDto.description?.let { album.description = it }
+            album.releaseYear = editDto.year
+            album.single = editDto.isSingle
+            if (update) {
+                album.cover = newCover
             }
+            album
         }
-        return@transaction album
     }
 
     fun notSingleOp(): Op<Boolean> {

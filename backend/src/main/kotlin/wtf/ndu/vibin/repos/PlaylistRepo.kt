@@ -1,6 +1,5 @@
 package wtf.ndu.vibin.repos
 
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inSubQuery
@@ -15,9 +14,7 @@ import wtf.ndu.vibin.dto.playlists.PlaylistDataDto
 import wtf.ndu.vibin.dto.playlists.PlaylistDto
 import wtf.ndu.vibin.dto.playlists.PlaylistEditDto
 import wtf.ndu.vibin.images.ImageCache
-import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.permissions.PermissionType
-import wtf.ndu.vibin.processing.ThumbnailProcessor
 import wtf.ndu.vibin.routes.PaginatedSearchParams
 import wtf.ndu.vibin.utils.DateTimeUtils
 import wtf.ndu.vibin.utils.ImageUtils
@@ -106,47 +103,46 @@ object PlaylistRepo {
      * @param playlistId The ID of the playlist to update, or null to create a new one.
      * @return The created or updated [PlaylistEntity], or null if the playlist to update was not found.
      */
-    fun createOrUpdatePlaylist(user: UserEntity, editDto: PlaylistEditDto, playlistId: Long?): PlaylistEntity? = transaction {
-        val playlist = if (playlistId != null) PlaylistEntity.findById(playlistId) else PlaylistEntity.new {
-            this.name = editDto.name
-            this.description = editDto.description ?: ""
-            this.public = editDto.isPublic ?: false
-            this.vibeDef = editDto.vibedef?.takeIf { it.isNotEmpty() }
-            this.owner = user
-        }
+    suspend fun createOrUpdatePlaylist(user: UserEntity, editDto: PlaylistEditDto, playlistId: Long?): PlaylistEntity? {
 
-
-        if (playlist == null) {
-            return@transaction null
-        }
-
-        if (playlistId != null) {
-            playlist.name = editDto.name
-            editDto.description?.let { playlist.description = it }
-            editDto.isPublic?.let { playlist.public = it }
-            playlist.vibeDef = editDto.vibedef?.takeIf { it.isNotEmpty() }
-        }
-
-        val collaborators = editDto.collaboratorIds?.mapNotNull { UserRepo.getById(it) }?.toList() ?: emptyList()
-        if (playlist.collaborators.toList() != collaborators) {
-            playlist.collaborators = SizedCollection(collaborators)
-        }
-
-        editDto.coverImageUrl?.let {
-            playlist.cover = null
-
-            if (it.isNotEmpty()) {
-                val image = runBlocking { Parser.downloadCoverImage(editDto.coverImageUrl) }
-                if (image != null) {
-                    val processedImage = ThumbnailProcessor.getImage(image)
-                    playlist.cover = processedImage
-                }
+        val playlist = transaction {
+            if (playlistId != null)
+                PlaylistEntity.findById(playlistId)
+            else PlaylistEntity.new {
+                this.name = editDto.name
+                this.description = editDto.description ?: ""
+                this.public = editDto.isPublic ?: false
+                this.vibeDef = editDto.vibedef?.takeIf { it.isNotEmpty() }
+                this.owner = user
             }
         }
 
-        playlist.updatedAt = DateTimeUtils.now()
+        if (playlist == null) {
+            return null
+        }
 
-        return@transaction playlist
+        val (coverChanged, newCover) = ImageRepo.getUpdatedImage(editDto.coverImageUrl)
+
+        return transaction {
+            if (playlistId != null) {
+                playlist.name = editDto.name
+                editDto.description?.let { playlist.description = it }
+                editDto.isPublic?.let { playlist.public = it }
+                playlist.vibeDef = editDto.vibedef?.takeIf { it.isNotEmpty() }
+            }
+
+            val collaborators = editDto.collaboratorIds?.mapNotNull { UserRepo.getById(it) }?.toList() ?: emptyList()
+            if (playlist.collaborators.toList() != collaborators) {
+                playlist.collaborators = SizedCollection(collaborators)
+            }
+
+            if (coverChanged) {
+                playlist.cover = newCover
+            }
+
+            playlist.updatedAt = DateTimeUtils.now()
+            playlist
+        }
     }
 
     fun deletePlaylist(playlistId: Long) = transaction {

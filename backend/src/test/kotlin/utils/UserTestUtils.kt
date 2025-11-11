@@ -11,7 +11,7 @@ import wtf.ndu.vibin.repos.UserRepo
 
 object UserTestUtils {
 
-    fun createTestUser(username: String, password: String): UserEntity {
+    suspend fun createTestUser(username: String, password: String): UserEntity {
         val user = UserRepo.updateOrCreateUser(null, UserEditDto(
             username = username,
             password = password,
@@ -27,14 +27,14 @@ object UserTestUtils {
         return user
     }
 
-    fun createUserWithSession(username: String, password: String): Pair<UserEntity, String> {
+    suspend fun createUserWithSession(username: String, password: String): Pair<UserEntity, String> {
         val user = createTestUser(username, password)
         val sessionToken = CryptoUtil.createToken()
         SessionRepo.addSession(user, sessionToken)
         return user to sessionToken
     }
 
-    fun createUserAndSessionWithPermissions(username: String, password: String, vararg permissions: Pair<PermissionType, Boolean>): Pair<UserEntity, String> {
+    suspend fun createUserAndSessionWithPermissions(username: String, password: String, vararg permissions: Pair<PermissionType, Boolean>): Pair<UserEntity, String> {
         val (user, token) = createUserWithSession(username, password)
         permissions.forEach { (permission, granted) ->
             if (granted) {

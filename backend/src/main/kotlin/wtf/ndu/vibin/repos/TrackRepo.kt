@@ -1,6 +1,5 @@
 package wtf.ndu.vibin.repos
 
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInSubQuery
@@ -16,10 +15,8 @@ import wtf.ndu.vibin.dto.IdNameDto
 import wtf.ndu.vibin.dto.tracks.MinimalTrackDto
 import wtf.ndu.vibin.dto.tracks.TrackDto
 import wtf.ndu.vibin.dto.tracks.TrackEditDto
-import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.parsing.TrackMetadata
 import wtf.ndu.vibin.parsing.parsers.PreparseData
-import wtf.ndu.vibin.processing.ThumbnailProcessor
 import wtf.ndu.vibin.routes.PaginatedSearchParams
 import wtf.ndu.vibin.search.SearchQueryBuilder
 import wtf.ndu.vibin.settings.Settings
@@ -135,52 +132,54 @@ object TrackRepo {
         return@transaction updated
     }
 
-    fun update(trackId: Long, editDto: TrackEditDto): TrackEntity? = transaction {
+    suspend fun update(trackId: Long, editDto: TrackEditDto): TrackEntity? {
 
-        val track = TrackEntity.findById(trackId) ?: return@transaction null
+        val track = getById(trackId) ?: return null
 
-        editDto.title?.takeIf { it.isNotBlank() }?.let { track.title = it }
-        editDto.explicit?.let { track.explicit = it }
+        val (changeCover, newCover) = ImageRepo.getUpdatedImage(editDto.imageUrl)
 
-        track.trackNumber = editDto.trackNumber
-        track.trackCount = editDto.trackCount
-        track.discNumber = editDto.discNumber
-        track.discCount = editDto.discCount
-        track.year = editDto.year
+        return transaction {
+            editDto.title?.takeIf { it.isNotBlank() }?.let { track.title = it }
+            editDto.explicit?.let { track.explicit = it }
 
-        editDto.comment?.let { track.comment = it }
+            track.trackNumber = editDto.trackNumber
+            track.trackCount = editDto.trackCount
+            track.discNumber = editDto.discNumber
+            track.discCount = editDto.discCount
+            track.year = editDto.year
 
-        editDto.imageUrl?.let { imageUrl ->
-            val imageData = runBlocking { Parser.downloadCoverImage(imageUrl) } ?: return@let
-            val image = ThumbnailProcessor.getImage(imageData)
-            image?.let { track.cover = it}
-        }
+            editDto.comment?.let { track.comment = it }
 
-        editDto.album?.let { albumNameId ->
-            if (albumNameId != track.album.id.value) {
-                AlbumRepo.getById(albumNameId)?.let {
-                    track.album = it
+            if (changeCover) {
+                track.cover = newCover
+            }
+
+            editDto.album?.let { albumNameId ->
+                if (albumNameId != track.album.id.value) {
+                    AlbumRepo.getById(albumNameId)?.let {
+                        track.album = it
+                    }
                 }
             }
+
+            editDto.artists?.let { artistNames ->
+                if (artistNames == track.artists.map { it.name }) return@let
+                val artists = artistNames.mapNotNull { idName -> ArtistRepo.getById(idName) }
+                track.artists = SizedCollection(artists)
+            }
+
+            editDto.tags?.let { tagIds ->
+                if (tagIds == track.tags.map { it.id.value }) return@let
+                val tags = tagIds.mapNotNull { id -> TagRepo.getById(id) }
+                track.tags = SizedCollection(tags)
+            }
+
+            track.updatedAt = DateTimeUtils.now()
+
+            LyricsRepo.setLyrics(track, editDto.lyrics)
+            track
         }
 
-        editDto.artists?.let { artistNames ->
-            if (artistNames == track.artists.map { it.name }) return@let
-            val artists = artistNames.mapNotNull { idName -> ArtistRepo.getById(idName) }
-            track.artists = SizedCollection(artists)
-        }
-
-        editDto.tags?.let { tagIds ->
-            if (tagIds == track.tags.map { it.id.value }) return@let
-            val tags = tagIds.mapNotNull { id -> TagRepo.getById(id) }
-            track.tags = SizedCollection(tags)
-        }
-
-        track.updatedAt = DateTimeUtils.now()
-
-        LyricsRepo.setLyrics(track, editDto.lyrics)
-
-        return@transaction track
     }
 
     fun getAll(page: Int, pageSize: Int, userId: Long? = null): Pair<List<TrackEntity>, Long> = transaction {
