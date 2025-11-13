@@ -27,9 +27,9 @@ object TrackTestUtils {
 
         val splitArtists = artists.split(",").map { it.trim() }
         val artists = splitArtists.map {
-            ArtistTestUtils.createArtist(it)
+            ArtistTestUtils.getOrCreateArtist(it)
         }.distinctBy { it.id.value }
-        val album = AlbumTestUtils.createAlbum(album)
+        val album = AlbumTestUtils.getOrCreateAlbum(album)
 
         return transaction {
             TrackEntity.new {

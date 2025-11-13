@@ -31,6 +31,10 @@ object ArtistRepo {
         return@transaction ArtistEntity.find { ArtistTable.id inList ids }.orderBy(ArtistTable.name to SortOrder.ASC).toList()
     }
 
+    fun getByName(name: String): ArtistEntity? = transaction {
+        return@transaction ArtistEntity.find { ArtistTable.name.lowerCase() eq name.lowercase() }.firstOrNull()
+    }
+
     fun getImage(artist: ArtistEntity): ImageEntity? = transaction {
         return@transaction artist.image
     }

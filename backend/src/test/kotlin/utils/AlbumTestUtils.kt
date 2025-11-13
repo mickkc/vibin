@@ -20,4 +20,12 @@ object AlbumTestUtils {
         assertNotNull(album)
         return album
     }
+
+    suspend fun getOrCreateAlbum(title: String): AlbumEntity {
+        val existingAlbum = AlbumRepo.getByTitle(title)
+        if (existingAlbum != null) {
+            return existingAlbum
+        }
+        return createAlbum(title)
+    }
 }

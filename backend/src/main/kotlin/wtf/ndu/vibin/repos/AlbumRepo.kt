@@ -70,6 +70,10 @@ object AlbumRepo {
         }
     }
 
+    fun getByTitle(title: String): AlbumEntity? = transaction {
+        return@transaction AlbumEntity.find { AlbumTable.title.lowerCase() eq title.lowercase() }.firstOrNull()
+    }
+
     fun getUnknownAlbum(): AlbumEntity = transaction {
         var album = AlbumEntity.find { AlbumTable.title eq UNKNOWN_ALBUM_NAME }.firstOrNull()
         if (album == null) {

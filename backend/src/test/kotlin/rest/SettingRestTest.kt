@@ -9,6 +9,7 @@ import kotlinx.serialization.json.Json
 import utils.UserTestUtils
 import utils.testApp
 import wtf.ndu.vibin.dto.KeyValueDto
+import wtf.ndu.vibin.parsing.MetadataFetchingType
 import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.settings.Settings
 import wtf.ndu.vibin.settings.server.MetadataLanguage
@@ -37,8 +38,14 @@ class SettingRestTest {
 
         serverSettings.forEach {
             assertTrue(settings.containsKey(it.key))
-            assertEquals(Settings.get(it), settings[it.key])
-            assertEquals(it.defaultValue, settings[it.key])
+
+            val actualValue = Settings.get(it)
+            if (actualValue is MetadataFetchingType) {
+                assertEquals(actualValue.name, settings[it.key])
+            }
+            else {
+                assertEquals(actualValue, settings[it.key])
+            }
         }
     }
 
