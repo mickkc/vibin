@@ -83,7 +83,7 @@ object UploadManager {
                     discCount = parsed.trackInfo.discCount,
                     year = parsed.trackInfo.year,
                     comment = parsed.trackInfo.comment ?: "",
-                    lyrics = parsed.trackInfo.lyrics,
+                    lyrics = parsed.trackInfo.lyrics ?: Parser.searchLyricsAuto(parsed),
                     coverUrl = parsed.trackInfo.coverImageUrl,
                     uploaderId = user.id.value,
                     lastUpdated = DateTimeUtils.now()

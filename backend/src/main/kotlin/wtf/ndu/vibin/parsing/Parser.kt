@@ -26,6 +26,7 @@ import wtf.ndu.vibin.settings.Settings
 import wtf.ndu.vibin.settings.server.AlbumMetadataFetchType
 import wtf.ndu.vibin.settings.server.ArtistMetadataFetchType
 import wtf.ndu.vibin.settings.server.ArtistMetadataSource
+import wtf.ndu.vibin.settings.server.LyricsMetadataSource
 import java.io.File
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -206,6 +207,29 @@ object Parser {
         }
         catch (e: Exception) {
             logger.error("Error searching lyrics for '$query' with provider '$provider': ${e.message}", e)
+            null
+        }
+    }
+
+    suspend fun searchLyricsAuto(trackMetadata: TrackMetadata): String? {
+
+        if (trackMetadata.trackInfo.artists.isNullOrEmpty() || trackMetadata.trackInfo.album == null || trackMetadata.fileInfo?.durationMs == null) {
+            return null
+        }
+
+        val provider = Settings.get(LyricsMetadataSource)
+        val parser = lyricsSearchProviders[provider] ?: return null
+
+        return try {
+            parser.searchLyrics(
+                trackName = trackMetadata.trackInfo.title,
+                artistName = trackMetadata.trackInfo.artists.first(),
+                albumName = trackMetadata.trackInfo.album,
+                duration = trackMetadata.fileInfo.durationMs
+            )
+        }
+        catch (e: Exception) {
+            logger.error("Error searching lyrics for '${trackMetadata.trackInfo.title}' by '${trackMetadata.trackInfo.artists.first()}' with provider '$provider': ${e.message}", e)
             null
         }
     }

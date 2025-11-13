@@ -123,3 +123,10 @@ object AlbumMetadataSource : ServerSetting<String>(
     serializer = { value -> value },
     defaultValue = "Deezer"
 )
+
+object LyricsMetadataSource : ServerSetting<String>(
+    key = "lyrics_metadata_source",
+    parser = { value -> value },
+    serializer = { value -> value },
+    defaultValue = "LrcLib"
+)

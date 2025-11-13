@@ -15,6 +15,7 @@ import wtf.ndu.vibin.dto.IdNameDto
 import wtf.ndu.vibin.dto.tracks.MinimalTrackDto
 import wtf.ndu.vibin.dto.tracks.TrackDto
 import wtf.ndu.vibin.dto.tracks.TrackEditDto
+import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.parsing.TrackMetadata
 import wtf.ndu.vibin.parsing.parsers.PreparseData
 import wtf.ndu.vibin.routes.PaginatedSearchParams
@@ -93,8 +94,11 @@ object TrackRepo {
                 this.tags = tags
             }
         }
-        if (metadata.trackInfo.lyrics != null) {
-            LyricsRepo.setLyrics(track, metadata.trackInfo.lyrics)
+
+        val lyrics = metadata.trackInfo.lyrics ?: Parser.searchLyricsAuto(metadata)
+
+        if (lyrics != null) {
+            LyricsRepo.setLyrics(track, lyrics)
         }
         return track
     }

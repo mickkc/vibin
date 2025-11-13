@@ -51,4 +51,31 @@ class LrcLibProvider(val client: HttpClient) : LyricsSearchProvider {
 
     }
 
+    override suspend fun searchLyrics(trackName: String, artistName: String, albumName: String, duration: Long): String? {
+
+        try {
+            val response = client.get("https://lrclib.net/api/get") {
+                parameter("track_name", trackName)
+                parameter("artist_name", artistName)
+                parameter("album_name", albumName)
+                parameter("duration", duration / 1000) // Milliseconds to seconds
+            }
+
+            if (!response.status.isSuccess()) {
+                val reply = response.bodyAsText()
+                logger.error("LrcLib API request failed for detailed lyrics search '$trackName' by '$artistName': ${response.status}. Response: $reply")
+                return null
+            }
+
+            val lyric = response.body<LrcLibLyrics>()
+            logger.info("LrcLib API response for detailed lyrics search '$trackName' by '$artistName': received lyrics detail")
+
+            return lyric.syncedLyrics ?: lyric.plainLyrics
+        }
+        catch (e: Exception) {
+            logger.error("LrcLib API request error for detailed lyrics search '$trackName' by '$artistName': ${e.message}", e)
+            return null
+        }
+    }
+
 }
