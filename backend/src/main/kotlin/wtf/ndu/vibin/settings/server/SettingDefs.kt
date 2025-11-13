@@ -18,6 +18,7 @@ val serverSettings = listOf(
     ArtistMetadataSource,
     AlbumMetadataFetchType,
     AlbumMetadataSource,
+    LyricsMetadataSource,
 )
 
 object WelcomeTexts : ServerSetting<List<String>>(
