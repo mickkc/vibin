@@ -8,4 +8,14 @@ data class PreparseData(
     val sampleRate: String?,
     val channels: String?,
     val audioFile: AudioFile
-)
+) {
+
+    fun getChannelsInt(): Int? {
+        return when (channels?.lowercase()) {
+            "mono" -> 1
+            "stereo" -> 2
+            else -> channels?.toIntOrNull()
+        }
+    }
+
+}

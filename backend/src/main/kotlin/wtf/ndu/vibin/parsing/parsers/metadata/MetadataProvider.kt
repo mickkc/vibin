@@ -30,7 +30,16 @@ class MetadataProvider : FileParser {
     fun Tag.getAllNonEmpty(vararg keys: FieldKey): List<String> {
         val results = mutableListOf<String>()
         for (key in keys) {
-            val values = this.getFields(key).flatMap { field -> field.toString().split(",").map { part -> part.trim() } }
+
+            val values = this.getFields(key).flatMap { field ->
+
+                var value = field.toString()
+                textTagRegex.find(value.trim())?.let { match ->
+                    value = match.groups["value"]?.value?.filter { it.code != 0 } ?: value
+                }
+
+                value.split(",").map { it.trim() }
+            }
             results.addAll(values)
         }
         return results.distinct()
@@ -109,7 +118,7 @@ class MetadataProvider : FileParser {
                 discNumber = parsedDiscNo,
                 discCount = parsedDiscCount,
                 year = parsedYear,
-                tags = tags.map { textTagRegex.find(it)?.groups?.get("value")?.value ?: it }.distinct(),
+                tags = tags.distinct(),
                 comment = comment,
                 coverImageUrl = "data:${tag.firstArtwork?.mimeType};base64,$base64Cover",
                 explicit = rating?.lowercase() == "explicit",

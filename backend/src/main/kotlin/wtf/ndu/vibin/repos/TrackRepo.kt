@@ -83,7 +83,7 @@ object TrackRepo {
                 this.comment = metadata.trackInfo.comment ?: ""
                 this.bitrate = metadata.fileInfo?.bitrate?.toIntOrNull()
                 this.sampleRate = metadata.fileInfo?.sampleRate?.toIntOrNull()
-                this.channels = metadata.fileInfo?.channels?.toIntOrNull()
+                this.channels = metadata.fileInfo?.getChannelsInt()
                 this.explicit = metadata.trackInfo.explicit ?: false
                 this.path = PathUtils.getTrackPathFromFile(file)
                 this.checksum = checksum ?: ChecksumUtil.getChecksum(file)
@@ -115,7 +115,7 @@ object TrackRepo {
             this.comment = upload.comment
             this.bitrate = preparseData.bitrate?.toIntOrNull()
             this.sampleRate = preparseData.sampleRate?.toIntOrNull()
-            this.channels = preparseData.channels?.toIntOrNull()
+            this.channels = preparseData.getChannelsInt()
             this.explicit = upload.explicit
             this.path = PathUtils.getTrackPathFromFile(file)
             this.checksum = ChecksumUtil.getChecksum(file)
