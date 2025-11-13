@@ -1,6 +1,5 @@
 package wtf.ndu.vibin.repos
 
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inSubQuery
@@ -34,11 +33,51 @@ object AlbumRepo {
      * Retrieves an existing album by title or creates a new one if it doesn't exist.
      *
      * @param title The title of the album to retrieve or create.
+     * @param artistName Optional name of the artist associated with the album for better search results.
      * @return The existing or newly created AlbumEntity.
      */
-    fun getOrCreateAlbum(title: String): AlbumEntity = transaction {
-        return@transaction AlbumEntity.find { AlbumTable.title.lowerCase() eq title.lowercase() }.firstOrNull()
-            ?: AlbumEntity.new { this.title = title }
+    suspend fun getOrCreateAlbum(title: String, artistName: String? = null): AlbumEntity {
+
+        if (title == UNKNOWN_ALBUM_NAME) {
+            return getUnknownAlbum()
+        }
+
+        val album = transaction {
+            AlbumEntity.find { AlbumTable.title.lowerCase() eq title.lowercase() }.firstOrNull()
+        }
+
+        if (album != null) {
+            return album
+        }
+
+        val query = if (artistName != null) {
+            "$artistName - $title"
+        } else {
+            title
+        }
+
+        val searchResult = Parser.searchAlbumAuto(query)
+        val (_, cover) = ImageRepo.getUpdatedImage(searchResult?.coverImageUrl)
+
+        return transaction {
+            AlbumEntity.new {
+                this.title = title
+                this.description = searchResult?.description ?: ""
+                this.releaseYear = searchResult?.year
+                this.single = searchResult?.isSingle
+                this.cover = cover
+            }
+        }
+    }
+
+    fun getUnknownAlbum(): AlbumEntity = transaction {
+        var album = AlbumEntity.find { AlbumTable.title eq UNKNOWN_ALBUM_NAME }.firstOrNull()
+        if (album == null) {
+            album = AlbumEntity.new {
+                this.title = UNKNOWN_ALBUM_NAME
+            }
+        }
+        return@transaction album
     }
 
     fun count(): Long = transaction {
@@ -59,11 +98,11 @@ object AlbumRepo {
         return@transaction results to count
     }
 
-    fun create(createDto: AlbumEditDto): AlbumEntity {
+    suspend fun create(createDto: AlbumEditDto): AlbumEntity {
 
         val cover = createDto.coverUrl?.let { url ->
             if (url.isNotEmpty()) {
-                val data = runBlocking { Parser.downloadCoverImage(url) }
+                val data = Parser.downloadCoverImage(url)
                 if (data != null) {
                     val image = ThumbnailProcessor.getImage(data)
                     return@let image

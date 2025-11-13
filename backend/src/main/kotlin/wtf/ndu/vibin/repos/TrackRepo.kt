@@ -60,34 +60,43 @@ object TrackRepo {
         return@transaction track.album.cover
     }
 
-    fun createTrack(file: File, metadata: TrackMetadata, checksum: String? = null, uploader: UserEntity? = null, cover: ImageEntity? = null): TrackEntity = transaction {
-        val track = TrackEntity.new {
-            this.title = metadata.trackInfo.title
-            this.trackNumber = metadata.trackInfo.trackNumber
-            this.trackCount = metadata.trackInfo.trackCount
-            this.discNumber = metadata.trackInfo.discNumber
-            this.discCount = metadata.trackInfo.discCount
-            this.year = metadata.trackInfo.year
-            this.duration = metadata.fileInfo?.durationMs
-            this.comment = metadata.trackInfo.comment ?: ""
-            this.bitrate = metadata.fileInfo?.bitrate?.toIntOrNull()
-            this.sampleRate = metadata.fileInfo?.sampleRate?.toIntOrNull()
-            this.channels = metadata.fileInfo?.channels?.toIntOrNull()
-            this.explicit = metadata.trackInfo.explicit ?: false
-            this.path = PathUtils.getTrackPathFromFile(file)
-            this.checksum = checksum ?: ChecksumUtil.getChecksum(file)
-            this.uploader = uploader
-            this.cover = cover
+    suspend fun createTrack(file: File, metadata: TrackMetadata, checksum: String? = null, uploader: UserEntity? = null, cover: ImageEntity? = null): TrackEntity {
 
-            this.album = metadata.trackInfo.album
-                ?.let { AlbumRepo.getOrCreateAlbum(it) }
-                ?: AlbumRepo.getOrCreateAlbum(AlbumRepo.UNKNOWN_ALBUM_NAME)
-            this.artists = SizedCollection(metadata.trackInfo.artists?.map { ArtistRepo.getOrCreateArtist(it) } ?: emptyList())
+        val album = metadata.trackInfo.album
+            ?.let { AlbumRepo.getOrCreateAlbum(it, metadata.trackInfo.artists?.firstOrNull()) }
+            ?: AlbumRepo.getUnknownAlbum()
+
+        val artists = SizedCollection(metadata.trackInfo.artists?.map { ArtistRepo.getOrCreateArtist(it) } ?: emptyList())
+
+        val tags = SizedCollection(metadata.trackInfo.tags?.map { TagRepo.getOrCreateTag(it) } ?: emptyList())
+
+        val track = transaction {
+            TrackEntity.new {
+                this.title = metadata.trackInfo.title
+                this.trackNumber = metadata.trackInfo.trackNumber
+                this.trackCount = metadata.trackInfo.trackCount
+                this.discNumber = metadata.trackInfo.discNumber
+                this.discCount = metadata.trackInfo.discCount
+                this.year = metadata.trackInfo.year
+                this.duration = metadata.fileInfo?.durationMs
+                this.comment = metadata.trackInfo.comment ?: ""
+                this.bitrate = metadata.fileInfo?.bitrate?.toIntOrNull()
+                this.sampleRate = metadata.fileInfo?.sampleRate?.toIntOrNull()
+                this.channels = metadata.fileInfo?.channels?.toIntOrNull()
+                this.explicit = metadata.trackInfo.explicit ?: false
+                this.path = PathUtils.getTrackPathFromFile(file)
+                this.checksum = checksum ?: ChecksumUtil.getChecksum(file)
+                this.uploader = uploader
+                this.cover = cover
+                this.album = album
+                this.artists = artists
+                this.tags = tags
+            }
         }
         if (metadata.trackInfo.lyrics != null) {
             LyricsRepo.setLyrics(track, metadata.trackInfo.lyrics)
         }
-        return@transaction track
+        return track
     }
 
     fun createTrack(file: File, preparseData: PreparseData, upload: PendingUpload, cover: ImageEntity?): TrackEntity = transaction {
@@ -109,7 +118,7 @@ object TrackRepo {
             this.uploader = UserRepo.getById(upload.uploaderId)
             this.cover = cover
 
-            this.album = AlbumRepo.getById(upload.album) ?: AlbumRepo.getOrCreateAlbum(AlbumRepo.UNKNOWN_ALBUM_NAME)
+            this.album = AlbumRepo.getById(upload.album) ?: AlbumRepo.getUnknownAlbum()
             this.artists = SizedCollection(upload.artists.mapNotNull { ArtistRepo.getById(it) })
             this.tags = SizedCollection(upload.tags.mapNotNull { TagRepo.getById(it) })
         }

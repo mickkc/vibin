@@ -45,7 +45,7 @@ fun Application.configureMetadataRoutes() = routing {
 
             val artists = request.artistNames.map { ArtistRepo.getOrCreateArtist(it) }
             val tags = request.tagNames.map { TagRepo.getOrCreateTag(it) }
-            val album = request.albumName?.let { AlbumRepo.getOrCreateAlbum(request.albumName) }
+            val album = request.albumName?.let { AlbumRepo.getOrCreateAlbum(request.albumName, request.artistNames.firstOrNull()) }
 
             call.respond(mapOf(
                 "artists" to ArtistRepo.toDto(artists),

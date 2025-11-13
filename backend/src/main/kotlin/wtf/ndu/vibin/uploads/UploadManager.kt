@@ -68,7 +68,12 @@ object UploadManager {
                     id = id,
                     filePath = filePath,
                     title = parsed.trackInfo.title,
-                    album = AlbumRepo.getOrCreateAlbum(parsed.trackInfo.album ?: AlbumRepo.UNKNOWN_ALBUM_NAME).id.value,
+                    album = (
+                            if (parsed.trackInfo.album != null)
+                                AlbumRepo.getOrCreateAlbum(parsed.trackInfo.album, parsed.trackInfo.artists?.firstOrNull())
+                            else
+                                AlbumRepo.getUnknownAlbum()
+                            ).id.value,
                     artists = parsed.trackInfo.artists?.map { ArtistRepo.getOrCreateArtist(it).id.value } ?: emptyList(),
                     tags = parsed.trackInfo.tags?.map { TagRepo.getOrCreateTag(it).id.value } ?: mutableListOf(),
                     explicit = parsed.trackInfo.explicit ?: false,

@@ -23,6 +23,9 @@ import wtf.ndu.vibin.repos.AlbumRepo
 import wtf.ndu.vibin.settings.server.FallbackMetadataSource
 import wtf.ndu.vibin.settings.server.PrimaryMetadataSource
 import wtf.ndu.vibin.settings.Settings
+import wtf.ndu.vibin.settings.server.AlbumMetadataFetchType
+import wtf.ndu.vibin.settings.server.ArtistMetadataFetchType
+import wtf.ndu.vibin.settings.server.ArtistMetadataSource
 import java.io.File
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -131,11 +134,63 @@ object Parser {
         }
     }
 
+    suspend fun searchArtistAuto(query: String): ArtistMetadata? {
+        val type = Settings.get(ArtistMetadataFetchType)
+        if (type == MetadataFetchingType.NONE) return null
+
+        val provider = Settings.get(ArtistMetadataSource)
+        val parser = artistSearchProviders[provider] ?: return null
+
+        return try {
+            val results = parser.searchArtist(query)
+            if (results == null || results.isEmpty()) {
+                null
+            } else {
+                when (type) {
+                    MetadataFetchingType.EXACT_MATCH -> results.firstOrNull { it.name == query }
+                    MetadataFetchingType.CASE_INSENSITIVE_MATCH -> results.firstOrNull { it.name.equals(query, ignoreCase = true) }
+                    MetadataFetchingType.FIRST_RESULT -> results.first()
+                    else -> null
+                }
+            }
+        }
+        catch (e: Exception) {
+            logger.error("Error searching artist '$query' with provider '$provider': ${e.message}", e)
+            null
+        }
+    }
+
     suspend fun searchAlbum(query: String, provider: String): List<AlbumMetadata>? {
         val parser = albumSearchProviders[provider] ?: return null
 
         return try {
             parser.searchAlbum(query)
+        }
+        catch (e: Exception) {
+            logger.error("Error searching album '$query' with provider '$provider': ${e.message}", e)
+            null
+        }
+    }
+
+    suspend fun searchAlbumAuto(query: String): AlbumMetadata? {
+        val type = Settings.get(AlbumMetadataFetchType)
+        if (type == MetadataFetchingType.NONE) return null
+
+        val provider = Settings.get(ArtistMetadataSource)
+        val parser = albumSearchProviders[provider] ?: return null
+
+        return try {
+            val results = parser.searchAlbum(query)
+            if (results == null || results.isEmpty()) {
+                null
+            } else {
+                when (type) {
+                    MetadataFetchingType.EXACT_MATCH -> results.firstOrNull { it.title == query }
+                    MetadataFetchingType.CASE_INSENSITIVE_MATCH -> results.firstOrNull { it.title.equals(query, ignoreCase = true) }
+                    MetadataFetchingType.FIRST_RESULT -> results.first()
+                    else -> null
+                }
+            }
         }
         catch (e: Exception) {
             logger.error("Error searching album '$query' with provider '$provider': ${e.message}", e)

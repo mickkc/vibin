@@ -1,6 +1,7 @@
 package wtf.ndu.vibin.settings.server
 
 import kotlinx.serialization.json.Json
+import wtf.ndu.vibin.parsing.MetadataFetchingType
 
 val serverSettings = listOf(
     ArtistNameDelimiters,
@@ -12,7 +13,11 @@ val serverSettings = listOf(
     FallbackMetadataSource,
     AddGenreAsTag,
     UploadPath,
-    WelcomeTexts
+    WelcomeTexts,
+    ArtistMetadataFetchType,
+    ArtistMetadataSource,
+    AlbumMetadataFetchType,
+    AlbumMetadataSource,
 )
 
 object WelcomeTexts : ServerSetting<List<String>>(
@@ -89,4 +94,32 @@ object UploadPath : ServerSetting<String>(
     parser = { value -> value },
     serializer = { value -> value },
     defaultValue = "{album}{sep}{artist} - {title}.{ext}"
+)
+
+object ArtistMetadataFetchType : ServerSetting<MetadataFetchingType>(
+    key = "artist_metadata_fetch_type",
+    parser = { value -> MetadataFetchingType.valueOf(value) },
+    serializer = { value -> value.name },
+    defaultValue = MetadataFetchingType.EXACT_MATCH
+)
+
+object ArtistMetadataSource : ServerSetting<String>(
+    key = "artist_metadata_source",
+    parser = { value -> value },
+    serializer = { value -> value },
+    defaultValue = "Deezer"
+)
+
+object AlbumMetadataFetchType : ServerSetting<MetadataFetchingType>(
+    key = "album_metadata_fetch_type",
+    parser = { value -> MetadataFetchingType.valueOf(value) },
+    serializer = { value -> value.name },
+    defaultValue = MetadataFetchingType.EXACT_MATCH
+)
+
+object AlbumMetadataSource : ServerSetting<String>(
+    key = "album_metadata_source",
+    parser = { value -> value },
+    serializer = { value -> value },
+    defaultValue = "Deezer"
 )

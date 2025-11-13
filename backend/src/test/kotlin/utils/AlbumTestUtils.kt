@@ -7,16 +7,17 @@ import wtf.ndu.vibin.repos.AlbumRepo
 
 object AlbumTestUtils {
 
-    suspend fun createAlbum(title: String, description: String, year: Int? = null, isSingle: Boolean = false): AlbumEntity {
-        val album = AlbumRepo.getOrCreateAlbum(title)
-        val updatedAlbum = AlbumRepo.update(album.id.value, AlbumEditDto(
-            title = title,
-            description = description,
-            year = year,
-            coverUrl = null,
-            isSingle = isSingle
-        ))
-        assertNotNull(updatedAlbum)
-        return updatedAlbum
+    suspend fun createAlbum(title: String, description: String? = null, year: Int? = null, isSingle: Boolean = false): AlbumEntity {
+        val album = AlbumRepo.create(
+            AlbumEditDto(
+                title = title,
+                description = description,
+                year = year,
+                coverUrl = null,
+                isSingle = isSingle
+            )
+        )
+        assertNotNull(album)
+        return album
     }
 }

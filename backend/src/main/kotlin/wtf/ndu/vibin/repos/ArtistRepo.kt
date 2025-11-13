@@ -11,6 +11,7 @@ import wtf.ndu.vibin.db.artists.TrackArtistConnection
 import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.dto.ArtistDto
 import wtf.ndu.vibin.dto.artists.ArtistEditData
+import wtf.ndu.vibin.parsing.Parser
 import wtf.ndu.vibin.routes.PaginatedSearchParams
 import wtf.ndu.vibin.settings.Settings
 import wtf.ndu.vibin.settings.user.BlockedArtists
@@ -40,12 +41,25 @@ object ArtistRepo {
      * @param name The name of the artist to retrieve or create.
      * @return The existing or newly created ArtistEntity.
      */
-    fun getOrCreateArtist(name: String): ArtistEntity = transaction {
-        return@transaction ArtistEntity.find { ArtistTable.name.lowerCase() eq name.lowercase() }.firstOrNull()
-            ?: ArtistEntity.new {
+    suspend fun getOrCreateArtist(name: String): ArtistEntity {
+        val artist = transaction {
+            ArtistEntity.find { ArtistTable.name.lowerCase() eq name.lowercase() }.firstOrNull()
+        }
+
+        if (artist != null) {
+            return artist
+        }
+
+        val searchResult = Parser.searchArtistAuto(name)
+        val (_, cover) = ImageRepo.getUpdatedImage(searchResult?.pictureUrl)
+
+        return transaction {
+            ArtistEntity.new {
                 this.name = name
-                this.image = null
+                this.description = searchResult?.biography ?: ""
+                this.image = cover
             }
+        }
     }
 
     suspend fun updateOrCreateArtist(id: Long?, data: ArtistEditData): ArtistEntity {
