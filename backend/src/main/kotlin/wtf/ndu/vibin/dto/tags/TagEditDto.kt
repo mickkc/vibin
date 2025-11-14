@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 data class TagEditDto(
     val name: String,
     val description: String?,
-    val color: String?
+    val importance: Int
 )

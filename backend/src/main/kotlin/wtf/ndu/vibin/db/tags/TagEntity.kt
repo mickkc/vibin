@@ -8,7 +8,7 @@ import wtf.ndu.vibin.db.ModifiableLongIdTable
 object TagTable : ModifiableLongIdTable("tag") {
     val name = varchar("name", 255).index()
     val description = text("description").default("")
-    val color = varchar("color", 7).nullable()
+    val importance = integer("importance").default(0)
 }
 
 /**
@@ -16,12 +16,12 @@ object TagTable : ModifiableLongIdTable("tag") {
  *
  * @property name The name of the tag.
  * @property description A description of the tag.
- * @property color The color associated with the tag in HEX format. (optional)
+ * @property importance An integer between 1 an 10 representing the importance of the tag.
  */
 class TagEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, TagTable) {
     companion object : LongEntityClass<TagEntity>(TagTable)
 
     var name by TagTable.name
     var description by TagTable.description
-    var color by TagTable.color
+    var importance by TagTable.importance
 }

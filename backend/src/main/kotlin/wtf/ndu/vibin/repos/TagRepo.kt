@@ -67,14 +67,14 @@ object TagRepo {
     fun create(editDto: TagEditDto): TagEntity = transaction {
         return@transaction TagEntity.new {
             this.name = editDto.name
-            this.color = editDto.color
+            this.importance = editDto.importance
             this.description = editDto.description ?: ""
         }
     }
 
     fun update(tag: TagEntity, editDto: TagEditDto): TagEntity = transaction {
         tag.name = editDto.name
-        tag.color = editDto.color
+        tag.importance = editDto.importance
         editDto.description?.let { tag.description = it }
         return@transaction tag
     }
@@ -104,7 +104,7 @@ object TagRepo {
             id = tagEntity.id.value,
             name = tagEntity.name,
             description = tagEntity.description,
-            color = tagEntity.color,
+            importance = tagEntity.importance,
             createdAt = tagEntity.createdAt,
             updatedAt = tagEntity.updatedAt
         )
