@@ -29,6 +29,9 @@ class ItunesProvider(val client: HttpClient) : TrackSearchProvider, AlbumSearchP
                 parameter("term", query)
                 parameter("media", "music")
                 parameter("entity", "song")
+                ParsingUtils.limit?.let {
+                    parameter("limit", it)
+                }
             }
 
             if (!response.status.isSuccess()) {
@@ -55,7 +58,7 @@ class ItunesProvider(val client: HttpClient) : TrackSearchProvider, AlbumSearchP
                     year = it.releaseDate?.substringBefore("-")?.toIntOrNull(),
                     tags = it.primaryGenreName?.let { genre -> listOf(genre) },
                     explicit = it.trackExplicitness == "explicit",
-                    coverImageUrl = it.artworkUrl100?.replace("100x100bb", "512x512bb")
+                    coverImageUrl = it.artworkUrl100?.replace("100x100bb", "1024x1024bb")
                 )
             }
         }
@@ -71,6 +74,9 @@ class ItunesProvider(val client: HttpClient) : TrackSearchProvider, AlbumSearchP
                 parameter("term", query)
                 parameter("media", "music")
                 parameter("entity", "album")
+                ParsingUtils.limit?.let {
+                    parameter("limit", it)
+                }
             }
 
             if (!response.status.isSuccess()) {

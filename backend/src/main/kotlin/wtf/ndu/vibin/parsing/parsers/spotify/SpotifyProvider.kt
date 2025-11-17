@@ -9,6 +9,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.parsing.AlbumMetadata
 import wtf.ndu.vibin.parsing.ArtistMetadata
+import wtf.ndu.vibin.parsing.ParsingUtils
 import wtf.ndu.vibin.parsing.TrackInfoMetadata
 import wtf.ndu.vibin.parsing.parsers.*
 import wtf.ndu.vibin.settings.Settings
@@ -64,6 +65,9 @@ class SpotifyProvider(val client: HttpClient) : ArtistSearchProvider, TrackSearc
                 header("Authorization", "Bearer $accessToken")
                 parameter("q", query)
                 parameter("type", "artist")
+                ParsingUtils.limit?.let {
+                    parameter("limit", it)
+                }
             }
 
             if (!response.status.isSuccess()) {
@@ -95,6 +99,9 @@ class SpotifyProvider(val client: HttpClient) : ArtistSearchProvider, TrackSearc
                 header("Authorization", "Bearer $accessToken")
                 parameter("q", query)
                 parameter("type", "track")
+                ParsingUtils.limit?.let {
+                    parameter("limit", it)
+                }
             }
 
             if (!response.status.isSuccess()) {
@@ -138,6 +145,9 @@ class SpotifyProvider(val client: HttpClient) : ArtistSearchProvider, TrackSearc
                 header("Authorization", "Bearer $accessToken")
                 parameter("q", query)
                 parameter("type", "album")
+                ParsingUtils.limit?.let {
+                    parameter("limit", it)
+                }
             }
 
             if (!response.status.isSuccess()) {
