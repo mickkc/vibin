@@ -92,6 +92,9 @@ paths:
   /api/favorites/{type}/{place}:
     $ref: 'methods/favorites.yaml#/Toggle'
 
+  /api/favorites/{type}/check/{entityId}:
+    $ref: 'methods/favorites.yaml#/Check'
+
   # █▀▄▀█ █▀▀ ▀█▀ ▄▀█ █▀▄ ▄▀█ ▀█▀ ▄▀█
   # █░▀░█ ██▄ ░█░ █▀█ █▄▀ █▀█ ░█░ █▀█
 

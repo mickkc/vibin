@@ -105,3 +105,40 @@ Toggle:
           application/json:
             schema:
               $ref: '../models/error.yaml#/Error'
+
+Check:
+  get:
+    summary: Check if an entity is marked as favorite
+    operationId: checkFavorite
+    tags:
+      - Favorites
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: type
+        in: path
+        required: true
+        schema:
+          type: string
+          enum: [track, album, artist]
+        description: Type of entity to check
+      - name: entityId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+        description: ID of the entity to check
+    responses:
+      200:
+        description: Favorite status retrieved successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

@@ -79,4 +79,12 @@ object FavoriteRepo {
             (FavoriteTable.place eq place)
         }
     }
+
+    fun isFavorite(userId: Long, entityType: FavoriteType, entityId: Long): Boolean = transaction {
+        FavoriteTable.select(FavoriteTable.columns).where {
+            (FavoriteTable.userId eq userId) and
+            (FavoriteTable.entityType eq entityType) and
+            (FavoriteTable.entityId eq entityId)
+        }.count() > 0
+    }
 }
