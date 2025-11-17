@@ -6,8 +6,12 @@ import wtf.ndu.vibin.parsing.MetadataFetchingType
 val serverSettings = listOf(
     ArtistNameDelimiters,
     MetadataLanguage,
+    ExtendedMetadata,
+    MetadataLimit,
     SpotifyClientId,
     SpotifyClientSecret,
+    LastFmApiKey,
+    LastFmSharedSecret,
     LyricFilePathTemplate,
     PrimaryMetadataSource,
     FallbackMetadataSource,
@@ -48,6 +52,20 @@ object MetadataLanguage : ServerSetting<String>(
     defaultValue = "en"
 )
 
+object ExtendedMetadata : ServerSetting<Boolean>(
+    key = "extended_metadata",
+    parser = { value -> value.toBoolean() },
+    serializer = { value -> value.toString() },
+    defaultValue = false
+)
+
+object MetadataLimit : ServerSetting<Int>(
+    key = "metadata_limit",
+    parser = { value -> value.toInt() },
+    serializer = { value -> value.toString() },
+    defaultValue = 0
+)
+
 object SpotifyClientId : ServerSetting<String>(
     key = "spotify_client_id",
     parser = { value -> value },
@@ -57,6 +75,20 @@ object SpotifyClientId : ServerSetting<String>(
 
 object SpotifyClientSecret : ServerSetting<String>(
     key = "spotify_client_secret",
+    parser = { value -> value },
+    serializer = { value -> value },
+    defaultValue = ""
+)
+
+object LastFmApiKey : ServerSetting<String>(
+    key = "lastfm_api_key",
+    parser = { value -> value },
+    serializer = { value -> value },
+    defaultValue = ""
+)
+
+object LastFmSharedSecret : ServerSetting<String>(
+    key = "lastfm_shared_secret",
     parser = { value -> value },
     serializer = { value -> value },
     defaultValue = ""
