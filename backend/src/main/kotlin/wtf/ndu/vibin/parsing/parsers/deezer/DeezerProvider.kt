@@ -15,6 +15,8 @@ import wtf.ndu.vibin.parsing.parsers.ArtistSearchProvider
 import wtf.ndu.vibin.parsing.parsers.FileParser
 import wtf.ndu.vibin.parsing.parsers.PreparseData
 import wtf.ndu.vibin.parsing.parsers.TrackSearchProvider
+import wtf.ndu.vibin.settings.Settings
+import wtf.ndu.vibin.settings.server.ExtendedMetadata
 
 class DeezerProvider(val client: HttpClient) : FileParser, ArtistSearchProvider, TrackSearchProvider, AlbumSearchProvider {
 
@@ -25,15 +27,37 @@ class DeezerProvider(val client: HttpClient) : FileParser, ArtistSearchProvider,
         val deezerResponse = get<DeezerSearchResponse<DeezerTrackData>>("https://api.deezer.com/search/track", query) ?: return null
         logger.info("Deezer API response for track '$query': found ${deezerResponse.data.size} results")
 
+        val extended = Settings.get(ExtendedMetadata)
+
         return deezerResponse.data.map {
-            TrackInfoMetadata(
+
+            val mapped = if (extended) {
+                getExtendedTrackMetadata(it.id)
+            } else null
+
+            mapped ?: TrackInfoMetadata(
                 title = it.title,
                 artists = ParsingUtils.splitArtistNames(it.artist.name),
                 album = it.album.title,
                 explicit = it.explicit_lyrics,
-                coverImageUrl = it.album.cover_big.replace("500x500", "512x512")
+                coverImageUrl = it.album.cover_xl
             )
         }
+    }
+
+    private suspend fun getExtendedTrackMetadata(trackId: Long): TrackInfoMetadata? {
+        val deezerTrackInfo = get<DeezerTrackInfo>("https://api.deezer.com/track/$trackId", "") ?: return null
+
+        return TrackInfoMetadata(
+            title = deezerTrackInfo.title,
+            artists = deezerTrackInfo.contributors.map { it.name },
+            album = deezerTrackInfo.album.title,
+            trackNumber = deezerTrackInfo.track_position,
+            discNumber = deezerTrackInfo.disk_number,
+            year = deezerTrackInfo.release_date.split("-").firstOrNull()?.toIntOrNull(),
+            explicit = deezerTrackInfo.explicit_lyrics,
+            coverImageUrl = deezerTrackInfo.album.cover_xl
+        )
     }
 
     override suspend fun searchArtist(query: String): List<ArtistMetadata>? {
@@ -43,7 +67,7 @@ class DeezerProvider(val client: HttpClient) : FileParser, ArtistSearchProvider,
         return deezerResponse.data.map {
             ArtistMetadata(
                 name = it.name,
-                pictureUrl = it.picture_big?.replace("500x500", "512x512")
+                pictureUrl = it.picture_xl
             )
         }
     }
@@ -55,7 +79,7 @@ class DeezerProvider(val client: HttpClient) : FileParser, ArtistSearchProvider,
         return deezerResponse.data.map {
             AlbumMetadata(
                 title = it.title,
-                coverImageUrl = it.cover_big?.replace("500x500", "512x512"),
+                coverImageUrl = it.cover_xl,
                 artistName = it.artist?.name,
                 description = null,
                 isSingle = it.record_type == "single"
@@ -67,6 +91,9 @@ class DeezerProvider(val client: HttpClient) : FileParser, ArtistSearchProvider,
         return try {
             val response = client.get(url) {
                 parameter("q", q)
+                ParsingUtils.limit?.let {
+                    parameter("limit", it)
+                }
             }
 
             if (!response.status.isSuccess()) {

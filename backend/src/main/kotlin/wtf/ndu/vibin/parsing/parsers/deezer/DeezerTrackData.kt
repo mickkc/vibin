@@ -29,3 +29,15 @@ data class DeezerAlbumData(
     val cover_big: String,
     val cover_xl: String
 )
+
+@Serializable
+data class DeezerTrackInfo(
+    val id: Long,
+    val title: String,
+    val track_position: Int,
+    val disk_number: Int,
+    val release_date: String,
+    val explicit_lyrics: Boolean,
+    val contributors: List<DeezerArtistData>,
+    val album: DeezerAlbumData
+)

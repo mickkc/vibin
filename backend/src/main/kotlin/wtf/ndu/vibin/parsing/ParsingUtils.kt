@@ -2,6 +2,8 @@ package wtf.ndu.vibin.parsing
 
 import wtf.ndu.vibin.settings.server.ArtistNameDelimiters
 import wtf.ndu.vibin.settings.Settings
+import wtf.ndu.vibin.settings.server.ExtendedMetadata
+import wtf.ndu.vibin.settings.server.MetadataLimit
 
 object ParsingUtils {
 
@@ -19,4 +21,7 @@ object ParsingUtils {
             .filter { it.isNotEmpty() }
         return split
     }
+
+    val limit
+        get() =  Settings.get(MetadataLimit).takeIf { it > 0 }
 }

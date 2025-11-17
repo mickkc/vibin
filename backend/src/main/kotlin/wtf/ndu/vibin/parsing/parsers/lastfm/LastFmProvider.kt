@@ -11,15 +11,10 @@ import wtf.ndu.vibin.parsing.AlbumMetadata
 import wtf.ndu.vibin.parsing.ArtistMetadata
 import wtf.ndu.vibin.parsing.ParsingUtils
 import wtf.ndu.vibin.parsing.TrackInfoMetadata
-import wtf.ndu.vibin.parsing.parsers.AlbumSearchProvider
-import wtf.ndu.vibin.parsing.parsers.ArtistSearchProvider
-import wtf.ndu.vibin.parsing.parsers.FileParser
-import wtf.ndu.vibin.parsing.parsers.PreparseData
-import wtf.ndu.vibin.parsing.parsers.TrackSearchProvider
+import wtf.ndu.vibin.parsing.parsers.*
 import wtf.ndu.vibin.settings.Settings
 import wtf.ndu.vibin.settings.server.ExtendedMetadata
 import wtf.ndu.vibin.settings.server.LastFmApiKey
-import wtf.ndu.vibin.settings.server.MetadataLimit
 
 class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearchProvider, AlbumSearchProvider, FileParser {
 
@@ -68,9 +63,7 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
             parameter("track", query)
             parameter("api_key", getApiKey())
             parameter("format", "json")
-            Settings.get(MetadataLimit)
-                .takeIf { it > 0 }
-                ?.let {parameter("limit", it) }
+            ParsingUtils.limit?.let {parameter("limit", it) }
         }
 
         if (!response.status.isSuccess()) {
@@ -129,9 +122,7 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
             parameter("artist", query)
             parameter("api_key", getApiKey())
             parameter("format", "json")
-            Settings.get(MetadataLimit)
-                .takeIf { it > 0 }
-                ?.let {parameter("limit", it) }
+            ParsingUtils.limit?.let {parameter("limit", it) }
         }
 
         if (!response.status.isSuccess()) {
@@ -147,11 +138,10 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
         val extended = Settings.get(ExtendedMetadata)
 
         return result.results.artistmatches.artist.map { artist ->
-            var mapped: ArtistMetadata? = null
 
-            if (extended) {
-                mapped = getExtendedArtistMetadata(artist.name)
-            }
+            val mapped: ArtistMetadata? = if (extended) {
+                getExtendedArtistMetadata(artist.name)
+            } else null
 
             mapped ?: ArtistMetadata(
                 name = artist.name,
@@ -198,9 +188,7 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
             parameter("album", query)
             parameter("api_key", getApiKey())
             parameter("format", "json")
-            Settings.get(MetadataLimit)
-                .takeIf { it > 0 }
-                ?.let { parameter("limit", it) }
+            ParsingUtils.limit?.let { parameter("limit", it) }
         }
 
         if (!response.status.isSuccess()) {
@@ -216,10 +204,11 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
         val extended = Settings.get(ExtendedMetadata)
 
         return result.results.albummatches.album.map { album ->
-            var mapped: AlbumMetadata? = null
-            if (extended) {
-                mapped = getExtendedAlbumMetadata(album.artist, album.name)
-            }
+
+            val mapped: AlbumMetadata? = if (extended) {
+                getExtendedAlbumMetadata(album.artist, album.name)
+            } else null
+
             mapped ?: AlbumMetadata(
                 title = album.name,
                 description = null,
