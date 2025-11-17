@@ -73,9 +73,12 @@ fun Application.configureFavoriteRoutes() = routing {
 
             val entityType = call.getFavoriteType() ?: return@getP
 
-            val isFavorite = FavoriteRepo.isFavorite(userId, entityType, entityId)
+            val place = FavoriteRepo.getPlace(userId, entityType, entityId)
 
-            call.success(isFavorite)
+            call.respond(mapOf(
+                "isFavorite" to (place != null),
+                "place" to place
+            ))
         }
     }
 }

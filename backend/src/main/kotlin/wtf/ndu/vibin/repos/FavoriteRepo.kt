@@ -13,6 +13,7 @@ import wtf.ndu.vibin.db.albums.AlbumEntity
 import wtf.ndu.vibin.db.artists.ArtistEntity
 import wtf.ndu.vibin.db.tracks.TrackEntity
 import wtf.ndu.vibin.dto.FavoriteDto
+import kotlin.collections.map
 
 object FavoriteRepo {
 
@@ -80,11 +81,11 @@ object FavoriteRepo {
         }
     }
 
-    fun isFavorite(userId: Long, entityType: FavoriteType, entityId: Long): Boolean = transaction {
-        FavoriteTable.select(FavoriteTable.columns).where {
+    fun getPlace(userId: Long, entityType: FavoriteType, entityId: Long): Int? = transaction {
+        FavoriteTable.select(FavoriteTable.place).where {
             (FavoriteTable.userId eq userId) and
             (FavoriteTable.entityType eq entityType) and
             (FavoriteTable.entityId eq entityId)
-        }.count() > 0
+        }.map { it[FavoriteTable.place] }.firstOrNull()
     }
 }

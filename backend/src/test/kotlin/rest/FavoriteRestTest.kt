@@ -7,6 +7,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.put
 import io.ktor.http.isSuccess
+import kotlinx.serialization.Serializable
 import utils.AlbumTestUtils
 import utils.ArtistTestUtils
 import utils.TrackTestUtils
@@ -18,11 +19,18 @@ import wtf.ndu.vibin.permissions.PermissionType
 import wtf.ndu.vibin.repos.FavoriteRepo
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class FavoriteRestTest {
+
+    @Serializable
+    data class FavoriteCheckResponse(
+        val isFavorite: Boolean,
+        val place: Int?
+    )
 
     // region Get
 
@@ -119,9 +127,10 @@ class FavoriteRestTest {
 
         // Initially not a favorite
         val initialCheckResponse = client.get("/api/favorites/track/check/${track.id.value}")
-        val initialIsFavorite = initialCheckResponse.body<Map<String, Boolean>>()
+        val initialCheck = initialCheckResponse.body<FavoriteCheckResponse>()
 
-        assertEquals(false, initialIsFavorite["success"])
+        assertFalse(initialCheck.isFavorite)
+        assertNull(initialCheck.place)
 
         // Add as favorite
         client.put("/api/favorites/track/1") {
@@ -130,9 +139,10 @@ class FavoriteRestTest {
 
         // Check again
         val checkResponse = client.get("/api/favorites/track/check/${track.id.value}")
-        val isFavorite = checkResponse.body<Map<String, Boolean>>()
+        val check = checkResponse.body<FavoriteCheckResponse>()
 
-        assertEquals(true, isFavorite["success"])
+        assertTrue(check.isFavorite)
+        assertEquals(1, check.place)
     }
 
     @Test
@@ -178,9 +188,10 @@ class FavoriteRestTest {
         assertEquals("Test Track", favorites.tracks[0]?.title)
 
         val isFavoriteCheckResponse = client.get("/api/favorites/track/check/${track.id.value}")
-        val isFavorite = isFavoriteCheckResponse.body<Map<String, Boolean>>()
+        val checkResult = isFavoriteCheckResponse.body<FavoriteCheckResponse>()
 
-        assertEquals(true, isFavorite["success"])
+        assertTrue(checkResult.isFavorite)
+        assertEquals(1, checkResult.place)
     }
 
     @Test
@@ -201,9 +212,10 @@ class FavoriteRestTest {
         assertEquals("Test Album", favorites.albums[1]?.title)
 
         val isFavoriteCheckResponse = client.get("/api/favorites/album/check/${album.id.value}")
-        val isFavorite = isFavoriteCheckResponse.body<Map<String, Boolean>>()
+        val isFavorite = isFavoriteCheckResponse.body<FavoriteCheckResponse>()
 
-        assertEquals(true, isFavorite["success"])
+        assertTrue(isFavorite.isFavorite)
+        assertEquals(2, isFavorite.place)
     }
 
     @Test
@@ -224,9 +236,10 @@ class FavoriteRestTest {
         assertEquals("Test Artist", favorites.artists[2]?.name)
 
         val isFavoriteCheckResponse = client.get("/api/favorites/artist/check/${artist.id.value}")
-        val isFavorite = isFavoriteCheckResponse.body<Map<String, Boolean>>()
+        val isFavorite = isFavoriteCheckResponse.body<FavoriteCheckResponse>()
 
-        assertEquals(true, isFavorite["success"])
+        assertTrue(isFavorite.isFavorite)
+        assertEquals(3, isFavorite.place)
     }
 
     @Test

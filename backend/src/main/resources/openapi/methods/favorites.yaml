@@ -135,7 +135,15 @@ Check:
         content:
           application/json:
             schema:
-              $ref: '../models/success.yaml#/Success'
+              type: object
+              properties:
+                isFavorite:
+                  type: boolean
+                  description: Indicates if the entity is marked as favorite
+                place:
+                  type: integer
+                  nullable: true
+                  description: Place (1-3) if the entity is a favorite, null otherwise
       default:
         description: Error
         content:
