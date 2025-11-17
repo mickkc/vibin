@@ -39,12 +39,16 @@ class SettingRestTest {
         serverSettings.forEach {
             assertTrue(settings.containsKey(it.key))
 
-            val actualValue = Settings.get(it)
-            if (actualValue is MetadataFetchingType) {
-                assertEquals(actualValue.name, settings[it.key])
-            }
-            else {
-                assertEquals(actualValue, settings[it.key])
+            when (val actualValue = Settings.get(it)) {
+                is MetadataFetchingType -> {
+                    assertEquals(actualValue.name, settings[it.key])
+                }
+                is Int -> {
+                    assertEquals(actualValue.toDouble(), settings[it.key])
+                }
+                else -> {
+                    assertEquals(actualValue, settings[it.key])
+                }
             }
         }
     }
