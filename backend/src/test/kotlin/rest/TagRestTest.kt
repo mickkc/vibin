@@ -19,9 +19,9 @@ class TagRestTest {
 
     @Test
     fun testGetTags() = testApp { client ->
-        TagTestUtils.createTag("Rock", "Rock music genre", "#FF0000")
-        TagTestUtils.createTag("Jazz", "Jazz music genre", "#00FF00")
-        TagTestUtils.createTag("Classical", "Classical music genre", "#0000FF")
+        TagTestUtils.createTag("Rock", "Rock music genre", 2)
+        TagTestUtils.createTag("Jazz", "Jazz music genre", 4)
+        TagTestUtils.createTag("Classical", "Classical music genre", 9)
 
         val response = client.get("/api/tags")
 
@@ -34,17 +34,17 @@ class TagRestTest {
         val firstTag = tags[0]
         assertEquals("Classical", firstTag.name)
         assertEquals("Classical music genre", firstTag.description)
-        assertEquals("#0000FF", firstTag.color)
+        assertEquals(9, firstTag.importance)
 
         val secondTag = tags[1]
         assertEquals("Jazz", secondTag.name)
         assertEquals("Jazz music genre", secondTag.description)
-        assertEquals("#00FF00", secondTag.color)
+        assertEquals(4, secondTag.importance)
 
         val thirdTag = tags[2]
         assertEquals("Rock", thirdTag.name)
         assertEquals("Rock music genre", thirdTag.description)
-        assertEquals("#FF0000", thirdTag.color)
+        assertEquals(2, thirdTag.importance)
     }
 
     @Test
@@ -135,7 +135,7 @@ class TagRestTest {
 
     @Test
     fun testGetTagByName() = testApp { client ->
-        TagTestUtils.createTag("Rock", "Rock music genre", "#FF0000")
+        TagTestUtils.createTag("Rock", "Rock music genre", 7)
 
         val response = client.get("/api/tags/named/Rock")
 
@@ -145,7 +145,7 @@ class TagRestTest {
 
         assertEquals("Rock", tag.name)
         assertEquals("Rock music genre", tag.description)
-        assertEquals("#FF0000", tag.color)
+        assertEquals(7, tag.importance)
     }
 
     @Test
@@ -205,7 +205,7 @@ class TagRestTest {
         val createDto = TagEditDto(
             name = "Rock",
             description = "Rock music genre",
-            color = "#FF0000"
+            importance = 1
         )
 
         val response = client.post("/api/tags") {
@@ -217,7 +217,7 @@ class TagRestTest {
         val createdTag = response.body<TagDto>()
         assertEquals("Rock", createdTag.name)
         assertEquals("Rock music genre", createdTag.description)
-        assertEquals("#FF0000", createdTag.color)
+        assertEquals(1, createdTag.importance)
     }
 
     @Test
@@ -231,7 +231,7 @@ class TagRestTest {
         val createDto = TagEditDto(
             name = "Rock",
             description = "Rock music genre",
-            color = "#FF0000"
+            importance = 4
         )
 
         val response = client.post("/api/tags") {
@@ -249,7 +249,7 @@ class TagRestTest {
         val createDto = TagEditDto(
             name = "Rock",
             description = "Another rock genre",
-            color = "#FF0000"
+            importance = 5
         )
 
         val response = client.post("/api/tags") {
@@ -266,7 +266,7 @@ class TagRestTest {
         val createDto = TagEditDto(
             name = "rock",
             description = "Another rock genre",
-            color = "#FF0000"
+            importance = 5
         )
 
         val response = client.post("/api/tags") {
@@ -281,7 +281,7 @@ class TagRestTest {
         val createDto = TagEditDto(
             name = "Jazz",
             description = null,
-            color = null
+            importance = 1
         )
 
         val response = client.post("/api/tags") {
@@ -293,7 +293,7 @@ class TagRestTest {
         val createdTag = response.body<TagDto>()
         assertEquals("Jazz", createdTag.name)
         assertEquals("", createdTag.description)
-        assertEquals(null, createdTag.color)
+        assertEquals(1, createdTag.importance)
     }
 
     // endregion
@@ -302,12 +302,12 @@ class TagRestTest {
 
     @Test
     fun testUpdateTag() = testApp { client ->
-        val tag = TagTestUtils.createTag("Old Name", "Old Description", "#000000")
+        val tag = TagTestUtils.createTag("Old Name", "Old Description", 10)
 
         val updateDto = TagEditDto(
             name = "New Name",
             description = "New Description",
-            color = "#FFFFFF"
+            importance = 8
         )
 
         val response = client.put("/api/tags/${tag.id.value}") {
@@ -319,7 +319,7 @@ class TagRestTest {
         val updatedTag = response.body<TagDto>()
         assertEquals("New Name", updatedTag.name)
         assertEquals("New Description", updatedTag.description)
-        assertEquals("#FFFFFF", updatedTag.color)
+        assertEquals(8, updatedTag.importance)
     }
 
     @Test
@@ -335,7 +335,7 @@ class TagRestTest {
         val updateDto = TagEditDto(
             name = "New Name",
             description = "New Description",
-            color = null
+            importance = 5
         )
 
         val response = client.put("/api/tags/${tag.id.value}") {
@@ -351,7 +351,7 @@ class TagRestTest {
         val updateDto = TagEditDto(
             name = "New Name",
             description = "New Description",
-            color = null
+            importance = 5
         )
 
         val response = client.put("/api/tags/9999") {
@@ -369,7 +369,7 @@ class TagRestTest {
         val updateDto = TagEditDto(
             name = "Rock",
             description = "Trying to use existing name",
-            color = null
+            importance = 3
         )
 
         val response = client.put("/api/tags/${tag2.id.value}") {
@@ -387,7 +387,7 @@ class TagRestTest {
         val updateDto = TagEditDto(
             name = "rock",
             description = "Trying to use existing name",
-            color = null
+            importance = 3
         )
 
         val response = client.put("/api/tags/${tag2.id.value}") {
@@ -399,12 +399,12 @@ class TagRestTest {
 
     @Test
     fun testUpdateTag_SameNameAllowed() = testApp { client ->
-        val tag = TagTestUtils.createTag("Rock", "Rock music genre", "#FF0000")
+        val tag = TagTestUtils.createTag("Rock", "Rock music genre", 3)
 
         val updateDto = TagEditDto(
             name = "Rock",
             description = "Updated description",
-            color = "#00FF00"
+            importance = 5,
         )
 
         val response = client.put("/api/tags/${tag.id.value}") {
@@ -416,7 +416,7 @@ class TagRestTest {
         val updatedTag = response.body<TagDto>()
         assertEquals("Rock", updatedTag.name)
         assertEquals("Updated description", updatedTag.description)
-        assertEquals("#00FF00", updatedTag.color)
+        assertEquals(5, updatedTag.importance)
     }
 
     // endregion

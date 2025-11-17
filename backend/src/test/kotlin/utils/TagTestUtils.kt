@@ -10,12 +10,12 @@ object TagTestUtils {
     fun createTag(
         name: String,
         description: String = "",
-        color: String? = null
+        importance: Int = 10
     ): TagEntity {
         val editDto = TagEditDto(
             name = name,
             description = description,
-            color = color
+            importance = importance
         )
         val tag = TagRepo.create(editDto)
         assertNotNull(tag)
