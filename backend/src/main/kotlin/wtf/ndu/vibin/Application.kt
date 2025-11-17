@@ -55,6 +55,8 @@ fun Application.module() {
     configureUploadRoutes()
     configureSettingRoutes()
 
+    configureFavoriteRoutes()
+
     configureFrontendRoutes()
 
     GlobalScope.launch {

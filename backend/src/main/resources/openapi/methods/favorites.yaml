@@ -1,0 +1,107 @@
+Get:
+  get:
+    summary: Get favorite entities for a user
+    operationId: getUserFavorites
+    tags:
+      - Favorites
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+        description: User ID
+    responses:
+      200:
+        description: The user's favorite entities
+        content:
+          application/json:
+            schema:
+              $ref: '../models/favorites.yaml#/Favorites'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Toggle:
+  put:
+    summary: Set / replace an entity as favorite
+    operationId: toggleFavorite
+    tags:
+      - Favorites
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: type
+        in: path
+        required: true
+        schema:
+          type: string
+          enum: [track, album, artist]
+        description: Type of entity to toggle as favorite
+      - name: place
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Place (1-3) to set the entity as favorite
+      - name: entityId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+        description: ID of the entity to toggle as favorite
+    responses:
+      200:
+        description: Favorite status toggled successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+  delete:
+    summary: Remove an entity from favorites
+    operationId: removeFavorite
+    tags:
+      - Favorites
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: type
+        in: path
+        required: true
+        schema:
+          type: string
+          enum: [track, album, artist]
+        description: Type of entity to remove from favorites
+      - name: place
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Place (1-3) to remove the entity from favorites
+    responses:
+      200:
+        description: Favorite removed successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

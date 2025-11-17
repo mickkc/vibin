@@ -83,6 +83,15 @@ paths:
   /api/check:
     $ref: 'methods/check.yaml#/Check'
 
+  # █▀▀ ▄▀█ █░█ █▀█ █▀█ █ ▀█▀ █▀▀ █▀
+  # █▀░ █▀█ ▀▄▀ █▄█ █▀▄ █ ░█░ ██▄ ▄█
+
+  /api/favorites/{id}:
+    $ref: 'methods/favorites.yaml#/Get'
+
+  /api/favorites/{type}/{place}:
+    $ref: 'methods/favorites.yaml#/Toggle'
+
   # █▀▄▀█ █▀▀ ▀█▀ ▄▀█ █▀▄ ▄▀█ ▀█▀ ▄▀█
   # █░▀░█ ██▄ ░█░ █▀█ █▄▀ █▀█ ░█░ █▀█
 

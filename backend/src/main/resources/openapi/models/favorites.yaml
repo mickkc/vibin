@@ -1,0 +1,21 @@
+Favorites:
+  type: object
+  properties:
+    tracks:
+      type: array
+      items:
+        $ref: 'track.yaml#/MinimalTrack'
+        nullable: true
+      description: List of favorite tracks
+    albums:
+      type: array
+      items:
+        $ref: 'album.yaml#/Album'
+        nullable: true
+      description: List of favorite albums
+    artists:
+      type: array
+      items:
+        $ref: 'artist.yaml#/Artist'
+        nullable: true
+      description: List of favorite artists

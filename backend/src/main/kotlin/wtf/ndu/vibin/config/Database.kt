@@ -68,6 +68,7 @@ val allTables = arrayOf(
     ListenTable,
     LyricsTable,
     TaskSettingTable,
+    FavoriteTable
 )
 
 fun createTables() = transaction {
