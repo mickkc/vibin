@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import wtf.ndu.vibin.config.EnvUtil
 import wtf.ndu.vibin.db.images.ImageEntity
 import wtf.ndu.vibin.processing.ThumbnailProcessor
+import wtf.ndu.vibin.utils.PathUtils
 import java.io.File
 
 object ImageCache {
@@ -24,7 +25,7 @@ object ImageCache {
             return imageFile
         }
 
-        val originalFile = File(imageEntity.sourcePath)
+        val originalFile = PathUtils.getThumbnailFileFromPath(imageEntity.sourcePath)
         return getImageFile(originalFile, size, imageEntity.id.value.toString())
     }
 

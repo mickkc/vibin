@@ -43,7 +43,7 @@ object ThumbnailProcessor {
 
             return ImageRepo.createImage(
                 checksum = checksum,
-                sourcePath = originalFile.absolutePath,
+                sourcePath = originalFile.name,
                 colorScheme = colorScheme
             )
         }
