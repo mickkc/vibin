@@ -3,6 +3,7 @@
 [![Build Status](http://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain&subject=Build)](https://jks.ndu.wtf/job/vibin-server/job/main/)
 [![Lines of Code](https://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain&subject=Lines%20of%20Code&status=${lineOfCode}&color=blue)](https://jks.ndu.wtf/job/vibin-server/job/main/)
 [![Code Coverage](https://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain&subject=Coverage&status=${instructionCoverage}&color=${colorInstructionCoverage})](https://jks.ndu.wtf/job/vibin-server/job/main/)
+[![License](https://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain&subject=License&status=GPLv3&color=teal)](LICENSE)
 
 ---
 
@@ -123,5 +124,5 @@ Not right now.
 
 # License
 
-This project is licensed under the [Vibin' Public License v1.0](LICENSE.md) (VPL-1.0).
+This project is licensed under the [GNU General Public License v3.0](LICENSE) (GPLv3).
 
