@@ -1,11 +1,16 @@
 ![Banner](assets/Banner-MD.jpg)
 
-[![Build Status](http://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain)](https://jks.ndu.wtf/job/vibin-server/job/main/)
+[![Build Status](http://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain&subject=Build)](https://jks.ndu.wtf/job/vibin-server/job/main/)
+[![Lines of Code](https://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain&subject=Lines%20of%20Code&status=${lineOfCode}&color=blue)](https://jks.ndu.wtf/job/vibin-server/job/main/)
+[![Code Coverage](https://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain&subject=Coverage&status=${instructionCoverage}&color=${colorInstructionCoverage})](https://jks.ndu.wtf/job/vibin-server/job/main/)
+
+---
 
 Vibin is a self-hosted music streaming server that allows you to upload, manage, and stream your music collection from anywhere.
 
 > [!CAUTION]
-> THIS PROJECT IS IN EARLY DEVELOPMENT, NOT YET USABLE, AND LACKS A LOT OF FEATURES AS WELL AS A FRONTEND.
+> This project is still in development. Breaking changes may occur without prior notice.
+> Use at your own risk.
 
 <!-- TOC -->
 * [Features](#features)
