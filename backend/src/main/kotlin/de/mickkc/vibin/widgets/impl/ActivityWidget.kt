@@ -14,7 +14,7 @@ import java.time.LocalDate
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
-class ActivityWidget(widgetContext: WidgetContext) : BaseWidget(widgetContext) {
+class ActivityWidget(widgetContext: WidgetContext, val extended: Boolean = true) : BaseWidget(widgetContext) {
 
     override fun render(): String {
 
@@ -54,16 +54,18 @@ class ActivityWidget(widgetContext: WidgetContext) : BaseWidget(widgetContext) {
                     }
                 }
 
-                val listensThisYear = listensPerDay.sumOf { it.second }
-                val listensThisMonth = listensPerDay.filter { it.first.monthValue == end.monthValue }.sumOf { it.second }
-                val listensThisWeek = listensPerDay.filter { it.first >= end.minusDays(7) }.sumOf { it.second }
-                val listensToday = listensPerDay.find { it.first.dayOfYear == end.dayOfYear }?.second ?: 0
+                if (extended) {
+                    val listensThisYear = listensPerDay.sumOf { it.second }
+                    val listensThisMonth = listensPerDay.filter { it.first.monthValue == end.monthValue }.sumOf { it.second }
+                    val listensThisWeek = listensPerDay.filter { it.first >= end.minusDays(7) }.sumOf { it.second }
+                    val listensToday = listensPerDay.find { it.first.dayOfYear == end.dayOfYear }?.second ?: 0
 
-                div("stats") {
-                    statCard(this@ActivityWidget, listensThisYear.toString(), t("widgets.activity.year"))
-                    statCard(this@ActivityWidget, listensThisMonth.toString(), t("widgets.activity.month"))
-                    statCard(this@ActivityWidget, listensThisWeek.toString(), t("widgets.activity.week"))
-                    statCard(this@ActivityWidget, listensToday.toString(), t("widgets.activity.today"))
+                    div("stats") {
+                        statCard(this@ActivityWidget, listensThisYear.toString(), t("widgets.activity.year"))
+                        statCard(this@ActivityWidget, listensThisMonth.toString(), t("widgets.activity.month"))
+                        statCard(this@ActivityWidget, listensThisWeek.toString(), t("widgets.activity.week"))
+                        statCard(this@ActivityWidget, listensToday.toString(), t("widgets.activity.today"))
+                    }
                 }
             }
         }

@@ -20,6 +20,7 @@ object WidgetBuilder {
             when (type) {
                 WidgetType.USER -> UserWidget(ctx)
                 WidgetType.ACTIVITY -> ActivityWidget(ctx)
+                WidgetType.SIMPLE_ACTIVITY -> ActivityWidget(ctx, extended = false)
                 WidgetType.FAVORITE_TRACKS -> FavoriteTracksWidget(ctx)
                 WidgetType.FAVORITE_ALBUMS -> FavoriteAlbumsWidget(ctx)
                 WidgetType.FAVORITE_ARTISTS -> FavoriteArtistsWidget(ctx)
