@@ -5,6 +5,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInSubQuery
 import org.jetbrains.exposed.sql.transactions.transaction
 import de.mickkc.vibin.db.UserEntity
+import de.mickkc.vibin.db.artists.ArtistEntity
 import de.mickkc.vibin.db.artists.TrackArtistConnection
 import de.mickkc.vibin.db.images.ColorSchemeEntity
 import de.mickkc.vibin.db.images.ImageEntity
@@ -46,6 +47,10 @@ object TrackRepo {
 
     fun getById(id: Long): TrackEntity? = transaction {
         return@transaction TrackEntity.findById(id)
+    }
+
+    fun getArtists(track: TrackEntity): List<ArtistEntity> = transaction {
+        return@transaction track.artists.toList()
     }
 
     fun getByArtistId(artistId: Long, userId: Long? = null): List<TrackEntity> = transaction {

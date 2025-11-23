@@ -25,25 +25,25 @@ object FavoriteRepo {
         )
     }
 
-    internal fun getFavoriteTracksForUser(userId: Long): List<TrackEntity?> {
+    fun getFavoriteTracksForUser(userId: Long): List<TrackEntity?> = transaction {
         val trackIds = getFavoriteIdsByTypeForUser(userId, FavoriteType.TRACK)
-        return (1..3).map { place ->
+        return@transaction (1..3).map { place ->
             val pair = trackIds.firstOrNull { it.second == place }
             pair?.let { TrackEntity.findById(it.first) }
         }
     }
 
-    internal fun getFavoriteAlbumsForUser(userId: Long): List<AlbumEntity?> {
+    fun getFavoriteAlbumsForUser(userId: Long): List<AlbumEntity?> = transaction {
         val albumIds = getFavoriteIdsByTypeForUser(userId, FavoriteType.ALBUM)
-        return (1..3).map { place ->
+        return@transaction (1..3).map { place ->
             val pair = albumIds.firstOrNull { it.second == place }
             pair?.let { AlbumEntity.findById(it.first) }
         }
     }
 
-    internal fun getFavoriteArtistsForUser(userId: Long): List<ArtistEntity?> {
+    fun getFavoriteArtistsForUser(userId: Long): List<ArtistEntity?> = transaction {
         val artistIds = getFavoriteIdsByTypeForUser(userId, FavoriteType.ARTIST)
-        return (1..3).map { place ->
+        return@transaction (1..3).map { place ->
             val pair = artistIds.firstOrNull { it.second == place }
             pair?.let { ArtistEntity.findById(it.first) }
         }

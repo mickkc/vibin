@@ -6,5 +6,6 @@ enum class WidgetType {
     FAVORITE_TRACKS,
     FAVORITE_ALBUMS,
     FAVORITE_ARTISTS,
+    JOINED_FAVORITES,
     SERVER_STATS
 }

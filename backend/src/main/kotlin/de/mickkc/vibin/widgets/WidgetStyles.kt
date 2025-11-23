@@ -36,6 +36,11 @@ object WidgetStyles {
             padding = Padding(all = 0.rem)
         }
 
+        h3 {
+            margin = Margin(all = 0.rem)
+            padding = Padding(all = 0.rem)
+        }
+
         rule(".activity-grid") {
             display = Display.grid
             gridTemplateRows = GridTemplateRows("repeat(7, 14px)")
@@ -95,7 +100,7 @@ object WidgetStyles {
             minHeight = 0.px
         }
 
-        rule(".user-info .description") {
+        rule(".description") {
             margin = Margin(top = 0.5.rem, bottom = 0.5.rem)
             opacity = 0.8
             fontSize = 0.9.rem
@@ -125,6 +130,87 @@ object WidgetStyles {
             flex = Flex.GROW
             textAlign = TextAlign.center
             height = LinearDimension.maxContent
+        }
+
+        rule(".favorites") {
+            display = Display.flex
+            flexDirection = FlexDirection.column
+        }
+
+        rule(".favorite-items") {
+            display = Display.flex
+            flexDirection = FlexDirection.row
+            gap = 1.rem
+            overflowX = Overflow.scroll
+        }
+
+        rule(".favorite-item") {
+            display = Display.flex
+            flexDirection = FlexDirection.column
+            gap = 0.25.rem
+            padding = Padding(all = 0.5.rem)
+            borderRadius = 0.5.rem
+            position = Position.relative
+        }
+
+        rule(".favorite-place") {
+            position = Position.absolute
+            top = 0.5.rem
+            right = 1.rem
+            fontSize = 1.5.rem
+            padding = Padding(horizontal = 0.25.rem, vertical = 0.5.rem)
+            borderBottomLeftRadius = 0.5.rem
+            borderBottomRightRadius = 0.5.rem
+            userSelect = UserSelect.none
+        }
+
+        rule(".item-info") {
+            display = Display.flex
+            flexDirection = FlexDirection.column
+            gap = 0.25.rem
+        }
+
+        rule(".item-info > *") {
+            overflow = Overflow.hidden
+            textOverflow = TextOverflow.ellipsis
+            whiteSpace = WhiteSpace.nowrap
+            maxWidth = 128.px
+        }
+
+        rule(".item-subtitle") {
+            padding = Padding(all = 0.rem)
+            margin = Margin(all = 0.rem)
+            opacity = 0.8
+            fontSize = 0.9.rem
+        }
+
+        rule(".item-cover") {
+            width = 128.px
+            height = 128.px
+            objectFit = ObjectFit.cover
+            borderRadius = 0.5.rem
+        }
+
+        rule(".joined-favorites") {
+            display = Display.flex
+            flexDirection = FlexDirection.row
+            gap = 2.rem
+            flexWrap = FlexWrap.wrap
+            justifyContent = JustifyContent.start
+            alignItems = Align.center
+        }
+
+        media("(max-width: 1000px)") {
+            rule(".joined-favorites") {
+                flexDirection = FlexDirection.column
+                alignItems = Align.center
+                justifyContent = JustifyContent.center
+                width = 100.vw - 2.rem
+                gap = 1.rem
+            }
+            rule(".joined-favorites .favorite-items") {
+                width = 100.vw - 4.rem
+            }
         }
 
     }.toString()

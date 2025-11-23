@@ -1,0 +1,40 @@
+package de.mickkc.vibin.widgets.impl
+
+import de.mickkc.vibin.images.ImageCache
+import de.mickkc.vibin.repos.AlbumRepo
+import de.mickkc.vibin.repos.FavoriteRepo
+import de.mickkc.vibin.utils.PathUtils
+import de.mickkc.vibin.widgets.BaseWidget
+import de.mickkc.vibin.widgets.WidgetContext
+import de.mickkc.vibin.widgets.components.favoritesSection
+import kotlinx.html.div
+import kotlinx.html.stream.appendHTML
+
+class FavoriteAlbumsWidget(ctx: WidgetContext) : BaseWidget(ctx) {
+
+    override fun render(): String = buildString {
+        appendHTML().div("widget-body") {
+
+            val favorites = FavoriteRepo.getFavoriteAlbumsForUser(ctx.userId)
+
+            favoritesSection(
+                this@FavoriteAlbumsWidget,
+                title = t("widgets.favorites.albums.title"),
+                favorites = favorites,
+                getCover = {
+                    AlbumRepo.getAlbumCover(it)?.let {
+                        ImageCache.getImageFile(it, 128)
+                    }
+                    ?: PathUtils.getDefaultImage("album", 128)
+               },
+                getTitle = { it.title },
+                getSubtitle = {
+                    it.description.ifBlank {
+                        it.releaseYear?.toString()
+                            ?: t("widgets.favorites.albums.subtitle_placeholder")
+                    }
+                }
+            )
+        }
+    }
+}

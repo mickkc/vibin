@@ -1,6 +1,10 @@
 package de.mickkc.vibin.widgets
 
 import de.mickkc.vibin.widgets.impl.ActivityWidget
+import de.mickkc.vibin.widgets.impl.FavoriteAlbumsWidget
+import de.mickkc.vibin.widgets.impl.FavoriteArtistsWidget
+import de.mickkc.vibin.widgets.impl.FavoriteTracksWidget
+import de.mickkc.vibin.widgets.impl.JoinedFavoritesWidget
 import de.mickkc.vibin.widgets.impl.ServerStatsWidget
 import de.mickkc.vibin.widgets.impl.UserWidget
 import kotlinx.html.*
@@ -16,9 +20,10 @@ object WidgetBuilder {
             when (type) {
                 WidgetType.USER -> UserWidget(ctx)
                 WidgetType.ACTIVITY -> ActivityWidget(ctx)
-                WidgetType.FAVORITE_TRACKS -> throw NotImplementedError()
-                WidgetType.FAVORITE_ALBUMS -> throw NotImplementedError()
-                WidgetType.FAVORITE_ARTISTS -> throw NotImplementedError()
+                WidgetType.FAVORITE_TRACKS -> FavoriteTracksWidget(ctx)
+                WidgetType.FAVORITE_ALBUMS -> FavoriteAlbumsWidget(ctx)
+                WidgetType.FAVORITE_ARTISTS -> FavoriteArtistsWidget(ctx)
+                WidgetType.JOINED_FAVORITES -> JoinedFavoritesWidget(ctx)
                 WidgetType.SERVER_STATS -> ServerStatsWidget(ctx)
             }
         }
