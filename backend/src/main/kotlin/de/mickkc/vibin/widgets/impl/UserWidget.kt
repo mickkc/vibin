@@ -19,8 +19,8 @@ class UserWidget(ctx: WidgetContext) : BaseWidget(ctx) {
         val user = UserRepo.getById(ctx.userId) ?: return t("widgets.user.not_found")
 
         val image = UserRepo.getProfilePicture(user)
-        val avatarFile = image?.let { ImageCache.getImageFile(it, 256) }
-            ?: PathUtils.getDefaultImage("user", 256)
+        val avatarFile = image?.let { ImageCache.getImageFile(it, 192) }
+            ?: PathUtils.getDefaultImage("user", 192)
             ?: return t("widgets.user.not_found")
 
         val bytes = avatarFile.readBytes()
