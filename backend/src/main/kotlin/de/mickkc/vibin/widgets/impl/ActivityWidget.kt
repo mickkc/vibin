@@ -6,11 +6,10 @@ import de.mickkc.vibin.widgets.BaseWidget
 import de.mickkc.vibin.widgets.WidgetContext
 import de.mickkc.vibin.widgets.WidgetUtils
 import de.mickkc.vibin.widgets.components.statCard
-import kotlinx.html.div
-import kotlinx.html.h2
+import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
-import kotlinx.html.style
 import java.time.LocalDate
+import java.util.*
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -33,7 +32,11 @@ class ActivityWidget(widgetContext: WidgetContext, val extended: Boolean = true)
                     +t("widgets.activity.title")
                 }
 
+                // "g" prefix to ensure the ID starts with a letter
+                val gridId = "g" + UUID.randomUUID().toString().substringBefore("-")
+
                 div("activity-grid") {
+                    this.id = gridId
                     style =
                         "grid-template-columns: repeat(${ceil((end.dayOfYear - startLocalDate.dayOfYear + 1) / 7f).roundToInt()}, 1fr);"
 
@@ -66,6 +69,16 @@ class ActivityWidget(widgetContext: WidgetContext, val extended: Boolean = true)
                         statCard(this@ActivityWidget, listensThisWeek.toString(), t("widgets.activity.week"))
                         statCard(this@ActivityWidget, listensToday.toString(), t("widgets.activity.today"))
                     }
+                }
+
+                // Auto-scroll to the end of the grid to show the most recent activity
+                unsafe {
+                    +"""
+                        <script>
+                            let $gridId = document.getElementById("$gridId");
+                            $gridId.scrollLeft = $gridId.scrollWidth;
+                        </script>
+                    """.trimIndent()
                 }
             }
         }
