@@ -13,7 +13,7 @@ import kotlinx.html.stream.appendHTML
 class FavoriteAlbumsWidget(ctx: WidgetContext) : BaseWidget(ctx) {
 
     override fun render(): String = buildString {
-        appendHTML().div("widget-body") {
+        appendHTML(prettyPrint = false).div("widget-body") {
 
             val favorites = FavoriteRepo.getFavoriteAlbumsForUser(ctx.userId)
 

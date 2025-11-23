@@ -33,7 +33,7 @@ object WidgetBuilder {
         val fgColor = WidgetUtils.colorToHex(ctx.foregroundColor)
 
         return buildString {
-            appendHTML().html {
+            appendHTML(prettyPrint = false).html {
 
                 lang = ctx.language
 

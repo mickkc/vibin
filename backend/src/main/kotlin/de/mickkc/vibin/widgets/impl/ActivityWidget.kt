@@ -27,7 +27,7 @@ class ActivityWidget(widgetContext: WidgetContext, val extended: Boolean = true)
         val end = LocalDate.now()
 
         return buildString {
-            appendHTML().div("widget-body") {
+            appendHTML(prettyPrint = false).div("widget-body") {
 
                 h2 {
                     +t("widgets.activity.title")

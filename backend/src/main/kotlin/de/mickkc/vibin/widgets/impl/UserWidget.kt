@@ -28,7 +28,7 @@ class UserWidget(ctx: WidgetContext) : BaseWidget(ctx) {
             Base64.encode(bytes)
         }"
 
-        appendHTML().div("widget-body") {
+        appendHTML(prettyPrint = false).div("widget-body") {
 
             div("user-container") {
                 img(

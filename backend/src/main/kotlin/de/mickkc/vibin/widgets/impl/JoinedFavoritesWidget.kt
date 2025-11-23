@@ -9,7 +9,7 @@ import kotlinx.html.unsafe
 class JoinedFavoritesWidget(ctx: WidgetContext) : BaseWidget(ctx) {
 
     override fun render(): String = buildString {
-        appendHTML().div("widget-body") {
+        appendHTML(prettyPrint = false).div("widget-body") {
 
             div("joined-favorites") {
                 unsafe {

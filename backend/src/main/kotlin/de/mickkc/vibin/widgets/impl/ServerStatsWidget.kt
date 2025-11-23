@@ -21,7 +21,7 @@ class ServerStatsWidget(ctx: WidgetContext) : BaseWidget(ctx) {
 
         return buildString {
 
-            appendHTML().div("widget-body") {
+            appendHTML(prettyPrint = false).div("widget-body") {
 
                 h2 {
                     +t("widgets.server_stats.title")
