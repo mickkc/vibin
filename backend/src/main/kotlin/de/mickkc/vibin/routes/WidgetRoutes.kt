@@ -45,7 +45,7 @@ fun Application.configureWidgetRoutes() = routing {
 
             val widgetTypes = widgetTypeParam.split(",").mapNotNull {
                 it.toIntOrNull()?.let { WidgetType.entries.getOrNull(it) }
-            }
+            }.distinct()
 
             if (widgetTypes.isEmpty()) {
                 return@getP call.invalidParameter("types")
