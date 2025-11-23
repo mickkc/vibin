@@ -38,7 +38,7 @@ object WidgetBuilder {
                 lang = ctx.language
 
                 head {
-                    title = "Vibin' Widget"
+                    title { +"Vibin' Widget" }
                     meta("charset", "UTF-8")
                     meta("viewport", "width=device-width, initial-scale=1.0")
                     link(rel = "stylesheet", href = "/api/widgets/styles", type = "text/css")

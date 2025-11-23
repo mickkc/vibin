@@ -54,9 +54,11 @@ fun<T> FlowContent.favoritesSection(
 
                     div("item-info") {
                         h3 {
+                            this.title = itemTitle
                             +itemTitle
                         }
                         p("item-subtitle") {
+                            this.title = itemSubtitle
                             +itemSubtitle
                         }
                     }
