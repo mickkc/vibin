@@ -46,6 +46,10 @@ dependencies {
     implementation(libs.ktor.server.openapi)
     implementation(libs.logback.classic)
 
+    implementation(libs.ktor.server.html.builder)
+    implementation(libs.kotlinx.html.jvm)
+    implementation(libs.kotlin.css)
+
     implementation(libs.flyway.core)
 
     implementation(libs.ktor.client.core)

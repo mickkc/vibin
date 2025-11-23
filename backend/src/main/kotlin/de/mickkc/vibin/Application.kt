@@ -58,6 +58,7 @@ fun Application.module() {
     configureFavoriteRoutes()
 
     configureFrontendRoutes()
+    configureWidgetRoutes()
 
     GlobalScope.launch {
         AudioFileProcessor.initialProcess()

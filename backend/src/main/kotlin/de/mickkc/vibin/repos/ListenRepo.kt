@@ -16,6 +16,7 @@ import de.mickkc.vibin.db.tracks.TrackEntity
 import de.mickkc.vibin.dto.KeyValueDto
 import de.mickkc.vibin.utils.DateTimeUtils
 import de.mickkc.vibin.utils.UserActivity
+import java.time.LocalDate
 
 object ListenRepo {
 
@@ -202,5 +203,20 @@ object ListenRepo {
         return@transaction ListenEntity
             .find { ListenTable.type eq ListenType.TRACK }
             .count()
+    }
+
+    fun getListensPerDay(userId: Long, since: Long): List<Pair<LocalDate, Long>> = transaction {
+        val listens = ListenEntity.find {
+            (ListenTable.listenedAt greaterEq since) and
+            (ListenTable.user eq userId) and
+            (ListenTable.type eq ListenType.TRACK)
+        }
+
+        val listensPerDay = listens.groupBy { DateTimeUtils.toLocalDate(it.listenedAt) }
+            .mapValues { it.value.size.toLong() }
+
+        return@transaction listensPerDay.entries
+            .sortedBy { it.key }
+            .map { it.toPair() }
     }
 }
