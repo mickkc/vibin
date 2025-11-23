@@ -27,7 +27,7 @@ fun Application.configureWidgetRoutes() = routing {
             val foregroundColor = call.request.queryParameters["fgColor"]?.toIntOrNull() ?: 0xEBDBB2
             val accentColor = call.request.queryParameters["accentColor"]?.toIntOrNull() ?: 0x689D6A
             var language = call.request.queryParameters["lang"]
-                ?: call.request.header("Accept-Language")?.split(",")?.firstOrNull()?.lowercase() ?: "en"
+                ?: call.request.header("Accept-Language")?.split(",", "-")?.firstOrNull()?.lowercase() ?: "en"
 
             if (!WidgetBuilder.SUPPORTED_LANGUAGES.contains(language)) {
                 language = "en"
