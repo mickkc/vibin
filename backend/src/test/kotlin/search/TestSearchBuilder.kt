@@ -3,7 +3,7 @@ package search
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.assertThrows
 import utils.initTestDb
-import wtf.ndu.vibin.search.SearchQueryBuilder
+import de.mickkc.vibin.search.SearchQueryBuilder
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals

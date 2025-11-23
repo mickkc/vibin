@@ -1,8 +1,8 @@
 package utils
 
-import wtf.ndu.vibin.db.artists.ArtistEntity
-import wtf.ndu.vibin.dto.artists.ArtistEditData
-import wtf.ndu.vibin.repos.ArtistRepo
+import de.mickkc.vibin.db.artists.ArtistEntity
+import de.mickkc.vibin.dto.artists.ArtistEditData
+import de.mickkc.vibin.repos.ArtistRepo
 
 object ArtistTestUtils {
     suspend fun createArtist(name: String, description: String = ""): ArtistEntity {

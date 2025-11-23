@@ -6,12 +6,12 @@ import io.ktor.http.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import utils.UserTestUtils
 import utils.testApp
-import wtf.ndu.vibin.auth.CryptoUtil
-import wtf.ndu.vibin.dto.PaginatedDto
-import wtf.ndu.vibin.dto.users.UserDto
-import wtf.ndu.vibin.dto.users.UserEditDto
-import wtf.ndu.vibin.repos.UserRepo
-import wtf.ndu.vibin.routes.PaginatedSearchParams
+import de.mickkc.vibin.auth.CryptoUtil
+import de.mickkc.vibin.dto.PaginatedDto
+import de.mickkc.vibin.dto.users.UserDto
+import de.mickkc.vibin.dto.users.UserEditDto
+import de.mickkc.vibin.repos.UserRepo
+import de.mickkc.vibin.routes.PaginatedSearchParams
 import kotlin.test.*
 
 class UserRestTest {

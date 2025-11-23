@@ -5,11 +5,11 @@ plugins {
     jacoco
 }
 
-group = "wtf.ndu"
+group = "de.mickkc"
 version = "0.0.1"
 
 application {
-    mainClass = "wtf.ndu.vibin.ApplicationKt"
+    mainClass = "de.mickkc.vibin.ApplicationKt"
 }
 
 kotlin {

@@ -1,9 +1,9 @@
 package utils
 
 import org.junit.jupiter.api.assertNotNull
-import wtf.ndu.vibin.db.albums.AlbumEntity
-import wtf.ndu.vibin.dto.albums.AlbumEditDto
-import wtf.ndu.vibin.repos.AlbumRepo
+import de.mickkc.vibin.db.albums.AlbumEntity
+import de.mickkc.vibin.dto.albums.AlbumEditDto
+import de.mickkc.vibin.repos.AlbumRepo
 
 object AlbumTestUtils {
 

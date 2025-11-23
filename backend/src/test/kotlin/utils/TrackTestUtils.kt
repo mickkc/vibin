@@ -2,8 +2,8 @@ package utils
 
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.transaction
-import wtf.ndu.vibin.db.tracks.TrackEntity
-import wtf.ndu.vibin.repos.UserRepo
+import de.mickkc.vibin.db.tracks.TrackEntity
+import de.mickkc.vibin.repos.UserRepo
 
 object TrackTestUtils {
     suspend fun createTrack(

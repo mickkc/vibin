@@ -6,9 +6,9 @@ import io.ktor.http.*
 import utils.TagTestUtils
 import utils.UserTestUtils
 import utils.testApp
-import wtf.ndu.vibin.dto.tags.TagDto
-import wtf.ndu.vibin.dto.tags.TagEditDto
-import wtf.ndu.vibin.permissions.PermissionType
+import de.mickkc.vibin.dto.tags.TagDto
+import de.mickkc.vibin.dto.tags.TagEditDto
+import de.mickkc.vibin.permissions.PermissionType
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

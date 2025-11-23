@@ -6,11 +6,11 @@ import io.ktor.http.*
 import utils.ArtistTestUtils
 import utils.UserTestUtils
 import utils.testApp
-import wtf.ndu.vibin.dto.ArtistDto
-import wtf.ndu.vibin.dto.PaginatedDto
-import wtf.ndu.vibin.dto.artists.ArtistEditData
-import wtf.ndu.vibin.permissions.PermissionType
-import wtf.ndu.vibin.repos.ArtistRepo
+import de.mickkc.vibin.dto.ArtistDto
+import de.mickkc.vibin.dto.PaginatedDto
+import de.mickkc.vibin.dto.artists.ArtistEditData
+import de.mickkc.vibin.permissions.PermissionType
+import de.mickkc.vibin.repos.ArtistRepo
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

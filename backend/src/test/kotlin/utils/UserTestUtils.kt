@@ -1,13 +1,13 @@
 package utils
 
 import org.junit.jupiter.api.assertNotNull
-import wtf.ndu.vibin.auth.CryptoUtil
-import wtf.ndu.vibin.db.UserEntity
-import wtf.ndu.vibin.dto.users.UserEditDto
-import wtf.ndu.vibin.permissions.PermissionType
-import wtf.ndu.vibin.repos.PermissionRepo
-import wtf.ndu.vibin.repos.SessionRepo
-import wtf.ndu.vibin.repos.UserRepo
+import de.mickkc.vibin.auth.CryptoUtil
+import de.mickkc.vibin.db.UserEntity
+import de.mickkc.vibin.dto.users.UserEditDto
+import de.mickkc.vibin.permissions.PermissionType
+import de.mickkc.vibin.repos.PermissionRepo
+import de.mickkc.vibin.repos.SessionRepo
+import de.mickkc.vibin.repos.UserRepo
 
 object UserTestUtils {
 

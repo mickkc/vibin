@@ -2,8 +2,8 @@ package parsers
 
 import kotlinx.coroutines.runBlocking
 import utils.initTestDb
-import wtf.ndu.vibin.parsing.Parser
-import wtf.ndu.vibin.utils.ChecksumUtil
+import de.mickkc.vibin.parsing.Parser
+import de.mickkc.vibin.utils.ChecksumUtil
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals

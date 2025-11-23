@@ -11,11 +11,11 @@ import utils.AlbumTestUtils
 import utils.TrackTestUtils
 import utils.UserTestUtils
 import utils.testApp
-import wtf.ndu.vibin.dto.PaginatedDto
-import wtf.ndu.vibin.dto.albums.AlbumDataDto
-import wtf.ndu.vibin.dto.albums.AlbumDto
-import wtf.ndu.vibin.dto.albums.AlbumEditDto
-import wtf.ndu.vibin.permissions.PermissionType
+import de.mickkc.vibin.dto.PaginatedDto
+import de.mickkc.vibin.dto.albums.AlbumDataDto
+import de.mickkc.vibin.dto.albums.AlbumDto
+import de.mickkc.vibin.dto.albums.AlbumEditDto
+import de.mickkc.vibin.permissions.PermissionType
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals

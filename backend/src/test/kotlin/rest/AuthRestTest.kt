@@ -4,8 +4,8 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import utils.testApp
-import wtf.ndu.vibin.dto.LoginResultDto
-import wtf.ndu.vibin.repos.SessionRepo
+import de.mickkc.vibin.dto.LoginResultDto
+import de.mickkc.vibin.repos.SessionRepo
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

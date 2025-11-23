@@ -6,8 +6,8 @@ import io.ktor.http.*
 import kotlinx.serialization.Serializable
 import utils.UserTestUtils
 import utils.testApp
-import wtf.ndu.vibin.permissions.PermissionType
-import wtf.ndu.vibin.repos.PermissionRepo
+import de.mickkc.vibin.permissions.PermissionType
+import de.mickkc.vibin.repos.PermissionRepo
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals

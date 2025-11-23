@@ -1,6 +1,6 @@
 package search
 
-import wtf.ndu.vibin.search.SearchQueryBuilder
+import de.mickkc.vibin.search.SearchQueryBuilder
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 

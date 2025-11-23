@@ -1,9 +1,9 @@
 package utils
 
 import org.junit.jupiter.api.assertNotNull
-import wtf.ndu.vibin.db.tags.TagEntity
-import wtf.ndu.vibin.dto.tags.TagEditDto
-import wtf.ndu.vibin.repos.TagRepo
+import de.mickkc.vibin.db.tags.TagEntity
+import de.mickkc.vibin.dto.tags.TagEditDto
+import de.mickkc.vibin.repos.TagRepo
 
 object TagTestUtils {
 

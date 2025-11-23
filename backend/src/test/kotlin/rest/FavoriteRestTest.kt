@@ -13,10 +13,10 @@ import utils.ArtistTestUtils
 import utils.TrackTestUtils
 import utils.UserTestUtils
 import utils.testApp
-import wtf.ndu.vibin.db.FavoriteType
-import wtf.ndu.vibin.dto.FavoriteDto
-import wtf.ndu.vibin.permissions.PermissionType
-import wtf.ndu.vibin.repos.FavoriteRepo
+import de.mickkc.vibin.db.FavoriteType
+import de.mickkc.vibin.dto.FavoriteDto
+import de.mickkc.vibin.permissions.PermissionType
+import de.mickkc.vibin.repos.FavoriteRepo
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

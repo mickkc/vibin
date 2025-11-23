@@ -3,8 +3,8 @@ package parsers
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.assertDoesNotThrow
-import wtf.ndu.vibin.parsing.Parser
-import wtf.ndu.vibin.utils.ChecksumUtil
+import de.mickkc.vibin.parsing.Parser
+import de.mickkc.vibin.utils.ChecksumUtil
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

@@ -1,10 +1,10 @@
 package utils
 
 import org.junit.jupiter.api.assertNotNull
-import wtf.ndu.vibin.db.playlists.PlaylistEntity
-import wtf.ndu.vibin.dto.playlists.PlaylistEditDto
-import wtf.ndu.vibin.repos.PlaylistRepo
-import wtf.ndu.vibin.repos.UserRepo
+import de.mickkc.vibin.db.playlists.PlaylistEntity
+import de.mickkc.vibin.dto.playlists.PlaylistEditDto
+import de.mickkc.vibin.repos.PlaylistRepo
+import de.mickkc.vibin.repos.UserRepo
 
 object PlaylistTestUtils {
 

@@ -6,13 +6,13 @@ import io.ktor.http.*
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.transactions.transaction
 import utils.*
-import wtf.ndu.vibin.dto.PaginatedDto
-import wtf.ndu.vibin.dto.tracks.MinimalTrackDto
-import wtf.ndu.vibin.dto.tracks.TrackDto
-import wtf.ndu.vibin.dto.tracks.TrackEditDto
-import wtf.ndu.vibin.permissions.PermissionType
-import wtf.ndu.vibin.repos.LyricsRepo
-import wtf.ndu.vibin.repos.TrackRepo
+import de.mickkc.vibin.dto.PaginatedDto
+import de.mickkc.vibin.dto.tracks.MinimalTrackDto
+import de.mickkc.vibin.dto.tracks.TrackDto
+import de.mickkc.vibin.dto.tracks.TrackEditDto
+import de.mickkc.vibin.permissions.PermissionType
+import de.mickkc.vibin.repos.LyricsRepo
+import de.mickkc.vibin.repos.TrackRepo
 import kotlin.test.*
 
 class TrackRestTest {
