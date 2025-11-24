@@ -7,6 +7,7 @@ import de.mickkc.vibin.db.widgets.SharedWidgetTable
 import de.mickkc.vibin.db.widgets.WidgetTypeTable
 import de.mickkc.vibin.dto.widgets.WidgetDto
 import de.mickkc.vibin.widgets.WidgetType
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -28,10 +29,11 @@ object WidgetRepo {
             this.fgColor = fgColor
             this.accentColor = accentColor
         }
-        types.distinct().forEach { type ->
+        types.distinct().forEachIndexed { index, type ->
             WidgetTypeTable.insert {
                 it[WidgetTypeTable.widget] = widget.id
                 it[WidgetTypeTable.type] = type
+                it[WidgetTypeTable.index] = index
             }
         }
         return@transaction widget
@@ -53,6 +55,7 @@ object WidgetRepo {
         return@transaction WidgetTypeTable
             .select(WidgetTypeTable.type)
             .where(WidgetTypeTable.widget eq widget.id)
+            .orderBy(WidgetTypeTable.index to SortOrder.ASC)
             .map { it[WidgetTypeTable.type] }
     }
 
@@ -76,7 +79,10 @@ object WidgetRepo {
         val types = getTypes(widget).map { it.name.lowercase() }
         return WidgetDto(
             id = widget.id.value,
-            types = types
+            types = types,
+            bgColor = widget.bgColor,
+            fgColor = widget.fgColor,
+            accentColor = widget.accentColor
         )
     }
 }

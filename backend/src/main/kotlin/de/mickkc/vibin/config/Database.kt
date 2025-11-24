@@ -17,6 +17,8 @@ import de.mickkc.vibin.db.playlists.PlaylistTrackTable
 import de.mickkc.vibin.db.tags.TagTable
 import de.mickkc.vibin.db.tags.TrackTagConnection
 import de.mickkc.vibin.db.tracks.TrackTable
+import de.mickkc.vibin.db.widgets.SharedWidgetTable
+import de.mickkc.vibin.db.widgets.WidgetTypeTable
 
 private val logger = LoggerFactory.getLogger("Database initialization")
 
@@ -68,7 +70,8 @@ val allTables = arrayOf(
     ListenTable,
     LyricsTable,
     TaskSettingTable,
-    FavoriteTable
+    FavoriteTable,
+    SharedWidgetTable, WidgetTypeTable
 )
 
 fun createTables() = transaction {
