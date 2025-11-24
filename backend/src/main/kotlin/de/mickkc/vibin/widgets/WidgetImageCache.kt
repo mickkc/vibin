@@ -90,7 +90,7 @@ object WidgetImageCache {
      */
     private fun generateImage(html: String, width: Int, height: Int): ByteArray {
         // Replace relative URLs with absolute URLs for Selenium
-        val processedHtml = html.replace("/api/", "http://localhost:8080/api/")
+        val processedHtml = prepareHtml(html)
 
         val options = createChromeOptions(width, height)
         val driver = ChromeDriver(options)
@@ -227,5 +227,11 @@ object WidgetImageCache {
             logger.debug("Cache file ${file.name} is out of date (age: ${age / (60 * 1000)} minutes)")
         }
         return outOfDate
+    }
+
+    fun prepareHtml(html: String): String {
+        return html
+            .replace("/api/", "http://localhost:8080/api/") // Replace with absolute URLs
+            .replace(Regex("<a [^>]*class=\"btn\"[^>]*>.*?</a>"), "") // Remove buttons
     }
 }
