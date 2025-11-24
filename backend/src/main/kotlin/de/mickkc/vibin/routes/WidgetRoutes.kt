@@ -1,11 +1,15 @@
 package de.mickkc.vibin.routes
 
+import de.mickkc.vibin.dto.widgets.CreateWidgetDto
 import de.mickkc.vibin.images.ImageCache
+import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.ImageRepo
+import de.mickkc.vibin.repos.WidgetRepo
 import de.mickkc.vibin.utils.PathUtils
 import de.mickkc.vibin.widgets.*
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -50,14 +54,23 @@ fun Application.configureWidgetRoutes() = routing {
         call.respondFile(file)
     }
 
-    getP("/api/widgets") {
+    getP("/api/widgets/{id}") {
+        val id = call.parameters["id"] ?: return@getP call.missingParameter("id")
 
-        val userId = call.parameters["userId"]?.toLongOrNull()
-            ?: return@getP call.missingParameter("userId")
+        val widget = WidgetRepo.getWidget(id) ?: return@getP call.notFound()
 
-        val backgroundColor = call.request.queryParameters["bgColor"]?.toIntOrNull() ?: 0x1D2021
-        val foregroundColor = call.request.queryParameters["fgColor"]?.toIntOrNull() ?: 0xEBDBB2
-        val accentColor = call.request.queryParameters["accentColor"]?.toIntOrNull() ?: 0x689D6A
+        val backgroundColor = call.request.queryParameters["bgColor"]?.let {
+            WidgetUtils.colorFromHex(it)
+        } ?: widget.bgColor ?: 0x1D2021
+
+        val foregroundColor = call.request.queryParameters["fgColor"]?.let {
+            WidgetUtils.colorFromHex(it)
+        } ?: widget.fgColor ?: 0xEBDBB2
+
+        val accentColor = call.request.queryParameters["accentColor"]?.let {
+            WidgetUtils.colorFromHex(it)
+        } ?: widget.accentColor ?: 0x689D6A
+
         var language = call.request.queryParameters["lang"]
             ?: call.request.header("Accept-Language")?.split(",", "-")?.firstOrNull()?.lowercase() ?: "en"
 
@@ -66,23 +79,84 @@ fun Application.configureWidgetRoutes() = routing {
         }
 
         val ctx = WidgetContext(
-            userId = userId,
+            userId = WidgetRepo.getUserId(widget),
             accentColor = accentColor,
             backgroundColor = backgroundColor,
             foregroundColor = foregroundColor,
             language = language
         )
 
-        val widgetTypeParam = call.request.queryParameters["types"] ?: "0,1"
-
-        val widgetTypes = widgetTypeParam.split(",").mapNotNull {
-            it.toIntOrNull()?.let { WidgetType.entries.getOrNull(it) }
-        }.distinct()
+        val widgetTypes = WidgetRepo.getTypes(widget)
 
         if (widgetTypes.isEmpty()) {
             return@getP call.invalidParameter("types")
         }
 
         call.respondText(WidgetBuilder.build(widgetTypes, ctx), contentType = ContentType.Text.Html)
+    }
+
+    authenticate("tokenAuth") {
+
+        getP("/api/widgets", PermissionType.MANAGE_WIDGETS) {
+            val user = call.getUser() ?: return@getP call.unauthorized()
+
+            val widgets = WidgetRepo.getAllForUser(user)
+            val widgetDtos = WidgetRepo.toDto(widgets)
+
+            call.respond(widgetDtos)
+        }
+
+        postP("/api/widgets", PermissionType.MANAGE_WIDGETS) {
+
+            val user = call.getUser() ?: return@postP call.unauthorized()
+            val dto = call.receive<CreateWidgetDto>()
+
+            val parsedTypes = dto.types.map { typeName ->
+                try {
+                    WidgetType.valueOf(typeName.uppercase())
+                } catch (_: IllegalArgumentException) {
+                    return@postP call.invalidParameter("types")
+                }
+            }
+
+            if (parsedTypes.isEmpty()) {
+                return@postP call.invalidParameter("types")
+            }
+
+            val bgColor = dto.bgColor?.let {
+                WidgetUtils.colorFromHex(it) ?: return@postP call.invalidParameter("bgColor")
+            }
+
+            val fgColor = dto.fgColor?.let {
+                WidgetUtils.colorFromHex(it) ?: return@postP call.invalidParameter("fgColor")
+            }
+
+            val accentColor = dto.accentColor?.let {
+                WidgetUtils.colorFromHex(it) ?: return@postP call.invalidParameter("accentColor")
+            }
+
+            // Check that either all or none of the colors are provided
+            val colorList = listOfNotNull(bgColor, fgColor, accentColor)
+            if (colorList.size != 3 && colorList.isNotEmpty()) {
+                return@postP call.invalidParameter("colors")
+            }
+
+            val widget = WidgetRepo.shareWidget(user, parsedTypes, bgColor, fgColor, accentColor)
+            call.respond(WidgetRepo.toDto(widget))
+        }
+
+        deleteP("/api/widgets/{id}", PermissionType.MANAGE_WIDGETS) {
+            val id = call.parameters["id"] ?: return@deleteP call.missingParameter("id")
+            val userId = call.getUserId() ?: return@deleteP call.unauthorized()
+
+            val widget = WidgetRepo.getWidget(id) ?: return@deleteP call.notFound()
+
+            val success = WidgetRepo.deleteWidget(widget, userId)
+            if (!success) {
+                return@deleteP call.forbidden()
+            }
+
+            call.success()
+        }
     }
 }

@@ -15,6 +15,13 @@ object WidgetUtils {
         return String.format("#%06X", 0xFFFFFF and color)
     }
 
+    private val hexRegex = Regex("^[0-9a-fA-F]{6}$")
+
+    fun colorFromHex(hex: String): Int? {
+        if (!hexRegex.matches(hex)) return null
+        return hex.toLong(16).toInt() or (0xFF shl 24)
+    }
+
     /**
      * Generates a signed image URL from an ImageEntity.
      *
