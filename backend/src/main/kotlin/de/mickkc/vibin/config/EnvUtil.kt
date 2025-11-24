@@ -63,4 +63,9 @@ object EnvUtil {
 
     const val IMAGE_CACHE_DIR = "IMAGE_CACHE_DIR"
     const val DEFAULT_IMAGE_CACHE_DIR = "/opt/vibin/image_cache"
+    const val WIDGET_IMAGE_CACHE_DIR = "WIDGET_IMAGE_CACHE_DIR"
+    const val DEFAULT_WIDGET_IMAGE_CACHE_DIR = "/opt/vibin/widget_image_cache"
+
+    const val WIDGET_CACHE_EXPIRATION_MINUTES = "WIDGET_CACHE_EXPIRATION_MINUTES"
+    const val DEFAULT_WIDGET_CACHE_EXPIRATION_MINUTES = "20"
 }

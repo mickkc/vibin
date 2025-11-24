@@ -35,6 +35,7 @@ jaudiotagger = { module = "com.github.RouHim:jaudiotagger", version.ref = "jaudi
 ktor-server-html-builder = { module = "io.ktor:ktor-server-html-builder-jvm", version.ref = "ktor" }
 kotlinx-html-jvm = { module = "org.jetbrains.kotlinx:kotlinx-html-jvm", version = "0.12.0" }
 kotlin-css = { module = "org.jetbrains.kotlin-wrappers:kotlin-css-jvm", version = "2025.6.4" }
+selenium-java = { module = "org.seleniumhq.selenium:selenium-java", version = "4.22.0" }
 
 
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }

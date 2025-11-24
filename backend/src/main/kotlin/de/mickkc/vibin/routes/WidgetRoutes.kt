@@ -1,5 +1,6 @@
 package de.mickkc.vibin.routes
 
+import de.mickkc.vibin.db.widgets.SharedWidgetEntity
 import de.mickkc.vibin.dto.widgets.CreateWidgetDto
 import de.mickkc.vibin.images.ImageCache
 import de.mickkc.vibin.permissions.PermissionType
@@ -13,6 +14,64 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+
+private data class WidgetColors(
+    val backgroundColor: Int,
+    val foregroundColor: Int,
+    val accentColor: Int
+)
+
+private fun RoutingCall.parseWidgetColors(widget: SharedWidgetEntity): WidgetColors {
+    val backgroundColor = request.queryParameters["bgColor"]?.let {
+        WidgetUtils.colorFromHex(it)
+    } ?: widget.bgColor ?: 0x1D2021
+
+    val foregroundColor = request.queryParameters["fgColor"]?.let {
+        WidgetUtils.colorFromHex(it)
+    } ?: widget.fgColor ?: 0xEBDBB2
+
+    val accentColor = request.queryParameters["accentColor"]?.let {
+        WidgetUtils.colorFromHex(it)
+    } ?: widget.accentColor ?: 0x689D6A
+
+    return WidgetColors(backgroundColor, foregroundColor, accentColor)
+}
+
+private fun RoutingCall.parseLanguage(): String {
+    var language = request.queryParameters["lang"]
+        ?: request.header("Accept-Language")?.split(",", "-")?.firstOrNull()?.lowercase() ?: "en"
+
+    if (!WidgetBuilder.SUPPORTED_LANGUAGES.contains(language)) {
+        language = "en"
+    }
+
+    return language
+}
+
+private suspend fun RoutingCall.getValidatedWidgetTypes(widget: SharedWidgetEntity): List<WidgetType>? {
+    val widgetTypes = WidgetRepo.getTypes(widget)
+
+    if (widgetTypes.isEmpty()) {
+        invalidParameter("types")
+        return null
+    }
+
+    return widgetTypes
+}
+
+private fun createWidgetContext(
+    widget: SharedWidgetEntity,
+    colors: WidgetColors,
+    language: String
+): WidgetContext {
+    return WidgetContext(
+        userId = WidgetRepo.getUserId(widget),
+        accentColor = colors.accentColor,
+        backgroundColor = colors.backgroundColor,
+        foregroundColor = colors.foregroundColor,
+        language = language
+    )
+}
 
 fun Application.configureWidgetRoutes() = routing {
 
@@ -56,43 +115,30 @@ fun Application.configureWidgetRoutes() = routing {
 
     getP("/api/widgets/{id}") {
         val id = call.parameters["id"] ?: return@getP call.missingParameter("id")
-
         val widget = WidgetRepo.getWidget(id) ?: return@getP call.notFound()
 
-        val backgroundColor = call.request.queryParameters["bgColor"]?.let {
-            WidgetUtils.colorFromHex(it)
-        } ?: widget.bgColor ?: 0x1D2021
-
-        val foregroundColor = call.request.queryParameters["fgColor"]?.let {
-            WidgetUtils.colorFromHex(it)
-        } ?: widget.fgColor ?: 0xEBDBB2
-
-        val accentColor = call.request.queryParameters["accentColor"]?.let {
-            WidgetUtils.colorFromHex(it)
-        } ?: widget.accentColor ?: 0x689D6A
-
-        var language = call.request.queryParameters["lang"]
-            ?: call.request.header("Accept-Language")?.split(",", "-")?.firstOrNull()?.lowercase() ?: "en"
-
-        if (!WidgetBuilder.SUPPORTED_LANGUAGES.contains(language)) {
-            language = "en"
-        }
-
-        val ctx = WidgetContext(
-            userId = WidgetRepo.getUserId(widget),
-            accentColor = accentColor,
-            backgroundColor = backgroundColor,
-            foregroundColor = foregroundColor,
-            language = language
-        )
-
-        val widgetTypes = WidgetRepo.getTypes(widget)
-
-        if (widgetTypes.isEmpty()) {
-            return@getP call.invalidParameter("types")
-        }
+        val colors = call.parseWidgetColors(widget)
+        val language = call.parseLanguage()
+        val widgetTypes = call.getValidatedWidgetTypes(widget) ?: return@getP
+        val ctx = createWidgetContext(widget, colors, language)
 
         call.respondText(WidgetBuilder.build(widgetTypes, ctx), contentType = ContentType.Text.Html)
+    }
+
+    getP("/api/widgets/{id}/image") {
+        val id = call.parameters["id"] ?: return@getP call.missingParameter("id")
+        val widget = WidgetRepo.getWidget(id) ?: return@getP call.notFound()
+
+        val width = call.request.queryParameters["width"]?.toIntOrNull()?.coerceIn(1, 1920) ?: 1080
+        val height = call.request.queryParameters["height"]?.toIntOrNull()?.coerceIn(1, 1920) ?: 720
+
+        val colors = call.parseWidgetColors(widget)
+        val language = call.parseLanguage()
+        val widgetTypes = call.getValidatedWidgetTypes(widget) ?: return@getP
+        val ctx = createWidgetContext(widget, colors, language)
+
+        val imageBytes = WidgetImageCache.getOrCreateImage(widget, widgetTypes, ctx, width, height)
+        call.respondBytes(imageBytes, ContentType.Image.PNG)
     }
 
     authenticate("tokenAuth") {
@@ -155,6 +201,9 @@ fun Application.configureWidgetRoutes() = routing {
             if (!success) {
                 return@deleteP call.forbidden()
             }
+
+            // Evict cached images for this widget
+            WidgetImageCache.evictCacheForWidget(id)
 
             call.success()
         }

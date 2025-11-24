@@ -49,6 +49,7 @@ dependencies {
     implementation(libs.ktor.server.html.builder)
     implementation(libs.kotlinx.html.jvm)
     implementation(libs.kotlin.css)
+    implementation(libs.selenium.java)
 
     implementation(libs.flyway.core)
 
