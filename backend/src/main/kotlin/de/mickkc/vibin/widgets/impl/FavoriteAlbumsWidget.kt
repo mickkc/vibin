@@ -1,9 +1,7 @@
 package de.mickkc.vibin.widgets.impl
 
-import de.mickkc.vibin.images.ImageCache
 import de.mickkc.vibin.repos.AlbumRepo
 import de.mickkc.vibin.repos.FavoriteRepo
-import de.mickkc.vibin.utils.PathUtils
 import de.mickkc.vibin.widgets.BaseWidget
 import de.mickkc.vibin.widgets.WidgetContext
 import de.mickkc.vibin.widgets.components.favoritesSection
@@ -21,12 +19,8 @@ class FavoriteAlbumsWidget(ctx: WidgetContext) : BaseWidget(ctx) {
                 this@FavoriteAlbumsWidget,
                 title = t("widgets.favorites.albums.title"),
                 favorites = favorites,
-                getCover = {
-                    AlbumRepo.getAlbumCover(it)?.let {
-                        ImageCache.getImageFile(it, 128)
-                    }
-                    ?: PathUtils.getDefaultImage("album", 128)
-               },
+                type = "album",
+                getCover = { AlbumRepo.getAlbumCover(it) },
                 getTitle = { it.title },
                 getSubtitle = {
                     it.description.ifBlank {

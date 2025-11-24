@@ -1,18 +1,16 @@
 package de.mickkc.vibin.widgets.components
 
+import de.mickkc.vibin.db.images.ImageEntity
 import de.mickkc.vibin.widgets.BaseWidget
 import de.mickkc.vibin.widgets.WidgetUtils
 import kotlinx.html.*
-import java.io.File
-import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 
-@OptIn(ExperimentalEncodingApi::class)
 fun<T> FlowContent.favoritesSection(
     widget: BaseWidget,
     title: String,
     favorites: List<T?>,
-    getCover: (T) -> File?,
+    type: String,
+    getCover: (T) -> ImageEntity?,
     getTitle: (T) -> String,
     getSubtitle: (T) -> String,
 ) {
@@ -26,23 +24,16 @@ fun<T> FlowContent.favoritesSection(
                 val itemTitle = item?.let { getTitle(it) } ?: ""
                 val itemSubtitle = item?.let { getSubtitle(it) } ?: ""
 
-                val bytes = cover?.readBytes()
-                val base64Image = if (bytes != null) {
-                    "data:image/${cover.extension};base64,${
-                        Base64.encode(bytes)
-                    }"
-                } else {
-                    null
-                }
+                val imageUrl = if (item == null) null else WidgetUtils.getImageUrl(cover, type, 128)
 
                 val cardBg = WidgetUtils.blendColors(widget.ctx.backgroundColor, widget.ctx.accentColor, 0.2f)
 
                 div("favorite-item") {
                     style = "background-color: ${WidgetUtils.colorToHex(cardBg)};"
 
-                    if (base64Image != null) {
+                    if (imageUrl != null) {
                         img(classes = "item-cover") {
-                            src = base64Image
+                            src = imageUrl
                             alt = itemTitle
                         }
                     }
