@@ -1,6 +1,7 @@
 package de.mickkc.vibin.tasks
 
 import de.mickkc.vibin.repos.TaskSettingsRepo
+import de.mickkc.vibin.utils.DateTimeUtils
 import java.util.concurrent.ConcurrentHashMap
 
 object TaskManager {
@@ -16,6 +17,10 @@ object TaskManager {
         }
 
         tasks[task.id] = task
+
+        if (task.runOnStartup && task.enabled.get()) {
+            task.nextRun = DateTimeUtils.now()
+        }
     }
 
     fun getTasks(): Collection<BaseTask> {

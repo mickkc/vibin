@@ -11,6 +11,7 @@ abstract class BaseTask {
 
     abstract val id: String
     abstract val interval: Duration
+    open val runOnStartup: Boolean = false
 
     var enabled: AtomicBoolean = AtomicBoolean(true)
 

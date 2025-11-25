@@ -195,20 +195,23 @@ object WidgetImageCache {
     /**
      * Cleans up expired cached images.
      *
-     * @return The number of expired images that were removed
+     * @return The number of expired images that were removed and total bytes freed
      */
-    fun cleanupExpiredCache(): Int {
+    fun cleanupExpiredCache(): Pair<Int, Long> {
         val cachedFiles = widgetImageCachePath.listFiles { file ->
             file.name.endsWith(".png")
-        } ?: return 0
+        } ?: return 0 to 0
 
         var cleanedCount = 0
+        var totalFreedBytes = 0L
 
         for (file in cachedFiles) {
             try {
                 if (isCacheFileExpired(file)) {
+                    val length = file.length()
                     if (file.delete()) {
                         cleanedCount++
+                        totalFreedBytes += length
                     }
                     else {
                         logger.error("Failed to clean up cached widget image: ${file.absolutePath}")
@@ -223,7 +226,7 @@ object WidgetImageCache {
             logger.info("Cleaned up $cleanedCount expired widget images")
         }
 
-        return cleanedCount
+        return cleanedCount to totalFreedBytes
     }
 
     fun isCacheFileExpired(file: File): Boolean {

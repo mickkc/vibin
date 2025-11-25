@@ -90,4 +90,17 @@ object PathUtils {
     fun sanitizePathComponent(component: String): String {
         return component.map { c -> if (c in allowedNameChars) c else '_' }.joinToString("")
     }
+
+    fun formatFileSize(sizeInBytes: Long): String {
+        val kiloByte = 1024.0
+        val megaByte = kiloByte * 1024
+        val gigaByte = megaByte * 1024
+
+        return when {
+            sizeInBytes >= gigaByte -> String.format("%.2f GB", sizeInBytes / gigaByte)
+            sizeInBytes >= megaByte -> String.format("%.2f MB", sizeInBytes / megaByte)
+            sizeInBytes >= kiloByte -> String.format("%.2f KB", sizeInBytes / kiloByte)
+            else -> "$sizeInBytes B"
+        }
+    }
 }

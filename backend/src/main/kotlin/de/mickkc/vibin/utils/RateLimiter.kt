@@ -99,10 +99,10 @@ class RateLimiter(
     /**
      * Cleans up expired entries.
      */
-    private fun cleanupOldEntries() {
+    fun cleanupOldEntries(): Boolean {
         val windowStart = DateTimeUtils.now() - (windowMinutes * 60)
 
-        rateLimits.entries.removeIf { (_, entry) ->
+        return rateLimits.entries.removeIf { (_, entry) ->
             entry.windowStart < windowStart
         }
     }
