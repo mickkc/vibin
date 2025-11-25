@@ -88,7 +88,7 @@ class StatisticRestTest {
         val artist = ArtistTestUtils.createArtist("Artist 1", "Description")
         val album = AlbumTestUtils.createAlbum("Album 1", "Description", 2020)
 
-        ListenRepo.listenedTo(1, artist.id.value, ListenType.ARTIST)
+        ListenRepo.listenedTo(1, artist.id.value, ListenType.ARTIST, at = DateTimeUtils.now() - 1000)
         ListenRepo.listenedTo(1, album.id.value, ListenType.ALBUM)
 
         val response = client.get("/api/stats/recent/nontracks") {
