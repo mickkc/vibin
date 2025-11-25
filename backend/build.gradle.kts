@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.jaudiotagger)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
+    testImplementation(libs.jsoup)
 }
 
 tasks.jacocoTestReport {

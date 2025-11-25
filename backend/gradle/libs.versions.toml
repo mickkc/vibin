@@ -37,6 +37,8 @@ kotlinx-html-jvm = { module = "org.jetbrains.kotlinx:kotlinx-html-jvm", version 
 kotlin-css = { module = "org.jetbrains.kotlin-wrappers:kotlin-css-jvm", version = "2025.6.4" }
 selenium-java = { module = "org.seleniumhq.selenium:selenium-java", version = "4.22.0" }
 
+jsoup = { module = "org.jsoup:jsoup", version = "1.21.2" }
+
 
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 

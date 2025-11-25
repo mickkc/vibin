@@ -1,5 +1,6 @@
 package utils
 
+import de.mickkc.vibin.db.images.ImageEntity
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.transaction
 import de.mickkc.vibin.db.tracks.TrackEntity
@@ -23,7 +24,8 @@ object TrackTestUtils {
         comment: String? = null,
         uploaderId: Long? = null,
         checksum: String? = null,
-        tags: List<String>? = null
+        tags: List<String>? = null,
+        coverChecksum: String? = null,
     ): TrackEntity {
 
         val splitArtists = artists.split(",").map { it.trim() }
@@ -55,6 +57,12 @@ object TrackTestUtils {
                 this.artists = SizedCollection(artists)
                 this.checksum = checksum ?: "checksum_${title.hashCode()}"
                 this.tags = SizedCollection(tags)
+                this.cover = coverChecksum?.let {
+                    ImageEntity.new {
+                        this.sourceChecksum = it
+                        this.sourcePath = "/images/covers/$it.jpg"
+                    }
+                }
             }
         }
     }

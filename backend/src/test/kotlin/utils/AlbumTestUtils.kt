@@ -2,8 +2,10 @@ package utils
 
 import org.junit.jupiter.api.assertNotNull
 import de.mickkc.vibin.db.albums.AlbumEntity
+import de.mickkc.vibin.db.images.ImageEntity
 import de.mickkc.vibin.dto.albums.AlbumEditDto
 import de.mickkc.vibin.repos.AlbumRepo
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object AlbumTestUtils {
 
@@ -27,5 +29,12 @@ object AlbumTestUtils {
             return existingAlbum
         }
         return createAlbum(title)
+    }
+
+    fun addCoverToAlbum(album: AlbumEntity, coverChecksum: String) = transaction {
+        album.cover = ImageEntity.new {
+            this.sourceChecksum = coverChecksum
+            this.sourcePath = "/images/albums/$coverChecksum.jpg"
+        }
     }
 }
