@@ -20,18 +20,17 @@ import java.time.LocalDate
 
 object ListenRepo {
 
-    fun listenedTo(userId: Long, entityId: Long, type: ListenType, checkTrack: Boolean = true): Boolean = transaction {
-        val now = DateTimeUtils.now()
+    fun listenedTo(userId: Long, entityId: Long, type: ListenType, at: Long = DateTimeUtils.now()): Boolean = transaction {
 
-        if (checkTrack && type == ListenType.TRACK) {
+        if (type == ListenType.TRACK) {
             val lastListenForUser = ListenEntity
                 .find { (ListenTable.user eq userId) and (ListenTable.type eq ListenType.TRACK) }
                 .orderBy(ListenTable.listenedAt to SortOrder.DESC)
                 .firstOrNull()
             if (lastListenForUser != null && lastListenForUser.entityId == entityId) {
                 val lastTrack = TrackRepo.getById(entityId) ?: return@transaction false
-                val difference = now - lastListenForUser.listenedAt
-                if (lastTrack.duration == null || difference * 1000 <= lastTrack.duration!!) {
+                val difference = at - lastListenForUser.listenedAt
+                if (lastTrack.duration != null && difference * 1000 <= lastTrack.duration!!) {
                     // If the last listened track is the same and the difference is less than the track duration, do not log a new listen
                     return@transaction false
                 }
@@ -44,7 +43,7 @@ object ListenRepo {
             this.user = user
             this.entityId = entityId
             this.type = type
-            this.listenedAt = now
+            this.listenedAt = at
         }
 
         return@transaction true

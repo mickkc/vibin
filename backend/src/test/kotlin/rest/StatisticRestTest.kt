@@ -1,10 +1,5 @@
 package rest
 
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.http.*
-import kotlinx.serialization.Serializable
-import utils.*
 import de.mickkc.vibin.db.ListenType
 import de.mickkc.vibin.dto.KeyValueDto
 import de.mickkc.vibin.dto.StatisticsDto
@@ -16,9 +11,12 @@ import de.mickkc.vibin.repos.ListenRepo
 import de.mickkc.vibin.repos.SettingsRepo
 import de.mickkc.vibin.settings.user.ShowActivitiesToOthers
 import de.mickkc.vibin.utils.DateTimeUtils
-import kotlinx.coroutines.delay
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import kotlinx.serialization.Serializable
+import utils.*
 import kotlin.test.*
-import kotlin.time.Duration.Companion.seconds
 
 class StatisticRestTest {
 
@@ -26,10 +24,6 @@ class StatisticRestTest {
     private data class SuccessResponse(
         val success: Boolean
     )
-
-    suspend fun sleep() {
-        delay(1.seconds)
-    }
 
     // region Get Recent Tracks
 
@@ -40,11 +34,9 @@ class StatisticRestTest {
         val track3 = TrackTestUtils.createTrack("Track 3", "Album 3", "Artist 3")
 
         // Record listens
-        ListenRepo.listenedTo(1, track1.id.value, ListenType.TRACK)
-        sleep()
-        ListenRepo.listenedTo(1, track2.id.value, ListenType.TRACK)
-        sleep()
-        ListenRepo.listenedTo(1, track3.id.value, ListenType.TRACK)
+        ListenRepo.listenedTo(1, track1.id.value, ListenType.TRACK, at = 1000)
+        ListenRepo.listenedTo(1, track2.id.value, ListenType.TRACK, at = 2000)
+        ListenRepo.listenedTo(1, track3.id.value, ListenType.TRACK, at = 3000)
 
         val response = client.get("/api/stats/recent") {
             parameter("limit", 2)
@@ -64,8 +56,7 @@ class StatisticRestTest {
     fun testGetRecentTracks_DefaultLimit() = testApp { client ->
         repeat(6) { i ->
             val track = TrackTestUtils.createTrack("Track $i", "Album", "Artist")
-            ListenRepo.listenedTo(1, track.id.value, ListenType.TRACK)
-            sleep()
+            ListenRepo.listenedTo(1, track.id.value, ListenType.TRACK, at = DateTimeUtils.now() - i * 1000)
         }
 
         val response = client.get("/api/stats/recent")
@@ -98,7 +89,6 @@ class StatisticRestTest {
         val album = AlbumTestUtils.createAlbum("Album 1", "Description", 2020)
 
         ListenRepo.listenedTo(1, artist.id.value, ListenType.ARTIST)
-        sleep()
         ListenRepo.listenedTo(1, album.id.value, ListenType.ALBUM)
 
         val response = client.get("/api/stats/recent/nontracks") {
@@ -141,8 +131,8 @@ class StatisticRestTest {
         val track3 = TrackTestUtils.createTrack("Track 3", "Album", "Artist")
 
         // Track 2 listened 3 times, Track 1 listened 2 times, Track 3 listened 1 time
-        repeat(3) { ListenRepo.listenedTo(1, track2.id.value, ListenType.TRACK, false) }
-        repeat(2) { ListenRepo.listenedTo(1, track1.id.value, ListenType.TRACK, false) }
+        repeat(3) { ListenRepo.listenedTo(1, track2.id.value, ListenType.TRACK) }
+        repeat(2) { ListenRepo.listenedTo(1, track1.id.value, ListenType.TRACK) }
         ListenRepo.listenedTo(1, track3.id.value, ListenType.TRACK)
 
         val response = client.get("/api/stats/tracks/top3")
@@ -187,7 +177,7 @@ class StatisticRestTest {
         val track2 = TrackTestUtils.createTrack("Track 2", "Album", "Artist 2")
 
         // Listen to track 1 more
-        repeat(3) { ListenRepo.listenedTo(1, track1.id.value, ListenType.TRACK, false) }
+        repeat(3) { ListenRepo.listenedTo(1, track1.id.value, ListenType.TRACK) }
         ListenRepo.listenedTo(1, track2.id.value, ListenType.TRACK)
 
         val response = client.get("/api/stats/artists/top2")
@@ -226,7 +216,7 @@ class StatisticRestTest {
 
         ListenRepo.listenedTo(1, track2.id.value, ListenType.TRACK)
         ListenRepo.listenedTo(1, track1.id.value, ListenType.TRACK)
-        ListenRepo.listenedTo(1, track2.id.value, ListenType.TRACK, false)
+        ListenRepo.listenedTo(1, track2.id.value, ListenType.TRACK)
 
         val response = client.get("/api/stats/tags/top2")
 
@@ -429,7 +419,7 @@ class StatisticRestTest {
         val track2 = TrackTestUtils.createTrack("Track 2", "Album", "Artist 2")
 
         // Record some listens for user 1
-        repeat(3) { ListenRepo.listenedTo(1, track1.id.value, ListenType.TRACK, false) }
+        repeat(3) { ListenRepo.listenedTo(1, track1.id.value, ListenType.TRACK, at = DateTimeUtils.now() - (it + 1) * 1000) }
         ListenRepo.listenedTo(1, track2.id.value, ListenType.TRACK)
 
         val response = client.get("/api/stats/users/1/activity") {
@@ -454,13 +444,11 @@ class StatisticRestTest {
         val track1 = TrackTestUtils.createTrack("Track 1", "Album", "Artist")
         val track2 = TrackTestUtils.createTrack("Track 2", "Album", "Artist")
 
-        ListenRepo.listenedTo(1, track1.id.value, ListenType.TRACK)
-        sleep()
-        val since = DateTimeUtils.now()
-        ListenRepo.listenedTo(1, track2.id.value, ListenType.TRACK)
+        ListenRepo.listenedTo(1, track1.id.value, ListenType.TRACK, at = 400L)
+        ListenRepo.listenedTo(1, track2.id.value, ListenType.TRACK, at = 600L)
 
         val response = client.get("/api/stats/users/1/activity") {
-            parameter("since", since)
+            parameter("since", 500L)
             parameter("limit", 10)
         }
 
