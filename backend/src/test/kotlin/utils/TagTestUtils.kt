@@ -21,4 +21,12 @@ object TagTestUtils {
         assertNotNull(tag)
         return tag
     }
+
+    fun getOrCreateTag(name: String): TagEntity {
+        val existingTag = TagRepo.getByName(name)
+        if (existingTag != null) {
+            return existingTag
+        }
+        return createTag(name)
+    }
 }
