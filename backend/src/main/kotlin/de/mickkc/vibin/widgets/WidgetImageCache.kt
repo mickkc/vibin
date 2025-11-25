@@ -73,7 +73,7 @@ object WidgetImageCache {
         }
 
         logger.info("Generating widget image: $cacheKey (${width}x${height})")
-        val html = WidgetBuilder.build(widgetTypes, ctx)
+        val html = WidgetBuilder.build(widgetTypes, ctx, interactive = false)
         val imageBytes = generateImage(html, width, height)
 
         try {
@@ -241,6 +241,5 @@ object WidgetImageCache {
     fun prepareHtml(html: String): String {
         return html
             .replace("/api/", "http://localhost:8080/api/") // Replace with absolute URLs
-            .replace(Regex("<a [^>]*class=\"btn\"[^>]*>.*?</a>"), "") // Remove buttons
     }
 }

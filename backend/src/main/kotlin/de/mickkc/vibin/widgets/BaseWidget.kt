@@ -6,7 +6,7 @@ abstract class BaseWidget(val ctx: WidgetContext) {
 
     private var resourceBundle: ResourceBundle? = null
 
-    abstract fun render(): String
+    abstract fun render(interactive: Boolean): String
 
     val backgroundColor: String
         get() = WidgetUtils.colorToHex(ctx.backgroundColor)

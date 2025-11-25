@@ -15,7 +15,7 @@ import kotlinx.html.stream.appendHTML
 
 class ServerStatsWidget(ctx: WidgetContext) : BaseWidget(ctx) {
 
-    override fun render(): String {
+    override fun render(interactive: Boolean): String {
 
         val totalDurationSeconds = TrackRepo.getTotalRuntimeSeconds()
 

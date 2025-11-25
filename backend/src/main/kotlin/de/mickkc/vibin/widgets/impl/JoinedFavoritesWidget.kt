@@ -8,14 +8,14 @@ import kotlinx.html.unsafe
 
 class JoinedFavoritesWidget(ctx: WidgetContext) : BaseWidget(ctx) {
 
-    override fun render(): String = buildString {
+    override fun render(interactive: Boolean): String = buildString {
         appendHTML(prettyPrint = false).div("widget-body") {
 
             div("joined-favorites") {
                 unsafe {
-                    +FavoriteTracksWidget(ctx).render()
-                    +FavoriteAlbumsWidget(ctx).render()
-                    +FavoriteArtistsWidget(ctx).render()
+                    +FavoriteTracksWidget(ctx).render(interactive)
+                    +FavoriteAlbumsWidget(ctx).render(interactive)
+                    +FavoriteArtistsWidget(ctx).render(interactive)
                 }
             }
         }

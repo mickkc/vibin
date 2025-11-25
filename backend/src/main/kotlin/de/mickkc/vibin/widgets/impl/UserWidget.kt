@@ -9,7 +9,7 @@ import kotlinx.html.stream.appendHTML
 
 class UserWidget(ctx: WidgetContext) : BaseWidget(ctx) {
 
-    override fun render(): String = buildString {
+    override fun render(interactive: Boolean): String = buildString {
 
         val user = UserRepo.getById(ctx.userId) ?: return t("widgets.user.not_found")
 
@@ -34,9 +34,11 @@ class UserWidget(ctx: WidgetContext) : BaseWidget(ctx) {
                     p("description") {
                         +user.description
                     }
-                    a(href = "/web/users/${ctx.userId}", target = "_blank", classes = "btn") {
-                        style = "background-color: ${WidgetUtils.colorToHex(ctx.accentColor)}; color: ${WidgetUtils.colorToHex(ctx.backgroundColor)};"
-                        +t("widgets.user.view_profile")
+                    if (interactive) {
+                        a(href = "/web/users/${ctx.userId}", target = "_blank", classes = "btn") {
+                            style = "background-color: ${WidgetUtils.colorToHex(ctx.accentColor)}; color: ${WidgetUtils.colorToHex(ctx.backgroundColor)};"
+                            +t("widgets.user.view_profile")
+                        }
                     }
                 }
             }

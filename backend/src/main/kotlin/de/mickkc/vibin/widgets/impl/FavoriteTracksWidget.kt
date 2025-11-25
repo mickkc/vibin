@@ -10,7 +10,7 @@ import kotlinx.html.stream.appendHTML
 
 class FavoriteTracksWidget(ctx: WidgetContext) : BaseWidget(ctx) {
 
-    override fun render(): String = buildString {
+    override fun render(interactive: Boolean): String = buildString {
         appendHTML(prettyPrint = false).div("widget-body") {
 
             val favorites = FavoriteRepo.getFavoriteTracksForUser(ctx.userId)

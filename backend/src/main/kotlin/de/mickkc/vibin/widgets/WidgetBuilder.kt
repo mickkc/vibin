@@ -14,7 +14,7 @@ object WidgetBuilder {
 
     val SUPPORTED_LANGUAGES = listOf("en", "de")
 
-    fun build(types: List<WidgetType>, ctx: WidgetContext): String {
+    fun build(types: List<WidgetType>, ctx: WidgetContext, interactive: Boolean = true): String {
 
         val widgets = types.map<WidgetType, BaseWidget> { type ->
             when (type) {
@@ -48,7 +48,7 @@ object WidgetBuilder {
                     style = "margin: 0; padding: 0; background-color: $bgColor; color: $fgColor;"
                     widgets.forEach { widget ->
                         unsafe {
-                            +widget.render()
+                            +widget.render(interactive)
                         }
                         if (widget != widgets.last()) {
                             div {

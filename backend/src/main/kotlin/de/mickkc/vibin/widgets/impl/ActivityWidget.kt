@@ -15,7 +15,7 @@ import kotlin.math.roundToInt
 
 class ActivityWidget(widgetContext: WidgetContext, val extended: Boolean = true) : BaseWidget(widgetContext) {
 
-    override fun render(): String {
+    override fun render(interactive: Boolean): String {
 
         val start = DateTimeUtils.startOfYear()
         val startLocalDate = DateTimeUtils.toLocalDate(start)
