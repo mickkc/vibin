@@ -46,6 +46,10 @@ suspend fun RoutingCall.notFound() {
     respond(ErrorDto.fromType(ErrorDtoType.NOT_FOUND))
 }
 
+suspend fun RoutingCall.rateLimitExceeded() {
+    respond(ErrorDto.fromType(ErrorDtoType.RATE_LIMIT_EXCEEDED))
+}
+
 fun RoutingCall.getToken(): String? {
     val principal = principal<UserPrincipal>()
     return principal?.token
@@ -67,6 +71,30 @@ fun RoutingCall.hasPermissions(vararg permissions: PermissionType): Boolean {
     val userId = getUserId() ?: return false
     if (permissions.isEmpty()) return true
     return PermissionRepo.hasPermissions(userId, permissions.toList())
+}
+
+/**
+ * Generates a client ID for rate limiting based on the client's IP address.
+ * Checks proxy headers (X-Forwarded-For, X-Real-IP) first, then falls back to remote address.
+ *
+ * @return A unique identifier for the client
+ */
+fun RoutingCall.getClientId(): String {
+    // TODO: Add config option to enable/disable proxy header checks
+    val forwardedFor = request.headers["X-Forwarded-For"]
+    if (forwardedFor != null) {
+        val clientIp = forwardedFor.split(",").firstOrNull()?.trim()
+        if (!clientIp.isNullOrEmpty()) {
+            return clientIp
+        }
+    }
+
+    val realIp = request.headers["X-Real-IP"]
+    if (!realIp.isNullOrEmpty()) {
+        return realIp
+    }
+
+    return request.local.remoteAddress
 }
 
 fun Route.getP(path: String, vararg permissions: PermissionType, body: suspend RoutingContext.() -> Unit) {

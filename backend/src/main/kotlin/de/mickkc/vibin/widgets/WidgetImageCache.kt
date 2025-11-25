@@ -2,6 +2,7 @@ package de.mickkc.vibin.widgets
 
 import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.db.widgets.SharedWidgetEntity
+import de.mickkc.vibin.utils.RateLimiter
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.TakesScreenshot
 import org.openqa.selenium.chrome.ChromeDriver
@@ -21,6 +22,11 @@ object WidgetImageCache {
     private val logger: Logger = LoggerFactory.getLogger(WidgetImageCache::class.java)
     private val widgetImageCachePath = File(
         EnvUtil.getOrDefault(EnvUtil.WIDGET_IMAGE_CACHE_DIR, EnvUtil.DEFAULT_WIDGET_IMAGE_CACHE_DIR)
+    )
+
+    val rateLimiter = RateLimiter(
+        maxRequests = EnvUtil.getOrDefault(EnvUtil.WIDGET_IMAGE_CACHE_RATE_LIMIT_REQUESTS, EnvUtil.DEFAULT_WIDGET_IMAGE_CACHE_RATE_LIMIT_REQUESTS).toInt(),
+        windowMinutes = EnvUtil.getOrDefault(EnvUtil.WIDGET_CACHE_EXPIRATION_MINUTES, EnvUtil.DEFAULT_WIDGET_CACHE_EXPIRATION_MINUTES).toInt()
     )
 
     private val cacheExpirationMinutes = EnvUtil.getOrDefault(EnvUtil.WIDGET_CACHE_EXPIRATION_MINUTES, EnvUtil.DEFAULT_WIDGET_CACHE_EXPIRATION_MINUTES).toLong()

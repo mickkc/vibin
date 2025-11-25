@@ -1,5 +1,6 @@
 package de.mickkc.vibin.routes
 
+import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.db.widgets.SharedWidgetEntity
 import de.mickkc.vibin.dto.widgets.CreateWidgetDto
 import de.mickkc.vibin.images.ImageCache
@@ -129,6 +130,11 @@ fun Application.configureWidgetRoutes() = routing {
         val id = call.parameters["id"] ?: return@getP call.missingParameter("id")
         val widget = WidgetRepo.getWidget(id) ?: return@getP call.notFound()
 
+        val clientId = call.getClientId()
+        if (!WidgetImageCache.rateLimiter.checkAndIncrement(clientId)) {
+            return@getP call.rateLimitExceeded()
+        }
+
         val width = call.request.queryParameters["width"]?.toIntOrNull()?.coerceIn(1, 1920) ?: 1080
         val height = call.request.queryParameters["height"]?.toIntOrNull()?.coerceIn(1, 1920) ?: 720
 
@@ -138,6 +144,10 @@ fun Application.configureWidgetRoutes() = routing {
         val ctx = createWidgetContext(widget, colors, language)
 
         val imageBytes = WidgetImageCache.getOrCreateImage(widget, widgetTypes, ctx, width, height)
+
+        val imageCacheDuration = EnvUtil.getOrDefault(EnvUtil.WIDGET_CACHE_EXPIRATION_MINUTES, EnvUtil.DEFAULT_WIDGET_CACHE_EXPIRATION_MINUTES).toLong()
+        call.response.headers.append(HttpHeaders.CacheControl, "public, max-age=${imageCacheDuration * 60}, stale-while-revalidate=60")
+
         call.respondBytes(imageBytes, ContentType.Image.PNG)
     }
 

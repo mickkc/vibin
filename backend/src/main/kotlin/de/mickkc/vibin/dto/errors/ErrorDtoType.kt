@@ -9,6 +9,7 @@ enum class ErrorDtoType(val code: HttpStatusCode) {
     NO_PERMISSION(HttpStatusCode.Forbidden),
     INTERNAL_ERROR(HttpStatusCode.InternalServerError),
     UNAUTHORIZED(HttpStatusCode.Unauthorized),
+    RATE_LIMIT_EXCEEDED(HttpStatusCode.TooManyRequests),
 
     CONFLICT(HttpStatusCode.Conflict),
 }
