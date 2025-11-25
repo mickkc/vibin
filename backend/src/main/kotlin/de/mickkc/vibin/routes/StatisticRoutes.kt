@@ -97,7 +97,9 @@ fun Application.configureStatisticRoutes() = routing {
 
         post("/api/stats/listen/{type}/{entityId}") {
             val userId = call.getUserId() ?: return@post call.unauthorized()
-            val type = call.parameters["type"]?.let { ListenType.valueOf(it) } ?: return@post call.missingParameter("type")
+            val type = call.parameters["type"]?.let {
+                try { ListenType.valueOf(it) } catch (_: IllegalArgumentException) { null }
+            } ?: return@post call.missingParameter("type")
             val entityId = call.parameters["entityId"]?.toLongOrNull() ?: return@post call.missingParameter("entityId")
 
             val success = ListenRepo.listenedTo(userId, entityId, type)
