@@ -20,10 +20,10 @@ import java.time.LocalDate
 
 object ListenRepo {
 
-    fun listenedTo(userId: Long, entityId: Long, type: ListenType): Boolean = transaction {
+    fun listenedTo(userId: Long, entityId: Long, type: ListenType, checkTrack: Boolean = true): Boolean = transaction {
         val now = DateTimeUtils.now()
 
-        if (type == ListenType.TRACK) {
+        if (checkTrack && type == ListenType.TRACK) {
             val lastListenForUser = ListenEntity
                 .find { (ListenTable.user eq userId) and (ListenTable.type eq ListenType.TRACK) }
                 .orderBy(ListenTable.listenedAt to SortOrder.DESC)
@@ -150,9 +150,9 @@ object ListenRepo {
         return@transaction tagCount
     }
 
-    fun getRecentTracks(userId: Long, limit: Int): List<TrackEntity> = transaction {
+    fun getRecentTracks(userId: Long, since: Long, limit: Int): List<TrackEntity> = transaction {
         return@transaction ListenEntity
-            .find { (ListenTable.user eq userId) and (ListenTable.type eq ListenType.TRACK) }
+            .find { (ListenTable.listenedAt greaterEq since) and (ListenTable.user eq userId) and (ListenTable.type eq ListenType.TRACK) }
             .orderBy(ListenTable.listenedAt to SortOrder.DESC)
             .map { it.entityId }
             .distinct()
@@ -178,7 +178,7 @@ object ListenRepo {
     }
 
     fun getActivityForUser(userId: Long, since: Long, limit: Int): UserActivity {
-        val recentTracks = getRecentTracks(userId, limit)
+        val recentTracks = getRecentTracks(userId, since, limit)
 
         val topTracks = getMostListenedTracks(userId, since)
             .toList()

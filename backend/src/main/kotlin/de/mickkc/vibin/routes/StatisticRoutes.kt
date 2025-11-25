@@ -26,7 +26,7 @@ fun Application.configureStatisticRoutes() = routing {
             val userId = call.getUserId() ?: return@get call.unauthorized()
             val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 5
 
-            val recentTracks = ListenRepo.getRecentTracks(userId, limit)
+            val recentTracks = ListenRepo.getRecentTracks(userId, 0, limit)
             call.respond(TrackRepo.toMinimalDto(recentTracks))
         }
 
