@@ -133,7 +133,7 @@ object ArtistMetadataFetchType : ServerSetting<MetadataFetchingType>(
     key = "artist_metadata_fetch_type",
     parser = { value -> MetadataFetchingType.valueOf(value) },
     serializer = { value -> value.name },
-    defaultValue = MetadataFetchingType.EXACT_MATCH
+    defaultValue = MetadataFetchingType.CASE_INSENSITIVE_MATCH
 )
 
 object ArtistMetadataSource : ServerSetting<String>(
@@ -147,7 +147,7 @@ object AlbumMetadataFetchType : ServerSetting<MetadataFetchingType>(
     key = "album_metadata_fetch_type",
     parser = { value -> MetadataFetchingType.valueOf(value) },
     serializer = { value -> value.name },
-    defaultValue = MetadataFetchingType.EXACT_MATCH
+    defaultValue = MetadataFetchingType.NONE
 )
 
 object AlbumMetadataSource : ServerSetting<String>(
