@@ -11,6 +11,7 @@ import de.mickkc.vibin.dto.tracks.TrackEditDto
 import de.mickkc.vibin.parsing.parsers.preparser.PreParseException
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.TrackRepo
+import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.uploads.PendingUpload
 import de.mickkc.vibin.uploads.UploadManager
 import kotlin.io.encoding.Base64
@@ -128,9 +129,11 @@ fun Application.configureUploadRoutes() = routing {
 
         getP("/api/uploads/tracks/{userId}", PermissionType.VIEW_TRACKS) {
             val userId = call.parameters["userId"]?.toLongOrNull() ?: return@getP call.missingParameter("userId")
+            val user = UserRepo.getById(userId) ?: return@getP call.notFound()
+
             val requestingUserId = call.getUserId() ?: return@getP call.unauthorized()
 
-            val uploadedTracks = TrackRepo.getUploadedByUser(userId, requestingUserId)
+            val uploadedTracks = TrackRepo.getUploadedByUser(user.id.value, requestingUserId)
 
             call.respond(TrackRepo.toMinimalDto(uploadedTracks))
         }
