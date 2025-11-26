@@ -1,0 +1,39 @@
+WidgetDto:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Unique identifier for the widget
+    types:
+      type: array
+      description: List of types associated with the widget
+      items:
+        type: string
+    bgColor:
+      type: integer
+      nullable: true
+    fgColor:
+      type: integer
+      nullable: true
+    accentColor:
+      type: integer
+      nullable: true
+
+CreateWidgetDto:
+  type: object
+  properties:
+    types:
+      type: array
+      description: List of types to associate with the widget
+      items:
+        type: string
+    bgColor:
+      type: string
+      description: Hex color code without the '#' prefix. Must be 6 characters long.
+    fgColor:
+      type: string
+      description: Hex color code without the '#' prefix. Must be 6 characters long.
+    accentColor:
+      type: string
+      description: Hex color code without the '#' prefix. Must be 6 characters long.

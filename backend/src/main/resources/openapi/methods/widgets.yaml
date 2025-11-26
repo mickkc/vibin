@@ -1,0 +1,298 @@
+Styles:
+  get:
+    summary: Get the stylesheet for widgets
+    operationId: GetWidgetStyles
+    tags:
+      - Widgets
+    responses:
+      200:
+        description: Stylesheet retrieved successfully
+        content:
+          text/css:
+            schema:
+              type: string
+              example: |
+                :root {
+                  font-family: 'Arial, sans-serif';
+                  -ms-overflow-style: none;
+                  scrollbar-width: none;
+                }
+                ...
+
+ById:
+  get:
+    summary: Get a widget by its ID
+    operationId: GetWidgetById
+    tags:
+      - Widgets
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The unique identifier of the widget
+        schema:
+          type: string
+          format: uuid
+      - name: bgColor
+        in: query
+        required: false
+        description: Optionally ovierride the background color of the widget (hex code)
+        schema:
+          type: string
+          example: "000000"
+          description: Hex color code without the '#' prefix. Must be 6 characters long.
+      - name: fgColor
+        in: query
+        required: false
+        description: Optionally override the foreground color of the widget (hex code)
+        schema:
+          type: string
+          example: "FFFFFF"
+          description: Hex color code without the '#' prefix. Must be 6 characters long.
+      - name: accentColor
+        in: query
+        required: false
+        description: Optionally override the accent color of the widget (hex code)
+        schema:
+          type: string
+          example: "1DB954"
+          description: Hex color code without the '#' prefix. Must be 6 characters long.
+      - name: lang
+        in: query
+        required: false
+        description: Optionally set the language for the widget text
+        schema:
+          type: string
+          example: "en"
+          description: Language code (e.g., 'en' for English, 'es' for Spanish)
+          default: "Accept-Language header or en if not provided"
+    responses:
+      200:
+        description: Widget retrieved successfully
+        content:
+          text/html:
+            schema:
+              type: string
+              example: |
+                <html lang="en">
+                  <head>
+                    ...
+                  </head>
+                  <body>
+                    <div class="widget-body">
+                      ...
+                    </div>
+                    ...
+                  </body>
+                </html>
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+  delete:
+    summary: Delete a widget by its ID
+    operationId: DeleteWidgetById
+    tags:
+      - Widgets
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The unique identifier of the widget to delete
+        schema:
+          type: string
+          format: uuid
+    responses:
+      200:
+        description: Widget deleted successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+
+GetImage:
+  get:
+    summary: Get a widget by its ID as an image
+    operationId: GetWidgetImageById
+    tags:
+      - Widgets
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The unique identifier of the widget
+        schema:
+          type: string
+          format: uuid
+      - name: bgColor
+        in: query
+        required: false
+        description: Optionally override the background color of the widget (hex code)
+        schema:
+          type: string
+          example: "000000"
+          description: Hex color code without the '#' prefix. Must be 6 characters long.
+      - name: fgColor
+        in: query
+        required: false
+        description: Optionally override the foreground color of the widget (hex code)
+        schema:
+          type: string
+          example: "FFFFFF"
+          description: Hex color code without the '#' prefix. Must be 6 characters long.
+      - name: accentColor
+        in: query
+        required: false
+        description: Optionally override the accent color of the widget (hex code)
+        schema:
+          type: string
+          example: "1DB954"
+          description: Hex color code without the '#' prefix. Must be 6 characters long.
+      - name: lang
+        in: query
+        required: false
+        description: Optionally set the language for the widget text
+        schema:
+          type: string
+          example: "en"
+          description: Language code (e.g., 'en' for English, 'es' for Spanish)
+          default: "Accept-Language header or en if not provided"
+      - name: width
+        in: query
+        required: false
+        description: Optionally set the width of the widget image (in pixels)
+        schema:
+          type: integer
+          example: 1080
+          description: Width in pixels. (1 - 1920)
+      - name: height
+        in: query
+        required: false
+        description: Optionally set the height of the widget image (in pixels)
+        schema:
+          type: integer
+          example: 720
+          description: Height in pixels. (1 - 1920)
+    responses:
+      200:
+        description: Widget image retrieved successfully
+        content:
+          image/png:
+            schema:
+              type: string
+              format: binary
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Image:
+  get:
+    summary: Get an image embedded in a widget by its checksum
+    operationId: GetWidgetEmbeddedImage
+    tags:
+      - Widgets
+    parameters:
+      - name: checksum
+        in: path
+        required: true
+        description: The checksum of the embedded image
+        schema:
+          type: string
+      - name: quality
+        in: query
+        required: false
+        description: The width and height of the image to return (in pixels)
+        schema:
+          type: integer
+          default: 192
+      - name: exp
+        in: query
+        required: false
+        description: Expiration timestamp for the image URL (in seconds)
+        schema:
+          type: integer
+      - name: sig
+        in: query
+        required: false
+        description: Signature for validating the image URL
+        schema:
+          type: string
+    responses:
+      200:
+        description: Embedded image retrieved successfully
+        content:
+          image/jpg:
+            schema:
+              type: string
+              format: binary
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Base:
+  get:
+    summary: Get all widgets for the authenticated user
+    operationId: GetAllWidgets
+    tags:
+      - Widgets
+    security:
+      - tokenAuth: []
+    responses:
+      200:
+        description: List of widgets created by the user
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../models/widget.yaml#/WidgetDto'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+  post:
+    summary: Create a new widget for the authenticated user
+    operationId: CreateWidget
+    tags:
+      - Widgets
+    security:
+      - tokenAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../models/widget.yaml#/CreateWidgetDto'
+    responses:
+      201:
+        description: Widget created successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../models/widget.yaml#/WidgetDto'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

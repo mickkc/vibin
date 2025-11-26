@@ -284,8 +284,23 @@ paths:
   /api/users/username/{username}/exists:
     $ref: 'methods/users.yaml#/CheckUsername'
 
+  # █░█░█ █ █▀▄ █▀▀ █▀▀ ▀█▀ █▀
+  # ▀▄▀▄▀ █ █▄▀ █▄█ ██▄ ░█░ ▄█
 
+  /api/widgets/styles:
+    $ref: 'methods/widgets.yaml#/Styles'
 
+  /api/widgets/{id}:
+    $ref: 'methods/widgets.yaml#/ById'
+
+  /api/widgets/{id}/image:
+    $ref: 'methods/widgets.yaml#/GetImage'
+
+  /api/widgets/images/{checksum}:
+    $ref: 'methods/widgets.yaml#/Image'
+
+  /api/widgets:
+    $ref: 'methods/widgets.yaml#/Base'
 
 components:
   securitySchemes:
