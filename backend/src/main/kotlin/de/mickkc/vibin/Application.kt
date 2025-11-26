@@ -43,6 +43,7 @@ fun Application.module() {
     configureMetadataRoutes()
 
     configureTrackRoutes()
+    configureRelatedTrackRoutes()
     configureAlbumRoutes()
     configurePlaylistRoutes()
     configurePlaylistTrackRoutes()

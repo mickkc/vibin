@@ -18,6 +18,7 @@ import de.mickkc.vibin.db.tags.TagEntity
 import de.mickkc.vibin.db.tags.TrackTagConnection
 import de.mickkc.vibin.repos.LyricsRepo
 import de.mickkc.vibin.repos.PlaylistTrackRepo
+import de.mickkc.vibin.repos.TrackRelationRepo
 import de.mickkc.vibin.utils.PathUtils
 
 object TrackTable : ModifiableLongIdTable("track") {
@@ -98,6 +99,9 @@ class TrackEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, TrackTable) {
 
         // Remove associations to lyrics
         LyricsRepo.deleteLyrics(this)
+
+        // Delete track relations
+        TrackRelationRepo.deleteAllRelationsForTrack(trackId)
 
         super.delete()
     }

@@ -16,6 +16,7 @@ import de.mickkc.vibin.db.playlists.PlaylistTable
 import de.mickkc.vibin.db.playlists.PlaylistTrackTable
 import de.mickkc.vibin.db.tags.TagTable
 import de.mickkc.vibin.db.tags.TrackTagConnection
+import de.mickkc.vibin.db.tracks.TrackRelationTable
 import de.mickkc.vibin.db.tracks.TrackTable
 import de.mickkc.vibin.db.widgets.SharedWidgetTable
 import de.mickkc.vibin.db.widgets.WidgetTypeTable
@@ -71,7 +72,8 @@ val allTables = arrayOf(
     LyricsTable,
     TaskSettingTable,
     FavoriteTable,
-    SharedWidgetTable, WidgetTypeTable
+    SharedWidgetTable, WidgetTypeTable,
+    TrackRelationTable
 )
 
 fun createTables() = transaction {
