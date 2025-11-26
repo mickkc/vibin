@@ -1,0 +1,128 @@
+Base:
+  get:
+    summary: Get related tracks
+    operationId: getRelatedTracks
+    tags:
+      - RelatedTracks
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: id
+        in: path
+        description: ID of the track to find related tracks for
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: A list of related tracks with descriptions
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  key:
+                    $ref: '../models/track.yaml#/MinimalTrack'
+                  value:
+                    type: string
+                    description: Description of how the track is related
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+  post:
+    summary: Add a related track
+    operationId: addRelatedTrack
+    tags:
+      - RelatedTracks
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: id
+        in: path
+        description: ID of the track to add a related track to
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: relatedTrackId
+        in: query
+        description: ID of the track to relate
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: description
+        in: query
+        description: Description of how the tracks are related
+        required: true
+        schema:
+          type: string
+      - name: mutual
+        in: query
+        description: Whether the relation should be mutual
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: reverseDescription
+        in: query
+        description: Description of how the tracks are related in reverse (if mutual)
+        required: false
+        schema:
+          type: string
+    responses:
+      200:
+        description: Related track added successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+  delete:
+    summary: Remove a related track
+    operationId: removeRelatedTrack
+    tags:
+      - RelatedTracks
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: id
+        in: path
+        description: ID of the track to remove a related track from
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: relatedTrackId
+        in: query
+        description: ID of the related track to remove
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: Related track removed successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

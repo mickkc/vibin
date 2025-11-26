@@ -233,8 +233,8 @@ paths:
   /api/tracks/artists/{id}:
     $ref: 'methods/tracks.yaml#/ByArtist'
 
-  /api/tracks/{id}/related:
-    $ref: 'methods/tracks.yaml#/Related'
+  /api/tracks/{id}/similar:
+    $ref: 'methods/tracks.yaml#/Similar'
 
   /api/tracks/search:
     $ref: 'methods/tracks.yaml#/Search'
@@ -259,6 +259,12 @@ paths:
 
   /api/tracks/{id}/stream:
     $ref: 'methods/tracks.yaml#/Stream'
+
+  # █▀█ █▀▀ █░░ ▄▀█ ▀█▀ █▀▀ █▀▄   ▀█▀ █▀█ ▄▀█ █▀▀ █▄▀ █▀
+  # █▀▄ ██▄ █▄▄ █▀█ ░█░ ██▄ █▄▀   ░█░ █▀▄ █▀█ █▄▄ █░█ ▄█
+
+  /api/tracks/{id}/related:
+    $ref: 'methods/relatedTracks.yaml#/Base'
 
   # █░█ █▀ █▀▀ █▀█ █▀
   # █▄█ ▄█ ██▄ █▀▄ ▄█
