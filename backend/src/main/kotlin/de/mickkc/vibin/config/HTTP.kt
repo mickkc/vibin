@@ -2,6 +2,7 @@ package de.mickkc.vibin.config
 
 import com.ucasoft.ktor.simpleCache.SimpleCache
 import com.ucasoft.ktor.simpleMemoryCache.memoryCache
+import de.mickkc.vibin.supportedAppVersions
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.cors.routing.*
@@ -29,5 +30,6 @@ fun Application.configureHTTP() {
     }
     install(DefaultHeaders) {
         header("X-Server-Version", version)
+        header("X-Supported-App-Versions", supportedAppVersions.joinToString(","))
     }
 }

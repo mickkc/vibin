@@ -1,5 +1,7 @@
 package de.mickkc.vibin.routes
 
+import de.mickkc.vibin.supportedAppVersions
+import de.mickkc.vibin.version
 import io.ktor.server.application.Application
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
@@ -10,7 +12,8 @@ fun Application.configureCheckRoutes() = routing {
     get("/api/check") {
         call.respond(mapOf(
             "status" to "ok",
-            "version" to de.mickkc.vibin.version
+            "version" to version,
+            "supportedAppVersions" to supportedAppVersions
         ))
     }
 
