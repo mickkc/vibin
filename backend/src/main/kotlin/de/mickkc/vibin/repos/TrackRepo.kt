@@ -247,7 +247,7 @@ object TrackRepo {
      * @return A list of [TrackEntity] matching the search criteria.
      */
     fun getSearched(params: PaginatedSearchParams, advanced: Boolean, userId: Long? = null): Pair<List<TrackEntity>, Long> = transaction {
-        val tracks = TrackEntity.find { notBlockedByUserOp(userId) and buildQuery(params.query, advanced) }
+        val tracks = TrackEntity.find { notBlockedByUserOp(userId) and buildQuery(params.query, advanced, userId) }
         val count = tracks.count()
         val results = tracks
             .orderBy(TrackTable.title to SortOrder.ASC)
@@ -258,7 +258,7 @@ object TrackRepo {
     }
 
     fun getSearched(query: String, advanced: Boolean, userId: Long? = null): List<TrackEntity> = transaction {
-        return@transaction TrackEntity.find { notBlockedByUserOp(userId) and buildQuery(query, advanced) }
+        return@transaction TrackEntity.find { notBlockedByUserOp(userId) and buildQuery(query, advanced, userId) }
             .toList()
     }
 
@@ -269,9 +269,9 @@ object TrackRepo {
      * @param advanced If true, uses advanced search parsing; otherwise, performs a simple case-insensitive title search.
      * @return An [Op] representing the search condition.
      */
-    private fun buildQuery(query: String, advanced: Boolean): Op<Boolean> {
+    private fun buildQuery(query: String, advanced: Boolean, userId: Long?): Op<Boolean> {
         return if (advanced) {
-            SearchQueryBuilder.build(query)
+            SearchQueryBuilder.build(query, userId)
         } else {
             (TrackTable.title.lowerCase() like "%${query.lowercase()}%")
         }

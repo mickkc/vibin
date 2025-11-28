@@ -16,18 +16,21 @@ import de.mickkc.vibin.db.LyricsTable
 import de.mickkc.vibin.db.albums.AlbumTable
 import de.mickkc.vibin.db.artists.ArtistTable
 import de.mickkc.vibin.db.artists.TrackArtistConnection
+import de.mickkc.vibin.db.playlists.PlaylistTable
+import de.mickkc.vibin.db.playlists.PlaylistTrackTable
 import de.mickkc.vibin.db.tags.TagTable
 import de.mickkc.vibin.db.tags.TrackTagConnection
 import de.mickkc.vibin.db.tracks.TrackTable
+import de.mickkc.vibin.repos.PlaylistRepo
 
 object SearchQueryBuilder {
 
     val trueBooleans = listOf("1", "true", "yes", "on")
     val falseBooleans = listOf("0", "false", "no", "off")
 
-    fun build(queryString: String): Op<Boolean> {
+    fun build(queryString: String, userId: Long?): Op<Boolean> {
         val parts = split(queryString)
-        return buildQuery(parts)
+        return buildQuery(parts, userId)
     }
 
     fun split(queryString: String): List<String> {
@@ -99,7 +102,7 @@ object SearchQueryBuilder {
         return parts
     }
 
-    fun buildQuery(parts: List<String>): Op<Boolean> {
+    fun buildQuery(parts: List<String>, userId: Long?): Op<Boolean> {
 
         val pparts = parts.toMutableList()
         var op: Op<Boolean>? = null
@@ -130,7 +133,7 @@ object SearchQueryBuilder {
             // region Parentheses
             if (opPart.startsWith("(") && opPart.endsWith(")")) {
                 val parts = split(opPart.removePrefix("(").removeSuffix(")"))
-                val nop = buildQuery(parts)
+                val nop = buildQuery(parts, userId)
                 addWithRelation(nop, relationPart ?: "AND")
             }
             // endregion
@@ -153,6 +156,24 @@ object SearchQueryBuilder {
                 val albumSearch = opPart.removePrefix("al:").removeSurrounding("\"")
                 val nop = albumSearch(albumSearch)
                 addWithRelation(nop, relationPart ?: "AND")
+            }
+            // endregion
+            // region Playlist
+            else if (opPart.startsWith("p:"))  {
+                val playlistSearch = opPart.removePrefix("p:").removeSurrounding("\"")
+
+                val playlistQuery = TrackTable.id inSubQuery (
+                    PlaylistTrackTable.select(PlaylistTrackTable.trackId).where {
+                        PlaylistTrackTable.playlistId inSubQuery (
+                            PlaylistTable.select(PlaylistTable.id).where {
+                                PlaylistTable.name.lowerCase() like "%${playlistSearch.lowercase()}%" and
+                                (if (userId != null) PlaylistRepo.createOp(userId) else (PlaylistTable.public eq true))
+                            }
+                        )
+                    }
+                )
+
+                addWithRelation(playlistQuery, relationPart ?: "AND")
             }
             // endregion
             // region Year

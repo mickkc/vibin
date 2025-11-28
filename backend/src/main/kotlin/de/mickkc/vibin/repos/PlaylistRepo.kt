@@ -190,7 +190,7 @@ object PlaylistRepo {
      *
      * @param userId The ID of the user for whom to filter playlists.
      */
-    private fun createOp(userId: Long): Op<Boolean> {
+    fun createOp(userId: Long): Op<Boolean> {
         return (PlaylistTable.public eq true) or (PlaylistTable.id inSubQuery (PlaylistCollaborator.select(
             PlaylistCollaborator.playlist
         ).where { PlaylistCollaborator.user eq userId }) or (PlaylistTable.owner eq userId))
