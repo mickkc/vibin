@@ -23,7 +23,7 @@ services:
     env_file:
       - .env
     volumes:
-      - /opt/vibin/db:/var/lib/postgresql/data
+      - /opt/vibin/db:/var/lib/postgresql
     restart: unless-stopped
     networks:
       - vibin_net

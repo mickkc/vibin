@@ -32,10 +32,11 @@ RUN flutter config --enable-web
 RUN mkdir /app/
 RUN git clone https://github.com/mickkc/vibin-app /app/
 WORKDIR /app/
+RUN git checkout 0.0.1-beta.1
 RUN flutter clean
 RUN flutter pub get
 RUN flutter pub run build_runner build --delete-conflicting-outputs
-RUN flutter build web --debug --pwa-strategy=none --dart-define=VIBIN_EMBEDDED_MODE=true
+RUN flutter build web --debug --pwa-strategy=none --dart-define=VIBIN_EMBEDDED_MODE=true --base-href "/web/"
 
 # Stage 4: Create the Runtime Image
 FROM amazoncorretto:21 AS runtime
