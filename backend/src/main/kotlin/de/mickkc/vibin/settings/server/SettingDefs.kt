@@ -163,3 +163,10 @@ object LyricsMetadataSource : ServerSetting<String>(
     serializer = { value -> value },
     defaultValue = "LrcLib"
 )
+
+object IsFirstScan : ServerSetting<Boolean>(
+    key = "is_first_scan",
+    parser = { value -> value.toBoolean() },
+    serializer = { value -> value.toString() },
+    defaultValue = true
+)

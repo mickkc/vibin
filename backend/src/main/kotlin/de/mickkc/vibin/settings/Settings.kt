@@ -1,6 +1,7 @@
 package de.mickkc.vibin.settings
 
 import de.mickkc.vibin.repos.SettingsRepo
+import de.mickkc.vibin.settings.server.ServerSetting
 import de.mickkc.vibin.settings.user.UserSetting
 
 object Settings {
@@ -21,5 +22,10 @@ object Settings {
         val stringValue = SettingsRepo.getUserSettingValue(userSetting.key, userId)
         val parsedValue = stringValue?.let { userSetting.parser(it) }
         return parsedValue ?: userSetting.defaultValue
+    }
+
+    fun <T>set(setting: ServerSetting<T>, value: T) {
+        val stringValue = setting.serializer(value)
+        SettingsRepo.updateServerSetting(setting, stringValue)
     }
 }

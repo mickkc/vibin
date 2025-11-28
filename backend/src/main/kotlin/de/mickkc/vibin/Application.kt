@@ -1,15 +1,12 @@
 package de.mickkc.vibin
 
 import de.mickkc.vibin.config.*
-import de.mickkc.vibin.processing.AudioFileProcessor
 import de.mickkc.vibin.routes.*
-import de.mickkc.vibin.tasks.Tasks
 import de.mickkc.vibin.tasks.TaskScheduler
+import de.mickkc.vibin.tasks.Tasks
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 fun main() {
     embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::mainModule)
@@ -63,10 +60,6 @@ fun Application.module() {
 
     configureFrontendRoutes()
     configureWidgetRoutes()
-
-    GlobalScope.launch {
-        AudioFileProcessor.initialProcess()
-    }
 
     Tasks.configure()
     TaskScheduler.start()

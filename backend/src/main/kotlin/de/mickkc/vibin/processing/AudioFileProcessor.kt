@@ -42,30 +42,18 @@ object AudioFileProcessor {
     )
 
     /**
-     * Checks if there are any tracks in the database. If none are found, it starts the initial processing
-     * of audio files in the configured music directory.
-     */
-    suspend fun initialProcess() {
-        if (TrackRepo.count() == 0L) {
-            logger.info("No tracks found in database, starting initial processing of audio files.")
-            reprocessAll()
-        } else {
-            logger.info("Tracks already exist in database, skipping initial processing.")
-        }
-    }
-
-    /**
      * Reprocesses all audio files in the configured music directory.
      */
-    suspend fun reprocessAll() {
+    suspend fun reprocessAll(): Int {
         val baseDir = EnvUtil.getOrDefault(EnvUtil.MUSIC_DIR, EnvUtil.DEFAULT_MUSIC_DIR)
         val musicDir = File(baseDir)
         if (!musicDir.exists() || !musicDir.isDirectory) {
             logger.error("MUSIC_DIR path '$baseDir' does not exist or is not a directory.")
-            return
+            return 0
         }
         val processedTracks = processAllFilesInDirectory(musicDir)
         logger.info("Reprocessing complete. Total tracks processed: ${processedTracks.size}")
+        return processedTracks.size
     }
 
     /**
