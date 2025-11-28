@@ -35,8 +35,12 @@ abstract class BaseTask {
             setNextRun()
 
         logger.info("Running task $id")
+
+        val start = System.currentTimeMillis()
         val result = runTask()
-        logger.info("Finished task $id")
+        val end = System.currentTimeMillis()
+
+        logger.info("Finished task $id. Duration: ${end - start} ms. Result: ${result.message}")
 
         return result
     }
