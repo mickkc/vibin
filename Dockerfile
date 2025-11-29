@@ -32,7 +32,7 @@ RUN flutter config --enable-web
 RUN mkdir /app/
 RUN git clone https://github.com/mickkc/vibin-app /app/
 WORKDIR /app/
-RUN git checkout 0.0.1-beta.1
+RUN git checkout 0.0.1-beta.2
 RUN flutter clean
 RUN flutter pub get
 RUN flutter pub run build_runner build --delete-conflicting-outputs
