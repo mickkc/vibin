@@ -1,11 +1,5 @@
 package de.mickkc.vibin.repos
 
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.inSubQuery
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInSubQuery
-import org.jetbrains.exposed.sql.transactions.transaction
 import de.mickkc.vibin.db.albums.AlbumEntity
 import de.mickkc.vibin.db.albums.AlbumTable
 import de.mickkc.vibin.db.artists.ArtistEntity
@@ -24,6 +18,12 @@ import de.mickkc.vibin.routes.PaginatedSearchParams
 import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.settings.user.BlockedArtists
 import de.mickkc.vibin.settings.user.BlockedTags
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inSubQuery
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInSubQuery
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object AlbumRepo {
 
@@ -190,7 +190,7 @@ object AlbumRepo {
                 (AlbumTable.id inSubQuery TrackTable
                     .select(TrackTable.albumId)
                     .groupBy(TrackTable.albumId)
-                    .where { (TrackTable.trackCount greater 1) or (TrackTable.discCount greater 1) }
+                    .having { Count(TrackTable.id) greater 1L }
                 )
     }
 
