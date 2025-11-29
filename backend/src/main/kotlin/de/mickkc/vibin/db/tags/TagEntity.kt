@@ -4,6 +4,8 @@ import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import de.mickkc.vibin.db.ModifiableLongIdEntity
 import de.mickkc.vibin.db.ModifiableLongIdTable
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
 
 object TagTable : ModifiableLongIdTable("tag") {
     val name = varchar("name", 255).index()
@@ -24,4 +26,15 @@ class TagEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, TagTable) {
     var name by TagTable.name
     var description by TagTable.description
     var importance by TagTable.importance
+
+    override fun delete() {
+
+        val tagId = this.id.value
+
+        TrackTagConnection.deleteWhere {
+            TrackTagConnection.tag eq tagId
+        }
+
+        super.delete()
+    }
 }
