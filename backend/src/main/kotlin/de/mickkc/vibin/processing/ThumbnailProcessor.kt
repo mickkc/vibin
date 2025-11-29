@@ -10,6 +10,7 @@ import java.awt.Image
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.InputStream
 import javax.imageio.ImageIO
 
 object ThumbnailProcessor {
@@ -61,6 +62,10 @@ object ThumbnailProcessor {
      */
     fun getImageFromByteArray(imageData: ByteArray): BufferedImage {
         return ImageIO.read(imageData.inputStream())
+    }
+
+    fun getImageFromInputStream(imageStream: InputStream): BufferedImage {
+        return ImageIO.read(imageStream)
     }
 
     fun getImageFromFile(imageFile: File): BufferedImage {

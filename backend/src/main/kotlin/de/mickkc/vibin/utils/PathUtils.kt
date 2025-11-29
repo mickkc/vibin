@@ -69,9 +69,19 @@ object PathUtils {
     }
 
     fun getDefaultImage(type: String, quality: Int): File? {
-        val resource = this::class.java.getResource("/img/default_${type}.png") ?: return null
+
+        val localFile = getThumbnailPath("default_${type}.png")
+        if (!localFile.exists()) {
+            val resource = this::class.java.getResource("/img/default_${type}.png") ?: return null
+            resource.openStream().use { input ->
+                localFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+        }
+
         return ImageCache.getImageFile(
-            originalFile = File(resource.toURI()),
+            originalFile = localFile,
             size = quality,
             name = "default_${type}"
         )
