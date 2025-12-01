@@ -131,9 +131,11 @@ object PlaylistRepo {
                 playlist.vibeDef = editDto.vibedef?.takeIf { it.isNotEmpty() }
             }
 
-            val collaborators = editDto.collaboratorIds?.mapNotNull { UserRepo.getById(it) }?.toList() ?: emptyList()
-            if (playlist.collaborators.toList() != collaborators) {
-                playlist.collaborators = SizedCollection(collaborators)
+            if (editDto.collaboratorIds != null) {
+                val collaborators = editDto.collaboratorIds.mapNotNull { UserRepo.getById(it) }.toList()
+                if (playlist.collaborators.toList() != collaborators) {
+                    playlist.collaborators = SizedCollection(collaborators)
+                }
             }
 
             if (coverChanged) {
