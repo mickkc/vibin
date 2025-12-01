@@ -134,8 +134,18 @@ object WidgetImageCache {
      */
     private fun createChromeOptions(width: Int, height: Int): ChromeOptions {
         val options = ChromeOptions()
+
+        val binary = EnvUtil.getOrDefault(EnvUtil.CHROME_BINARY_PATH, EnvUtil.DEFAULT_CHROME_BINARY_PATH)
+
+        if (binary.isNotBlank()) {
+            logger.info("Using custom Chrome binary at: $binary")
+            options.setBinary(binary)
+        }
+
         options.addArguments(
             "--headless=new",
+            "--no-sandbox",
+            "--disable-dev-shm-usage",
             "--disable-gpu",
             "--window-size=$width,$height"
         )

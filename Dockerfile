@@ -40,10 +40,23 @@ RUN flutter pub run build_runner build --delete-conflicting-outputs
 RUN flutter build web --debug --pwa-strategy=none --dart-define=VIBIN_EMBEDDED_MODE=true --base-href "/web/"
 
 # Stage 4: Create the Runtime Image
-FROM amazoncorretto:21 AS runtime
+FROM debian:latest AS runtime
+
+# Install Chromium and ChromeDriver
+RUN apt-get update && apt-get install -y \
+    openjdk-21-jdk \
+    chromium \
+    chromium-driver \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables for Selenium
+ENV CHROME_BINARY_PATH /usr/bin/chromium
+ENV CHROMEDRIVER /usr/bin/chromedriver
 
 EXPOSE 8080
 RUN mkdir /app
+
+# Copy the backend jar and static frontend files
 COPY --from=build /home/gradle/src/build/libs/*.jar /app/backend.jar
 COPY --from=frontend /app/build/web/ /app/frontend/
 
