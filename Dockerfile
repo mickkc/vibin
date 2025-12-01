@@ -19,23 +19,22 @@ WORKDIR /home/gradle/src
 RUN gradle buildFatJar --no-daemon
 
 # Stage 3: Build Frontend
-FROM debian:latest AS frontend
-RUN apt-get update
-RUN apt-get install -y libxi6 libgtk-3-0 libxrender1 libxtst6 libxslt1.1 curl git wget unzip gdb libstdc++6 libglu1-mesa fonts-droid-fallback lib32stdc++6 python3
-RUN apt-get clean
-RUN git clone https://github.com/flutter/flutter.git /usr/local/flutter
-ENV PATH="/usr/local/flutter/bin:/usr/local/flutter/bin/cache/dart-sdk/bin:${PATH}"
-RUN flutter doctor -v
-RUN flutter channel stable
-RUN flutter upgrade
-RUN flutter config --enable-web
-RUN mkdir /app/
-RUN git clone https://github.com/mickkc/vibin-app /app/
-WORKDIR /app/
-RUN git fetch
-RUN git checkout 0.0.1-beta.2
-RUN flutter clean
-RUN flutter pub get
+FROM ghcr.io/cirruslabs/flutter:stable AS frontend
+
+ARG VIBIN_TAG=0.0.1-beta.2
+
+# Install git
+RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+
+# Clone the vibin-app repository
+WORKDIR /tmp/app/
+RUN git clone --depth 1 --branch ${VIBIN_TAG} https://github.com/mickkc/vibin-app .
+
+# Set up Flutter environment
+RUN flutter config --no-analytics --enable-web
+RUN flutter pub get --offline || flutter pub get
+
+# Build the web application
 RUN flutter pub run build_runner build --delete-conflicting-outputs
 RUN flutter build web --debug --pwa-strategy=none --dart-define=VIBIN_EMBEDDED_MODE=true --base-href "/web/"
 
@@ -44,7 +43,7 @@ FROM debian:latest AS runtime
 
 # Install Chromium and ChromeDriver
 RUN apt-get update && apt-get install -y \
-    openjdk-21-jdk \
+    openjdk-21-jre-headless \
     chromium \
     chromium-driver \
     && rm -rf /var/lib/apt/lists/*
@@ -53,13 +52,14 @@ RUN apt-get update && apt-get install -y \
 ENV CHROME_BINARY_PATH /usr/bin/chromium
 ENV CHROMEDRIVER /usr/bin/chromedriver
 
-EXPOSE 8080
 RUN mkdir /app
 
 # Copy the backend jar and static frontend files
 COPY --from=build /home/gradle/src/build/libs/*.jar /app/backend.jar
-COPY --from=frontend /app/build/web/ /app/frontend/
+COPY --from=frontend /tmp/app/build/web/ /app/frontend/
 
 ENV FRONTEND_DIR="/app/frontend"
+
+EXPOSE 8080
 
 ENTRYPOINT ["java","-jar","/app/backend.jar"]
