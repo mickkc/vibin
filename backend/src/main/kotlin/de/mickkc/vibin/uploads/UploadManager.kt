@@ -60,9 +60,18 @@ object UploadManager {
 
             file.writeBytes(data)
 
+            var coverFile: File? = null
 
             try {
                 val parsed = Parser.parse(file)
+
+                if (parsed.trackInfo.coverImageUrl != null) {
+                    val coverData = Parser.downloadCoverImage(parsed.trackInfo.coverImageUrl)
+                    if (coverData != null) {
+                        coverFile = PathUtils.getUploadFileFromPath("$filePath.cover.jpg")
+                        coverFile.writeBytes(coverData)
+                    }
+                }
 
                 val pendingUpload = PendingUpload(
                     id = id,
@@ -84,7 +93,6 @@ object UploadManager {
                     year = parsed.trackInfo.year,
                     comment = parsed.trackInfo.comment ?: "",
                     lyrics = parsed.trackInfo.lyrics ?: Parser.searchLyricsAuto(parsed),
-                    coverUrl = parsed.trackInfo.coverImageUrl,
                     uploaderId = user.id.value,
                     lastUpdated = DateTimeUtils.now()
                 )
@@ -95,6 +103,7 @@ object UploadManager {
             } catch (e: Exception) {
                 logger.error("Error parsing uploaded file for user ID $userId: ${e.message}", e)
                 file.delete()
+                coverFile?.delete()
                 storage.remove(id)
                 mutexMap.remove(id)
                 throw e
@@ -131,8 +140,24 @@ object UploadManager {
             upload.discCount = metadata.discCount
             upload.year = metadata.year
             upload.comment = metadata.comment ?: upload.comment
-            upload.coverUrl = metadata.imageUrl ?: upload.coverUrl
             upload.lyrics = metadata.lyrics ?: upload.lyrics
+
+            if (metadata.imageUrl != null) {
+                if (metadata.imageUrl.isEmpty()) {
+                    // Reset cover if empty string is provided
+                    val coverFile = getCoverFile(upload)
+                    if (coverFile != null && coverFile.exists()) {
+                        coverFile.delete()
+                    }
+                }
+                else {
+                    // Download & Save cover image
+                    Parser.downloadCoverImage(metadata.imageUrl)?.let {
+                        val coverFile = PathUtils.getUploadFileFromPath("${upload.filePath}.cover.jpg")
+                        coverFile.writeBytes(it)
+                    }
+                }
+            }
 
             return upload
         }
@@ -174,9 +199,12 @@ object UploadManager {
 
             Files.move(file.toPath(), targetFile.toPath())
 
-            val cover = upload.coverUrl?.let { url ->
-                val data = Parser.downloadCoverImage(url)
-                data?.let { ThumbnailProcessor.getImage(it) }
+            val coverFile = getCoverFile(upload)
+
+            val cover = coverFile?.let { file ->
+                ThumbnailProcessor.getImage(file.readBytes()).also {
+                    file.delete()
+                }
             }
 
             val track = TrackRepo.createTrack(
@@ -212,6 +240,12 @@ object UploadManager {
             if (file.exists()) {
                 file.delete()
             }
+
+            val coverFile = getCoverFile(upload)
+            if (coverFile != null && coverFile.exists()) {
+                coverFile.delete()
+            }
+
             storage.remove(upload.id)
         }
         finally {
@@ -243,6 +277,12 @@ object UploadManager {
 
         val safeReplacedPath = PathUtils.sanitizePath(replacedPath)
         return PathUtils.getTrackFileFromPath(safeReplacedPath)
+    }
+
+    fun getCoverFile(pendingUploadEntity: PendingUpload): File? {
+        return PathUtils.getUploadFileFromPath("${pendingUploadEntity.filePath}.cover.jpg").takeIf {
+            it.exists()
+        }
     }
 
     /**
@@ -301,7 +341,6 @@ object UploadManager {
             year = upload.year,
             comment = upload.comment,
             lyrics = upload.lyrics,
-            coverUrl = upload.coverUrl,
             uploaderId = upload.uploaderId,
             lastUpdated = upload.lastUpdated
         )

@@ -18,7 +18,6 @@ data class PendingUpload(
     var year: Int?,
     var comment: String,
     var lyrics: String?,
-    var coverUrl: String?,
     var uploaderId: Long,
     var lastUpdated: Long
 )

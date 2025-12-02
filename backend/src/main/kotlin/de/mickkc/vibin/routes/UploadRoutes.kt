@@ -1,11 +1,5 @@
 package de.mickkc.vibin.routes
 
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.plugins.NotFoundException
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
 import de.mickkc.vibin.dto.UploadResultDto
 import de.mickkc.vibin.dto.tracks.TrackEditDto
 import de.mickkc.vibin.parsing.parsers.preparser.PreParseException
@@ -14,6 +8,13 @@ import de.mickkc.vibin.repos.TrackRepo
 import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.uploads.PendingUpload
 import de.mickkc.vibin.uploads.UploadManager
+import de.mickkc.vibin.utils.PathUtils
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.plugins.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -136,6 +137,22 @@ fun Application.configureUploadRoutes() = routing {
             val uploadedTracks = TrackRepo.getUploadedByUser(user.id.value, requestingUserId)
 
             call.respond(TrackRepo.toMinimalDto(uploadedTracks))
+        }
+
+        getP("/api/uploads/{uploadId}/cover", PermissionType.UPLOAD_TRACKS) {
+
+            val upload = call.getValidatedUpload() ?: return@getP
+
+            val coverData = UploadManager.getCoverFile(upload)
+
+            if (coverData == null) {
+                PathUtils.getDefaultImage("track", 512)?.let {
+                    return@getP call.respondFile(it)
+                }
+                return@getP call.notFound()
+            }
+
+            call.respondFile(coverData)
         }
     }
 }
