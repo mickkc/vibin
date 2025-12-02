@@ -120,7 +120,7 @@ class MetadataProvider : FileParser {
                 year = parsedYear,
                 tags = tags.distinct(),
                 comment = comment,
-                coverImageUrl = "data:${tag.firstArtwork?.mimeType};base64,$base64Cover",
+                coverImageUrl = if (base64Cover != null) "data:${tag.firstArtwork?.mimeType};base64,$base64Cover" else null,
                 explicit = rating?.lowercase() == "explicit",
                 lyrics = lyrics
             )
