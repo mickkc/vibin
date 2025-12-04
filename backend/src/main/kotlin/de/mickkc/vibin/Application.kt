@@ -32,6 +32,7 @@ fun Application.module() {
     configureSecurity()
     configureHTTP()
     configureStatusPages()
+    configureWebSockets()
 
     configureOpenApi()
 
@@ -60,6 +61,8 @@ fun Application.module() {
 
     configureFrontendRoutes()
     configureWidgetRoutes()
+
+    configureWebSocketRoutes()
 
     Tasks.configure()
     TaskScheduler.start()

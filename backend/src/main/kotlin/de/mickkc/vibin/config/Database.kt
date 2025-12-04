@@ -68,7 +68,7 @@ val allTables = arrayOf(
     AlbumTable,
     TrackTable, TrackTagConnection, TrackArtistConnection,
     PlaylistTable, PlaylistTrackTable, PlaylistCollaborator,
-    ListenTable,
+    ListenTable, TrackListenDurationTable,
     LyricsTable,
     TaskSettingTable,
     FavoriteTable,

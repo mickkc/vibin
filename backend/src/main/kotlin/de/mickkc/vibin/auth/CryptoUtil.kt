@@ -31,12 +31,12 @@ object CryptoUtil {
      * Generates a random token consisting of 64 alphanumeric characters that is guaranteed to be unique.
      * @return A randomly generated token string.
      */
-    fun createToken(): String = transaction {
+    fun createToken(length: Int = 64): String = transaction {
         var token: String
         do {
             token = generateSequence {
                 (('A'..'Z') + ('a'..'z') + ('0'..'9')).random()
-            }.take(64).joinToString("")
+            }.take(length).joinToString("")
         } while (SessionEntity.find { SessionTable.token eq token }.any())
         return@transaction token
     }

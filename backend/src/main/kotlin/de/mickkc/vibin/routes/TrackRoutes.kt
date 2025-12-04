@@ -1,17 +1,16 @@
 package de.mickkc.vibin.routes
 
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import de.mickkc.vibin.db.ListenType
 import de.mickkc.vibin.dto.PaginatedDto
 import de.mickkc.vibin.dto.tracks.TrackEditDto
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.*
 import de.mickkc.vibin.utils.ImageUtils
 import de.mickkc.vibin.utils.PathUtils
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 
 fun Application.configureTrackRoutes() = routing {
 
@@ -182,8 +181,6 @@ fun Application.configureTrackRoutes() = routing {
         if (!audioFile.exists()) {
             return@getP call.notFound()
         }
-
-        ListenRepo.listenedTo(userId, track.id.value, ListenType.TRACK)
 
         call.respondFile(audioFile)
     }
