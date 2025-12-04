@@ -38,7 +38,7 @@ object TaskScheduler {
 
                 val delay = TaskManager.getNextTaskRunTime()?.let { nextRunTime ->
                     val delaySeconds = nextRunTime - DateTimeUtils.now()
-                    if (delaySeconds > 0) delaySeconds else 0
+                    if (delaySeconds > 0) delaySeconds else IDLE_INTERVAL_SECONDS
                 } ?: IDLE_INTERVAL_SECONDS
 
                 logger.info("Next task run in $delay seconds")

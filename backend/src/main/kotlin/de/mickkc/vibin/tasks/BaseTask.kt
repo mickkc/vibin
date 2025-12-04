@@ -37,7 +37,13 @@ abstract class BaseTask {
         logger.info("Running task $id")
 
         val start = System.currentTimeMillis()
-        val result = runTask()
+        val result = try {
+            runTask()
+        }
+        catch (e: Exception) {
+            logger.error("Error running task $id: ${e.message}", e)
+            TaskResult.failure(e.toString())
+        }
         val end = System.currentTimeMillis()
 
         logger.info("Finished task $id. Duration: ${end - start} ms. Result: ${result.message}")
