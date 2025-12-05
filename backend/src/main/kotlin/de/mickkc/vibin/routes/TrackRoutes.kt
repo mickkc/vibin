@@ -18,8 +18,8 @@ fun Application.configureTrackRoutes() = routing {
 
         // Get all tracks (paginated)
         getP("/api/tracks", PermissionType.VIEW_TRACKS) {
-            val page = call.request.queryParameters["page"]?.toIntOrNull() ?: 1
-            val pageSize = call.request.queryParameters["pageSize"]?.toIntOrNull() ?: 50
+            val page = call.getIntOrDefault("page", 1) ?: return@getP
+            val pageSize = call.getIntOrDefault("pageSize", 50) ?: return@getP
             val userId = call.getUserId() ?: return@getP call.unauthorized()
 
             val (tracks, total) = TrackRepo.getAll(page, pageSize, userId)
@@ -34,14 +34,14 @@ fun Application.configureTrackRoutes() = routing {
 
         // Get track by ID
         getP("/api/tracks/{trackId}", PermissionType.VIEW_TRACKS) {
-            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
+            val trackId = call.getLongParameter("trackId") ?: return@getP
             val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
             call.respond(TrackRepo.toDto(track))
         }
 
         // Get tracks by artist ID
         getP("/api/tracks/artists/{artistId}", PermissionType.VIEW_TRACKS) {
-            val artistId = call.parameters["artistId"]?.toLongOrNull() ?: return@getP call.missingParameter("artistId")
+            val artistId = call.getLongParameter("artistId") ?: return@getP
             val userId = call.getUserId() ?: return@getP call.unauthorized()
 
             val tracks = TrackRepo.getByArtistId(artistId, userId)
@@ -50,7 +50,7 @@ fun Application.configureTrackRoutes() = routing {
 
         // Edit track details
         putP("/api/tracks/{trackId}", PermissionType.MANAGE_TRACKS) {
-            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@putP call.missingParameter("trackId")
+            val trackId = call.getLongParameter("trackId") ?: return@putP
             val editDto = call.receive<TrackEditDto>()
 
             val updated = TrackRepo.update(trackId, editDto) ?: return@putP call.notFound()
@@ -59,17 +59,18 @@ fun Application.configureTrackRoutes() = routing {
 
         // Delete track
         deleteP("/api/tracks/{trackId}", PermissionType.DELETE_TRACKS) {
-            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@deleteP call.missingParameter("trackId")
-
+            val trackId = call.getLongParameter("trackId") ?: return@deleteP
             val track = TrackRepo.getById(trackId) ?: return@deleteP call.notFound()
+
             TrackRepo.delete(track)
             call.success()
         }
 
         // Get related tracks
         getP("/api/tracks/{trackId}/similar", PermissionType.VIEW_TRACKS) {
-            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
-            val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 10
+            val trackId = call.getLongParameter("trackId") ?: return@getP
+            val limit = call.getIntOrDefault("limit", 10) ?: return@getP
+
             val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
             val related = TrackRepo.getRelated(track, limit)
             call.respond(TrackRepo.toMinimalDto(related))
@@ -79,7 +80,7 @@ fun Application.configureTrackRoutes() = routing {
         getP("/api/tracks/search", PermissionType.VIEW_TRACKS) {
 
             val params = call.getPaginatedSearchParams() ?: return@getP
-            val advanced = call.request.queryParameters["advanced"]?.toBooleanStrictOrNull() ?: false
+            val advanced = call.getBooleanOrDefault("advanced", false) ?: return@getP
             val userId = call.getUserId() ?: return@getP call.unauthorized()
 
             val (results, count) = TrackRepo.getSearched(params, advanced, userId)
@@ -93,7 +94,7 @@ fun Application.configureTrackRoutes() = routing {
         }
 
         getP("/api/tracks/random", PermissionType.VIEW_TRACKS) {
-            val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 1
+            val limit = call.getIntOrDefault("limit", 1) ?: return@getP
             val userId = call.getUserId() ?: return@getP call.unauthorized()
 
             val track = TrackRepo.getRandom(limit, userId)
@@ -102,7 +103,7 @@ fun Application.configureTrackRoutes() = routing {
         }
 
         getP("/api/tracks/newest", PermissionType.VIEW_TRACKS) {
-            val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 10
+            val limit = call.getIntOrDefault("limit", 10) ?: return@getP
             val userId = call.getUserId() ?: return@getP call.unauthorized()
 
             val tracks = TrackRepo.getNewest(limit, userId)
@@ -111,7 +112,7 @@ fun Application.configureTrackRoutes() = routing {
 
 
         getP("/api/tracks/{trackId}/lyrics", PermissionType.VIEW_TRACKS) {
-            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
+            val trackId = call.getLongParameter("trackId") ?: return@getP
 
             val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
             val lyrics = LyricsRepo.getLyrics(track)?.content
@@ -124,13 +125,13 @@ fun Application.configureTrackRoutes() = routing {
         }
 
         getP("/api/tracks/{trackId}/lyrics/check", PermissionType.VIEW_TRACKS) {
-            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
+            val trackId = call.getLongParameter("trackId") ?: return@getP
             val hasLyrics = LyricsRepo.hasLyrics(trackId)
             call.success(hasLyrics)
         }
 
         getP("/api/tracks/{trackId}/download", PermissionType.DOWNLOAD_TRACKS) {
-            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
+            val trackId = call.getLongParameter("trackId") ?: return@getP
             val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
 
             val audioFile = PathUtils.getTrackFileFromPath(track.path)
@@ -156,8 +157,8 @@ fun Application.configureTrackRoutes() = routing {
             return@getP call.forbidden(PermissionType.VIEW_TRACKS)
         }
 
-        val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
-        val quality = call.request.queryParameters["quality"]?.toIntOrNull() ?: 0
+        val trackId = call.getLongParameter("trackId") ?: return@getP
+        val quality = call.getIntOrDefault("quality", 0) ?: return@getP
         val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
         val cover = TrackRepo.getCover(track)
 
@@ -174,7 +175,7 @@ fun Application.configureTrackRoutes() = routing {
             return@getP call.forbidden(PermissionType.STREAM_TRACKS)
         }
 
-        val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
+        val trackId = call.getLongParameter("trackId") ?: return@getP
         val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
 
         val audioFile = PathUtils.getTrackFileFromPath(track.path)

@@ -22,12 +22,7 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 fun Application.configureUploadRoutes() = routing {
 
     suspend fun RoutingCall.getValidatedUpload(): PendingUpload? {
-        val uploadId = this.parameters["uploadId"]
-
-        if (uploadId == null) {
-            missingParameter("uploadId")
-            return null
-        }
+        val uploadId = getStringParameter("uploadId") ?: return null
 
         val upload = UploadManager.getById(uploadId)
 
@@ -65,7 +60,7 @@ fun Application.configureUploadRoutes() = routing {
         postP("/api/uploads", PermissionType.UPLOAD_TRACKS) {
 
             val userId = call.getUserId() ?: return@postP call.unauthorized()
-            val filename = call.parameters["filename"] ?: return@postP call.missingParameter("filename")
+            val filename = call.getStringParameter("filename") ?: return@postP
             val base64data = call.receiveText()
 
             try {
@@ -129,7 +124,7 @@ fun Application.configureUploadRoutes() = routing {
         }
 
         getP("/api/uploads/tracks/{userId}", PermissionType.VIEW_TRACKS) {
-            val userId = call.parameters["userId"]?.toLongOrNull() ?: return@getP call.missingParameter("userId")
+            val userId = call.getLongParameter("userId") ?: return@getP
             val user = UserRepo.getById(userId) ?: return@getP call.notFound()
 
             val requestingUserId = call.getUserId() ?: return@getP call.unauthorized()

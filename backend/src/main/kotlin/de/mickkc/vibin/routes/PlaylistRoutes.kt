@@ -18,7 +18,7 @@ fun Application.configurePlaylistRoutes() = routing {
 
             val userId = call.getUserId() ?: return@getP call.unauthorized()
             val params = call.getPaginatedSearchParams() ?: return@getP
-            val onlyOwn = call.request.queryParameters["onlyOwn"]?.toBoolean() ?: false
+            val onlyOwn = call.getBooleanOrDefault("onlyOwn", false) ?: return@getP
 
             // Get the playlists for the requested page
             val (playlists, total) = PlaylistRepo.getAll(params, userId, onlyOwn)
@@ -33,7 +33,7 @@ fun Application.configurePlaylistRoutes() = routing {
 
         getP("/api/playlists/{playlistId}", PermissionType.VIEW_PLAYLISTS, PermissionType.VIEW_TRACKS) {
             val userId = call.getUserId() ?: return@getP call.unauthorized()
-            val playlistId = call.parameters["playlistId"]?.toLongOrNull() ?: return@getP call.missingParameter("playlistId")
+            val playlistId = call.getLongParameter("playlistId") ?: return@getP
 
             val playlist = PlaylistRepo.getById(playlistId, userId) ?: return@getP call.notFound()
 
@@ -42,7 +42,7 @@ fun Application.configurePlaylistRoutes() = routing {
 
         getP("/api/playlists/users/{userId}", PermissionType.VIEW_PLAYLISTS, PermissionType.VIEW_USERS) {
             val requestingUserId = call.getUserId() ?: return@getP call.unauthorized()
-            val userId = call.parameters["userId"]?.toLongOrNull() ?: return@getP call.missingParameter("userId")
+            val userId = call.getLongParameter("userId") ?: return@getP
 
             val playlists = PlaylistRepo.getAllForUser(userId, userId == requestingUserId)
 
@@ -51,7 +51,7 @@ fun Application.configurePlaylistRoutes() = routing {
 
         getP("/api/playlists/random", PermissionType.VIEW_PLAYLISTS) {
             val userId = call.getUserId() ?: return@getP call.unauthorized()
-            val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 1
+            val limit = call.getIntOrDefault("limit", 1) ?: return@getP
 
             val playlists = PlaylistRepo.getRandom(limit, userId)
 
@@ -89,7 +89,7 @@ fun Application.configurePlaylistRoutes() = routing {
 
         putP("/api/playlists/{playlistId}", PermissionType.MANAGE_PLAYLISTS) {
             val user = call.getUser() ?: return@putP call.unauthorized()
-            val playlistId = call.parameters["playlistId"]?.toLongOrNull() ?: return@putP call.missingParameter("playlistId")
+            val playlistId = call.getLongParameter("playlistId") ?: return@putP
             val editDto = getValidatedEditDto(call) ?: return@putP
 
             // Get the playlist to check ownership
@@ -104,8 +104,7 @@ fun Application.configurePlaylistRoutes() = routing {
 
         deleteP("/api/playlists/{playlistId}", PermissionType.DELETE_OWN_PLAYLISTS) {
             val userId = call.getUserId() ?: return@deleteP call.unauthorized()
-            val playlistId =
-                call.parameters["playlistId"]?.toLongOrNull() ?: return@deleteP call.missingParameter("playlistId")
+            val playlistId = call.getLongParameter("playlistId") ?: return@deleteP
 
             // Get the playlist to check ownership
             val playlist = PlaylistRepo.getByIdIfAllowed(playlistId, userId, PermissionType.DELETE_COLLABORATIVE_PLAYLISTS)
@@ -118,8 +117,8 @@ fun Application.configurePlaylistRoutes() = routing {
 
         getP("/api/playlists/{playlistId}/image", PermissionType.VIEW_PLAYLISTS) {
             val userId = call.getUserId() ?: return@getP call.unauthorized()
-            val playlistId = call.parameters["playlistId"]?.toLongOrNull() ?: return@getP call.missingParameter("playlistId")
-            val quality = call.request.queryParameters["quality"]?.toIntOrNull() ?: 0
+            val playlistId = call.getLongParameter("playlistId") ?: return@getP
+            val quality = call.getIntOrDefault("quality", 0) ?: return@getP
 
             val playlist = PlaylistRepo.getById(playlistId, userId) ?: return@getP call.notFound()
 

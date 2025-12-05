@@ -36,13 +36,13 @@ fun Application.configureUserRoutes() = routing {
         }
 
         getP("/api/users/{userId}", PermissionType.VIEW_USERS) {
-            val userId = call.parameters["userId"]?.toLongOrNull() ?: return@getP call.missingParameter("userId")
+            val userId = call.getLongParameter("userId") ?: return@getP
             val user = UserRepo.getById(userId) ?: return@getP call.notFound()
             call.respond(UserRepo.toDto(user))
         }
 
         getP("/api/users/username/{username}/exists") {
-            val username = call.parameters["username"] ?: return@getP call.missingParameter("username")
+            val username = call.getStringParameter("username") ?: return@getP
             val exists = UserRepo.checkUsernameExists(username)
             call.success(exists)
         }
@@ -60,7 +60,7 @@ fun Application.configureUserRoutes() = routing {
         }
 
         putP("/api/users/{userId}") {
-            val userId = call.parameters["userId"]?.toLongOrNull() ?: return@putP call.missingParameter("userId")
+            val userId = call.getLongParameter("userId") ?: return@putP
             val currentUser = call.getUser() ?: return@putP call.unauthorized()
 
             if (userId == currentUser.id.value) {
@@ -93,7 +93,7 @@ fun Application.configureUserRoutes() = routing {
         }
 
         deleteP("/api/users/{userId}") {
-            val userId = call.parameters["userId"]?.toLongOrNull() ?: return@deleteP call.missingParameter("userId")
+            val userId = call.getLongParameter("userId") ?: return@deleteP
             val deleteData = call.parameters["deleteData"]?.toBoolean() ?: false
 
             if (userId == call.getUserId()) {
@@ -115,9 +115,9 @@ fun Application.configureUserRoutes() = routing {
         }
 
         getP("/api/users/{userId}/pfp", PermissionType.VIEW_USERS) {
-            val userId = call.parameters["userId"]?.toLongOrNull() ?: return@getP call.missingParameter("userId")
+            val userId = call.getLongParameter("userId") ?: return@getP
             val user = UserRepo.getById(userId) ?: return@getP call.notFound()
-            val quality = call.request.queryParameters["quality"]?.toIntOrNull() ?: 0
+            val quality = call.getIntOrDefault("quality", 0) ?: return@getP
             val profilePicture = UserRepo.getProfilePicture(user)
 
             val file = ImageUtils.getFileOrDefault(profilePicture, quality, "user") ?: return@getP call.notFound()

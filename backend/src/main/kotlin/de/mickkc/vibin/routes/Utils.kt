@@ -163,3 +163,111 @@ suspend fun RoutingCall.getPaginatedSearchParams(): PaginatedSearchParams? {
         pageSize = pageSize
     )
 }
+
+suspend fun RoutingCall.getBooleanOrDefault(paramName: String, default: Boolean): Boolean? {
+    val paramValue = this.parameters[paramName]
+
+    if (paramValue == null) {
+        return default
+    }
+
+    return when (paramValue.lowercase()) {
+        "true", "1", "yes" -> true
+        "false", "0", "no" -> false
+        else -> {
+            invalidParameter(paramName, "true", "false")
+            null
+        }
+    }
+}
+
+suspend fun RoutingCall.getBooleanParameter(paramName: String): Boolean? {
+    val paramValue = this.parameters[paramName]
+
+    if (paramValue == null) {
+        missingParameter(paramName)
+        return null
+    }
+
+    return when (paramValue.lowercase()) {
+        "true", "1", "yes" -> true
+        "false", "0", "no" -> false
+        else -> {
+            invalidParameter(paramName, "true", "false")
+            null
+        }
+    }
+}
+
+suspend fun RoutingCall.getStringOrDefault(paramName: String, default: String): String {
+    return this.parameters[paramName] ?: default
+}
+
+suspend fun RoutingCall.getStringParameter(paramName: String): String? {
+    val paramValue = this.parameters[paramName]
+
+    if (paramValue == null) {
+        missingParameter(paramName)
+        return null
+    }
+
+    return paramValue
+}
+
+suspend fun RoutingCall.getLongOrDefault(paramName: String, default: Long): Long? {
+    val paramValue = this.parameters[paramName] ?: return default
+
+    val longValue = paramValue.toLongOrNull()
+    if (longValue == null) {
+        invalidParameter(paramName)
+        return null
+    }
+
+    return longValue
+}
+
+suspend fun RoutingCall.getLongParameter(paramName: String): Long? {
+    val paramValue = this.parameters[paramName]
+
+    if (paramValue == null) {
+        missingParameter(paramName)
+        return null
+    }
+
+    val longValue = paramValue.toLongOrNull()
+    if (longValue == null) {
+        invalidParameter(paramName)
+        return null
+    }
+
+    return longValue
+}
+
+suspend fun RoutingCall.getIntOrDefault(paramName: String, default: Int): Int? {
+    val paramValue = this.parameters[paramName] ?: return default
+
+    val intValue = paramValue.toIntOrNull()
+    if (intValue == null) {
+        invalidParameter(paramName)
+        return null
+    }
+
+    return intValue
+}
+
+suspend fun RoutingCall.getIntParameter(paramName: String): Int? {
+    val paramValue = this.parameters[paramName]
+
+    if (paramValue == null) {
+        missingParameter(paramName)
+        return null
+    }
+
+    val intValue = paramValue.toIntOrNull()
+    if (intValue == null) {
+        invalidParameter(paramName)
+        return null
+    }
+
+    return intValue
+}

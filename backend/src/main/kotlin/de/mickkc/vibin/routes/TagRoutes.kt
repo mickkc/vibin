@@ -14,7 +14,7 @@ fun Application.configureTagRoutes() = routing {
 
         getP("/api/tags", PermissionType.VIEW_TAGS) {
 
-            val query = call.request.queryParameters["query"] ?: ""
+            val query = call.getStringOrDefault("query", "")
             val limit = call.request.queryParameters["limit"]?.toIntOrNull()?.takeIf { it > 0 }
 
             val allTags = TagRepo.getAll(query, limit)
@@ -41,7 +41,7 @@ fun Application.configureTagRoutes() = routing {
         }
 
         putP("/api/tags/{id}", PermissionType.MANAGE_TAGS) {
-            val tagId = call.parameters["id"]?.toLongOrNull() ?: return@putP call.missingParameter("id")
+            val tagId = call.getLongParameter("id") ?: return@putP
             val editDto = call.receive<TagEditDto>()
 
             val existingTag = TagRepo.getById(tagId) ?: return@putP call.notFound()
@@ -55,28 +55,28 @@ fun Application.configureTagRoutes() = routing {
         }
 
         deleteP("/api/tags/{id}", PermissionType.DELETE_TAGS) {
-            val tagId = call.parameters["id"]?.toLongOrNull() ?: return@deleteP call.missingParameter("id")
+            val tagId = call.getLongParameter("id") ?: return@deleteP
             val existingTag = TagRepo.getById(tagId) ?: return@deleteP call.notFound()
             TagRepo.delete(existingTag)
             call.success()
         }
 
         getP("/api/tags/autocomplete", PermissionType.VIEW_TAGS) {
-            val query = call.request.queryParameters["query"] ?: return@getP call.missingParameter("query")
-            val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 10
+            val query = call.getStringParameter("query") ?: return@getP
+            val limit = call.getIntOrDefault("limit", 10) ?: return@getP
 
             val tagNames = TagRepo.autocomplete(query, limit)
             call.respond(tagNames)
         }
 
         getP("/api/tags/named/{name}", PermissionType.VIEW_TAGS) {
-            val name = call.parameters["name"]?.trim() ?: return@getP call.missingParameter("name")
+            val name = call.getStringParameter("name")?.trim() ?: return@getP
             val tag = TagRepo.getByName(name) ?: return@getP call.notFound()
             call.respond(TagRepo.toDto(tag))
         }
 
         getP("/api/tags/check/{name}", PermissionType.VIEW_TAGS) {
-            val name = call.parameters["name"]?.trim() ?: return@getP call.missingParameter("name")
+            val name = call.getStringParameter("name")?.trim() ?: return@getP
             val exists = TagRepo.doesTagExist(name)
             call.success(exists)
         }

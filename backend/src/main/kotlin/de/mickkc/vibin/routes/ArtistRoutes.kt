@@ -31,7 +31,7 @@ fun Application.configureArtistRoutes() = routing {
         }
 
         getP("/api/artists/{id}", PermissionType.VIEW_ARTISTS) {
-            val id = call.parameters["id"]?.toLongOrNull() ?: return@getP call.missingParameter("id")
+            val id = call.getLongParameter("id") ?: return@getP
             val artist = ArtistRepo.getById(id) ?: return@getP call.notFound()
             call.respond(ArtistRepo.toDto(artist))
         }
@@ -58,7 +58,7 @@ fun Application.configureArtistRoutes() = routing {
         }
 
         putP("/api/artists/{id}", PermissionType.MANAGE_ARTISTS) {
-            val id = call.parameters["id"]?.toLongOrNull() ?: return@putP call.missingParameter("id")
+            val id = call.getLongParameter("id") ?: return@putP
             val data = call.receive<ArtistEditData>()
             try {
                 val updatedArtist = ArtistRepo.updateOrCreateArtist(id, data)
@@ -70,7 +70,7 @@ fun Application.configureArtistRoutes() = routing {
         }
 
         deleteP("/api/artists/{id}", PermissionType.DELETE_ARTISTS) {
-            val id = call.parameters["id"]?.toLongOrNull() ?: return@deleteP call.missingParameter("id")
+            val id = call.getLongParameter("id") ?: return@deleteP
             val success = ArtistRepo.deleteArtist(id)
 
             if (!success) {
@@ -81,8 +81,8 @@ fun Application.configureArtistRoutes() = routing {
         }
 
         getP("/api/artists/{artistId}/image", PermissionType.VIEW_ARTISTS) {
-            val artistId = call.parameters["artistId"]?.toLongOrNull() ?: return@getP call.missingParameter("artistId")
-            val quality = call.request.queryParameters["quality"]?.toIntOrNull() ?: 0
+            val artistId = call.getLongParameter("artistId") ?: return@getP
+            val quality = call.getIntOrDefault("quality", 0) ?: return@getP
             val artist = ArtistRepo.getById(artistId) ?: return@getP call.notFound()
             val image = ArtistRepo.getImage(artist)
 
@@ -91,8 +91,8 @@ fun Application.configureArtistRoutes() = routing {
         }
 
         getP("/api/artists/autocomplete", PermissionType.VIEW_ARTISTS) {
-            val query = call.request.queryParameters["query"] ?: return@getP call.missingParameter("query")
-            val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 10
+            val query = call.getStringParameter("query") ?: return@getP
+            val limit = call.getIntOrDefault("limit", 10) ?: return@getP
 
             val artistNames = ArtistRepo.autocomplete(query, limit)
             call.respond(artistNames)

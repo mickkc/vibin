@@ -18,15 +18,15 @@ fun Application.configurePermissionRoutes() = routing {
         }
 
         getP("/api/permissions/{userId}", PermissionType.MANAGE_PERMISSIONS) {
-            val userId = call.parameters["userId"]?.toLongOrNull() ?: return@getP call.missingParameter("userId")
+            val userId = call.getLongParameter("userId") ?: return@getP
             val user = UserRepo.getById(userId) ?: return@getP call.notFound()
             val permissions = PermissionRepo.getPermissions(user.id.value)
             call.respond(permissions.map { it.id })
         }
 
         putP("/api/permissions/{userId}", PermissionType.MANAGE_PERMISSIONS) {
-            val userId = call.parameters["userId"]?.toLongOrNull() ?: return@putP call.missingParameter("userId")
-            val permissionId = call.request.queryParameters["permissionId"] ?: return@putP call.missingParameter("permissionId")
+            val userId = call.getLongParameter("userId") ?: return@putP
+            val permissionId = call.getStringParameter("permissionId") ?: return@putP
 
             val user = UserRepo.getById(userId) ?: return@putP call.notFound()
 

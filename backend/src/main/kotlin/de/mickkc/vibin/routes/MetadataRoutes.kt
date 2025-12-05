@@ -27,8 +27,12 @@ fun Application.configureMetadataRoutes() = routing {
         }
 
         get("/api/metadata/{type}") {
-            val query = call.request.queryParameters["q"]?.takeIf { it.isNotBlank() } ?: return@get call.missingParameter("q")
-            val provider = call.request.queryParameters["provider"] ?: return@get call.missingParameter("provider")
+            val query = call.getStringParameter("q") ?: return@get
+            val provider = call.getStringParameter("provider") ?: return@get
+
+            if (query.isBlank()) {
+                return@get call.respond(emptyList<Any>())
+            }
 
             val results = when (call.parameters["type"]) {
                 "track" -> Parser.searchTrack(query, provider)

@@ -27,7 +27,7 @@ fun Application.configureFavoriteRoutes() = routing {
 
         getP("/api/favorites/{userId}", PermissionType.VIEW_USERS) {
 
-            val userId = call.parameters["userId"]?.toLongOrNull() ?: return@getP call.missingParameter("userId")
+            val userId = call.getLongParameter("userId") ?: return@getP
 
             val favorites = FavoriteRepo.getFavoriteDtoForUser(userId)
 
@@ -37,8 +37,8 @@ fun Application.configureFavoriteRoutes() = routing {
         putP("/api/favorites/{entityType}/{place}", PermissionType.MANAGE_OWN_USER) {
 
             val userId = call.getUserId() ?: return@putP call.unauthorized()
-            val entityId = call.parameters["entityId"]?.toLongOrNull() ?: return@putP call.missingParameter("entityId")
-            val place = call.parameters["place"]?.toIntOrNull() ?: return@putP call.missingParameter("place")
+            val entityId = call.getLongParameter("entityId") ?: return@putP
+            val place = call.getIntParameter("place") ?: return@putP
 
             if (place !in 1..3)
                 return@putP call.invalidParameter("place", "1", "2", "3")
@@ -53,7 +53,7 @@ fun Application.configureFavoriteRoutes() = routing {
         deleteP("/api/favorites/{entityType}/{place}", PermissionType.MANAGE_OWN_USER) {
 
             val userId = call.getUserId() ?: return@deleteP call.unauthorized()
-            val place = call.parameters["place"]?.toIntOrNull() ?: return@deleteP call.missingParameter("place")
+            val place = call.getIntParameter("place") ?: return@deleteP
 
             if (place !in 1..3)
                 return@deleteP call.invalidParameter("place", "1", "2", "3")
@@ -69,7 +69,7 @@ fun Application.configureFavoriteRoutes() = routing {
 
             val userId = call.getUserId() ?: return@getP call.unauthorized()
 
-            val entityId = call.parameters["entityId"]?.toLongOrNull() ?: return@getP call.missingParameter("entityId")
+            val entityId = call.getLongParameter("entityId") ?: return@getP
 
             val entityType = call.getFavoriteType() ?: return@getP
 

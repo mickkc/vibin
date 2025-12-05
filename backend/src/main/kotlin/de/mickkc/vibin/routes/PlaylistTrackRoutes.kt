@@ -65,8 +65,7 @@ fun Application.configurePlaylistTrackRoutes() = routing {
         }
 
         getP("/api/playlists/containing/{trackId}", PermissionType.VIEW_PLAYLISTS) {
-            val trackId = call.parameters["trackId"]?.toLongOrNull()
-                ?: return@getP call.missingParameter("trackId")
+            val trackId = call.getLongParameter("trackId") ?: return@getP
             val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
 
             val playlists = PlaylistTrackRepo.getPlaylistsWithTrack(track)

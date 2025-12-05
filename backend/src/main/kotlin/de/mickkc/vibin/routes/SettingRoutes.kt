@@ -27,7 +27,7 @@ fun Application.configureSettingRoutes() = routing {
 
         putP("/api/settings/{settingKey}") {
 
-            val settingKey = call.parameters["settingKey"] ?: return@putP call.missingParameter("settingKey")
+            val settingKey = call.getStringParameter("settingKey") ?: return@putP
             val setting = SettingsRepo.getServerSetting(settingKey)
 
             if (setting == null) {

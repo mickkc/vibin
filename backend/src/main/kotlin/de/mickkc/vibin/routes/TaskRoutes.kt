@@ -18,21 +18,19 @@ fun Application.configureTaskRoutes() = routing {
         }
 
         putP("/api/tasks/{taskId}/enable", PermissionType.MANAGE_TASKS) {
-            val taskId = call.parameters["taskId"] ?: return@putP call.missingParameter("taskId")
-            val enable = call.parameters["enable"] ?: return@putP call.missingParameter("enable")
+            val taskId = call.getStringParameter("taskId") ?: return@putP
+            val enable = call.getBooleanParameter("enable") ?: return@putP
 
             if (TaskManager.getById(taskId) == null) {
                 return@putP call.notFound()
             }
 
-            val enableBool = enable.toBooleanStrictOrNull() ?: return@putP call.invalidParameter("enable", "true", "false")
-
-            TaskManager.setTaskEnabled(taskId, enableBool)
+            TaskManager.setTaskEnabled(taskId, enable)
             call.success()
         }
 
         postP("/api/tasks/{taskId}/run", PermissionType.MANAGE_TASKS) {
-            val taskId = call.parameters["taskId"] ?: return@postP call.missingParameter("taskId")
+            val taskId = call.getStringParameter("taskId") ?: return@postP
 
             val result = TaskScheduler.forceRunTask(taskId) ?: return@postP call.notFound()
 

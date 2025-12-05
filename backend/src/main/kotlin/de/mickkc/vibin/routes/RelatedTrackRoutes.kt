@@ -15,8 +15,7 @@ fun Application.configureRelatedTrackRoutes() = routing {
 
         getP("/api/tracks/{trackId}/related", PermissionType.VIEW_TRACKS) {
 
-            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@getP call.missingParameter("trackId")
-
+            val trackId = call.getLongParameter("trackId") ?: return@getP
             val relatedTracks = TrackRelationRepo.getRelatedTracks(trackId)
 
             call.respond(relatedTracks.map {
@@ -26,11 +25,10 @@ fun Application.configureRelatedTrackRoutes() = routing {
 
         postP("/api/tracks/{trackId}/related", PermissionType.CREATE_TRACK_RELATIONS) {
 
-            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@postP call.missingParameter("trackId")
-
-            val relatedTrackId = call.parameters["relatedTrackId"]?.toLongOrNull() ?: return@postP call.missingParameter("relatedTrackId")
-            val relationDescription = call.parameters["description"] ?: return@postP call.missingParameter("description")
-            val mutual = call.parameters["mutual"]?.toBoolean() ?: false
+            val trackId = call.getLongParameter("trackId") ?: return@postP
+            val relatedTrackId = call.getLongParameter("relatedTrackId") ?: return@postP
+            val relationDescription = call.getStringParameter("description") ?: return@postP
+            val mutual = call.getBooleanOrDefault("mutual", false) ?: return@postP
             val reverseDescription = call.parameters["reverseDescription"]
 
             if (trackId == relatedTrackId) {
@@ -57,8 +55,8 @@ fun Application.configureRelatedTrackRoutes() = routing {
 
         deleteP("/api/tracks/{trackId}/related", PermissionType.DELETE_TRACK_RELATIONS) {
 
-            val trackId = call.parameters["trackId"]?.toLongOrNull() ?: return@deleteP call.missingParameter("trackId")
-            val relatedTrackId = call.parameters["relatedTrackId"]?.toLongOrNull() ?: return@deleteP call.missingParameter("relatedTrackId")
+            val trackId = call.getLongParameter("trackId") ?: return@deleteP
+            val relatedTrackId = call.getLongParameter("relatedTrackId") ?: return@deleteP
 
             TrackRelationRepo.removeRelationBetweenTracks(trackId, relatedTrackId)
 

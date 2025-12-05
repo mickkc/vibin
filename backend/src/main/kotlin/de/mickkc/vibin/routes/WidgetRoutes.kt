@@ -86,11 +86,11 @@ fun Application.configureWidgetRoutes() = routing {
      * This avoids brute-forcing checksums and accessing images that where valid at some point.
      */
     get("/api/widgets/images/{checksum}") {
-        val checksum = call.parameters["checksum"] ?: return@get call.missingParameter("checksum")
-        val quality = call.request.queryParameters["quality"]?.toIntOrNull() ?: 192
+        val checksum = call.getStringParameter("checksum") ?: return@get
+        val quality = call.getIntOrDefault("quality", 192) ?: return@get
 
-        val expirationTimestamp = call.request.queryParameters["exp"]?.toLongOrNull() ?: return@get call.missingParameter("exp")
-        val signature = call.request.queryParameters["sig"] ?: return@get call.missingParameter("sig")
+        val expirationTimestamp = call.getLongParameter("exp") ?: return@get
+        val signature = call.getStringParameter("sig") ?: return@get
 
         if (!ImageCryptoUtil.validateImageSignature(checksum, expirationTimestamp, signature)) {
             return@get call.forbidden()
@@ -115,7 +115,7 @@ fun Application.configureWidgetRoutes() = routing {
     }
 
     getP("/api/widgets/{id}") {
-        val id = call.parameters["id"] ?: return@getP call.missingParameter("id")
+        val id = call.getStringParameter("id") ?: return@getP
         val widget = WidgetRepo.getWidget(id) ?: return@getP call.notFound()
 
         val colors = call.parseWidgetColors(widget)
@@ -127,7 +127,7 @@ fun Application.configureWidgetRoutes() = routing {
     }
 
     getP("/api/widgets/{id}/image") {
-        val id = call.parameters["id"] ?: return@getP call.missingParameter("id")
+        val id = call.getStringParameter("id") ?: return@getP
         val widget = WidgetRepo.getWidget(id) ?: return@getP call.notFound()
 
         val clientId = call.getClientId()
@@ -135,8 +135,8 @@ fun Application.configureWidgetRoutes() = routing {
             return@getP call.rateLimitExceeded()
         }
 
-        val width = call.request.queryParameters["width"]?.toIntOrNull()?.coerceIn(1, 1920) ?: 1080
-        val height = call.request.queryParameters["height"]?.toIntOrNull()?.coerceIn(1, 1920) ?: 720
+        val width = call.getIntOrDefault("width", 1080)?.coerceIn(1, 1920) ?: return@getP
+        val height = call.getIntOrDefault("height", 720)?.coerceIn(1, 1920) ?: return@getP
 
         val colors = call.parseWidgetColors(widget)
         val language = call.parseLanguage()
@@ -202,7 +202,7 @@ fun Application.configureWidgetRoutes() = routing {
         }
 
         deleteP("/api/widgets/{id}", PermissionType.MANAGE_WIDGETS) {
-            val id = call.parameters["id"] ?: return@deleteP call.missingParameter("id")
+            val id = call.getStringParameter("id") ?: return@deleteP
             val userId = call.getUserId() ?: return@deleteP call.unauthorized()
 
             val widget = WidgetRepo.getWidget(id) ?: return@deleteP call.notFound()
