@@ -23,16 +23,22 @@ object TaskScheduler {
                 val now = DateTimeUtils.now()
                 TaskManager.getTasks().forEach { task ->
                     val nextRun = task.nextRun
-                    if (task.enabled.get() && (nextRun == null || nextRun <= now)) {
-                        try {
-                            val result = task.run()
-                            if (result != null)
-                                TaskManager.setTaskResult(task.id, result)
+
+                    if (task.enabled.get()) {
+                        if (nextRun == null || nextRun <= now) {
+                            try {
+                                val result = task.run()
+                                if (result != null)
+                                    TaskManager.setTaskResult(task.id, result)
+                            }
+                            catch (e: Exception) {
+                                logger.error("Error running task ${task.id}: ${e.message}", e)
+                                TaskManager.setTaskResult(task.id, TaskResult.failure(e.toString()))
+                            }
                         }
-                        catch (e: Exception) {
-                            logger.error("Error running task ${task.id}: ${e.message}", e)
-                            TaskManager.setTaskResult(task.id, TaskResult.failure(e.toString()))
-                        }
+                    }
+                    else {
+                        task.setNextRun()
                     }
                 }
 
