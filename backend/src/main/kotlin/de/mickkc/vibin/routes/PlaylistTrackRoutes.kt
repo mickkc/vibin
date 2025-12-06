@@ -31,7 +31,7 @@ fun Application.configurePlaylistTrackRoutes() = routing {
 
     authenticate("tokenAuth") {
 
-        postP("/api/playlists/{playlistId}/tracks", PermissionType.MANAGE_PLAYLISTS) {
+        postP("/api/playlists/{playlistId}/tracks", PermissionType.MANAGE_PLAYLIST_TRACKS) {
 
             val user = call.getUser() ?: return@postP call.unauthorized()
             val (playlist, track) = call.getPlaylistAndTrack() ?: return@postP
@@ -40,7 +40,7 @@ fun Application.configurePlaylistTrackRoutes() = routing {
             call.success()
         }
 
-        deleteP("/api/playlists/{playlistId}/tracks", PermissionType.MANAGE_PLAYLISTS) {
+        deleteP("/api/playlists/{playlistId}/tracks", PermissionType.MANAGE_PLAYLIST_TRACKS) {
 
             val (playlist, track) = call.getPlaylistAndTrack() ?: return@deleteP
 
@@ -48,7 +48,7 @@ fun Application.configurePlaylistTrackRoutes() = routing {
             call.success()
         }
 
-        putP("/api/playlists/{playlistId}/tracks", PermissionType.MANAGE_PLAYLISTS) {
+        putP("/api/playlists/{playlistId}/tracks", PermissionType.MANAGE_PLAYLIST_TRACKS) {
 
             val afterTrackId: Long? = call.request.queryParameters["afterTrackId"]?.toLongOrNull()
 
@@ -67,8 +67,9 @@ fun Application.configurePlaylistTrackRoutes() = routing {
         getP("/api/playlists/containing/{trackId}", PermissionType.VIEW_PLAYLISTS) {
             val trackId = call.getLongParameter("trackId") ?: return@getP
             val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
+            val userId = call.getUserId() ?: return@getP call.unauthorized()
 
-            val playlists = PlaylistTrackRepo.getPlaylistsWithTrack(track)
+            val playlists = PlaylistTrackRepo.getPlaylistsWithTrack(track, userId)
             call.respond(PlaylistRepo.toDto(playlists))
         }
     }

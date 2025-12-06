@@ -11,6 +11,7 @@ import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.artists.TrackArtistConnection
 import de.mickkc.vibin.db.playlists.PlaylistTrackEntity
 import de.mickkc.vibin.db.playlists.PlaylistEntity
+import de.mickkc.vibin.db.playlists.PlaylistTable
 import de.mickkc.vibin.db.playlists.PlaylistTrackTable
 import de.mickkc.vibin.db.tags.TrackTagConnection
 import de.mickkc.vibin.db.tracks.TrackEntity
@@ -202,16 +203,22 @@ object PlaylistTrackRepo {
     }
 
     /**
-     * Get all playlists that contain the given track.
+     * Get all playlists that contain the given track and are accessible by the specified user.
      *
      * @param track The track entity to search for.
+     * @param userId The ID of the user used to filter accessible playlists.
      * @return A list of playlist entities that include the specified track.
      */
-    fun getPlaylistsWithTrack(track: TrackEntity): List<PlaylistEntity> = transaction {
+    fun getPlaylistsWithTrack(track: TrackEntity, userId: Long): List<PlaylistEntity> = transaction {
 
-        return@transaction PlaylistTrackEntity.find {
-            PlaylistTrackTable.trackId eq track.id.value
-        }.map { it.playlist }
+        return@transaction PlaylistTrackTable
+            .innerJoin(PlaylistTable, { playlistId }, { PlaylistTable.id })
+            .select(PlaylistTable.columns)
+            .where {
+                (PlaylistTrackTable.trackId eq track.id.value) and
+                PlaylistRepo.createCollaborationOp(userId)
+            }
+            .map { PlaylistEntity.wrapRow(it) }
     }
 
     fun getTracksFromPlaylist(playlist: PlaylistEntity, userId: Long?): List<PlaylistTrackEntity> = transaction {

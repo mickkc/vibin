@@ -24,6 +24,7 @@ enum class PermissionType(val id: String, val grantedByDefault: Boolean) {
 
     VIEW_PLAYLISTS("view_playlists", true),
     MANAGE_PLAYLISTS("manage_playlists", true),
+    MANAGE_PLAYLIST_TRACKS("manage_playlist_tracks", true),
     CREATE_PRIVATE_PLAYLISTS("create_private_playlists", true),
     CREATE_PUBLIC_PLAYLISTS("create_public_playlists", true),
     DELETE_OWN_PLAYLISTS("delete_own_playlists", true),

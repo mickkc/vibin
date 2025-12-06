@@ -216,7 +216,7 @@ object PlaylistRepo {
      *
      * @param userId The ID of the user for whom to filter collaborative playlists.
      */
-    private fun createCollaborationOp(userId: Long): Op<Boolean> {
+    fun createCollaborationOp(userId: Long): Op<Boolean> {
         return (PlaylistTable.id inSubQuery (PlaylistCollaborator.select(
             PlaylistCollaborator.playlist
         ).where { PlaylistCollaborator.user eq userId }) or (PlaylistTable.owner eq userId))
