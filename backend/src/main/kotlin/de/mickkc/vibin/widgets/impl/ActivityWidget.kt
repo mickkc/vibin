@@ -8,6 +8,7 @@ import de.mickkc.vibin.widgets.WidgetUtils
 import de.mickkc.vibin.widgets.components.statCard
 import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.util.*
 import kotlin.math.ceil
@@ -60,7 +61,7 @@ class ActivityWidget(widgetContext: WidgetContext, val extended: Boolean = true)
                 if (extended) {
                     val listensThisYear = listensPerDay.sumOf { it.second }
                     val listensThisMonth = listensPerDay.filter { it.first.monthValue == end.monthValue }.sumOf { it.second }
-                    val listensThisWeek = listensPerDay.filter { it.first >= end.minusDays(7) }.sumOf { it.second }
+                    val listensThisWeek = listensPerDay.filter { it.first >= end.with(DayOfWeek.MONDAY) }.sumOf { it.second }
                     val listensToday = listensPerDay.find { it.first.dayOfYear == end.dayOfYear }?.second ?: 0
 
                     div("stats") {
