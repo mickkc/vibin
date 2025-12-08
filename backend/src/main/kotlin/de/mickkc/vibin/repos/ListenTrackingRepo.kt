@@ -7,6 +7,7 @@ import de.mickkc.vibin.db.tracks.TrackEntity
 import de.mickkc.vibin.utils.DateTimeUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.math.round
 
 object ListenTrackingRepo {
 
@@ -146,10 +147,15 @@ object ListenTrackingRepo {
         val user = UserEntity.findById(listen.userId) ?: return@transaction
         val track = TrackEntity.findById(listen.trackId) ?: return@transaction
 
+        if (track.duration == null) return@transaction
+
+        // Ensure listened duration does not exceed track duration
+        val normalizedDuration = listen.totalListenedSeconds.coerceIn(0L, round(track.duration!! / 1000.0).toLong())
+
         TrackListenDurationEntity.new {
             this.user = user
             this.track = track
-            this.listenedDurationSeconds = listen.totalListenedSeconds
+            this.listenedDurationSeconds = normalizedDuration
             this.createdAt = listen.created
         }
 
