@@ -141,7 +141,10 @@ object PlaylistTrackRepo {
                 .singleOrNull() ?: return@transaction false.also {
                     logger.warn("Tried to move track ID ${track.id.value} in playlist ID ${playlist.id.value} after track ID ${afterTrack.id.value}, but the after track was not found.")
                 }
-            afterPosition + 1
+            if (afterPosition >= currentPosition)
+                afterPosition
+            else
+                afterPosition + 1
         }
 
         val trackCount = getManuallyAddedTrackCount(playlist)

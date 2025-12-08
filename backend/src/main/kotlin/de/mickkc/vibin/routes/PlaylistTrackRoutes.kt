@@ -19,7 +19,7 @@ fun Application.configurePlaylistTrackRoutes() = routing {
 
         val playlistId = parameters["playlistId"]?.toLongOrNull()
             ?: return missingParameter("playlistId").let { null }
-        val playlist = PlaylistRepo.getByIdIfAllowed(playlistId, userId, PermissionType.EDIT_COLLABORATIVE_PLAYLISTS)
+        val playlist = PlaylistRepo.getByIdIfAllowed(playlistId, userId, PermissionType.MANAGE_PLAYLIST_TRACKS)
             ?: return notFound().let { null }
 
         val trackId = request.queryParameters["trackId"]?.toLongOrNull()
