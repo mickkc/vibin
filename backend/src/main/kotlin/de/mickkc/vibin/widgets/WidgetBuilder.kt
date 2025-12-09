@@ -31,6 +31,7 @@ object WidgetBuilder {
 
         val bgColor = WidgetUtils.colorToHex(ctx.backgroundColor)
         val fgColor = WidgetUtils.colorToHex(ctx.foregroundColor)
+        val accentColor = WidgetUtils.colorToHex(ctx.accentColor)
 
         return buildString {
             appendHTML(prettyPrint = false).html {
@@ -45,7 +46,7 @@ object WidgetBuilder {
                 }
 
                 body {
-                    style = "margin: 0; padding: 0; background-color: $bgColor; color: $fgColor;"
+                    style = "margin: 0; padding: 0; background-color: $bgColor; color: $fgColor; accent-color: $accentColor"
                     widgets.forEach { widget ->
                         unsafe {
                             +widget.render(interactive)
