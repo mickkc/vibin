@@ -62,6 +62,7 @@ dependencies {
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.jsoup)
+    testImplementation(libs.ph.css)
 }
 
 tasks.jacocoTestReport {
