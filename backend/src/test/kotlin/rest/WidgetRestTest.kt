@@ -55,6 +55,7 @@ class WidgetRestTest {
             deleteOnExit()
         }
         EnvUtil.addOverride(EnvUtil.THUMBNAIL_DIR, imageDir.absolutePathString())
+        EnvUtil.addOverride(EnvUtil.IMAGE_CACHE_DIR, imageDir.absolutePathString())
 
         val signedUrl = ImageCryptoUtil.generateSignedImageUrl(checksum, 192)
 
