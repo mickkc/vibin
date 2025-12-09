@@ -1,6 +1,7 @@
 package rest
 
 import com.helger.css.reader.CSSReader
+import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.dto.widgets.CreateWidgetDto
 import de.mickkc.vibin.dto.widgets.WidgetDto
 import de.mickkc.vibin.permissions.PermissionType
@@ -13,9 +14,12 @@ import de.mickkc.vibin.widgets.WidgetUtils
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.http.content.EntityTagVersion
 import org.jsoup.Jsoup
 import utils.UserTestUtils
 import utils.testApp
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.createTempDirectory
 import kotlin.test.*
 
 class WidgetRestTest {
@@ -44,6 +48,14 @@ class WidgetRestTest {
     @Test
     fun testGetWidgetImage_DefaultImage() = testApp { client ->
         val checksum = "default-track"
+
+        val imageDir = createTempDirectory("widget-images")
+        imageDir.toFile().apply {
+            mkdirs()
+            deleteOnExit()
+        }
+        EnvUtil.addOverride(EnvUtil.THUMBNAIL_DIR, imageDir.absolutePathString())
+
         val signedUrl = ImageCryptoUtil.generateSignedImageUrl(checksum, 192)
 
         val response = client.get(signedUrl)
