@@ -45,8 +45,7 @@ class WidgetRestTest {
 
     // region Get Widget Images
 
-    // TODO: Re-enable this test once default images are properly set up in the test environment
-/*    @Test
+    @Test
     fun testGetWidgetImage_DefaultImage() = testApp { client ->
         val checksum = "default-track"
 
@@ -70,7 +69,7 @@ class WidgetRestTest {
 
         // Precomputed checksum of the default image in 192x192 size
         assertEquals("9d893b2a161d255c154aa628d10c471f", responseChecksum)
-    }*/
+    }
 
     @Test
     fun testGetWidgetImage_InvalidSignature() = testApp { client ->

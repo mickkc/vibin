@@ -11,16 +11,16 @@ import java.io.File
 object ImageCache {
 
     private val logger: Logger = LoggerFactory.getLogger(ImageCache::class.java)
-    private val imageCachePath = File(EnvUtil.getOrDefault(EnvUtil.IMAGE_CACHE_DIR, EnvUtil.DEFAULT_IMAGE_CACHE_DIR))
 
     init {
+        val imageCachePath = getImageCachePath()
         if (!imageCachePath.exists()) {
             imageCachePath.mkdirs()
         }
     }
 
     fun getImageFile(imageEntity: ImageEntity, size: Int): File? {
-        val imageFile = File(imageCachePath, "${imageEntity.id.value}_$size.jpg")
+        val imageFile = File(getImageCachePath(), "${imageEntity.id.value}_$size.jpg")
         if (imageFile.exists()) {
             return imageFile
         }
@@ -36,7 +36,7 @@ object ImageCache {
         }
 
         try {
-            val imageFile = File(imageCachePath, "${name}_$size.jpg")
+            val imageFile = File(getImageCachePath(), "${name}_$size.jpg")
             if (imageFile.exists()) {
                 return imageFile
             }
@@ -65,7 +65,7 @@ object ImageCache {
     }
 
     fun evictCacheForImageId(imageId: Long) {
-        val cachedFiles = imageCachePath.listFiles { file ->
+        val cachedFiles = getImageCachePath().listFiles { file ->
             file.name.startsWith("${imageId}_")
         } ?: return
 
@@ -77,5 +77,9 @@ object ImageCache {
                 logger.error("Error evicting cached image file: ${file.absolutePath}", e)
             }
         }
+    }
+
+    fun getImageCachePath(): File {
+        return File(EnvUtil.getOrDefault(EnvUtil.IMAGE_CACHE_DIR, EnvUtil.DEFAULT_IMAGE_CACHE_DIR))
     }
 }
