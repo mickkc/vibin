@@ -14,13 +14,15 @@ import de.mickkc.vibin.widgets.WidgetUtils
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import io.ktor.http.content.EntityTagVersion
 import org.jsoup.Jsoup
 import utils.UserTestUtils
 import utils.testApp
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.createTempDirectory
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class WidgetRestTest {
 
