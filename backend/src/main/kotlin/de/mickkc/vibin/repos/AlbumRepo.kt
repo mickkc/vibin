@@ -195,10 +195,10 @@ object AlbumRepo {
     }
 
     fun estimateIsSingle(albumId: Long): Boolean = transaction {
-        val trackCounts = TrackTable.select(TrackTable.trackCount).where {
-            (TrackTable.albumId eq albumId) and (TrackTable.trackCount neq null)
-        }.map { it[TrackTable.trackCount] }
-        return@transaction trackCounts.all { it == 1 }
+        val trackCounts = TrackTable.select(TrackTable.id).where {
+            (TrackTable.albumId eq albumId)
+        }.count()
+        return@transaction trackCounts <= 1
     }
 
     fun delete(albumId: Long): Boolean = transaction {
