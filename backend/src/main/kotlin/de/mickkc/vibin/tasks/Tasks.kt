@@ -1,5 +1,6 @@
 package de.mickkc.vibin.tasks
 
+import de.mickkc.vibin.tasks.impl.CalculateMissingVolumeLevelsTask
 import de.mickkc.vibin.tasks.impl.DeleteExpiredWidgetImagesTask
 import de.mickkc.vibin.tasks.impl.DeleteUnusedAlbumsTask
 import de.mickkc.vibin.tasks.impl.DeleteUnusedArtistsTask
@@ -18,6 +19,7 @@ object Tasks {
         TaskManager.registerTask(DeleteExpiredWidgetImagesTask())
         TaskManager.registerTask(RemoveExpiredRateLimitsTask())
         TaskManager.registerTask(ScanForNewTracksTask())
+        TaskManager.registerTask(CalculateMissingVolumeLevelsTask())
     }
 
 }

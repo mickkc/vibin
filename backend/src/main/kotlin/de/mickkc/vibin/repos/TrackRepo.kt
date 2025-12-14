@@ -150,6 +150,13 @@ object TrackRepo {
         return@transaction updated
     }
 
+    fun update(trackId: Long, block: TrackEntity.() -> Unit): TrackEntity? = transaction {
+        val track = TrackEntity.findById(trackId) ?: return@transaction null
+        val updated = track.apply(block)
+        updated.updatedAt = DateTimeUtils.now()
+        return@transaction updated
+    }
+
     suspend fun update(trackId: Long, editDto: TrackEditDto): TrackEntity? {
 
         val track = getById(trackId) ?: return null
@@ -237,6 +244,10 @@ object TrackRepo {
 
     fun getColorScheme(track: TrackEntity): ColorSchemeEntity? = transaction {
         return@transaction track.cover?.colorScheme
+    }
+
+    fun findTracksWithoutVolumeLevel(): List<TrackEntity> = transaction {
+        return@transaction TrackEntity.find { TrackTable.volumeOffset eq null }.toList()
     }
 
     /**

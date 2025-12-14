@@ -1,5 +1,8 @@
 package de.mickkc.vibin.processing
 
+import de.mickkc.vibin.db.tracks.TrackEntity
+import de.mickkc.vibin.repos.TrackRepo
+import de.mickkc.vibin.utils.PathUtils
 import de.mickkc.vibin.utils.ProcessUtil
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -19,6 +22,8 @@ object VolumeDetector {
     private val json = Json { ignoreUnknownKeys = true }
 
     suspend fun detectVolumeLevel(audioFile: File): VolumeLevels? {
+
+        logger.info("Detecting volume levels for file: ${audioFile.absolutePath}")
 
         val cmd = arrayOf(
             "ffmpeg", "-hide_banner", "-nostats",
@@ -92,6 +97,25 @@ object VolumeDetector {
                 normalizationType = jsonObject["normalization_type"]?.jsonPrimitive?.content ?: throw IllegalArgumentException("Missing normalization_type"),
                 targetOffset = jsonObject["target_offset"]?.jsonPrimitive?.double ?: throw IllegalArgumentException("Missing target_offset")
             )
+        }
+    }
+
+    /**
+     * Detects the volume level of the given track and updates its volumeOffset in the database.
+     *
+     * This function updates the TrackEntity based on the track ID and not the entity instance in case it
+     * has been modified elsewhere while processing.
+     */
+    suspend fun detectVolumeLevel(track: TrackEntity) {
+        val file = PathUtils.getTrackFileFromPath(track.path)
+        val levels = detectVolumeLevel(file)
+        if (levels != null) {
+            TrackRepo.update(track.id.value) {
+                volumeOffset = levels.targetOffset
+            }
+        }
+        else {
+            logger.error("Could not detect volume levels for track id=${track.id.value}, path=${track.path}")
         }
     }
 }

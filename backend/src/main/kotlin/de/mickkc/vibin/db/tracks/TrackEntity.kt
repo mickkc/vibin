@@ -39,6 +39,7 @@ object TrackTable : ModifiableLongIdTable("track") {
     val path = varchar("path", 1024).uniqueIndex()
     val checksum = text("checksum").uniqueIndex()
     val uploader = reference("uploader", UserTable).nullable()
+    val volumeOffset = double("volume_offset").nullable().default(null)
 }
 
 /**
@@ -57,6 +58,10 @@ object TrackTable : ModifiableLongIdTable("track") {
  * @property cover The cover image associated with the track. (optional)
  * @property artists The artists associated with the track.
  * @property tags The tags associated with the track.
+ * @property path The file path of the track.
+ * @property checksum The checksum of the track file.
+ * @property uploader The user who uploaded the track. (optional)
+ * @property volumeOffset The volume offset for playback normalization. (optional)
  */
 class TrackEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, TrackTable) {
     companion object : LongEntityClass<TrackEntity>(TrackTable)
@@ -80,6 +85,7 @@ class TrackEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, TrackTable) {
     var artists by ArtistEntity via TrackArtistConnection
     var tags by TagEntity via TrackTagConnection
     var uploader by UserEntity.Companion optionalReferencedOn TrackTable.uploader
+    var volumeOffset by TrackTable.volumeOffset
 
     override fun delete() {
 
