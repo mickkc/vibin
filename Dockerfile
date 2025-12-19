@@ -28,7 +28,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /
 
 # Clone the vibin-app repository
 WORKDIR /tmp/app/
-RUN git clone --depth 1 --branch ${VIBIN_TAG} https://github.com/mickkc/vibin-app .
+RUN git clone --depth 1 --branch ${VIBIN_TAG} https://codeberg.org/mickkc/vibin-app.git .
 
 # Set up Flutter environment
 RUN flutter config --no-analytics --enable-web
