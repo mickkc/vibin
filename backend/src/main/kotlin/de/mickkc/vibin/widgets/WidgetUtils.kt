@@ -1,6 +1,7 @@
 package de.mickkc.vibin.widgets
 
 import de.mickkc.vibin.db.images.ImageEntity
+import de.mickkc.vibin.utils.AccessCryptoUtil
 
 object WidgetUtils {
 
@@ -32,7 +33,7 @@ object WidgetUtils {
      */
     fun getImageUrl(image: ImageEntity?, type: String, quality: Int = 192): String {
 
-        return ImageCryptoUtil.generateSignedImageUrl(
+        return AccessCryptoUtil.generateSignedImageUrl(
             checksum = image?.sourceChecksum ?: "default-$type",
             quality = quality
         )

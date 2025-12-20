@@ -1,17 +1,16 @@
-package de.mickkc.vibin.widgets
+package de.mickkc.vibin.utils
 
-import de.mickkc.vibin.auth.CryptoUtil.secureRandom
-import de.mickkc.vibin.utils.DateTimeUtils
+import de.mickkc.vibin.auth.CryptoUtil
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
-object ImageCryptoUtil {
+object AccessCryptoUtil {
 
-    private val IMAGE_SIGNING_KEY: ByteArray = ByteArray(32).also { secureRandom.nextBytes(it) }
+    private val IMAGE_SIGNING_KEY: ByteArray = ByteArray(32).also { CryptoUtil.secureRandom.nextBytes(it) }
 
-    private const val IMAGE_URL_VALIDITY_SECONDS = 3600L // 1 hour
+    private const val ACCESS_VALIDITY_SECONDS = 3600L // 1 hour
 
     /**
      * Generates a signed URL for an image checksum with time-based expiration.
@@ -22,25 +21,35 @@ object ImageCryptoUtil {
      */
     @OptIn(ExperimentalEncodingApi::class)
     fun generateSignedImageUrl(checksum: String, quality: Int): String {
-
-        val expirationTimestamp = DateTimeUtils.now() + IMAGE_URL_VALIDITY_SECONDS
-
+        val expirationTimestamp = DateTimeUtils.now() + ACCESS_VALIDITY_SECONDS
         val hmacBytes = getHmacBytes(checksum, expirationTimestamp)
-
         val signature = Base64.UrlSafe.encode(hmacBytes).trimEnd('=')
-
         return "/api/widgets/images/$checksum?quality=$quality&exp=$expirationTimestamp&sig=$signature"
     }
 
     /**
-     * Validates a signed image URL.
-     * @param checksum The image checksum from the URL
-     * @param expirationTimestamp The expiration timestamp from the URL (Unix seconds)
-     * @param providedSignature The signature from the URL
-     * @return true if URL is valid and not expired, false otherwise
+     * Generates a signature and expiration timestamp for any given image checksum.
+     *
+     * @param checksum The checksum
+     * @return A pair of (signature, expirationTimestamp)
      */
     @OptIn(ExperimentalEncodingApi::class)
-    fun validateImageSignature(checksum: String, expirationTimestamp: Long, providedSignature: String): Boolean {
+    fun generateSignatureAndTimestamp(checksum: String): Pair<String, Long> {
+        val expirationTimestamp = DateTimeUtils.now() + ACCESS_VALIDITY_SECONDS
+        val hmacBytes = getHmacBytes(checksum, expirationTimestamp)
+        val signature = Base64.UrlSafe.encode(hmacBytes).trimEnd('=')
+        return Pair(signature, expirationTimestamp)
+    }
+
+    /**
+     * Validates a signature.
+     * @param checksum The checksum
+     * @param expirationTimestamp The expiration timestamp (Unix seconds)
+     * @param providedSignature The provided signature to validate
+     * @return true if signature is valid and not expired, false otherwise
+     */
+    @OptIn(ExperimentalEncodingApi::class)
+    fun validateSignature(checksum: String, expirationTimestamp: Long, providedSignature: String): Boolean {
 
         val currentTimestamp = DateTimeUtils.now()
         if (currentTimestamp > expirationTimestamp) {

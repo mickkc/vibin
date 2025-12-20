@@ -93,6 +93,14 @@ object ImageRepo {
         }
     }
 
+    fun getById(id: Long): ImageEntity? = transaction {
+        ImageEntity.findById(id)
+    }
+
+    fun getByChecksum(checksum: String): ImageEntity? = transaction {
+        ImageEntity.find { ImageTable.sourceChecksum eq checksum }.firstOrNull()
+    }
+
     /**
      * Deletes all provided ImageEntity instances within a single transaction.
      *

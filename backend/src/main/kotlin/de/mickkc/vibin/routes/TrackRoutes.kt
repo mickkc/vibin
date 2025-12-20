@@ -3,8 +3,9 @@ package de.mickkc.vibin.routes
 import de.mickkc.vibin.dto.PaginatedDto
 import de.mickkc.vibin.dto.tracks.TrackEditDto
 import de.mickkc.vibin.permissions.PermissionType
-import de.mickkc.vibin.repos.*
-import de.mickkc.vibin.utils.ImageUtils
+import de.mickkc.vibin.repos.ColorSchemeRepo
+import de.mickkc.vibin.repos.LyricsRepo
+import de.mickkc.vibin.repos.TrackRepo
 import de.mickkc.vibin.utils.PathUtils
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -141,48 +142,5 @@ fun Application.configureTrackRoutes() = routing {
 
             call.respondFile(audioFile)
         }
-    }
-
-    fun getUserIdFromCall(call: ApplicationCall): Long? {
-        return call.request.headers["Authorization"]?.removePrefix("Bearer ")?.let { SessionRepo.validateAndUpdateToken(it) }
-            ?: call.parameters["mediaToken"]?.let { SessionRepo.getUserFromMediaToken(it)?.id?.value }
-    }
-
-    // Get track cover image
-    // Not using authentication to allow fetching covers with the token as a query parameter instead of a header
-    getP("/api/tracks/{trackId}/cover") {
-        val userId = getUserIdFromCall(call) ?: return@getP call.unauthorized()
-
-        if (!PermissionRepo.hasPermissions(userId, listOf(PermissionType.VIEW_TRACKS))) {
-            return@getP call.forbidden(PermissionType.VIEW_TRACKS)
-        }
-
-        val trackId = call.getLongParameter("trackId") ?: return@getP
-        val quality = call.getIntOrDefault("quality", 0) ?: return@getP
-        val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
-        val cover = TrackRepo.getCover(track)
-
-        val file = ImageUtils.getFileOrDefault(cover, quality, "track") ?: return@getP call.notFound()
-
-        call.respondFile(file)
-    }
-
-    // TODO: Move into authenticated block when headers are fixed on Web
-    getP("/api/tracks/{trackId}/stream") {
-        val userId = getUserIdFromCall(call) ?: return@getP call.unauthorized()
-
-        if (!PermissionRepo.hasPermissions(userId, listOf(PermissionType.STREAM_TRACKS))) {
-            return@getP call.forbidden(PermissionType.STREAM_TRACKS)
-        }
-
-        val trackId = call.getLongParameter("trackId") ?: return@getP
-        val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
-
-        val audioFile = PathUtils.getTrackFileFromPath(track.path)
-        if (!audioFile.exists()) {
-            return@getP call.notFound()
-        }
-
-        call.respondFile(audioFile)
     }
 }

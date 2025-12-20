@@ -8,7 +8,7 @@ import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.repos.WidgetRepo
 import de.mickkc.vibin.utils.ChecksumUtil
-import de.mickkc.vibin.widgets.ImageCryptoUtil
+import de.mickkc.vibin.utils.AccessCryptoUtil
 import de.mickkc.vibin.widgets.WidgetType
 import de.mickkc.vibin.widgets.WidgetUtils
 import io.ktor.client.call.*
@@ -59,7 +59,7 @@ class WidgetRestTest {
         EnvUtil.addOverride(EnvUtil.THUMBNAIL_DIR, imageDir.absolutePathString())
         EnvUtil.addOverride(EnvUtil.IMAGE_CACHE_DIR, imageDir.absolutePathString())
 
-        val signedUrl = ImageCryptoUtil.generateSignedImageUrl(checksum, 192)
+        val signedUrl = AccessCryptoUtil.generateSignedImageUrl(checksum, 192)
 
         val response = client.get(signedUrl)
 
@@ -102,7 +102,7 @@ class WidgetRestTest {
     @Test
     fun testGetWidgetImage_NonExistentChecksum() = testApp { client ->
         val checksum = "nonexistent"
-        val signedUrl = ImageCryptoUtil.generateSignedImageUrl(checksum, 192)
+        val signedUrl = AccessCryptoUtil.generateSignedImageUrl(checksum, 192)
 
         val response = client.get(signedUrl)
 

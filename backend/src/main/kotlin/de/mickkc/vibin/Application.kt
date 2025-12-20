@@ -64,6 +64,9 @@ fun Application.module() {
 
     configureWebSocketRoutes()
 
+    configureStreamRoutes()
+    configureImageRoutes()
+
     Tasks.configure()
     TaskScheduler.start()
 }

@@ -4,6 +4,7 @@ import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.db.widgets.SharedWidgetEntity
 import de.mickkc.vibin.dto.widgets.CreateWidgetDto
 import de.mickkc.vibin.images.ImageCache
+import de.mickkc.vibin.utils.AccessCryptoUtil
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.ImageRepo
 import de.mickkc.vibin.repos.WidgetRepo
@@ -92,7 +93,7 @@ fun Application.configureWidgetRoutes() = routing {
         val expirationTimestamp = call.getLongParameter("exp") ?: return@get
         val signature = call.getStringParameter("sig") ?: return@get
 
-        if (!ImageCryptoUtil.validateImageSignature(checksum, expirationTimestamp, signature)) {
+        if (!AccessCryptoUtil.validateSignature(checksum, expirationTimestamp, signature)) {
             return@get call.forbidden()
         }
 
