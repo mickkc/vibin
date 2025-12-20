@@ -1,16 +1,15 @@
 package de.mickkc.vibin.routes
 
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
 import de.mickkc.vibin.auth.CryptoUtil
 import de.mickkc.vibin.dto.PaginatedDto
 import de.mickkc.vibin.dto.users.UserEditDto
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.UserRepo
-import de.mickkc.vibin.utils.ImageUtils
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 
 fun Application.configureUserRoutes() = routing {
     authenticate("tokenAuth") {
@@ -116,13 +115,10 @@ fun Application.configureUserRoutes() = routing {
 
         getP("/api/users/{userId}/pfp", PermissionType.VIEW_USERS) {
             val userId = call.getLongParameter("userId") ?: return@getP
-            val user = UserRepo.getById(userId) ?: return@getP call.notFound()
             val quality = call.getIntOrDefault("quality", 0) ?: return@getP
-            val profilePicture = UserRepo.getProfilePicture(user)
+            val imageId = UserRepo.getProfilePictureId(userId)
 
-            val file = ImageUtils.getFileOrDefault(profilePicture, quality, "user") ?: return@getP call.notFound()
-
-            call.respondFile(file)
+            call.respondRedirect("/api/images/${if (imageId != null) "by-id/${imageId}" else "default" }?type=user&quality=$quality")
         }
     }
 }

@@ -1,5 +1,6 @@
 package de.mickkc.vibin.routes
 
+import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.TrackRepo
 import de.mickkc.vibin.streaming.StreamBuilder
 import de.mickkc.vibin.utils.AccessCryptoUtil
@@ -12,13 +13,13 @@ import io.ktor.server.routing.*
 fun Application.configureStreamRoutes() = routing {
 
     authenticate("tokenAuth") {
-        get("/api/streams") {
-            val ids = call.getStringParameter("ids") ?: return@get
+        getP("/api/streams", PermissionType.STREAM_TRACKS) {
+            val ids = call.getStringParameter("ids") ?: return@getP
             val idList = ids.split(",")
             val trackList = idList.mapNotNull { it.toLongOrNull()?.let { id -> TrackRepo.getById(id) } }
 
             if (idList.isEmpty() || trackList.size != idList.size) {
-                return@get call.invalidParameter("ids")
+                return@getP call.invalidParameter("ids")
             }
 
             val streams = trackList.map { track -> StreamBuilder.build(track) }

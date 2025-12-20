@@ -8,6 +8,7 @@ data class UserDto(
     val username: String,
     val displayName: String?,
     val description: String,
+    val imageId: Long?,
     val email: String?,
     val isActive: Boolean,
     val isAdmin: Boolean,

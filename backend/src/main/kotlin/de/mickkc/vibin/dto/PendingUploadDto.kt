@@ -2,6 +2,7 @@ package de.mickkc.vibin.dto
 
 import kotlinx.serialization.Serializable
 import de.mickkc.vibin.dto.albums.AlbumDto
+import de.mickkc.vibin.dto.artists.ArtistDto
 import de.mickkc.vibin.dto.tags.TagDto
 
 @Serializable

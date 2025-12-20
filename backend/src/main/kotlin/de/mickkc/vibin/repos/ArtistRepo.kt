@@ -9,7 +9,7 @@ import de.mickkc.vibin.db.artists.ArtistEntity
 import de.mickkc.vibin.db.artists.ArtistTable
 import de.mickkc.vibin.db.artists.TrackArtistConnection
 import de.mickkc.vibin.db.images.ImageEntity
-import de.mickkc.vibin.dto.ArtistDto
+import de.mickkc.vibin.dto.artists.ArtistDto
 import de.mickkc.vibin.dto.artists.ArtistEditData
 import de.mickkc.vibin.parsing.Parser
 import de.mickkc.vibin.routes.PaginatedSearchParams
@@ -37,6 +37,11 @@ object ArtistRepo {
 
     fun getImage(artist: ArtistEntity): ImageEntity? = transaction {
         return@transaction artist.image
+    }
+
+    fun getImageId(artistId: Long): Long? = transaction {
+        val artist = ArtistEntity.findById(artistId) ?: return@transaction null
+        return@transaction artist.image?.id?.value
     }
 
     /**
@@ -175,6 +180,7 @@ object ArtistRepo {
             id = artistEntity.id.value,
             name = artistEntity.name,
             description = artistEntity.description,
+            imageId = artistEntity.image?.id?.value,
             createdAt = artistEntity.createdAt,
             updatedAt = artistEntity.updatedAt
         )

@@ -66,6 +66,11 @@ object TrackRepo {
         return@transaction track.album.cover
     }
 
+    fun getCoverId(trackId: Long): Long? = transaction {
+        val track = TrackEntity.findById(trackId) ?: return@transaction null
+        return@transaction track.cover?.id?.value ?: track.album.cover?.id?.value
+    }
+
     suspend fun createTrack(file: File, metadata: TrackMetadata, checksum: String? = null, uploader: UserEntity? = null, cover: ImageEntity? = null): TrackEntity {
 
         val album = metadata.trackInfo.album
@@ -390,6 +395,7 @@ object TrackRepo {
             title = trackEntity.title,
             album = AlbumRepo.toDto(trackEntity.album),
             artists = ArtistRepo.toDto(trackEntity.artists.toList()),
+            coverId = trackEntity.cover?.id?.value ?: trackEntity.album.cover?.id?.value,
             explicit = trackEntity.explicit,
             trackNumber = trackEntity.trackNumber,
             trackCount = trackEntity.trackCount,
@@ -424,6 +430,7 @@ object TrackRepo {
             title = trackEntity.title,
             album = IdNameDto(id = trackEntity.album.id.value, trackEntity.album.title),
             artists = trackEntity.artists.map { IdNameDto(it.id.value, it.name) },
+            coverId = trackEntity.cover?.id?.value ?: trackEntity.album.cover?.id?.value,
             duration = trackEntity.duration,
             uploader = trackEntity.uploader?.let { IdNameDto(it.id.value, it.displayName ?: it.username) }
         )

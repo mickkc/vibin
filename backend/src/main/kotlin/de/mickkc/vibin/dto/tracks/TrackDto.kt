@@ -1,7 +1,7 @@
 package de.mickkc.vibin.dto.tracks
 
 import kotlinx.serialization.Serializable
-import de.mickkc.vibin.dto.ArtistDto
+import de.mickkc.vibin.dto.artists.ArtistDto
 import de.mickkc.vibin.dto.tags.TagDto
 import de.mickkc.vibin.dto.users.UserDto
 import de.mickkc.vibin.dto.albums.AlbumDto
@@ -12,6 +12,7 @@ data class TrackDto (
     val title: String,
     val album: AlbumDto,
     val artists: List<ArtistDto>,
+    val coverId: Long?,
     val explicit: Boolean,
     val trackNumber: Int?,
     val trackCount: Int?,

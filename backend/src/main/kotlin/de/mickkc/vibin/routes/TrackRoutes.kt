@@ -142,5 +142,13 @@ fun Application.configureTrackRoutes() = routing {
 
             call.respondFile(audioFile)
         }
+
+        getP("/api/tracks/{trackId}/cover", PermissionType.VIEW_TRACKS) {
+            val trackId = call.getLongParameter("trackId") ?: return@getP
+            val quality = call.getIntOrDefault("quality", 0) ?: return@getP
+            val imageId = TrackRepo.getCoverId(trackId)
+
+            call.respondRedirect("/api/images/${if (imageId != null) "by-id/${imageId}" else "default" }?type=track&quality=$quality")
+        }
     }
 }

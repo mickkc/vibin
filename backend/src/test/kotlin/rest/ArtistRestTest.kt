@@ -6,7 +6,7 @@ import io.ktor.http.*
 import utils.ArtistTestUtils
 import utils.UserTestUtils
 import utils.testApp
-import de.mickkc.vibin.dto.ArtistDto
+import de.mickkc.vibin.dto.artists.ArtistDto
 import de.mickkc.vibin.dto.PaginatedDto
 import de.mickkc.vibin.dto.artists.ArtistEditData
 import de.mickkc.vibin.permissions.PermissionType

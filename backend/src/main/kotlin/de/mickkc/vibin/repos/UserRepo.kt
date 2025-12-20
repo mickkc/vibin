@@ -25,6 +25,11 @@ object UserRepo {
         return@transaction user.profilePicture
     }
 
+    fun getProfilePictureId(userId: Long): Long? = transaction {
+        val user = UserEntity.findById(userId) ?: return@transaction null
+        return@transaction user.profilePicture?.id?.value
+    }
+
     /**
      * Retrieves a user by their username.
      *
@@ -162,6 +167,7 @@ object UserRepo {
             username = entity.username,
             description = entity.description,
             displayName = entity.displayName,
+            imageId = entity.profilePicture?.id?.value,
             email = entity.email,
             isActive = entity.isActive,
             isAdmin = entity.isAdmin,

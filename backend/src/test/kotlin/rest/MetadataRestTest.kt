@@ -11,7 +11,7 @@ import utils.ArtistTestUtils
 import utils.TagTestUtils
 import utils.UserTestUtils
 import utils.testApp
-import de.mickkc.vibin.dto.ArtistDto
+import de.mickkc.vibin.dto.artists.ArtistDto
 import de.mickkc.vibin.dto.CreateMetadataDto
 import de.mickkc.vibin.dto.albums.AlbumDto
 import de.mickkc.vibin.dto.tags.TagDto

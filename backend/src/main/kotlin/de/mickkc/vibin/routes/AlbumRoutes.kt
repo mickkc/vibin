@@ -1,17 +1,16 @@
 package de.mickkc.vibin.routes
 
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
 import de.mickkc.vibin.dto.KeyValueDto
 import de.mickkc.vibin.dto.PaginatedDto
 import de.mickkc.vibin.dto.albums.AlbumEditDto
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.AlbumRepo
 import de.mickkc.vibin.repos.TrackRepo
-import de.mickkc.vibin.utils.ImageUtils
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 
 fun Application.configureAlbumRoutes() = routing {
 
@@ -95,14 +94,12 @@ fun Application.configureAlbumRoutes() = routing {
         }
 
         getP("/api/albums/{albumId}/cover", PermissionType.VIEW_ALBUMS) {
-            val albumId = call.parameters["albumId"]?.toLongOrNull() ?: return@getP call.missingParameter("albumId")
+            val albumId = call.getLongParameter("albumId") ?: return@getP
             val album = AlbumRepo.getById(albumId) ?: return@getP call.notFound()
-            val quality = call.request.queryParameters["quality"]?.toIntOrNull() ?: 0
-            val cover = AlbumRepo.getAlbumCover(album)
+            val quality = call.getIntOrDefault("quality", 0) ?: return@getP
+            val imageId = AlbumRepo.getAlbumCover(album)?.id?.value
 
-            val file = ImageUtils.getFileOrDefault(cover, quality, "album") ?: return@getP call.notFound()
-
-            call.respondFile(file)
+            call.respondRedirect("/api/images/${if (imageId != null) "by-id/${imageId}" else "default" }?type=album&quality=$quality")
         }
     }
 }

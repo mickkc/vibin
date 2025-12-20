@@ -9,6 +9,7 @@ data class MinimalTrackDto (
     val title: String,
     val artists: List<IdNameDto>,
     val album: IdNameDto,
+    val coverId: Long?,
     val duration: Long?,
     val uploader: IdNameDto?
 )

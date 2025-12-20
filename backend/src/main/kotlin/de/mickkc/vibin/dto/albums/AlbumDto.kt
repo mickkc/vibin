@@ -1,13 +1,14 @@
 package de.mickkc.vibin.dto.albums
 
 import kotlinx.serialization.Serializable
-import de.mickkc.vibin.dto.ArtistDto
+import de.mickkc.vibin.dto.artists.ArtistDto
 
 @Serializable
 data class AlbumDto (
     val id: Long,
     val title: String,
     val description: String,
+    val coverId: Long?,
     val year: Int?,
     val artists: List<ArtistDto>,
     val trackCount: Long,

@@ -10,7 +10,6 @@ import de.mickkc.vibin.dto.PaginatedDto
 import de.mickkc.vibin.dto.artists.ArtistEditData
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.ArtistRepo
-import de.mickkc.vibin.utils.ImageUtils
 
 fun Application.configureArtistRoutes() = routing {
 
@@ -83,11 +82,9 @@ fun Application.configureArtistRoutes() = routing {
         getP("/api/artists/{artistId}/image", PermissionType.VIEW_ARTISTS) {
             val artistId = call.getLongParameter("artistId") ?: return@getP
             val quality = call.getIntOrDefault("quality", 0) ?: return@getP
-            val artist = ArtistRepo.getById(artistId) ?: return@getP call.notFound()
-            val image = ArtistRepo.getImage(artist)
+            val imageId = ArtistRepo.getImageId(artistId)
 
-            val file = ImageUtils.getFileOrDefault(image, quality, "artist") ?: return@getP call.notFound()
-            call.respondFile(file)
+            call.respondRedirect("/api/images/${if (imageId != null) "by-id/${imageId}" else "default" }?type=artist&quality=$quality")
         }
 
         getP("/api/artists/autocomplete", PermissionType.VIEW_ARTISTS) {

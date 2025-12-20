@@ -298,6 +298,14 @@ object AlbumRepo {
         }.toList()
     }
 
+    private fun getCoverIdFromFirstTrack(album: AlbumEntity): Long? {
+        val trackWithCover = TrackEntity.find { (TrackTable.albumId eq album.id) and (TrackTable.coverId neq null) }
+            .orderBy(TrackTable.discNumber to SortOrder.ASC_NULLS_LAST, TrackTable.trackNumber to SortOrder.ASC_NULLS_LAST)
+            .limit(1)
+            .firstOrNull()
+        return trackWithCover?.cover?.id?.value
+    }
+
     private fun getSongAmountForAlbum(album: AlbumEntity): Long = TrackEntity.find { TrackTable.albumId eq album.id }.count()
 
     fun toDto(albumEntity: AlbumEntity): AlbumDto = transaction {
@@ -321,6 +329,7 @@ object AlbumRepo {
             title = albumEntity.title,
             description = albumEntity.description,
             artists = getArtistsForAlbum(albumEntity).map { ArtistRepo.toDtoInternal(it) },
+            coverId = albumEntity.cover?.id?.value ?: getCoverIdFromFirstTrack(albumEntity),
             trackCount = getSongAmountForAlbum(albumEntity),
             year = albumEntity.releaseYear ?: estimateReleaseYear(albumEntity.id.value),
             single = albumEntity.single ?: estimateIsSingle(albumEntity.id.value),
