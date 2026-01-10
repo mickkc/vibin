@@ -2,12 +2,19 @@ package de.mickkc.vibin.tasks
 
 import de.mickkc.vibin.repos.TaskSettingsRepo
 import de.mickkc.vibin.utils.DateTimeUtils
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import java.util.concurrent.ConcurrentHashMap
 
 object TaskManager {
 
     private val tasks = mutableMapOf<String, BaseTask>()
     private val results = ConcurrentHashMap<String, TaskResult>()
+    private val progresses = ConcurrentHashMap<String, TaskProgress>()
+
+    private val progressMessageResponseFlow = MutableSharedFlow<TaskAction>()
+    val sharedFlow = progressMessageResponseFlow.asSharedFlow()
+
 
     fun registerTask(task: BaseTask) {
 
@@ -18,13 +25,27 @@ object TaskManager {
 
         tasks[task.id] = task
 
-        if (task.runOnStartup && task.enabled.get()) {
-            task.nextRun = DateTimeUtils.now()
+        if (task.enabled.get()) {
+            if (task.runOnStartup) {
+                task.nextRun = DateTimeUtils.now()
+            } else {
+                if (task.interval != null)
+                    task.nextRun = DateTimeUtils.now() + task.interval!!.inWholeSeconds
+            }
         }
+    }
+
+    fun cancelTask(taskId: String) {
+        val task = tasks[taskId] ?: return
+        task.interrupt()
     }
 
     fun getTasks(): Collection<BaseTask> {
         return tasks.values
+    }
+
+    fun getSchedulableTasks(): Collection<BaseTask> {
+        return tasks.values.filter { it.interval != null }
     }
 
     /**
@@ -34,6 +55,7 @@ object TaskManager {
     fun getNextTaskRunTime(): Long? {
         return tasks.values
             .mapNotNull { it.nextRun }
+            .filter { it >= DateTimeUtils.now() }
             .minOrNull()
     }
 
@@ -52,5 +74,24 @@ object TaskManager {
 
     fun getTaskResult(taskId: String): TaskResult? {
         return results[taskId]
+    }
+
+    suspend fun reportStart(taskId: String) {
+        progressMessageResponseFlow.emit(TaskAction(taskId, action = "start"))
+    }
+
+    suspend fun reportCompletion(taskId: String, result: TaskResult) {
+        progressMessageResponseFlow.emit(TaskAction(taskId, action = "complete", result = result))
+    }
+
+    suspend fun reportProgress(progress: TaskProgress) {
+        progresses[progress.taskId] = progress
+        progressMessageResponseFlow.emit(TaskAction(progress.taskId, action = "progress", progress = progress))
+    }
+
+    fun getRunningProgresses(): List<TaskProgress> {
+        return tasks.values
+            .filter { it.isRunning() }
+            .map { progresses[it.id] ?: TaskProgress(it.id) }
     }
 }

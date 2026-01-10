@@ -7,7 +7,7 @@ import de.mickkc.vibin.widgets.WidgetImageCache
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 
-class DeleteExpiredWidgetImagesTask : BaseTask() {
+object DeleteExpiredWidgetImagesTask : BaseTask() {
 
     override val id: String
         get() = "remove_expired_widget_images"

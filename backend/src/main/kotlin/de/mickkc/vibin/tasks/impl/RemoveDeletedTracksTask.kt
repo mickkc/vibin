@@ -4,31 +4,36 @@ import de.mickkc.vibin.repos.TrackRepo
 import de.mickkc.vibin.tasks.BaseTask
 import de.mickkc.vibin.tasks.TaskResult
 import de.mickkc.vibin.utils.PathUtils
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.hours
 
-class RemoveDeletedTracksTask : BaseTask() {
+object RemoveDeletedTracksTask : BaseTask() {
     override val id: String
         get() = "remove_deleted_tracks"
 
-    override val interval: Duration
-        get() = 8.hours
+    override val runOnStartup: Boolean
+        get() = true
 
     override suspend fun runTask(): TaskResult {
 
-        val tracks = TrackRepo.getTrackIdsWithPath()
+        val tracks = TrackRepo.getTrackIdsWithPath().withIndex()
         val idsToDelete = mutableListOf<Long>()
 
-        for ((trackId, path) in tracks) {
-            val file = PathUtils.getTrackFileFromPath(path)
+        for ((index, trackEntry) in tracks) {
+            if (isInterrupted()) {
+                logger.info("Task interrupted. Stopping at index $index.")
+                break
+            }
+
+            val file = PathUtils.getTrackFileFromPath(trackEntry.second)
             if (!file.exists()) {
-                idsToDelete.add(trackId)
-                logger.info("Removing track with ID $trackId as its file does not exist.")
+                idsToDelete.add(trackEntry.first)
+                logger.info("Removing track with ID ${trackEntry.first} as its file does not exist.")
             }
         }
 
         if (idsToDelete.isNotEmpty()) {
             TrackRepo.deleteTracksByIds(idsToDelete)
+            runAfterCompletion(DeleteUnusedAlbumsTask)
+            runAfterCompletion(DeleteUnusedArtistsTask)
         }
         else {
             return TaskResult.success("No tracks with missing files found.")

@@ -6,7 +6,7 @@ import de.mickkc.vibin.tasks.TaskResult
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 
-class DeleteUnusedArtistsTask : BaseTask() {
+object DeleteUnusedArtistsTask : BaseTask() {
 
     override val id: String
         get() = "delete_unused_artists"
@@ -25,6 +25,7 @@ class DeleteUnusedArtistsTask : BaseTask() {
         }
 
         ArtistRepo.deleteAll(artists)
+        runAfterCompletion(DeleteUnusedImagesTask)
 
         logger.info("Deleted $count unused artists.")
 

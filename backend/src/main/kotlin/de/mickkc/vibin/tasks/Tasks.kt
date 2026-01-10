@@ -12,14 +12,14 @@ import de.mickkc.vibin.tasks.impl.ScanForNewTracksTask
 object Tasks {
 
     fun configure() {
-        TaskManager.registerTask(DeleteUnusedImagesTask())
-        TaskManager.registerTask(DeleteUnusedAlbumsTask())
-        TaskManager.registerTask(DeleteUnusedArtistsTask())
-        TaskManager.registerTask(RemoveDeletedTracksTask())
-        TaskManager.registerTask(DeleteExpiredWidgetImagesTask())
-        TaskManager.registerTask(RemoveExpiredRateLimitsTask())
-        TaskManager.registerTask(ScanForNewTracksTask())
-        TaskManager.registerTask(CalculateMissingVolumeLevelsTask())
+        TaskManager.registerTask(DeleteUnusedImagesTask)
+        TaskManager.registerTask(DeleteUnusedAlbumsTask)
+        TaskManager.registerTask(DeleteUnusedArtistsTask)
+        TaskManager.registerTask(RemoveDeletedTracksTask)
+        TaskManager.registerTask(DeleteExpiredWidgetImagesTask)
+        TaskManager.registerTask(RemoveExpiredRateLimitsTask)
+        TaskManager.registerTask(ScanForNewTracksTask)
+        TaskManager.registerTask(CalculateMissingVolumeLevelsTask)
     }
 
 }

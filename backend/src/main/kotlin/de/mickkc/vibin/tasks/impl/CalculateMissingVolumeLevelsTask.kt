@@ -4,16 +4,11 @@ import de.mickkc.vibin.processing.VolumeDetector
 import de.mickkc.vibin.repos.TrackRepo
 import de.mickkc.vibin.tasks.BaseTask
 import de.mickkc.vibin.tasks.TaskResult
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.hours
 
-class CalculateMissingVolumeLevelsTask : BaseTask() {
+object CalculateMissingVolumeLevelsTask : BaseTask() {
 
     override val id: String
         get() = "calculate_missing_volume_levels"
-
-    override val interval: Duration
-        get() = 6.hours
 
     override suspend fun runTask(): TaskResult {
 
@@ -22,12 +17,20 @@ class CalculateMissingVolumeLevelsTask : BaseTask() {
             return TaskResult.success("No tracks without volume level found.")
         }
 
-        tracksWithoutVolumeLevel.forEach { track ->
+        tracksWithoutVolumeLevel.withIndex().forEach { (index, track) ->
+
+            if (isInterrupted()) {
+                logger.info("Task $id was interrupted. Stopping further processing.")
+                return TaskResult.success("Task was interrupted after processing $index out of ${tracksWithoutVolumeLevel.size} tracks.")
+            }
+
             try {
+                reportProgress("Processing: ${track.path.substringAfterLast('/')}", index + 1, tracksWithoutVolumeLevel.size)
                 VolumeDetector.detectVolumeLevel(track)
             }
             catch (e: Exception) {
                 logger.error("Failed to detect volume level for track ID ${track.id.value}: ${e.message}")
+                reportProgress("Error: ${e.message}", index + 1, tracksWithoutVolumeLevel.size)
             }
         }
 

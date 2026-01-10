@@ -6,7 +6,7 @@ import de.mickkc.vibin.widgets.WidgetImageCache
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 
-class RemoveExpiredRateLimitsTask : BaseTask() {
+object RemoveExpiredRateLimitsTask : BaseTask() {
 
     override val id: String
         get() = "remove_expired_rate_limits"

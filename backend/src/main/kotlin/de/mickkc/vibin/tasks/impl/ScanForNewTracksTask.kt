@@ -5,16 +5,11 @@ import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.settings.server.IsFirstScan
 import de.mickkc.vibin.tasks.BaseTask
 import de.mickkc.vibin.tasks.TaskResult
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.hours
 
-class ScanForNewTracksTask : BaseTask() {
+object ScanForNewTracksTask : BaseTask() {
 
     override val id: String
         get() = "scan_for_new_tracks"
-
-    override val interval: Duration
-        get() = 3.hours
 
     override val runOnStartup: Boolean
         get() = true

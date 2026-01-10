@@ -21,7 +21,7 @@ object TaskScheduler {
         scope.launch {
             while (isActive) {
                 val now = DateTimeUtils.now()
-                TaskManager.getTasks().forEach { task ->
+                TaskManager.getSchedulableTasks().forEach { task ->
                     val nextRun = task.nextRun
 
                     if (task.enabled.get()) {
@@ -54,21 +54,26 @@ object TaskScheduler {
         }
     }
 
-    suspend fun forceRunTask(taskId: String): TaskResult? {
-        val task = TaskManager.getById(taskId) ?: return null
-        try {
-            val result = task.run(setNext = false, force = true)
-            if (result != null) {
+    fun forceRunTask(taskId: String) {
+        val task = TaskManager.getById(taskId) ?: return
+
+        if (task.isRunning()) {
+            logger.warn("Task $taskId is already running, cannot force run.")
+            return
+        }
+
+        scope.launch {
+            try {
+                val result = task.run(setNext = false, force = true)
+                if (result != null) {
+                    TaskManager.setTaskResult(task.id, result)
+                }
+            } catch (e: Exception) {
+                logger.error("Error force running task ${task.id}: ${e.message}", e)
+
+                val result = TaskResult.failure(e.toString())
                 TaskManager.setTaskResult(task.id, result)
             }
-            return result
-
-        } catch (e: Exception) {
-            logger.error("Error force running task ${task.id}: ${e.message}", e)
-
-            val result = TaskResult.failure(e.toString())
-            TaskManager.setTaskResult(task.id, result)
-            return result
         }
     }
 

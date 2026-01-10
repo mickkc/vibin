@@ -6,7 +6,7 @@ import de.mickkc.vibin.tasks.TaskResult
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 
-class DeleteUnusedImagesTask : BaseTask() {
+object DeleteUnusedImagesTask : BaseTask() {
 
     override val id: String
         get() = "delete_unused_images"

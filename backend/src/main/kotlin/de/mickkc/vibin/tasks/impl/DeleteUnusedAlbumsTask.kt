@@ -6,7 +6,7 @@ import de.mickkc.vibin.tasks.TaskResult
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 
-class DeleteUnusedAlbumsTask : BaseTask() {
+object DeleteUnusedAlbumsTask : BaseTask() {
 
     override val id: String
         get() = "delete_unused_albums"
@@ -25,6 +25,8 @@ class DeleteUnusedAlbumsTask : BaseTask() {
         }
 
         AlbumRepo.deleteAll(albums)
+
+        runAfterCompletion(DeleteUnusedImagesTask)
 
         logger.info("Deleted $count unused albums.")
 

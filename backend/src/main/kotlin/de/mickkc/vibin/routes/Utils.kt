@@ -10,64 +10,65 @@ import de.mickkc.vibin.dto.errors.ErrorDtoType
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.PermissionRepo
 import de.mickkc.vibin.repos.UserRepo
+import io.ktor.server.application.ApplicationCall
 
-suspend fun RoutingCall.success(success: Boolean = true) {
+suspend fun ApplicationCall.success(success: Boolean = true) {
     respond(mapOf("success" to success))
 }
 
-suspend fun RoutingCall.respond(error: ErrorDto) {
+suspend fun ApplicationCall.respond(error: ErrorDto) {
     respond(error.type.code, error)
 }
 
-suspend fun RoutingCall.missingParameter(param: String) {
+suspend fun ApplicationCall.missingParameter(param: String) {
     respond(ErrorDto.fromType(ErrorDtoType.MISSING_PARAMETER, "parameterName" to param))
 }
 
-suspend fun RoutingCall.invalidParameter(param: String, vararg allowedParameters: String) {
+suspend fun ApplicationCall.invalidParameter(param: String, vararg allowedParameters: String) {
     respond(ErrorDto.fromType(ErrorDtoType.INVALID_PARAMETER, "parameterName" to param, "reason" to allowedParameters.joinToString(", ")))
 }
 
-suspend fun RoutingCall.unauthorized(reason: String = "Unauthorized") {
+suspend fun ApplicationCall.unauthorized(reason: String = "Unauthorized") {
     respond(ErrorDto.fromType(ErrorDtoType.UNAUTHORIZED, "reason" to reason))
 }
 
-suspend fun RoutingCall.conflict() {
+suspend fun ApplicationCall.conflict() {
     respond(ErrorDto.fromType(ErrorDtoType.CONFLICT))
 }
 
-suspend fun RoutingCall.forbidden(vararg requiredPermissions: PermissionType) {
+suspend fun ApplicationCall.forbidden(vararg requiredPermissions: PermissionType) {
     respond(ErrorDto.fromType(
         ErrorDtoType.NO_PERMISSION,
         "requiredPermissions" to requiredPermissions.joinToString(",") { it.id }
     ))
 }
 
-suspend fun RoutingCall.notFound() {
+suspend fun ApplicationCall.notFound() {
     respond(ErrorDto.fromType(ErrorDtoType.NOT_FOUND))
 }
 
-suspend fun RoutingCall.rateLimitExceeded() {
+suspend fun ApplicationCall.rateLimitExceeded() {
     respond(ErrorDto.fromType(ErrorDtoType.RATE_LIMIT_EXCEEDED))
 }
 
-fun RoutingCall.getToken(): String? {
+fun ApplicationCall.getToken(): String? {
     val principal = principal<UserPrincipal>()
     return principal?.token
 }
 
-fun RoutingCall.getUser(): UserEntity? {
+fun ApplicationCall.getUser(): UserEntity? {
     val principal = principal<UserPrincipal>()
     return principal?.let {
         UserRepo.getById(principal.userId)
     }
 }
 
-fun RoutingCall.getUserId(): Long? {
+fun ApplicationCall.getUserId(): Long? {
     val principal = principal<UserPrincipal>()
     return principal?.userId
 }
 
-fun RoutingCall.hasPermissions(vararg permissions: PermissionType): Boolean {
+fun ApplicationCall.hasPermissions(vararg permissions: PermissionType): Boolean {
     val userId = getUserId() ?: return false
     if (permissions.isEmpty()) return true
     return PermissionRepo.hasPermissions(userId, permissions.toList())
@@ -79,7 +80,7 @@ fun RoutingCall.hasPermissions(vararg permissions: PermissionType): Boolean {
  *
  * @return A unique identifier for the client
  */
-fun RoutingCall.getClientId(): String {
+fun ApplicationCall.getClientId(): String {
     // TODO: Add config option to enable/disable proxy header checks
     val forwardedFor = request.headers["X-Forwarded-For"]
     if (forwardedFor != null) {
@@ -142,7 +143,7 @@ data class PaginatedSearchParams(
         get() = ((page - 1) * pageSize).toLong()
 }
 
-suspend fun RoutingCall.getPaginatedSearchParams(): PaginatedSearchParams? {
+suspend fun ApplicationCall.getPaginatedSearchParams(): PaginatedSearchParams? {
     val query = request.queryParameters["query"] ?: ""
     val page = request.queryParameters["page"]?.toIntOrNull() ?: 1
     val pageSize = request.queryParameters["pageSize"]?.toIntOrNull() ?: 50
@@ -164,7 +165,7 @@ suspend fun RoutingCall.getPaginatedSearchParams(): PaginatedSearchParams? {
     )
 }
 
-suspend fun RoutingCall.getBooleanOrDefault(paramName: String, default: Boolean): Boolean? {
+suspend fun ApplicationCall.getBooleanOrDefault(paramName: String, default: Boolean): Boolean? {
     val paramValue = this.parameters[paramName]
 
     if (paramValue == null) {
@@ -181,7 +182,7 @@ suspend fun RoutingCall.getBooleanOrDefault(paramName: String, default: Boolean)
     }
 }
 
-suspend fun RoutingCall.getBooleanParameter(paramName: String): Boolean? {
+suspend fun ApplicationCall.getBooleanParameter(paramName: String): Boolean? {
     val paramValue = this.parameters[paramName]
 
     if (paramValue == null) {
@@ -199,11 +200,11 @@ suspend fun RoutingCall.getBooleanParameter(paramName: String): Boolean? {
     }
 }
 
-suspend fun RoutingCall.getStringOrDefault(paramName: String, default: String): String {
+suspend fun ApplicationCall.getStringOrDefault(paramName: String, default: String): String {
     return this.parameters[paramName] ?: default
 }
 
-suspend fun RoutingCall.getStringParameter(paramName: String): String? {
+suspend fun ApplicationCall.getStringParameter(paramName: String): String? {
     val paramValue = this.parameters[paramName]
 
     if (paramValue == null) {
@@ -214,7 +215,7 @@ suspend fun RoutingCall.getStringParameter(paramName: String): String? {
     return paramValue
 }
 
-suspend fun RoutingCall.getLongOrDefault(paramName: String, default: Long): Long? {
+suspend fun ApplicationCall.getLongOrDefault(paramName: String, default: Long): Long? {
     val paramValue = this.parameters[paramName] ?: return default
 
     val longValue = paramValue.toLongOrNull()
@@ -226,7 +227,7 @@ suspend fun RoutingCall.getLongOrDefault(paramName: String, default: Long): Long
     return longValue
 }
 
-suspend fun RoutingCall.getLongParameter(paramName: String): Long? {
+suspend fun ApplicationCall.getLongParameter(paramName: String): Long? {
     val paramValue = this.parameters[paramName]
 
     if (paramValue == null) {
@@ -243,7 +244,7 @@ suspend fun RoutingCall.getLongParameter(paramName: String): Long? {
     return longValue
 }
 
-suspend fun RoutingCall.getIntOrDefault(paramName: String, default: Int): Int? {
+suspend fun ApplicationCall.getIntOrDefault(paramName: String, default: Int): Int? {
     val paramValue = this.parameters[paramName] ?: return default
 
     val intValue = paramValue.toIntOrNull()
@@ -255,7 +256,7 @@ suspend fun RoutingCall.getIntOrDefault(paramName: String, default: Int): Int? {
     return intValue
 }
 
-suspend fun RoutingCall.getIntParameter(paramName: String): Int? {
+suspend fun ApplicationCall.getIntParameter(paramName: String): Int? {
     val paramValue = this.parameters[paramName]
 
     if (paramValue == null) {
