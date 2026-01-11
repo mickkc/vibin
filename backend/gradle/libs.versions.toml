@@ -31,7 +31,9 @@ ktor-server-websockets = { module = "io.ktor:ktor-server-websockets", version.re
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
+
 jaudiotagger = { module = "com.github.RouHim:jaudiotagger", version.ref = "jaudiotagger" }
+directory-watcher = { module = "io.methvin:directory-watcher", version = "0.19.1" }
 
 ktor-server-html-builder = { module = "io.ktor:ktor-server-html-builder-jvm", version.ref = "ktor" }
 kotlinx-html-jvm = { module = "org.jetbrains.kotlinx:kotlinx-html-jvm", version = "0.12.0" }

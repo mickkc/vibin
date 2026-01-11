@@ -49,6 +49,10 @@ object TrackRepo {
         return@transaction TrackEntity.findById(id)
     }
 
+    fun getByPath(path: String): TrackEntity? = transaction {
+        return@transaction TrackEntity.find { TrackTable.path eq path }.firstOrNull()
+    }
+
     fun getArtists(track: TrackEntity): List<ArtistEntity> = transaction {
         return@transaction track.artists.toList()
     }

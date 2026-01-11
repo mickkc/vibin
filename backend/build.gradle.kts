@@ -59,6 +59,8 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
 
     implementation(libs.jaudiotagger)
+    implementation(libs.directory.watcher)
+
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.jsoup)

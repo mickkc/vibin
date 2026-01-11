@@ -4,9 +4,11 @@ import de.mickkc.vibin.config.*
 import de.mickkc.vibin.routes.*
 import de.mickkc.vibin.tasks.TaskScheduler
 import de.mickkc.vibin.tasks.Tasks
+import de.mickkc.vibin.watcher.DirectoryWatcher
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import kotlinx.coroutines.launch
 
 fun main() {
     embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::mainModule)
@@ -69,4 +71,9 @@ fun Application.module() {
 
     Tasks.configure()
     TaskScheduler.start()
+
+    DirectoryWatcher.configure()
+    launch {
+        DirectoryWatcher.start()
+    }
 }

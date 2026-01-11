@@ -41,6 +41,30 @@ object AudioFileProcessor {
         "mp2" // MP2
     )
 
+    fun isSupportedAudioFile(file: File): Boolean {
+        val extension = file.extension.lowercase()
+        return supportedExtensions.contains(extension)
+    }
+
+    /**
+     * Retrieves all supported music files in the configured music directory.
+     *
+     * @return A list of File objects representing the music files.
+     */
+    fun getMusicFilesInMusicDir(): List<File> {
+        val baseDir = EnvUtil.getOrDefault(EnvUtil.MUSIC_DIR, EnvUtil.DEFAULT_MUSIC_DIR)
+        val musicDir = File(baseDir)
+        if (!musicDir.exists() || !musicDir.isDirectory) {
+            logger.error("MUSIC_DIR path '$baseDir' does not exist or is not a directory.")
+            return emptyList()
+        }
+        val allFiles = musicDir.walkTopDown().filter { it.isFile }.toList()
+        return allFiles.filter { file ->
+            val extension = file.extension.lowercase()
+            supportedExtensions.contains(extension)
+        }
+    }
+
     /**
      * Reprocesses all audio files in the configured music directory.
      */
