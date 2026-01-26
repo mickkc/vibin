@@ -2,6 +2,7 @@ package de.mickkc.vibin.tasks
 
 import de.mickkc.vibin.repos.TaskSettingsRepo
 import de.mickkc.vibin.utils.DateTimeUtils
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import java.util.concurrent.ConcurrentHashMap
@@ -38,6 +39,13 @@ object TaskManager {
     fun cancelTask(taskId: String) {
         val task = tasks[taskId] ?: return
         task.interrupt()
+    }
+
+    suspend fun waitForTaskCompletion(taskId: String) {
+        val task = tasks[taskId] ?: return
+        while (task.isRunning()) {
+            delay(100)
+        }
     }
 
     fun getTasks(): Collection<BaseTask> {

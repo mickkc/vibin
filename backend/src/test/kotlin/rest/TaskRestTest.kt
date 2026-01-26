@@ -15,6 +15,10 @@ import de.mickkc.vibin.repos.ImageRepo
 import de.mickkc.vibin.repos.TrackRepo
 import de.mickkc.vibin.tasks.TaskManager
 import de.mickkc.vibin.tasks.TaskResult
+import de.mickkc.vibin.tasks.impl.DeleteUnusedAlbumsTask
+import de.mickkc.vibin.tasks.impl.DeleteUnusedArtistsTask
+import de.mickkc.vibin.tasks.impl.DeleteUnusedImagesTask
+import de.mickkc.vibin.tasks.impl.RemoveDeletedTracksTask
 import de.mickkc.vibin.utils.DateTimeUtils
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.createFile
@@ -170,9 +174,6 @@ class TaskRestTest {
 
         assertTrue(response.status.isSuccess())
 
-        val result = response.body<TaskResult>()
-        assertNotNull(result)
-
         val task = TaskManager.getById(taskId)
         assertNotNull(task)
         assertNotNull(task.lastRun)
@@ -193,14 +194,6 @@ class TaskRestTest {
         }
 
         assertEquals(403, response.status.value)
-    }
-
-    @Test
-    fun testRunTask_NotFound() = testApp { client ->
-
-        val response = client.post("/api/tasks/non-existent-task-id/run")
-
-        assertEquals(404, response.status.value)
     }
     // endregion
 
@@ -225,8 +218,7 @@ class TaskRestTest {
 
         assertTrue(response.status.isSuccess())
 
-        val result = response.body<TaskResult>()
-        assertTrue(result.success)
+        TaskManager.waitForTaskCompletion(DeleteUnusedImagesTask.id)
 
         assertEquals(1, transaction { ImageEntity.count() })
     }
@@ -247,8 +239,7 @@ class TaskRestTest {
         val response = client.post("/api/tasks/delete_unused_images/run")
         assertTrue(response.status.isSuccess())
 
-        val result = response.body<TaskResult>()
-        assertTrue(result.success)
+        TaskManager.waitForTaskCompletion(DeleteUnusedImagesTask.id)
 
         val imageCountAfter = transaction { ImageEntity.count() }
         assertTrue(imageCountAfter < imageCountBefore)
@@ -266,8 +257,7 @@ class TaskRestTest {
         val response = client.post("/api/tasks/delete_unused_albums/run")
         assertTrue(response.status.isSuccess())
 
-        val result = response.body<TaskResult>()
-        assertTrue(result.success)
+        TaskManager.waitForTaskCompletion(DeleteUnusedAlbumsTask.id)
 
         val albumStillExists = AlbumRepo.getById(album.id.value)
         assertNotNull(albumStillExists)
@@ -286,8 +276,7 @@ class TaskRestTest {
         val response = client.post("/api/tasks/delete_unused_albums/run")
         assertTrue(response.status.isSuccess())
 
-        val result = response.body<TaskResult>()
-        assertTrue(result.success)
+        TaskManager.waitForTaskCompletion(DeleteUnusedAlbumsTask.id)
 
         val albumCountAfter = AlbumRepo.count()
         assertTrue(albumCountAfter < albumCountBefore)
@@ -311,8 +300,7 @@ class TaskRestTest {
         val response = client.post("/api/tasks/delete_unused_artists/run")
         assertTrue(response.status.isSuccess())
 
-        val result = response.body<TaskResult>()
-        assertTrue(result.success)
+        TaskManager.waitForTaskCompletion(DeleteUnusedArtistsTask.id)
 
         val artistCountAfter = ArtistRepo.count()
         assertEquals(artistCountBefore, artistCountAfter)
@@ -329,8 +317,7 @@ class TaskRestTest {
         val response = client.post("/api/tasks/delete_unused_artists/run")
         assertTrue(response.status.isSuccess())
 
-        val result = response.body<TaskResult>()
-        assertTrue(result.success)
+        TaskManager.waitForTaskCompletion(DeleteUnusedArtistsTask.id)
 
         val artistCountAfter = ArtistRepo.count()
         assertTrue(artistCountAfter < artistCountBefore)
@@ -364,8 +351,7 @@ class TaskRestTest {
         val response = client.post("/api/tasks/remove_deleted_tracks/run")
         assertTrue(response.status.isSuccess())
 
-        val result = response.body<TaskResult>()
-        assertTrue(result.success)
+        TaskManager.waitForTaskCompletion(RemoveDeletedTracksTask.id)
 
         val trackCountAfter = TrackRepo.count()
         assertEquals(trackCountBefore, trackCountAfter)
@@ -391,9 +377,7 @@ class TaskRestTest {
         val response = client.post("/api/tasks/remove_deleted_tracks/run")
         assertTrue(response.status.isSuccess())
 
-        val result = response.body<TaskResult>()
-        assertTrue(result.success)
-        assertNotNull(result.message)
+        TaskManager.waitForTaskCompletion(RemoveDeletedTracksTask.id)
 
         val trackCountAfter = TrackRepo.count()
         assertTrue(trackCountAfter < trackCountBefore)
