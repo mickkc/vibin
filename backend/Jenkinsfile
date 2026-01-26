@@ -7,6 +7,7 @@ pipeline {
 
     environment {
         GRADLE_OPTS = '-Dorg.gradle.daemon=false'
+        BUILD_WEBHOOK_URL = credentials('BUILD_WEBHOOK_URL')
     }
 
     stages {
@@ -62,6 +63,37 @@ pipeline {
             echo 'Build failed'
         }
         always {
+            script {
+                try {
+                    // Send pipeline and test results to n8n webhook (for notifications)
+                    def testSummary = junit 'backend/**/build/test-results/test/*.xml'
+                    echo "Total: ${testSummary.totalCount}, Passed: ${testSummary.passCount}, Failed: ${testSummary.failCount}, Skipped: ${testSummary.skipCount}"
+
+                    httpRequest(
+                        httpMode: 'POST',
+                        url: env.BUILD_WEBHOOK_URL,
+                        contentType: 'APPLICATION_JSON',
+                        requestBody: """
+                        {
+                          "job": "${env.JOB_NAME}",
+                          "build": "${env.BUILD_NUMBER}",
+                          "url": "${env.BUILD_URL}",
+                          "status": "${currentBuild.currentResult}",
+                          "tests": {
+                            "total": ${testSummary.totalCount},
+                            "passed": ${testSummary.passCount},
+                            "failed": ${testSummary.failCount},
+                            "skipped": ${testSummary.skipCount}
+                          }
+                        }
+                        """
+                    )
+                } catch (Exception e) {
+                    echo "Failed to send webhook: ${e.message}"
+                    e.printStackTrace()
+                }
+            }
+
             // Clean up workspace
             cleanWs()
         }
