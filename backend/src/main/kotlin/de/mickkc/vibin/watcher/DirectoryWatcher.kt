@@ -23,7 +23,7 @@ import kotlin.time.Duration.Companion.seconds
 object DirectoryWatcher {
 
     private val logger = LoggerFactory.getLogger(de.mickkc.vibin.watcher.DirectoryWatcher::class.java)
-    lateinit var watcher: DirectoryWatcher
+    var watcher: DirectoryWatcher? = null
 
     private val fsEvents = Channel<DirectoryChangeEvent>(capacity = Channel.UNLIMITED)
 
@@ -53,12 +53,15 @@ object DirectoryWatcher {
     }
 
     suspend fun start() {
-        watcher.watchAsync()
+        if (watcher == null) {
+            logger.warn("Directory watcher is not configured. Call configure() before start().")
+            return
+        }
         startEventProcessor()
     }
 
     fun stop() {
-        watcher.close()
+        watcher?.close()
     }
 
     suspend fun startEventProcessor() = withContext(Dispatchers.IO) {
