@@ -34,8 +34,8 @@ object AccessCryptoUtil {
      * @return A pair of (signature, expirationTimestamp)
      */
     @OptIn(ExperimentalEncodingApi::class)
-    fun generateSignatureAndTimestamp(checksum: String): Pair<String, Long> {
-        val expirationTimestamp = DateTimeUtils.now() + ACCESS_VALIDITY_SECONDS
+    fun generateSignatureAndTimestamp(checksum: String, accessValidityOverride: Long? = null): Pair<String, Long> {
+        val expirationTimestamp = DateTimeUtils.now() + (accessValidityOverride ?: ACCESS_VALIDITY_SECONDS)
         val hmacBytes = getHmacBytes(checksum, expirationTimestamp)
         val signature = Base64.UrlSafe.encode(hmacBytes).trimEnd('=')
         return Pair(signature, expirationTimestamp)

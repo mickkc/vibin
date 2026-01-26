@@ -1,5 +1,7 @@
 package rest
 
+import de.mickkc.vibin.config.EnvUtil
+import de.mickkc.vibin.db.tracks.TrackEntity
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -13,6 +15,10 @@ import de.mickkc.vibin.dto.tracks.TrackEditDto
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.LyricsRepo
 import de.mickkc.vibin.repos.TrackRepo
+import de.mickkc.vibin.utils.AccessCryptoUtil
+import de.mickkc.vibin.utils.PathUtils
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.createTempDirectory
 import kotlin.test.*
 
 class TrackRestTest {
@@ -722,20 +728,65 @@ class TrackRestTest {
     }
 
     @Test
-    fun testStreamTrack_NoPermission() = testApp(false) { client ->
-        val (_, token) = UserTestUtils.createUserAndSessionWithPermissions(
-            username = "testuser",
-            password = "noperms",
-            PermissionType.STREAM_TRACKS to false
-        )
+    fun testStreamTrack_NoAuth() = testApp(false) { client ->
 
-        val track = TrackTestUtils.createTrack("Track", "Album", "Artist")
+        val track = TrackTestUtils.createTrack("Track", "Album", "Artist", checksum = "Test", path = "test.mp3")
 
-        val response = client.get("/api/tracks/${track.id.value}/stream") {
-            bearerAuth(token)
+        // Create Track file to avoid 404
+        createTempTrackFile(track)
+
+        val response = client.get("/api/streams/${track.id.value}")
+
+        assertEquals(400, response.status.value)
+    }
+
+    @Test
+    fun testStreamTrack() = testApp(false) { client ->
+
+        val track = TrackTestUtils.createTrack("Track", "Album", "Artist", checksum = "Test", path = "test.mp3")
+        val (sig, exp) = AccessCryptoUtil.generateSignatureAndTimestamp(track.checksum)
+
+        // Create Track file to avoid 404
+        createTempTrackFile(track)
+
+        val response = client.get("/api/streams/${track.id.value}") {
+            parameter("sig", sig)
+            parameter("exp", exp)
         }
 
-        assertEquals(403, response.status.value)
+        assertEquals(200, response.status.value)
+    }
+
+    @Test
+    fun testStreamTrack_InvalidSignature() = testApp(false) { client ->
+
+        val track = TrackTestUtils.createTrack("Track", "Album", "Artist", checksum = "Test", path = "test.mp3")
+
+        // Create Track file to avoid 404
+        createTempTrackFile(track)
+
+        val response = client.get("/api/streams/${track.id.value}") {
+            parameter("sig", "invalidsig")
+            parameter("exp", System.currentTimeMillis() + 60000)
+        }
+
+        assertEquals(401, response.status.value)
+    }
+
+    @Test
+    fun testStreamTrack_ExpiredSignature() = testApp(false) { client ->
+        val track = TrackTestUtils.createTrack("Track", "Album", "Artist", checksum = "Test", path = "test.mp3")
+        val (sig, exp) = AccessCryptoUtil.generateSignatureAndTimestamp(track.checksum, accessValidityOverride = -60000)
+
+        // Create Track file to avoid 404
+        createTempTrackFile(track)
+
+        val response = client.get("/api/streams/${track.id.value}") {
+            parameter("sig", sig)
+            parameter("exp", exp)
+        }
+
+        assertEquals(401, response.status.value)
     }
 
     @Test
@@ -756,4 +807,14 @@ class TrackRestTest {
     }
 
     // endregion
+
+    fun createTempTrackFile(track: TrackEntity) {
+        val tempDir = createTempDirectory()
+        EnvUtil.addOverride(EnvUtil.MUSIC_DIR, tempDir.absolutePathString())
+        PathUtils.getTrackFileFromPath(track.path).apply {
+            parentFile?.mkdirs()
+            writeText("Dummy audio content")
+            deleteOnExit()
+        }
+    }
 }
