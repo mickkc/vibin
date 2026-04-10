@@ -735,7 +735,7 @@ class TrackRestTest {
         // Create Track file to avoid 404
         createTempTrackFile(track)
 
-        val response = client.get("/api/streams/${track.id.value}")
+        val response = client.get("/api/streams/${track.id.value}?format=original")
 
         assertEquals(400, response.status.value)
     }
@@ -749,7 +749,7 @@ class TrackRestTest {
         // Create Track file to avoid 404
         createTempTrackFile(track)
 
-        val response = client.get("/api/streams/${track.id.value}") {
+        val response = client.get("/api/streams/${track.id.value}?format=original") {
             parameter("sig", sig)
             parameter("exp", exp)
         }
@@ -765,7 +765,7 @@ class TrackRestTest {
         // Create Track file to avoid 404
         createTempTrackFile(track)
 
-        val response = client.get("/api/streams/${track.id.value}") {
+        val response = client.get("/api/streams/${track.id.value}?format=original") {
             parameter("sig", "invalidsig")
             parameter("exp", System.currentTimeMillis() + 60000)
         }
@@ -781,7 +781,7 @@ class TrackRestTest {
         // Create Track file to avoid 404
         createTempTrackFile(track)
 
-        val response = client.get("/api/streams/${track.id.value}") {
+        val response = client.get("/api/streams/${track.id.value}?format=original") {
             parameter("sig", sig)
             parameter("exp", exp)
         }

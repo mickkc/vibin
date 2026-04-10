@@ -17,10 +17,10 @@ class ImageDownloaderRestTest {
     @Tag("network")
     fun testImageDownloadExternal() {
         val downloaded = runBlocking {
-            Parser.downloadCoverImage("https://uploads.wtf/c/test/mick.png")
+            Parser.downloadCoverImage("https://uploads.wtf/ALc4LTyo0byB.jpeg")
         }
         assertNotNull(downloaded)
-        assertEquals("085e9292a8ecaae27509e8a980f90889", ChecksumUtil.getChecksum(downloaded))
+        assertEquals("7b3d6c7df0ea1a0509b4850cae2b916f", ChecksumUtil.getChecksum(downloaded))
     }
 
     @Test
