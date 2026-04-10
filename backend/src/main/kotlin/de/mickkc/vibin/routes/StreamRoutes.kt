@@ -41,7 +41,7 @@ fun Application.configureStreamRoutes() = routing {
             return@get call.unauthorized("Invalid or expired track signature")
         }
 
-        val format = call.getStringOrDefault("format", "mp3")
+        val format = call.getStringOrDefault("format", "mp3").trim().lowercase()
         val bitrate = call.getIntOrDefault("bitrate", 128) ?: return@get
         val start = call.getLongOrDefault("start", 0L) ?: return@get
 
@@ -50,14 +50,19 @@ fun Application.configureStreamRoutes() = routing {
             return@get call.notFound()
         }
 
-        val ffmpegArgs = when(format.trim().lowercase()) {
+        if (format == "original") {
+            call.response.header(HttpHeaders.CacheControl, "no-cache, no-store, must-revalidate")
+            return@get call.respondFile(file)
+        }
+
+        val ffmpegArgs = when(format) {
             "mp3" -> listOf("-hide_banner", "-loglevel", "error", "-ss", start.toString(), "-i", file.absolutePath, "-vn", "-c:a", "libmp3lame", "-ba", "${bitrate}k", "-f", "mp3", "-")
             "opus" -> listOf("-hide_banner", "-loglevel", "error", "-ss", start.toString(), "-i", file.absolutePath, "-vn", "-c:a", "libopus", "-b:a", "${bitrate}k", "-f", "webm", "-")
             "aac" -> listOf("-hide_banner", "-loglevel", "error", "-ss", start.toString(), "-i", file.absolutePath, "-vn", "-c:a", "aac", "-b:a", "${bitrate}k", "-f", "adts", "-")
             else -> return@get call.invalidParameter("format", "mp3", "opus", "aac")
         }
 
-        val contentType = when(format.trim().lowercase()) {
+        val contentType = when(format) {
             "mp3" -> ContentType.parse("audio/mpeg")
             "opus" -> ContentType.parse("audio/webm")
             "aac" -> ContentType.parse("audio/aac")
