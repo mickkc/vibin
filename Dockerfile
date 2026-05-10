@@ -55,7 +55,7 @@ ENV CHROMEDRIVER /usr/bin/chromedriver
 RUN mkdir /app
 
 # Copy the backend jar and static frontend files
-COPY --from=build /home/gradle/src/build/libs/*.jar /app/backend.jar
+COPY --from=build /home/gradle/src/build/libs/vibin-all.jar /app/backend.jar
 COPY --from=frontend /tmp/app/build/web/ /app/frontend/
 
 ENV FRONTEND_DIR="/app/frontend"
