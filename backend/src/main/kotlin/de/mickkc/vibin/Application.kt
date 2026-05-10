@@ -16,10 +16,10 @@ fun main() {
 }
 
 val version: String
-    get() = "0.0.1-beta.6"
+    get() = "0.0.1-beta.8"
 
 val supportedAppVersions: List<String>
-    get() = listOf("0.0.1-beta.6")
+    get() = listOf("0.0.1-beta.8")
 
 fun Application.mainModule() {
     configureDatabase()

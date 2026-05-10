@@ -21,7 +21,7 @@ RUN gradle buildFatJar --no-daemon
 # Stage 3: Build Frontend
 FROM ghcr.io/cirruslabs/flutter:stable AS frontend
 
-ARG VIBIN_TAG=0.0.1-beta.6
+ARG VIBIN_TAG=0.0.1-beta.8
 
 # Install git
 RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
@@ -44,6 +44,7 @@ FROM debian:latest AS runtime
 # Install Chromium and ChromeDriver
 RUN apt-get update && apt-get install -y \
     openjdk-21-jre-headless \
+    ffmpeg \
     chromium \
     chromium-driver \
     && rm -rf /var/lib/apt/lists/*
