@@ -20,13 +20,6 @@
 
 <!-- TOC -->
   * [Features](#features)
-  * [Music Search Language](#music-search-language)
-    * [Search Operators](#search-operators)
-      * [Metadata Search](#-metadata-search)
-      * [Filters](#-filters)
-      * [Advanced Search](#-advanced-search)
-      * [Logical Operators](#-logical-operators)
-    * [Wildcards](#wildcards)
   * [Installation](#installation)
     * [Manual Installation](#manual-installation)
     * [Docker](#docker)
@@ -64,66 +57,6 @@
 </tr>
 </table>
 
-## Music Search Language
-
-Vibin features a powerful query language for precise music searching. All searches are **case-insensitive**.
-
-### Search Operators
-
-#### Metadata Search
-
-| Operator         | Description                    | Example                           |
-|------------------|--------------------------------|-----------------------------------|
-| `multiple words` | Search artist, album, or title | `never gonna give you up`         |
-| `t:`             | Search by **title**            | `t:"never gonna give you up"`     |
-| `a:`             | Search by **artist**           | `a:"rick astley"`                 |
-| `al:`            | Search by **album**            | `al:"whenever you need somebody"` |
-| `p:`             | Search by **playlist**         | `p:"best of 80s"`                 |
-| `c:`             | Search by **comment**          | `c:"chill vibes"`                 |
-
-#### Filters
-
-| Operator | Description         | Examples                                                                             |
-|----------|---------------------|--------------------------------------------------------------------------------------|
-| `y:`     | Year or year range  | `y:1987` or `y:1980-1994`<br>`y:-1990` (up to 1990)<br>`y:2000-` (from 2000)         |
-| `d:`     | Duration in seconds | `d:300` (exactly 5 min)<br>`d:180-240` (3-4 min)<br>`d:-120` (up to 2 min)           |
-| `b:`     | Bitrate in kbps     | `b:320` (exactly 320 kbps)<br>`b:128-256` (128-256 kbps)<br>`b:320-` (from 320 kbps) |
-| `e:`     | Explicit content    | `e:true` / `e:yes` / `e:1`<br>`e:false` / `e:no` / `e:0`                             |
-| `l:`     | Has lyrics          | `l:true` / `l:yes` / `l:1`<br>`l:false` / `l:no` / `l:0`                             |
-
-#### Advanced Search
-
-| Operator | Description               | Example                        |
-|----------|---------------------------|--------------------------------|
-| `lc:`    | Search **lyrics content** | `lc:"never gonna give you up"` |
-| `+tag`   | Include tag               | `+favorite`                    |
-| `-tag`   | Exclude tag               | `-chill`                       |
-
-#### Logical Operators
-
-Combine search criteria with `AND` and `OR` operators:
-
-```
-a:"rick astley" AND t:"never gonna give you up"
-a:"rick astley" AND e:false
-+chill AND (+lofi OR +jazz) AND more
-```
-
-**Operator Precedence:** `AND` > `OR`
-
-> **Note:** Use parentheses `()` to group conditions and control evaluation order.
-> Conditions without a prefix are treated as `AND` by default.
-> Escape quotes with backslash: `\"`
-
-### Wildcards
-
-| Wildcard | Description                        | Example                                                  |
-|----------|------------------------------------|----------------------------------------------------------|
-| `%`      | Matches any sequence of characters | `t:"never%you%"` matches "never gonna give you up"       |
-| `_`      | Matches any single characte r      | `a:"rick_astley"` matches "rick astley" or "rick-astley" |
-
----
-
 ## Installation
 
 ### Manual Installation
@@ -132,7 +65,17 @@ a:"rick astley" AND e:false
 
 ### Docker
 
-> Coming soon
+1. Make sure you have [Docker](https://docs.docker.com/engine/install) and [Docker Compose](https://docs.docker.com/compose/install/)
+   installed on your system.
+2. Download / copy the [example docker-compose.yml](docker-compose.yml.example) file and the [example .env](.env.example) file and 
+   modify them to your needs.
+3. Run the following command:
+    ```bash
+    docker compose up -d
+    ```
+4. You can now access the application at `http://localhost:8080`. (Or the port you specified in the docker-compose.yml file.)
+5. Login with the default credentials (username `Admin`, password `admin`)
+6. CHANGE THE PASSWORD OF THE ADMIN USER IMMEDIATELY!
 
 ### Apps
 

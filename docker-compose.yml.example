@@ -1,8 +1,6 @@
 services:
   vibin:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: mickkc/vibin
     container_name: vibin
     ports:
       - "8080:8080"
