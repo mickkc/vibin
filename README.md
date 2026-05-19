@@ -10,6 +10,8 @@
 [![Lines of Code](https://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain&subject=Lines%20of%20Code&status=${lineOfCode}&color=blue)](https://jks.ndu.wtf/job/vibin-server/job/main/)
 [![Code Coverage](https://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain&subject=Coverage&status=${instructionCoverage}&color=${colorInstructionCoverage})](https://jks.ndu.wtf/job/vibin-server/job/main/)
 [![License](https://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain&subject=License&status=GPLv3&color=teal)](LICENSE)
+[![Docker Pulls](https://img.shields.io/docker/pulls/mickkc/vibin)](https://hub.docker.com/r/mickkc/vibin)
+![Docker Image Version](https://img.shields.io/docker/v/mickkc/vibin)
 
 </div>
 
