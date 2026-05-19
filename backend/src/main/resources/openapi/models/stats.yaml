@@ -36,3 +36,8 @@ GlobalStats:
       format: int64
       description: Total number of track plays across all users
       example: 50000
+    totalListenDuration:
+      type: integer
+      format: int64
+      description: Total duration of all users listen activity in seconds
+      example: 700000

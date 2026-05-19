@@ -198,3 +198,38 @@ Global:
           application/json:
             schema:
               $ref: '../models/error.yaml#/Error'
+
+TrackListenDuration:
+  get:
+    summary: Get the duration on how long the current user listened to a specific track
+    operationId: getUserListenDurationForTrack
+    tags:
+      - Stats
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: The Id of the track
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: Listen duration
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                duration:
+                  type: integer
+                  format: int64
+                  description: The total duration the user has listened to the specified track, in seconds
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

@@ -173,6 +173,9 @@ paths:
   /api/stats/global:
     $ref: 'methods/stats.yaml#/Global'
 
+  /api/stats/tracks/{id}/duration:
+    $ref: 'methods/stats.yaml#/TrackListenDuration'
+
   # ▀█▀ ▄▀█ █▀▀ █▀
   # ░█░ █▀█ █▄█ ▄█
 
