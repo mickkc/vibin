@@ -7,9 +7,11 @@ import io.ktor.server.routing.*
 import de.mickkc.vibin.db.ListenType
 import de.mickkc.vibin.dto.StatisticsDto
 import de.mickkc.vibin.dto.UserActivityDto
+import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.AlbumRepo
 import de.mickkc.vibin.repos.ArtistRepo
 import de.mickkc.vibin.repos.ListenRepo
+import de.mickkc.vibin.repos.ListenTrackingRepo
 import de.mickkc.vibin.repos.PlaylistRepo
 import de.mickkc.vibin.repos.TagRepo
 import de.mickkc.vibin.repos.TrackRepo
@@ -141,7 +143,19 @@ fun Application.configureStatisticRoutes() = routing {
                 totalArtists = ArtistRepo.count(),
                 totalPlaylists = PlaylistRepo.count(),
                 totalUsers = UserRepo.count(),
-                totalPlays = ListenRepo.getTotalListenedTracks()
+                totalPlays = ListenRepo.getTotalListenedTracks(),
+                totalListenDuration = ListenTrackingRepo.getGlobalListenDuration()
+            ))
+        }
+
+        getP("/api/stats/tracks/{id}/duration", PermissionType.VIEW_TRACKS) {
+            val userId = call.getUserId() ?: return@getP call.forbidden()
+            val trackId = call.pathParameters["id"]?.toLongOrNull() ?: return@getP call.missingParameter("id")
+
+            val duration = ListenTrackingRepo.getUserListenDurationForTrack(trackId, userId)
+
+            call.respond(mapOf(
+                "duration" to duration
             ))
         }
     }

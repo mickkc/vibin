@@ -11,4 +11,5 @@ data class StatisticsDto(
     val totalPlaylists: Long,
     val totalUsers: Long,
     val totalPlays: Long,
+    val totalListenDuration: Long
 )

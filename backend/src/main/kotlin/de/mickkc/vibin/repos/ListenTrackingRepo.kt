@@ -2,9 +2,12 @@ package de.mickkc.vibin.repos
 
 import de.mickkc.vibin.db.ListenType
 import de.mickkc.vibin.db.TrackListenDurationEntity
+import de.mickkc.vibin.db.TrackListenDurationTable
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.tracks.TrackEntity
 import de.mickkc.vibin.utils.DateTimeUtils
+import org.jetbrains.exposed.sql.Sum
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.round
@@ -182,5 +185,48 @@ object ListenTrackingRepo {
     fun deleteSessionData(sessionId: String) {
         listenMap.remove(sessionId)
         offsetsMap.remove(sessionId)
+    }
+
+    fun getGlobalListenDuration() = transaction {
+        val rs = TrackListenDurationTable.select(Sum(
+            expr = TrackListenDurationTable.listenedDurationSeconds,
+            columnType = TrackListenDurationTable.listenedDurationSeconds.columnType))
+            .execute(this)
+
+        if (rs != null && rs.next()) {
+            return@transaction rs.getLong(1)
+        }
+
+        return@transaction 0L
+    }
+
+    fun getGlobalListenDurationForTrack(trackId: Long): Long = transaction {
+        val rs = TrackListenDurationTable
+            .select(Sum(
+                expr = TrackListenDurationTable.listenedDurationSeconds,
+                columnType = TrackListenDurationTable.listenedDurationSeconds.columnType))
+            .where { TrackListenDurationTable.trackId eq trackId }
+            .execute(this)
+
+        if (rs != null && rs.next()) {
+            return@transaction rs.getLong(1)
+        }
+
+        return@transaction 0L
+    }
+
+    fun getUserListenDurationForTrack(trackId: Long, userId: Long): Long = transaction {
+        val rs = TrackListenDurationTable
+            .select(Sum(
+                expr = TrackListenDurationTable.listenedDurationSeconds,
+                columnType = TrackListenDurationTable.listenedDurationSeconds.columnType))
+            .where { (TrackListenDurationTable.userId eq userId) and (TrackListenDurationTable.trackId eq trackId) }
+            .execute(this)
+
+        if (rs != null && rs.next()) {
+            return@transaction rs.getLong(1)
+        }
+
+        return@transaction 0L
     }
 }
