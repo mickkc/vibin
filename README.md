@@ -1,6 +1,6 @@
 <div align="center">
 
-![Banner](assets/Banner-MD.jpg)
+![Banner](assets/banner.png)
 
 ### Your Personal Music Streaming Server
 
