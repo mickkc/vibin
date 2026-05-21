@@ -2,7 +2,9 @@ package de.mickkc.vibin.routes
 
 import de.mickkc.vibin.dto.PaginatedDto
 import de.mickkc.vibin.dto.tracks.TrackEditDto
+import de.mickkc.vibin.dto.tracks.batch.BatchEditDto
 import de.mickkc.vibin.permissions.PermissionType
+import de.mickkc.vibin.repos.BatchEditRepo
 import de.mickkc.vibin.repos.ColorSchemeRepo
 import de.mickkc.vibin.repos.LyricsRepo
 import de.mickkc.vibin.repos.TrackRepo
@@ -149,6 +151,17 @@ fun Application.configureTrackRoutes() = routing {
             val imageId = TrackRepo.getCoverId(trackId)
 
             call.respondRedirect("/api/images/${if (imageId != null) "by-id/${imageId}" else "default" }?type=track&quality=$quality")
+        }
+
+        postP("/api/tracks/edit/batch", PermissionType.MANAGE_TRACKS) {
+            val userId = call.getUserId()
+                ?: return@postP call.unauthorized()
+
+            val editDto = call.receive<BatchEditDto>()
+
+            val result = BatchEditRepo.batchEdit(editDto, userId)
+
+            call.respond(result)
         }
     }
 }

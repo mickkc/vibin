@@ -9,6 +9,7 @@ import de.mickkc.vibin.utils.DateTimeUtils
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.Sum
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.statements.UpdateStatement
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
@@ -248,5 +249,18 @@ object ListenTrackingRepo {
             ) { statement: UpdateStatement ->
                 statement[TrackListenDurationTable.trackId] = null
             }
+    }
+
+    /**
+     * Removes all listening duration from a track.
+     *
+     * Only do this if specifically requested by the user.
+     * If a track is deleted, use @see trackDeleted instead!
+     *
+     * @param trackId The track id to remove all durations for.
+     */
+    fun deleteAllForTrack(trackId: Long) = transaction {
+        TrackListenDurationTable
+            .deleteWhere { TrackListenDurationTable.trackId eq trackId }
     }
 }
