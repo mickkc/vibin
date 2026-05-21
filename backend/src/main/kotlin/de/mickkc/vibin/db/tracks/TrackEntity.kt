@@ -21,6 +21,7 @@ import de.mickkc.vibin.repos.LyricsRepo
 import de.mickkc.vibin.repos.PlaylistTrackRepo
 import de.mickkc.vibin.repos.TrackRelationRepo
 import de.mickkc.vibin.utils.PathUtils
+import kotlinx.css.tr
 
 object TrackTable : ModifiableLongIdTable("track") {
     val title = varchar("title", 255).index()
@@ -104,15 +105,18 @@ class TrackEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, TrackTable) {
         // Remove associations to playlists
         PlaylistTrackRepo.deleteTrackFromAllPlaylists(this)
 
-        // Delete the track file from the filesystem
-        PathUtils.getTrackFileFromPath(path).delete()
-
         // Remove associations to lyrics
         LyricsRepo.deleteLyrics(this)
 
         // Delete track relations
         TrackRelationRepo.deleteAllRelationsForTrack(trackId)
 
+        val trackPath = this.path
+
         super.delete()
+
+        // Delete the track file from the filesystem after it has been deleted ffrom the database
+        // In case the database deletion fails, this will not delete the file
+        PathUtils.getTrackFileFromPath(trackPath).delete()
     }
 }
