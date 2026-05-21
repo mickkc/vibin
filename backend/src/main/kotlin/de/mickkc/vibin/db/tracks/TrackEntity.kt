@@ -16,6 +16,7 @@ import de.mickkc.vibin.db.images.ImageEntity
 import de.mickkc.vibin.db.images.ImageTable
 import de.mickkc.vibin.db.tags.TagEntity
 import de.mickkc.vibin.db.tags.TrackTagConnection
+import de.mickkc.vibin.repos.ListenTrackingRepo
 import de.mickkc.vibin.repos.LyricsRepo
 import de.mickkc.vibin.repos.PlaylistTrackRepo
 import de.mickkc.vibin.repos.TrackRelationRepo
@@ -96,6 +97,9 @@ class TrackEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, TrackTable) {
 
         // Remove associations to tags
         TrackTagConnection.deleteWhere { TrackTagConnection.track eq trackId }
+
+        // Remove associations to listening durations
+        ListenTrackingRepo.trackDeleted(trackId)
 
         // Remove associations to playlists
         PlaylistTrackRepo.deleteTrackFromAllPlaylists(this)

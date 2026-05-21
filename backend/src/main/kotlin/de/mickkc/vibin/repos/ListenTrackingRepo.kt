@@ -6,9 +6,12 @@ import de.mickkc.vibin.db.TrackListenDurationTable
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.tracks.TrackEntity
 import de.mickkc.vibin.utils.DateTimeUtils
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.Sum
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.statements.UpdateStatement
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.update
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.round
 
@@ -228,5 +231,22 @@ object ListenTrackingRepo {
         }
 
         return@transaction 0L
+    }
+
+    /**
+     * Removes a track from all `TrackListenDurationTable` rows by setting `trackId` to null.
+     *
+     * They keep getting stored in the database, because they still count as something users have listened to in the
+     * past.
+     *
+     * @param trackId The track id to remove from all tracked listening durations
+     */
+    fun trackDeleted(trackId: Long) = transaction {
+        TrackListenDurationTable
+            .update(
+                where = { TrackListenDurationTable.trackId eq trackId }
+            ) { statement: UpdateStatement ->
+                statement[TrackListenDurationTable.trackId] = null
+            }
     }
 }
