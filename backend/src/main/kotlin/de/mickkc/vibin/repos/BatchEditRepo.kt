@@ -1,5 +1,8 @@
 package de.mickkc.vibin.repos
 
+import de.mickkc.vibin.db.albums.AlbumEntity
+import de.mickkc.vibin.db.playlists.PlaylistEntity
+import de.mickkc.vibin.db.tags.TagEntity
 import de.mickkc.vibin.db.tracks.TrackEntity
 import de.mickkc.vibin.db.tracks.TrackTable
 import de.mickkc.vibin.dto.tracks.batch.*
@@ -12,6 +15,19 @@ import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+
+private data class TrackVirtualState(
+    var title: String,
+    var comment: String,
+    var tags: MutableList<TagEntity>,
+    var playlists: MutableList<PlaylistEntity>,
+    var listenDuration: Long,
+    var album: AlbumEntity,
+    var bitrate: Int?,
+    var channels: Int?,
+    var sampleRate: Int?,
+    var duration: Long?
+)
 
 object BatchEditRepo {
 
@@ -35,36 +51,49 @@ object BatchEditRepo {
         try {
             tracks.forEach { track ->
 
+                val state = TrackVirtualState(
+                    title = track.title,
+                    comment = track.comment,
+                    tags = track.tags.toMutableList(),
+                    playlists = PlaylistTrackRepo.getPlaylistsWithTrack(track, userId).toMutableList(),
+                    listenDuration = ListenTrackingRepo.getGlobalListenDurationForTrack(track.id.value),
+                    album = track.album,
+                    bitrate = track.bitrate,
+                    channels = track.channels,
+                    sampleRate = track.sampleRate,
+                    duration = track.duration
+                )
+
                 val trackChanges = mutableListOf<BatchEditResultDtoChange?>()
 
                 edit.actions.forEach { action ->
                     when (action.actionType) {
                         BatchEditActionType.ADD_TAGS -> {
-                            trackChanges += batchEditTags(track, action.data["ids"], edit.dryRun, false)
+                            trackChanges += batchEditTags(track, state, action.data["ids"], edit.dryRun, false)
                         }
                         BatchEditActionType.REMOVE_TAGS -> {
-                            trackChanges += batchEditTags(track, action.data["ids"], edit.dryRun, true)
+                            trackChanges += batchEditTags(track, state, action.data["ids"], edit.dryRun, true)
                         }
                         BatchEditActionType.ADD_TO_PLAYLIST -> {
-                            trackChanges += batchEditPlaylist(track, action.data["id"], edit.dryRun, userId, false)
+                            trackChanges += batchEditPlaylist(track, state, action.data["id"], edit.dryRun, userId, false)
                         }
                         BatchEditActionType.REMOVE_FROM_PLAYLIST -> {
-                            trackChanges += batchEditPlaylist(track, action.data["id"], edit.dryRun, userId, true)
+                            trackChanges += batchEditPlaylist(track, state, action.data["id"], edit.dryRun, userId, true)
                         }
                         BatchEditActionType.TITLE -> {
-                            trackChanges += batchEditRename(track, action.data["from"], action.data["to"], edit.dryRun)
+                            trackChanges += batchEditRename(track, state, action.data["from"], action.data["to"], edit.dryRun)
                         }
                         BatchEditActionType.CHANGE_COMMENT -> {
-                            trackChanges += batchEditComment(track, action.data["from"], action.data["to"], edit.dryRun)
+                            trackChanges += batchEditComment(track, state, action.data["from"], action.data["to"], edit.dryRun)
                         }
                         BatchEditActionType.REMOVE_LISTEN_DURATION -> {
-                            trackChanges += batchEditRemoveListenDuration(track, edit.dryRun)
+                            trackChanges += batchEditRemoveListenDuration(track, state, edit.dryRun)
                         }
                         BatchEditActionType.REGENERATE_FILE_METADATA -> {
-                            trackChanges += batchRescanFileMetadata(track, edit.dryRun)
+                            trackChanges += batchRescanFileMetadata(track, state, edit.dryRun)
                         }
                         BatchEditActionType.CHANGE_ALBUM -> {
-                            trackChanges += batchEditAlbum(track, action.data["id"], edit.dryRun)
+                            trackChanges += batchEditAlbum(track, state, action.data["id"], edit.dryRun)
                         }
                     }
                 }
@@ -92,9 +121,8 @@ object BatchEditRepo {
         )
     }
 
-    fun batchEditTags(track: TrackEntity, tagIds: Any?, dryRun: Boolean, remove: Boolean): BatchEditResultDtoChange? {
-        val currentTags = track.tags.toMutableList()
-        val tagStrBefore = currentTags.joinToString(", ") { it.name }
+    private fun batchEditTags(track: TrackEntity, state: TrackVirtualState, tagIds: Any?, dryRun: Boolean, remove: Boolean): BatchEditResultDtoChange? {
+        val tagStrBefore = state.tags.joinToString(", ") { it.name }
 
         if (tagIds == null || tagIds !is List<*>) {
             throw BatchEditException("Invalid data: Tag ids is not a List.")
@@ -107,15 +135,15 @@ object BatchEditRepo {
                 ?: throw BatchEditException("Invalid data: Tag id is not a number.")
 
             if (remove) {
-                if (currentTags.any { it.id.value == tagIdLong }) {
-                    currentTags.removeAll { it.id.value == tagIdLong }
+                if (state.tags.any { it.id.value == tagIdLong }) {
+                    state.tags.removeAll { it.id.value == tagIdLong }
                     modifiedTags = true
                 }
             } else {
-                if (!currentTags.any { it.id.value == tagIdLong }) {
+                if (!state.tags.any { it.id.value == tagIdLong }) {
                     val tag = TagRepo.getById(tagIdLong)
                         ?: throw BatchEditException("Invalid data: Tag with id $tagIdLong not found.")
-                    currentTags += tag
+                    state.tags += tag
                     modifiedTags = true
                 }
             }
@@ -123,23 +151,22 @@ object BatchEditRepo {
 
         if (modifiedTags) {
             if (!dryRun) {
-                track.tags = SizedCollection(currentTags)
+                track.tags = SizedCollection(state.tags)
             }
 
             return BatchEditResultDtoChange(
                 track = toMinimalDtoInternal(track),
                 type = BatchEditResultDtoChangeType.TAGS,
                 before = tagStrBefore,
-                after = currentTags.joinToString(", ") { it.name }
+                after = state.tags.joinToString(", ") { it.name }
             )
         }
 
         return null
     }
 
-    fun batchEditPlaylist(track: TrackEntity, playlistId: Any?, dryRun: Boolean, userId: Long, remove: Boolean): BatchEditResultDtoChange? {
-        val currentPlaylists = PlaylistTrackRepo.getPlaylistsWithTrack(track, userId).toMutableList()
-        val playlistStrBefore = currentPlaylists.joinToString(", ") { it.name }
+    private fun batchEditPlaylist(track: TrackEntity, state: TrackVirtualState, playlistId: Any?, dryRun: Boolean, userId: Long, remove: Boolean): BatchEditResultDtoChange? {
+        val playlistStrBefore = state.playlists.joinToString(", ") { it.name }
 
         val playlistIdLong = (playlistId as? Number)?.toLong()
             ?: throw BatchEditException("Invalid data: Playlist id is not a number.")
@@ -147,9 +174,9 @@ object BatchEditRepo {
         var modifiedPlaylist = false
 
         if (remove) {
-            val matchingPlaylist = currentPlaylists.find { it.id.value == playlistIdLong }
+            val matchingPlaylist = state.playlists.find { it.id.value == playlistIdLong }
             if (matchingPlaylist != null) {
-                currentPlaylists.remove(matchingPlaylist)
+                state.playlists.remove(matchingPlaylist)
                 if (!dryRun) {
                     PlaylistTrackRepo.removeTrackFromPlaylist(matchingPlaylist, track)
                 }
@@ -157,12 +184,12 @@ object BatchEditRepo {
             }
         }
         else {
-            if (!currentPlaylists.any { it.id.value == playlistIdLong }) {
+            if (!state.playlists.any { it.id.value == playlistIdLong }) {
                 val playlist = PlaylistRepo.getById(playlistIdLong, userId)
                     ?: throw BatchEditException("Invalid data: Playlist with id $playlistIdLong not found.")
                 val user = UserRepo.getById(userId)
                     ?: throw BatchEditException("Invalid data: User with id $userId not found.")
-                currentPlaylists += playlist
+                state.playlists += playlist
                 if (!dryRun) {
                     PlaylistTrackRepo.addTrackToPlaylist(playlist, track, user)
                 }
@@ -171,7 +198,7 @@ object BatchEditRepo {
         }
 
         if (modifiedPlaylist) {
-            val playlistStringAfter = currentPlaylists.joinToString(", ") { it.name }
+            val playlistStringAfter = state.playlists.joinToString(", ") { it.name }
             return BatchEditResultDtoChange(
                 track = toMinimalDtoInternal(track),
                 type = BatchEditResultDtoChangeType.PLAYLIST,
@@ -183,17 +210,18 @@ object BatchEditRepo {
         return null
     }
 
-    fun batchEditRename(track: TrackEntity, from: Any?, to: Any?, dryRun: Boolean): BatchEditResultDtoChange? {
+    private fun batchEditRename(track: TrackEntity, state: TrackVirtualState, from: Any?, to: Any?, dryRun: Boolean): BatchEditResultDtoChange? {
         if (from !is String)
             throw BatchEditException("Invalid data: 'from' must be a string.")
         if (to !is String)
             throw BatchEditException("Invalid data: 'to' must be a string.")
 
-        val oldTitle = track.title
+        val oldTitle = state.title
 
-        val newTitle = Regex(from).replace(track.title, to)
+        val newTitle = Regex(from).replace(state.title, to)
 
         if (newTitle != oldTitle) {
+            state.title = newTitle
             if (!dryRun) {
                 track.title = newTitle
             }
@@ -208,17 +236,18 @@ object BatchEditRepo {
         return null
     }
 
-    fun batchEditComment(track: TrackEntity, from: Any?, to: Any?, dryRun: Boolean): BatchEditResultDtoChange? {
+    private fun batchEditComment(track: TrackEntity, state: TrackVirtualState, from: Any?, to: Any?, dryRun: Boolean): BatchEditResultDtoChange? {
         if (from !is String)
             throw BatchEditException("Invalid data: 'from' must be a string.")
         if (to !is String)
             throw BatchEditException("Invalid data: 'to' must be a string.")
 
-        val oldComment = track.comment
+        val oldComment = state.comment
 
-        val newComment = Regex(from).replace(track.comment, to)
+        val newComment = Regex(from).replace(state.comment, to)
 
         if (newComment != oldComment) {
+            state.comment = newComment
             if (!dryRun) {
                 track.comment = newComment
             }
@@ -233,17 +262,17 @@ object BatchEditRepo {
         return null
     }
 
-    fun batchEditRemoveListenDuration(track: TrackEntity, dryRun: Boolean): BatchEditResultDtoChange? {
-        val listenDuration = ListenTrackingRepo.getGlobalListenDurationForTrack(track.id.value)
-
-        if (listenDuration > 0) {
+    private fun batchEditRemoveListenDuration(track: TrackEntity, state: TrackVirtualState, dryRun: Boolean): BatchEditResultDtoChange? {
+        if (state.listenDuration > 0) {
+            val oldListenDuration = state.listenDuration
+            state.listenDuration = 0
             if (!dryRun) {
                 ListenTrackingRepo.deleteAllForTrack(track.id.value)
             }
             return BatchEditResultDtoChange(
                 track = toMinimalDtoInternal(track),
                 type = BatchEditResultDtoChangeType.LISTEN_DURATION,
-                before = "${listenDuration}s",
+                before = "${oldListenDuration}s",
                 after = "0s"
             )
         }
@@ -251,24 +280,29 @@ object BatchEditRepo {
         return null
     }
 
-    fun batchRescanFileMetadata(track: TrackEntity, dryRun: Boolean): BatchEditResultDtoChange? {
+    private fun batchRescanFileMetadata(track: TrackEntity, state: TrackVirtualState, dryRun: Boolean): BatchEditResultDtoChange? {
 
-        val oldMetadataStr = "Bitrate: ${track.bitrate} kbps, Channels: ${track.channels}, Sample rate: ${track.sampleRate}, Duration: ${track.duration} ms"
+        val oldMetadataStr = "Bitrate: ${state.bitrate} kbps, Channels: ${state.channels}, Sample rate: ${state.sampleRate}, Duration: ${state.duration} ms"
 
         val file = PathUtils.getTrackFileFromPath(track.path)
 
         val preParseData = PreParser.preParse(file)
 
-        val newBitrate = preParseData.bitrate?.toIntOrNull() ?: track.bitrate
-        val newChannelsInt = preParseData.getChannelsInt() ?: track.channels
-        val newSampleRate = preParseData.sampleRate?.toIntOrNull() ?: track.sampleRate
+        val newBitrate = preParseData.bitrate?.toIntOrNull() ?: state.bitrate
+        val newChannelsInt = preParseData.getChannelsInt() ?: state.channels
+        val newSampleRate = preParseData.sampleRate?.toIntOrNull() ?: state.sampleRate
 
         if (
-            newBitrate != track.bitrate ||
-            newChannelsInt != track.channels ||
-            preParseData.durationMs != track.duration ||
-            newSampleRate != track.sampleRate
+            newBitrate != state.bitrate ||
+            newChannelsInt != state.channels ||
+            preParseData.durationMs != state.duration ||
+            newSampleRate != state.sampleRate
         ) {
+            state.bitrate = newBitrate
+            state.channels = newChannelsInt
+            state.duration = preParseData.durationMs
+            state.sampleRate = newSampleRate
+
             if (!dryRun) {
                 track.bitrate = newBitrate
                 track.channels = newChannelsInt
@@ -289,14 +323,15 @@ object BatchEditRepo {
         return null
     }
 
-    fun batchEditAlbum(track: TrackEntity, albumId: Any?, dryRun: Boolean): BatchEditResultDtoChange? {
+    private fun batchEditAlbum(track: TrackEntity, state: TrackVirtualState, albumId: Any?, dryRun: Boolean): BatchEditResultDtoChange? {
         val albumIdLong = (albumId as? Number)?.toLong()
             ?: throw BatchEditException("Invalid data: Album id is not a number.")
 
-        val oldAlbum = track.album
+        val oldAlbum = state.album
         if (oldAlbum.id.value != albumIdLong) {
             val newAlbum = AlbumRepo.getById(albumIdLong)
                 ?: throw BatchEditException("Invalid data: Album with id $albumIdLong not found.")
+            state.album = newAlbum
             if (!dryRun) {
                 track.album = newAlbum
             }
