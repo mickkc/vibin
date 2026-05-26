@@ -53,7 +53,10 @@ fun Application.configureUserRoutes() = routing {
 
         postP("/api/users", PermissionType.CREATE_USERS) {
             val userEditDto = call.receive<UserEditDto>()
+            val currentUser = call.getUser() ?: return@postP call.unauthorized()
 
+            if (userEditDto.isAdmin != null && userEditDto.isAdmin && !currentUser.isAdmin)
+                return@postP call.forbidden()
             if (userEditDto.username == null)
                 return@postP call.missingParameter("username")
             else if (UserRepo.checkUsernameExists(userEditDto.username))
@@ -66,7 +69,12 @@ fun Application.configureUserRoutes() = routing {
         putP("/api/users/{userId}") {
             val userId = call.getLongParameter("userId") ?: return@putP
             val currentUser = call.getUser() ?: return@putP call.unauthorized()
+            val user = UserRepo.getById(userId) ?: return@putP call.notFound()
 
+            val userEditDto = call.receive<UserEditDto>()
+
+            if (userEditDto.isAdmin != null && userEditDto.isAdmin != user.isAdmin && !currentUser.isAdmin)
+                return@putP call.forbidden()
             if (userId == currentUser.id.value) {
                 if (!call.hasPermissions(PermissionType.MANAGE_OWN_USER))
                     return@putP call.forbidden(PermissionType.MANAGE_OWN_USER)
@@ -75,9 +83,6 @@ fun Application.configureUserRoutes() = routing {
                     return@putP call.forbidden(PermissionType.MANAGE_USERS)
             }
 
-            val user = UserRepo.getById(userId) ?: return@putP call.notFound()
-
-            val userEditDto = call.receive<UserEditDto>()
 
             if (userEditDto.username != null && userEditDto.username != user.username) {
                 if (UserRepo.checkUsernameExists(userEditDto.username))
@@ -85,7 +90,7 @@ fun Application.configureUserRoutes() = routing {
             }
 
             if (userEditDto.password != null) {
-                val oldHashedPassword = userEditDto.password.let { CryptoUtil.hashPassword(it, user.salt) }
+                val oldHashedPassword = userEditDto.oldPassword?.let { CryptoUtil.hashPassword(it, user.salt) }
                 if (!oldHashedPassword.contentEquals(user.passwordHash) && !currentUser.isAdmin) {
                     return@putP call.forbidden()
                 }
