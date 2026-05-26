@@ -25,9 +25,13 @@ fun Application.configureFavoriteRoutes() = routing {
             }
         }
 
-        getP("/api/favorites/{userId}", PermissionType.VIEW_USERS) {
-
+        getP("/api/favorites/{userId}") {
+            val requestingUserId = call.getUserId()
             val userId = call.getLongParameter("userId") ?: return@getP
+
+            if (requestingUserId != userId && !call.hasPermissions(PermissionType.VIEW_USERS)) {
+                return@getP call.forbidden(PermissionType.VIEW_USERS)
+            }
 
             val favorites = FavoriteRepo.getFavoriteDtoForUser(userId)
 
@@ -65,7 +69,7 @@ fun Application.configureFavoriteRoutes() = routing {
             call.success()
         }
 
-        getP("/api/favorites/{entityType}/check/{entityId}", PermissionType.VIEW_USERS) {
+        getP("/api/favorites/{entityType}/check/{entityId}") {
 
             val userId = call.getUserId() ?: return@getP call.unauthorized()
 

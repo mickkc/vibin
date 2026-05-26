@@ -29,13 +29,18 @@ fun Application.configureUserRoutes() = routing {
             )
         }
 
-        getP("/api/users/me", PermissionType.VIEW_USERS) {
+        getP("/api/users/me") {
             val user = call.getUser() ?: return@getP call.notFound()
             call.respond(UserRepo.toDto(user))
         }
 
-        getP("/api/users/{userId}", PermissionType.VIEW_USERS) {
+        getP("/api/users/{userId}") {
             val userId = call.getLongParameter("userId") ?: return@getP
+            val requestingUserId = call.getUserId()
+            if (requestingUserId != userId && !call.hasPermissions(PermissionType.VIEW_USERS)) {
+                return@getP call.forbidden(PermissionType.VIEW_USERS)
+            }
+
             val user = UserRepo.getById(userId) ?: return@getP call.notFound()
             call.respond(UserRepo.toDto(user))
         }
