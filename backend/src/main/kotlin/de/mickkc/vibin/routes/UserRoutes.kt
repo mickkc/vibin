@@ -123,8 +123,14 @@ fun Application.configureUserRoutes() = routing {
             call.success()
         }
 
-        getP("/api/users/{userId}/pfp", PermissionType.VIEW_USERS) {
+        getP("/api/users/{userId}/pfp") {
+            val requestinguserId = call.getUserId() ?: return@getP call.unauthorized()
             val userId = call.getLongParameter("userId") ?: return@getP
+
+            if (requestinguserId != userId && !call.hasPermissions(PermissionType.VIEW_USERS)) {
+                return@getP call.forbidden(PermissionType.VIEW_USERS)
+            }
+
             val quality = call.getIntOrDefault("quality", 0) ?: return@getP
             val imageId = UserRepo.getProfilePictureId(userId)
 
