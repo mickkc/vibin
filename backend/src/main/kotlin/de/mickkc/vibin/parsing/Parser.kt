@@ -32,6 +32,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.net.InetAddress
+import java.net.MalformedURLException
 import java.net.URL
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -259,17 +260,23 @@ object Parser {
             }
         }
 
-        val parsedUrl = URL(url)
-        if (parsedUrl.protocol !in listOf("http", "https")) {
-            logger.warn("Non-http(s) url provided to downloadCoverImage: $url")
-            return null
-        }
+        try {
+            val parsedUrl = URL(url)
+            if (parsedUrl.protocol !in listOf("http", "https")) {
+                logger.warn("Non-http(s) url provided to downloadCoverImage: $url")
+                return null
+            }
 
-        val addr = withContext(Dispatchers.IO) {
-            InetAddress.getByName(parsedUrl.host)
+            val addr = withContext(Dispatchers.IO) {
+                InetAddress.getByName(parsedUrl.host)
+            }
+            if (addr.isSiteLocalAddress || addr.isLoopbackAddress || addr.isLinkLocalAddress) {
+                logger.warn("Local/Loopback address provided to downloadCoverImage: $url")
+                return null
+            }
         }
-        if (addr.isSiteLocalAddress || addr.isLoopbackAddress || addr.isLinkLocalAddress) {
-            logger.warn("Local/Loopback address provided to downloadCoverImage: $url")
+        catch (e: MalformedURLException) {
+            logger.warn("Malformed url provided to downloadCoverImage: $url", e)
             return null
         }
 
