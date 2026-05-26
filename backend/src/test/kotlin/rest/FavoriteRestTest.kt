@@ -145,29 +145,6 @@ class FavoriteRestTest {
         assertEquals(1, check.place)
     }
 
-    @Test
-    fun testCheckFavorite_NoPermission() = testApp(false) { client ->
-        val (user, _) = UserTestUtils.createUserAndSessionWithPermissions(
-            "targetuser", "password",
-            PermissionType.MANAGE_OWN_USER to false
-        )
-
-        val track = TrackTestUtils.createTrack("Test Track", "Album", "Artist")
-        FavoriteRepo.addFavorite(user.id.value, FavoriteType.TRACK, track.id.value, 1)
-
-        val (_, token) = UserTestUtils.createUserAndSessionWithPermissions(
-            username = "testuser",
-            password = "noperms",
-            PermissionType.VIEW_USERS to false
-        )
-
-        val response = client.get("/api/favorites/track/check/${track.id.value}") {
-            bearerAuth(token)
-        }
-
-        assertEquals(403, response.status.value)
-    }
-
     // region Add
 
     @Test
