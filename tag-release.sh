@@ -11,7 +11,7 @@ usage() {
 
 TAG="$1"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VIBIN_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+VIBIN_DIR="$(cd "$SCRIPT_DIR" && pwd)"
 VIBIN_APP_DIR="$(cd "$VIBIN_DIR/../vibin-app" && pwd)"
 
 die() { echo "error: $*" >&2; exit 1; }
@@ -43,4 +43,9 @@ git -C "$VIBIN_DIR" push origin "$TAG"
 echo "==> Pushing vibin-app tag"
 git -C "$VIBIN_APP_DIR" push origin "$TAG"
 
-echo "==> Done — both repos tagged and pushed as '$TAG'"
+echo ""
+echo "============================== Done! =============================="
+
+echo "==> Pipeline: https://jks.ndu.wtf/job/Vibin'%20Docker%20release/view/tags/job/$TAG/"
+echo "==> Server src: https://codeberg.org/mickkc/vibin/src/tag/$TAG"
+echo "==> App src: https://codeberg.org/mickkc/vibin-app/src/tag/$TAG"
