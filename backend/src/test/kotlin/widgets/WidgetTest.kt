@@ -433,9 +433,9 @@ class WidgetTest {
         val track2 = TrackTestUtils.createTrack("Track 2", "Album", "Artist")
 
         // Record some listens
-        ListenRepo.listenedTo(user.id.value, track1.id.value, ListenType.TRACK)
-        ListenRepo.listenedTo(user.id.value, track2.id.value, ListenType.TRACK)
-        ListenRepo.listenedTo(user.id.value, track1.id.value, ListenType.TRACK, at = DateTimeUtils.now() - 24 * 60 * 60)
+        ListenTestUtils.listenedToTrack(user, track1, 120)
+        ListenTestUtils.listenedToTrack(user, track2, 120)
+        ListenTestUtils.listenedToTrack(user, track1, 120, at = DateTimeUtils.now() - 1.days.inWholeSeconds)
 
         val ctx = createContext(userId = user.id.value)
         val html = WidgetBuilder.build(listOf(WidgetType.SIMPLE_ACTIVITY), ctx)
@@ -477,9 +477,9 @@ class WidgetTest {
         val track2 = TrackTestUtils.createTrack("Track 2", "Album", "Artist")
 
         // Record some listens
-        ListenRepo.listenedTo(user.id.value, track1.id.value, ListenType.TRACK)
-        ListenRepo.listenedTo(user.id.value, track2.id.value, ListenType.TRACK)
-        ListenRepo.listenedTo(user.id.value, track1.id.value, ListenType.TRACK, at = DateTimeUtils.now() - 1.days.inWholeSeconds)
+        ListenTestUtils.listenedToTrack(user, track1, 120)
+        ListenTestUtils.listenedToTrack(user, track2, 120)
+        ListenTestUtils.listenedToTrack(user, track1, 120, at = DateTimeUtils.now() - 1.days.inWholeSeconds)
 
         val ctx = createContext(userId = user.id.value)
         val html = WidgetBuilder.build(listOf(WidgetType.ACTIVITY), ctx)
@@ -519,21 +519,21 @@ class WidgetTest {
         assertEquals(4, statCards.size)
 
         val expectedStats = listOf(
-            if (today.dayOfYear == 1) 2 else 3, // Year
-            if (today.dayOfMonth == 1) 2 else 3, // Month
-            if (today.dayOfWeek.value == 1) 2 else 3, // Week
-            2 // Today
+            if (today.dayOfYear == 1) "4m 0s" else "6m 0s", // Year
+            if (today.dayOfMonth == 1) "4m 0s" else "6m 0s", // Month
+            if (today.dayOfWeek.value == 1) "4m 0s" else "6m 0s", // Week
+            "4m 0s" // Today
         )
 
         val expectedLabels = listOf(
-            "Tracks this Year",
-            "Tracks this Month",
-            "Tracks this Week",
-            "Tracks Today"
+            "This Year",
+            "This Month",
+            "This Week",
+            "Today"
         )
 
         statCards.forEachIndexed { index, card ->
-            assertEquals(expectedStats[index].toString(), card.child(0).single().text())
+            assertEquals(expectedStats[index], card.child(0).single().text())
             assertEquals(expectedLabels[index], card.child(1).single().text())
         }
     }
