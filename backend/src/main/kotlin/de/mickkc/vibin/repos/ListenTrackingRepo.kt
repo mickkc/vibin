@@ -13,6 +13,7 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.statements.UpdateStatement
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
+import java.time.LocalDate
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.round
 
@@ -262,5 +263,27 @@ object ListenTrackingRepo {
     fun deleteAllForTrack(trackId: Long) = transaction {
         TrackListenDurationTable
             .deleteWhere { TrackListenDurationTable.trackId eq trackId }
+    }
+
+    /**
+     * Returns the total time a user has listened to any track per day.
+     *
+     * @param userId The id of the user to get the durations for
+     * @param since The start timestamp. Durations from that time onwards are returned.
+     *
+     * @return A list of pairs, where the first value is the date, and the seconds value the total seconds
+     */
+    fun getListenDurationPerDay(userId: Long, since: Long): List<Pair<LocalDate, Long>> = transaction {
+        val durations  = TrackListenDurationEntity.find {
+            (TrackListenDurationTable.createdAt greaterEq since) and
+            (TrackListenDurationTable.userId eq userId)
+        }
+
+        val durationsPerDay = durations.groupBy { DateTimeUtils.toLocalDate(it.createdAt) }
+            .mapValues { it.value.sumOf { it.listenedDurationSeconds } }
+
+        return@transaction durationsPerDay.entries
+            .sortedBy { it.key }
+            .map { it.toPair() }
     }
 }
