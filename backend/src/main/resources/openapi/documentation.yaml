@@ -5,8 +5,8 @@ info:
   version: 0.0.1
   contact:
     name: "Vibin' Project"
-    url: "https://github.com/mickkc/vibin"
-    email: "tim@vibin.wtf"
+    url: "https://codeberg.org/mickkc/vibin"
+    email: "contact@mickkc.dev"
   license:
     name: Licensed under VPL v1.0
     url: "https://github.com/mickkc/vibin/blob/main/LICENSE.md"
