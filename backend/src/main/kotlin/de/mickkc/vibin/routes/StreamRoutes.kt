@@ -56,7 +56,7 @@ fun Application.configureStreamRoutes() = routing {
         }
 
         val ffmpegArgs = when(format) {
-            "mp3" -> listOf("-hide_banner", "-loglevel", "error", "-ss", start.toString(), "-i", file.absolutePath, "-vn", "-c:a", "libmp3lame", "-ba", "${bitrate}k", "-f", "mp3", "-")
+            "mp3" -> listOf("-hide_banner", "-loglevel", "error", "-ss", start.toString(), "-i", file.absolutePath, "-vn", "-c:a", "libmp3lame", "-b:a", "${bitrate}k", "-f", "mp3", "-")
             "opus" -> listOf("-hide_banner", "-loglevel", "error", "-ss", start.toString(), "-i", file.absolutePath, "-vn", "-c:a", "libopus", "-b:a", "${bitrate}k", "-f", "webm", "-")
             "aac" -> listOf("-hide_banner", "-loglevel", "error", "-ss", start.toString(), "-i", file.absolutePath, "-vn", "-c:a", "aac", "-b:a", "${bitrate}k", "-f", "adts", "-")
             else -> return@get call.invalidParameter("format", "mp3", "opus", "aac")
