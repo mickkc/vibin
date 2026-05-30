@@ -16,6 +16,8 @@ object CryptoUtil {
 
     val secureRandom = SecureRandom()
 
+    private val tokenChars = ('A'..'Z') + ('a'..'z') + ('0'..'9')
+
     fun getSalt(): ByteArray {
         val salt = ByteArray(16)
         secureRandom.nextBytes(salt)
@@ -34,9 +36,9 @@ object CryptoUtil {
     fun createToken(length: Int = 64): String = transaction {
         var token: String
         do {
-            token = generateSequence {
-                (('A'..'Z') + ('a'..'z') + ('0'..'9')).random()
-            }.take(length).joinToString("")
+            token = (1..length).map {
+                tokenChars[secureRandom.nextInt(tokenChars.size)]
+            }.joinToString("")
         } while (SessionEntity.find { SessionTable.token eq token }.any())
         return@transaction token
     }
