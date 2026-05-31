@@ -24,6 +24,11 @@ import de.mickkc.vibin.search.SearchQueryBuilder
 import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.settings.user.BlockedArtists
 import de.mickkc.vibin.settings.user.BlockedTags
+import de.mickkc.vibin.settings.user.RelatedAlbumScoreMultiplier
+import de.mickkc.vibin.settings.user.RelatedArtistScoreMultiplier
+import de.mickkc.vibin.settings.user.RelatedTagsNegativeScoreMultiplier
+import de.mickkc.vibin.settings.user.RelatedTagsScoreMultiplier
+import de.mickkc.vibin.settings.user.UserSetting
 import de.mickkc.vibin.uploads.PendingUpload
 import de.mickkc.vibin.utils.ChecksumUtil
 import de.mickkc.vibin.utils.DateTimeUtils
@@ -335,8 +340,9 @@ object TrackRepo {
         }
     }
 
-    fun getRelated(track: TrackEntity, limit: Int): List<TrackEntity> = transaction {
+    fun getRelated(track: TrackEntity, limit: Int, userId: Long? = null): List<TrackEntity> = transaction {
         val candidates = TrackEntity.find {
+            notBlockedByUserOp(userId) and
             // Exclude the current track
             (TrackTable.id neq track.id.value) and
             // Same album
@@ -351,23 +357,30 @@ object TrackRepo {
             }.groupBy(TrackTagConnection.track).having { TrackTagConnection.tag.count() greater track.tags.count() / 2 }))
         }.toList()
         return@transaction candidates
-            .map { it to rateRelatedScore(track, it) }
+            .asSequence()
+            .map { it to rateRelatedScore(track, it, userId) }
             .filter { it.second > 0 }
             .sortedByDescending { it.second }
             .take(limit)
             .map { it.first }
+            .toList()
     }
 
-    private fun rateRelatedScore(track: TrackEntity, related: TrackEntity): Int {
-        var score = 0
+    private fun rateRelatedScore(track: TrackEntity, related: TrackEntity, userId: Long?): Float {
+        var score = 0f
         val sharedArtists = track.artists.intersect(related.artists.toSet()).size
-        score += sharedArtists * 3
-        if (track.year != null && track.year == related.year) score += 1
+        score += sharedArtists * getScoreMultiplier(RelatedArtistScoreMultiplier, userId)
+        if (track.album == related.album) score += getScoreMultiplier(RelatedAlbumScoreMultiplier, userId)
         val sharedTags = track.tags.intersect(related.tags.toSet()).size
-        score += sharedTags
+        score += sharedTags * getScoreMultiplier(RelatedTagsScoreMultiplier, userId)
         val notSharedTags = (track.tags + related.tags).toSet().size - sharedTags
-        score -= notSharedTags / 2
+        score -= notSharedTags * getScoreMultiplier(RelatedTagsNegativeScoreMultiplier, userId)
         return score
+    }
+
+    private fun getScoreMultiplier(setting: UserSetting<Float>, userId: Long?): Float {
+        if (userId == null) return setting.defaultValue
+        return Settings.get(setting, userId)
     }
 
     fun getAllFromAlbum(albumId: Long, userId: Long? = null): List<TrackEntity> = transaction {
