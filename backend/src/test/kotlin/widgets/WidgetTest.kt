@@ -458,12 +458,12 @@ class WidgetTest {
         for (day in daysOffset..<(daysToToday + daysOffset - 2)) {
             val cell = grid.child(day)
             assertEquals("", cell.text())
-            assertEquals("background-color: #190000;", cell.attr("style"))
+            assertEquals("background-color: #0C0000;", cell.attr("style"))
         }
 
         val secondLastCell = grid.child(daysToToday + daysOffset - 2)
         assertEquals("", secondLastCell.text())
-        assertEquals("background-color: #8C0000;", secondLastCell.attr("style"))
+        assertEquals("background-color: #BF0000;", secondLastCell.attr("style"))
 
         val lastCell = grid.child(daysToToday + daysOffset - 1)
         assertEquals("", lastCell.text())
@@ -503,12 +503,12 @@ class WidgetTest {
         for (day in daysOffset..<(daysToToday + daysOffset - 2)) {
             val cell = grid.child(day)
             assertEquals("", cell.text())
-            assertEquals("background-color: #190000;", cell.attr("style"))
+            assertEquals("background-color: #0C0000;", cell.attr("style"))
         }
 
         val secondLastCell = grid.child(daysToToday + daysOffset - 2)
         assertEquals("", secondLastCell.text())
-        assertEquals("background-color: #8C0000;", secondLastCell.attr("style"))
+        assertEquals("background-color: #BF0000;", secondLastCell.attr("style"))
 
         val lastCell = grid.child(daysToToday + daysOffset - 1)
         assertEquals("", lastCell.text())

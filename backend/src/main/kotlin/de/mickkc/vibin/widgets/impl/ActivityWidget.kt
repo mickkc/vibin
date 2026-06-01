@@ -11,8 +11,6 @@ import kotlinx.html.stream.appendHTML
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.util.*
-import kotlin.math.ceil
-import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
@@ -50,8 +48,6 @@ class ActivityWidget(widgetContext: WidgetContext, val extended: Boolean = true)
 
                 div("activity-grid") {
                     this.id = gridId
-                    style =
-                        "grid-template-columns: repeat(${ceil((end.dayOfYear - startLocalDate.dayOfYear + 1) / 7f).roundToInt()}, 1fr);"
 
                     for (day in 1..<startLocalDate.dayOfWeek.value) {
                         div {}
@@ -61,7 +57,7 @@ class ActivityWidget(widgetContext: WidgetContext, val extended: Boolean = true)
                         val duration = durationsPerDay.find { it.first.dayOfYear == day }?.second ?: 0
                         val intensity = if (longestDurationPerDay > 0) duration.toFloat() / longestDurationPerDay else 0f
 
-                        val ratio = 0.1f + (intensity * 0.9f)
+                        val ratio = 0.05f + (if (duration > 0) 0.45f else 0f) + (intensity * 0.5f)
                         val bgColor = WidgetUtils.blendColors(ctx.backgroundColor, ctx.accentColor, ratio)
 
                         div {
