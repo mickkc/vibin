@@ -1,9 +1,6 @@
 package de.mickkc.vibin.repos
 
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInSubQuery
-import org.jetbrains.exposed.sql.transactions.transaction
+import de.mickkc.vibin.db.TrackListenDurationTable
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.artists.ArtistEntity
 import de.mickkc.vibin.db.artists.TrackArtistConnection
@@ -13,26 +10,26 @@ import de.mickkc.vibin.db.tags.TrackTagConnection
 import de.mickkc.vibin.db.tracks.TrackEntity
 import de.mickkc.vibin.db.tracks.TrackTable
 import de.mickkc.vibin.dto.IdNameDto
+import de.mickkc.vibin.dto.SortDirection
 import de.mickkc.vibin.dto.tracks.MinimalTrackDto
 import de.mickkc.vibin.dto.tracks.TrackDto
 import de.mickkc.vibin.dto.tracks.TrackEditDto
+import de.mickkc.vibin.dto.tracks.TrackSortingCriteria
 import de.mickkc.vibin.parsing.Parser
 import de.mickkc.vibin.parsing.TrackMetadata
 import de.mickkc.vibin.parsing.parsers.PreparseData
 import de.mickkc.vibin.routes.PaginatedSearchParams
 import de.mickkc.vibin.search.SearchQueryBuilder
 import de.mickkc.vibin.settings.Settings
-import de.mickkc.vibin.settings.user.BlockedArtists
-import de.mickkc.vibin.settings.user.BlockedTags
-import de.mickkc.vibin.settings.user.RelatedAlbumScoreMultiplier
-import de.mickkc.vibin.settings.user.RelatedArtistScoreMultiplier
-import de.mickkc.vibin.settings.user.RelatedTagsNegativeScoreMultiplier
-import de.mickkc.vibin.settings.user.RelatedTagsScoreMultiplier
-import de.mickkc.vibin.settings.user.UserSetting
+import de.mickkc.vibin.settings.user.*
 import de.mickkc.vibin.uploads.PendingUpload
 import de.mickkc.vibin.utils.ChecksumUtil
 import de.mickkc.vibin.utils.DateTimeUtils
 import de.mickkc.vibin.utils.PathUtils
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInSubQuery
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
 
 object TrackRepo {
@@ -221,11 +218,17 @@ object TrackRepo {
 
     }
 
-    fun getAll(page: Int, pageSize: Int, userId: Long? = null): Pair<List<TrackEntity>, Long> = transaction {
+    fun getAll(
+        page: Int,
+        pageSize: Int,
+        sortingCriteria: TrackSortingCriteria = TrackSortingCriteria.TITLE,
+        sortingDirection: SortDirection = SortDirection.ASC,
+        userId: Long? = null
+    ): Pair<List<TrackEntity>, Long> = transaction {
         val tracks = TrackEntity.find(notBlockedByUserOp(userId))
         val count = tracks.count()
         val results = tracks
-            .orderBy(TrackTable.title to SortOrder.ASC)
+            .orderBy(getSortingExpr(sortingCriteria, userId) to getSortingDir(sortingDirection))
             .limit(pageSize)
             .offset(((page - 1) * pageSize).toLong())
             .toList()
@@ -271,11 +274,17 @@ object TrackRepo {
      * @param advanced If true, uses advanced search parsing; otherwise, performs a simple case-insensitive title search.
      * @return A list of [TrackEntity] matching the search criteria.
      */
-    fun getSearched(params: PaginatedSearchParams, advanced: Boolean, userId: Long? = null): Pair<List<TrackEntity>, Long> = transaction {
+    fun getSearched(
+        params: PaginatedSearchParams,
+        advanced: Boolean,
+        sortingCriteria: TrackSortingCriteria = TrackSortingCriteria.TITLE,
+        sortDirection: SortDirection = SortDirection.ASC,
+        userId: Long? = null
+    ): Pair<List<TrackEntity>, Long> = transaction {
         val tracks = TrackEntity.find { notBlockedByUserOp(userId) and buildQuery(params.query, advanced, userId) }
         val count = tracks.count()
         val results = tracks
-            .orderBy(TrackTable.title to SortOrder.ASC)
+            .orderBy(getSortingExpr(sortingCriteria, userId) to getSortingDir(sortDirection))
             .limit(params.pageSize)
             .offset(params.offset)
             .toList()
@@ -404,6 +413,51 @@ object TrackRepo {
 
     fun deleteTracksByIds(trackIds: List<Long>) = transaction {
         TrackEntity.find { TrackTable.id inList trackIds }.forEach { it.delete() }
+    }
+
+    /**
+     * Returns an `Expression` used to sort a collection of tracks, based on the provided criteria.
+     *
+     * @param criteria The criteria used to sort tracks
+     * @param userId The ID of the user to sort for. If null, user-related criterias like "last listened to" are instead
+     *               sorted by name.
+     * @return The Expression that can be used in orderBy()
+     */
+    fun getSortingExpr(criteria: TrackSortingCriteria, userId: Long?): Expression<*> {
+        return when (criteria) {
+            TrackSortingCriteria.TITLE -> TrackTable.title
+            TrackSortingCriteria.RELEASE_YEAR -> TrackTable.year
+            TrackSortingCriteria.AUDIO_QUALITY -> TrackTable.bitrate
+            TrackSortingCriteria.AUDIO_DURATION -> TrackTable.duration
+            TrackSortingCriteria.LISTEN_DURATION -> (if (userId == null) TrackSortingCriteria.TITLE else wrapAsExpression<Long>(TrackListenDurationTable
+                .select(Sum(TrackListenDurationTable.listenedDurationSeconds, LongColumnType()))
+                .where {
+                    (TrackListenDurationTable.trackId eq TrackTable.id) and
+                    (TrackListenDurationTable.userId eq userId)
+                })) as Expression<*>
+            TrackSortingCriteria.DATE_ADDED -> TrackTable.createdAt
+            TrackSortingCriteria.DATE_MODIFIED -> TrackTable.updatedAt
+            TrackSortingCriteria.LAST_LISTENED_TO -> (if (userId == null) TrackSortingCriteria.TITLE else wrapAsExpression<Long>(TrackListenDurationTable
+                .select(Max(TrackListenDurationTable.createdAt, LongColumnType()))
+                .where {
+                    (TrackListenDurationTable.trackId eq TrackTable.id) and
+                            (TrackListenDurationTable.userId eq userId)
+                })) as Expression<*>
+            TrackSortingCriteria.RANDOM -> Random()
+        }
+    }
+
+    /**
+     * Returns the `SortOrder` for the provided sort direction, always placing NULLs last.
+     *
+     * @param direction The sort direction
+     * @return The `exposed.sql` `SortOrder`
+     */
+    fun getSortingDir(direction: SortDirection): SortOrder {
+        return when (direction) {
+            SortDirection.ASC -> SortOrder.ASC_NULLS_LAST
+            SortDirection.DESC -> SortOrder.DESC_NULLS_LAST
+        }
     }
 
     private fun toDtoInternal(trackEntity: TrackEntity): TrackDto {

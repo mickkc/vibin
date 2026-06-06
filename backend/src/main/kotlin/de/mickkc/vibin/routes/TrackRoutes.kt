@@ -1,7 +1,9 @@
 package de.mickkc.vibin.routes
 
 import de.mickkc.vibin.dto.PaginatedDto
+import de.mickkc.vibin.dto.SortDirection
 import de.mickkc.vibin.dto.tracks.TrackEditDto
+import de.mickkc.vibin.dto.tracks.TrackSortingCriteria
 import de.mickkc.vibin.dto.tracks.batch.BatchEditDto
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.BatchEditRepo
@@ -25,7 +27,10 @@ fun Application.configureTrackRoutes() = routing {
             val pageSize = call.getIntOrDefault("pageSize", 50) ?: return@getP
             val userId = call.getUserId() ?: return@getP call.unauthorized()
 
-            val (tracks, total) = TrackRepo.getAll(page, pageSize, userId)
+            val sortCriteria = call.getEnum("sort", TrackSortingCriteria.TITLE) ?: return@getP
+            val sortDirection = call.getEnum("dir", SortDirection.ASC) ?: return@getP
+
+            val (tracks, total) = TrackRepo.getAll(page, pageSize, sortingCriteria = sortCriteria, sortingDirection = sortDirection, userId = userId)
 
             call.respond(PaginatedDto(
                 items = TrackRepo.toMinimalDto(tracks),
@@ -87,7 +92,10 @@ fun Application.configureTrackRoutes() = routing {
             val advanced = call.getBooleanOrDefault("advanced", false) ?: return@getP
             val userId = call.getUserId() ?: return@getP call.unauthorized()
 
-            val (results, count) = TrackRepo.getSearched(params, advanced, userId)
+            val sortCriteria = call.getEnum("sort", TrackSortingCriteria.TITLE) ?: return@getP
+            val sortDirection = call.getEnum("dir", SortDirection.ASC) ?: return@getP
+
+            val (results, count) = TrackRepo.getSearched(params, advanced, sortingCriteria = sortCriteria, sortDirection = sortDirection, userId = userId)
 
             call.respond(PaginatedDto(
                 items = TrackRepo.toMinimalDto(results),

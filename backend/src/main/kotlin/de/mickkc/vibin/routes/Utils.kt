@@ -11,6 +11,7 @@ import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.PermissionRepo
 import de.mickkc.vibin.repos.UserRepo
 import io.ktor.server.application.ApplicationCall
+import kotlin.enums.enumEntries
 
 suspend fun ApplicationCall.success(success: Boolean = true) {
     respond(mapOf("success" to success))
@@ -271,4 +272,17 @@ suspend fun ApplicationCall.getIntParameter(paramName: String): Int? {
     }
 
     return intValue
+}
+
+suspend inline fun<reified E : Enum<E>> ApplicationCall.getEnum(paramName: String, default: E?): E? {
+    val strParam = if (default != null) getStringOrDefault(paramName, default.name) else getStringParameter(paramName)
+    if (strParam == null) return null
+
+    try {
+        return enumValueOf<E>(strParam)
+    }
+    catch (_: IllegalArgumentException) {
+        invalidParameter(paramName, *enumEntries<E>().map { it.name }.toTypedArray())
+        return null
+    }
 }
