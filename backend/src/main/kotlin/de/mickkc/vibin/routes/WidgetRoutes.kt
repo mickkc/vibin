@@ -137,7 +137,10 @@ fun Application.configureWidgetRoutes() = routing {
         }
 
         val width = call.getIntOrDefault("width", 1080)?.coerceIn(1, 1920) ?: return@getP
-        val height = call.getIntOrDefault("height", 720)?.coerceIn(1, 1920) ?: return@getP
+        // height is optional, if not provided, it gets calculated based on the widget size.
+        val height = call.parameters["height"]?.let {
+            it.toIntOrNull()?.coerceIn(1, 1920) ?: return@getP call.invalidParameter("height")
+        }
 
         val colors = call.parseWidgetColors(widget)
         val language = call.parseLanguage()
