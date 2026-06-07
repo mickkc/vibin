@@ -430,7 +430,7 @@ object TrackRepo {
             TrackSortingCriteria.AUDIO_QUALITY -> TrackTable.bitrate
             TrackSortingCriteria.AUDIO_DURATION -> TrackTable.duration
             TrackSortingCriteria.LISTEN_DURATION -> (if (userId == null) TrackTable.title else wrapAsExpression<Long>(TrackListenDurationTable
-                .select(Sum(TrackListenDurationTable.listenedDurationSeconds, LongColumnType()))
+                .select(Coalesce(Sum(TrackListenDurationTable.listenedDurationSeconds, LongColumnType()), intLiteral(0)))
                 .where {
                     (TrackListenDurationTable.trackId eq TrackTable.id) and
                     (TrackListenDurationTable.userId eq userId)
