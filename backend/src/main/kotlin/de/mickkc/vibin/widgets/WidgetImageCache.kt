@@ -3,6 +3,8 @@ package de.mickkc.vibin.widgets
 import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.db.widgets.SharedWidgetEntity
 import de.mickkc.vibin.utils.RateLimiter
+import org.openqa.selenium.Dimension
+import org.openqa.selenium.JavascriptExecutor
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.TakesScreenshot
 import org.openqa.selenium.chrome.ChromeDriver
@@ -31,6 +33,15 @@ object WidgetImageCache {
 
     private val cacheExpirationMinutes = EnvUtil.getOrDefault(EnvUtil.WIDGET_CACHE_EXPIRATION_MINUTES, EnvUtil.DEFAULT_WIDGET_CACHE_EXPIRATION_MINUTES).toLong()
 
+    private const val DEFAULT_HEIGHT = 720
+
+    /**
+     * The size of the Chrome window decorations.
+     * This needs to be added to the auto-detected widget height to get the actual Chrome window size.
+     */
+    @Volatile
+    private var viewportHeightOffset: Int? = null
+
     init {
         if (!widgetImageCachePath.exists()) {
             widgetImageCachePath.mkdirs()
@@ -42,11 +53,13 @@ object WidgetImageCache {
     /**
      * Gets a cached widget image or generates a new one if not cached.
      *
+     * If [height] is null, it is calculated based on the width and widget size.
+     *
      * @param widget The widget entity
      * @param widgetTypes The list of widget types to render
      * @param ctx The widget context containing colors, language, etc.
      * @param width The desired image width
-     * @param height The desired image height
+     * @param height The desired image height, or null to derive it from the natural size
      * @return The widget image as a byte array (PNG format)
      */
     fun getOrCreateImage(
@@ -54,7 +67,7 @@ object WidgetImageCache {
         widgetTypes: List<WidgetType>,
         ctx: WidgetContext,
         width: Int,
-        height: Int
+        height: Int? = null
     ): ByteArray {
         val cacheKey = generateCacheKey(widget.id.value, ctx, width, height)
         val cacheFile = File(widgetImageCachePath, "$cacheKey.png")
@@ -72,7 +85,9 @@ object WidgetImageCache {
             }
         }
 
-        logger.info("Generating widget image: $cacheKey (${width}x${height})")
+        logger.info("Generating widget image: $cacheKey (${width}x${height ?: "auto"})")
+        val timeStart = System.currentTimeMillis()
+
         val html = WidgetBuilder.build(widgetTypes, ctx, interactive = false)
         val imageBytes = generateImage(html, width, height)
 
@@ -83,6 +98,9 @@ object WidgetImageCache {
             logger.error("Failed to cache widget image: $cacheKey", e)
         }
 
+        val timeEnd = System.currentTimeMillis()
+        logger.info("Widget image generation took ${timeEnd - timeStart} ms.")
+
         return imageBytes
     }
 
@@ -91,31 +109,69 @@ object WidgetImageCache {
      *
      * @param html The HTML content to render
      * @param width The desired image width
-     * @param height The desired image height
+     * @param height The desired image height, or null to derive it from the natural content height
      * @return The rendered image as a byte array (PNG format)
      */
-    private fun generateImage(html: String, width: Int, height: Int): ByteArray {
+    private fun generateImage(html: String, width: Int, height: Int?): ByteArray {
         // Replace relative URLs with absolute URLs for Selenium
         val processedHtml = prepareHtml(html)
 
+        val tempHtmlFile = createTempFile(suffix = ".html").toFile()
+        try {
+            tempHtmlFile.writeText(processedHtml)
+            val uri = tempHtmlFile.toURI().toString()
+
+            return withDriver(width, height ?: DEFAULT_HEIGHT) { driver ->
+                driver.get(uri)
+
+                if (height == null) {
+                    val launchHeight = measureLaunchHeightForWidget(driver, width)
+                    driver.manage().window().size = Dimension(width, launchHeight)
+                }
+
+                (driver as TakesScreenshot).getScreenshotAs(OutputType.BYTES)
+            }
+        } finally {
+            try {
+                tempHtmlFile.delete()
+            } catch (e: Exception) {
+                logger.warn("Failed to delete temp HTML file: ${tempHtmlFile.absolutePath}", e)
+            }
+        }
+    }
+
+    /**
+     * Determines the window height that renders the widget currently loaded in [driver] with a viewport exactly as
+     * tall as its natural content.
+     *
+     * @param driver A driver that has already loaded the widget at viewport width [width]
+     * @param width The viewport width the widget was rendered at
+     * @return The window height to resize [driver] to before taking the final screenshot
+     */
+    private fun measureLaunchHeightForWidget(driver: ChromeDriver, width: Int): Int {
+        val naturalHeight = measureWidgetHeight(driver)
+        val offset = viewportHeightOffset ?: (DEFAULT_HEIGHT - measureWindowHeight(driver)).also {
+            viewportHeightOffset = it
+        }
+        logger.debug("Detected natural content height $naturalHeight for width $width (viewport offset: $offset)")
+        return naturalHeight + offset
+    }
+
+    /**
+     * Launches a Chrome driver at [width]x[height] and passes it to [action].
+     *
+     * @param width The viewport width to launch the browser with
+     * @param height The viewport height to launch the browser with
+     * @param action Called with the newly launched driver
+     * @return The result of [action]
+     */
+    private fun <T> withDriver(width: Int, height: Int, action: (ChromeDriver) -> T): T {
         val options = createChromeOptions(width, height)
+
         val driver = ChromeDriver(options)
 
         try {
-            val tempHtmlFile = createTempFile(suffix = ".html").toFile()
-            try {
-                tempHtmlFile.writeText(processedHtml)
-                driver.get(tempHtmlFile.toURI().toString())
-
-                val screenshot = (driver as TakesScreenshot).getScreenshotAs(OutputType.BYTES)
-                return screenshot
-            } finally {
-                try {
-                    tempHtmlFile.delete()
-                } catch (e: Exception) {
-                    logger.warn("Failed to delete temp HTML file: ${tempHtmlFile.absolutePath}", e)
-                }
-            }
+            return action(driver)
         } finally {
             try {
                 driver.quit()
@@ -123,6 +179,21 @@ object WidgetImageCache {
                 logger.error("Error quitting ChromeDriver", e)
             }
         }
+    }
+
+    private fun measureWidgetHeight(driver: ChromeDriver): Int {
+        // document.body.scrollHeight didn't work.
+        // document.body.clientHeight didn't work.
+        // document.documentElement.scrollHeight didn't work (even though it works on firefox).
+        // document.documentElement.clientHeight didn't work (even though it works on firefox).
+        // >:(
+        val result = (driver as JavascriptExecutor).executeScript("return +getComputedStyle(document.body).height.replace(\"px\", \"\");")
+        return (result as? Number)?.toInt() ?: DEFAULT_HEIGHT
+    }
+
+    private fun measureWindowHeight(driver: ChromeDriver): Int {
+        val result = (driver as JavascriptExecutor).executeScript("return window.innerHeight;")
+        return (result as? Number)?.toInt() ?: DEFAULT_HEIGHT
     }
 
     /**
@@ -159,17 +230,17 @@ object WidgetImageCache {
      * @param widgetId The widget ID
      * @param ctx The widget context
      * @param width The image width
-     * @param height The image height
+     * @param height The image height, or null for auto
      * @return A unique cache key string
      */
     private fun generateCacheKey(
         widgetId: String,
         ctx: WidgetContext,
         width: Int,
-        height: Int
+        height: Int?
     ): String {
         return "${widgetId}_${ctx.userId}_${ctx.backgroundColor}_" +
-                "${ctx.foregroundColor}_${ctx.accentColor}_${ctx.language}_${width}_${height}"
+                "${ctx.foregroundColor}_${ctx.accentColor}_${ctx.language}_${width}_${height ?: "auto"}"
     }
 
     /**

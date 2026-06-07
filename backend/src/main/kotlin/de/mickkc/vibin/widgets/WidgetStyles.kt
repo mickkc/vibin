@@ -13,6 +13,10 @@ object WidgetStyles {
             put("scrollbar-width", "none")
         }
 
+        body {
+            height = LinearDimension.fitContent
+        }
+
         rule("*::-webkit-scrollbar") {
             display = Display.none
         }
