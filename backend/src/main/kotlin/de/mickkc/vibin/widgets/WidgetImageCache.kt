@@ -3,6 +3,7 @@ package de.mickkc.vibin.widgets
 import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.db.widgets.SharedWidgetEntity
 import de.mickkc.vibin.utils.RateLimiter
+import org.openqa.selenium.Dimension
 import org.openqa.selenium.JavascriptExecutor
 import org.openqa.selenium.OutputType
 import org.openqa.selenium.TakesScreenshot
@@ -120,11 +121,14 @@ object WidgetImageCache {
             tempHtmlFile.writeText(processedHtml)
             val uri = tempHtmlFile.toURI().toString()
 
-            val actualHeight = height
-                ?: measureLaunchHeightForWidget(uri, width)
-
-            return withDriver(width, actualHeight) { driver ->
+            return withDriver(width, height ?: DEFAULT_HEIGHT) { driver ->
                 driver.get(uri)
+
+                if (height == null) {
+                    val launchHeight = measureLaunchHeightForWidget(driver, width)
+                    driver.manage().window().size = Dimension(width, launchHeight)
+                }
+
                 (driver as TakesScreenshot).getScreenshotAs(OutputType.BYTES)
             }
         } finally {
@@ -137,23 +141,20 @@ object WidgetImageCache {
     }
 
     /**
-     * Determines the `--window-size` launch height that renders the widget at [uri] with a viewport exactly as tall as
-     * the widget at [width].
+     * Determines the window height that renders the widget currently loaded in [driver] with a viewport exactly as
+     * tall as its natural content.
      *
-     * @param uri The URI of the HTML file to render
-     * @param width The target viewport width
-     * @return The launch height to pass to [createChromeOptions] for the final screenshot render
+     * @param driver A driver that has already loaded the widget at viewport width [width]
+     * @param width The viewport width the widget was rendered at
+     * @return The window height to resize [driver] to before taking the final screenshot
      */
-    private fun measureLaunchHeightForWidget(uri: String, width: Int): Int {
-        return withDriver(width, DEFAULT_HEIGHT) { driver ->
-            driver.get(uri)
-            val naturalHeight = measureWidgetHeight(driver)
-            val offset = viewportHeightOffset ?: (DEFAULT_HEIGHT - measureWindowHeight(driver)).also {
-                viewportHeightOffset = it
-            }
-            logger.debug("Detected natural content height $naturalHeight for width $width (viewport offset: $offset)")
-            naturalHeight + offset
+    private fun measureLaunchHeightForWidget(driver: ChromeDriver, width: Int): Int {
+        val naturalHeight = measureWidgetHeight(driver)
+        val offset = viewportHeightOffset ?: (DEFAULT_HEIGHT - measureWindowHeight(driver)).also {
+            viewportHeightOffset = it
         }
+        logger.debug("Detected natural content height $naturalHeight for width $width (viewport offset: $offset)")
+        return naturalHeight + offset
     }
 
     /**
