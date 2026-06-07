@@ -436,7 +436,7 @@ object TrackRepo {
                     (TrackListenDurationTable.userId eq userId)
                 })) as Expression<*>
             TrackSortingCriteria.DATE_ADDED -> TrackTable.createdAt
-            TrackSortingCriteria.DATE_MODIFIED -> TrackTable.updatedAt
+            TrackSortingCriteria.DATE_MODIFIED -> Coalesce(TrackTable.updatedAt, TrackTable.createdAt)
             TrackSortingCriteria.LAST_LISTENED_TO -> (if (userId == null) TrackSortingCriteria.TITLE else wrapAsExpression<Long>(TrackListenDurationTable
                 .select(Max(TrackListenDurationTable.createdAt, LongColumnType()))
                 .where {
