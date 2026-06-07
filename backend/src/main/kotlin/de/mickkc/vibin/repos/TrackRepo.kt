@@ -429,7 +429,7 @@ object TrackRepo {
             TrackSortingCriteria.RELEASE_YEAR -> TrackTable.year
             TrackSortingCriteria.AUDIO_QUALITY -> TrackTable.bitrate
             TrackSortingCriteria.AUDIO_DURATION -> TrackTable.duration
-            TrackSortingCriteria.LISTEN_DURATION -> (if (userId == null) TrackSortingCriteria.TITLE else wrapAsExpression<Long>(TrackListenDurationTable
+            TrackSortingCriteria.LISTEN_DURATION -> (if (userId == null) TrackTable.title else wrapAsExpression<Long>(TrackListenDurationTable
                 .select(Sum(TrackListenDurationTable.listenedDurationSeconds, LongColumnType()))
                 .where {
                     (TrackListenDurationTable.trackId eq TrackTable.id) and
@@ -437,7 +437,7 @@ object TrackRepo {
                 })) as Expression<*>
             TrackSortingCriteria.DATE_ADDED -> TrackTable.createdAt
             TrackSortingCriteria.DATE_MODIFIED -> Coalesce(TrackTable.updatedAt, TrackTable.createdAt)
-            TrackSortingCriteria.LAST_LISTENED_TO -> (if (userId == null) TrackSortingCriteria.TITLE else wrapAsExpression<Long>(TrackListenDurationTable
+            TrackSortingCriteria.LAST_LISTENED_TO -> (if (userId == null) TrackTable.title else wrapAsExpression<Long>(TrackListenDurationTable
                 .select(Max(TrackListenDurationTable.createdAt, LongColumnType()))
                 .where {
                     (TrackListenDurationTable.trackId eq TrackTable.id) and
