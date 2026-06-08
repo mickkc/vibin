@@ -95,5 +95,5 @@ object EnvUtil {
     const val DEFAULT_SMTP_AUTH = "true"
     const val SMTP_USERNAME = "SMTP_USERNAME"
     const val SMTP_PASSWORD = "SMTP_PASSWORD"
-    const val SMTP_FROM = "STMP_FROM"
+    const val SMTP_FROM = "SMTP_FROM"
 }
