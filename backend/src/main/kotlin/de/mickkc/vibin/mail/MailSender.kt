@@ -38,14 +38,14 @@ object MailSender {
         }
 
         val auth = EnvUtil.getBooleanOrError(EnvUtil.SMTP_AUTH, EnvUtil.DEFAULT_SMTP_AUTH)
-        val useTls = EnvUtil.getBooleanOrError(EnvUtil.SMTP_STARTTLS, EnvUtil.DEFAULT_SMTP_STARTTLS)
-        val useSsl = EnvUtil.getBooleanOrError(EnvUtil.SMTP_SSL, EnvUtil.DEFAULT_SMTP_SSL)
+        val useStartTls = EnvUtil.getBooleanOrError(EnvUtil.SMTP_STARTTLS, EnvUtil.DEFAULT_SMTP_STARTTLS)
+        val useTlsSsl = EnvUtil.getBooleanOrError(EnvUtil.SMTP_SSL, EnvUtil.DEFAULT_SMTP_SSL)
 
         val portStr = EnvUtil.get(EnvUtil.SMTP_PORT)
         val port: Int
 
         when (portStr) {
-            null -> port = if (useTls) 587 else if (useSsl) 465 else 25
+            null -> port = if (useStartTls) 587 else if (useTlsSsl) 465 else 25
             else -> {
                 val parsedPort = portStr.toIntOrNull()
                 if (parsedPort == null || parsedPort < 1 || parsedPort > 65535) {
@@ -56,11 +56,11 @@ object MailSender {
             }
         }
 
-        if (useTls && useSsl) {
-            logger.warn("Both STARTTLS and SSL configured, STARTTLS will be used.")
+        if (useStartTls && useTlsSsl) {
+            logger.warn("Both STARTTLS and TLS/SSL configured, STARTTLS will be used.")
         }
 
-        if (useTls) {
+        if (useStartTls) {
             val tlsREquired = EnvUtil.getBooleanOrError(EnvUtil.SMTP_STARTTLS_REQUIRED, EnvUtil.DEFAULT_SMTP_STARTTLS_REQUIRED)
 
             props.apply {
@@ -71,9 +71,8 @@ object MailSender {
                 put("mail.smtp.starttls.required", tlsREquired.toString())
             }
         }
-        else if (useSsl) {
+        else if (useTlsSsl) {
             props.apply {
-                put("mail.transport.protocol", "smtps")
                 put("mail.smtp.host", host)
                 put("mail.smtp.port", port.toString())
                 put("mail.smtp.auth", auth.toString())
@@ -86,7 +85,6 @@ object MailSender {
                 put("mail.smtp.host", host)
                 put("mail.smtp.port", port.toString())
                 put("mail.smtp.auth", auth.toString())
-                put("mail.smtp.starttls.enable", "false")
 
             }
         }
