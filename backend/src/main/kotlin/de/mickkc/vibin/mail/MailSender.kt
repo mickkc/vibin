@@ -115,7 +115,10 @@ object MailSender {
 
     fun sendMail(to: String, subject: String, body: String) {
 
-        if (!configured) return
+        if (!configured) {
+            logger.warn("SMTP is not configured, email with subject '$subject' can't be sent.")
+            return
+        }
 
         try {
             val message = MimeMessage(session)
