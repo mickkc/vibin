@@ -52,6 +52,8 @@ dependencies {
     implementation(libs.kotlin.css)
     implementation(libs.selenium.java)
 
+    implementation(libs.angus.mail)
+
     implementation(libs.flyway.core)
 
     implementation(libs.ktor.client.core)

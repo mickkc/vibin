@@ -1,5 +1,7 @@
 package de.mickkc.vibin.config
 
+import org.openqa.selenium.InvalidArgumentException
+
 object EnvUtil {
 
     private val overrides: MutableMap<String, String> = mutableMapOf()
@@ -34,6 +36,12 @@ object EnvUtil {
      */
     fun getOrDefault(key: String, default: String): String {
         return overrides[key] ?: System.getenv(key) ?: default
+    }
+
+    fun getBooleanOrError(key: String, default: String): Boolean {
+        val strValue = overrides[key] ?: System.getenv(key) ?: default
+        return strValue.toBooleanStrictOrNull()
+            ?: throw InvalidArgumentException("Invalid value for $key: '$strValue', expected 'true' or 'false'")
     }
 
     /**
@@ -73,4 +81,19 @@ object EnvUtil {
     const val DEFAULT_WIDGET_IMAGE_CACHE_RATE_LIMIT_REQUESTS = "5"
     const val CHROME_BINARY_PATH = "CHROME_BINARY_PATH"
     const val DEFAULT_CHROME_BINARY_PATH = "/usr/bin/chromium"
+
+    const val SMTP_HOST = "SMTP_HOST"
+    const val SMTP_PORT = "SMTP_PORT"
+    const val SMTP_STARTTLS = "SMT_STARTTLS"
+    const val DEFAULT_SMTP_STARTTLS = "false"
+    const val SMTP_STARTTLS_REQUIRED = "SMTP_STARTTLS_REQUIRED"
+    const val DEFAULT_SMTP_STARTTLS_REQUIRED = "true"
+    const val SMTP_SSL = "SMTP_SSL"
+    const val DEFAULT_SMTP_SSL = "true"
+
+    const val SMTP_AUTH = "SMTP_AUTH"
+    const val DEFAULT_SMTP_AUTH = "true"
+    const val SMTP_USERNAME = "SMTP_USERNAME"
+    const val SMTP_PASSWORD = "SMTP_PASSWORD"
+    const val SMTP_FROM = "SMTP_FROM"
 }
