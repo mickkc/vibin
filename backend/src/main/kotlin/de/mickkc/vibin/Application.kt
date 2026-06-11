@@ -1,6 +1,7 @@
 package de.mickkc.vibin
 
 import de.mickkc.vibin.config.*
+import de.mickkc.vibin.mail.MailSender
 import de.mickkc.vibin.routes.*
 import de.mickkc.vibin.tasks.TaskScheduler
 import de.mickkc.vibin.tasks.Tasks
@@ -29,6 +30,8 @@ fun Application.mainModule() {
 fun Application.module() {
 
     configureCheckRoutes()
+
+    MailSender.init()
 
     configureSerialization()
     configureSecurity()
