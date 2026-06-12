@@ -217,14 +217,19 @@ class WidgetTest {
     @Test
     fun testServerStatsWidget_BasicContent() = testApp { _ ->
         // Create some test data
-        TrackTestUtils.createTrack("Track 1", "Album 1", "Artist 1", duration = 1000)
-        TrackTestUtils.createTrack("Track 2", "Album 2", "Artist 2", duration = 2000)
+        val track1 = TrackTestUtils.createTrack("Track 1", "Album 1", "Artist 1", duration = 1000)
+        val track2 = TrackTestUtils.createTrack("Track 2", "Album 2", "Artist 2", duration = 2000)
         AlbumTestUtils.createAlbum("Album 3", "Description", 2020)
         ArtistTestUtils.createArtist("Artist 3", "Description")
         PlaylistTestUtils.createPlaylist("Playlist 1", true, 1)
         PlaylistTestUtils.createPlaylist("Playlist 2", false, 1)
 
         ListenRepo.listenedTo(1, 1, ListenType.TRACK)
+
+        val testUser = UserRepo.getById(1)!!
+
+        ListenTestUtils.listenedToTrack(testUser, track1, 120)
+        ListenTestUtils.listenedToTrack(testUser, track2, 45)
 
         val ctx = createContext()
         val html = WidgetBuilder.build(listOf(WidgetType.SERVER_STATS), ctx)
@@ -245,7 +250,7 @@ class WidgetTest {
                 "Artists" -> assertEquals("3", value)
                 "Playlists" -> assertEquals("2", value)
                 "Users" -> assertEquals("1", value)
-                "Play Count" -> assertEquals("1", value)
+                "Total Listening Time" -> assertEquals("2m 45s", value)
                 else -> fail("Unexpected stat label: $label")
             }
         }
@@ -444,10 +449,14 @@ class WidgetTest {
 
         val grid = doc.select(".activity-grid").single()
 
-        val daysToToday = DateTimeUtils.toLocalDate(DateTimeUtils.now()).dayOfYear
-        val daysOffset = DateTimeUtils.toLocalDate(DateTimeUtils.startOfYear()).dayOfWeek.value - 1
+        val startDate = DateTimeUtils.nowLocalDate().minusYears(1)
+        val endDate = DateTimeUtils.nowLocalDate()
 
-        assertEquals(daysToToday + daysOffset, grid.childrenSize())
+        val daysOffset = startDate.dayOfWeek.value - 1
+
+        val dayAmount = startDate.datesUntil(endDate).count().toInt() + 1
+
+        assertEquals(daysOffset + dayAmount, grid.childrenSize())
 
         for (day in 0..<daysOffset) {
             val cell = grid.child(day)
@@ -455,17 +464,17 @@ class WidgetTest {
             assertEquals("", cell.attr("style"))
         }
 
-        for (day in daysOffset..<(daysToToday + daysOffset - 2)) {
+        for (day in daysOffset..<(dayAmount + daysOffset - 2)) {
             val cell = grid.child(day)
             assertEquals("", cell.text())
             assertEquals("background-color: #0C0000;", cell.attr("style"))
         }
 
-        val secondLastCell = grid.child(daysToToday + daysOffset - 2)
+        val secondLastCell = grid.child(dayAmount + daysOffset - 2)
         assertEquals("", secondLastCell.text())
-        assertEquals("background-color: #BF0000;", secondLastCell.attr("style"))
+        assertEquals("background-color: #920000;", secondLastCell.attr("style"))
 
-        val lastCell = grid.child(daysToToday + daysOffset - 1)
+        val lastCell = grid.child(dayAmount + daysOffset - 1)
         assertEquals("", lastCell.text())
         assertEquals("background-color: #FF0000;", lastCell.attr("style"))
     }
@@ -488,11 +497,14 @@ class WidgetTest {
 
         val grid = doc.select(".activity-grid").single()
 
-        val today = DateTimeUtils.toLocalDate(DateTimeUtils.now())
-        val daysToToday = today.dayOfYear
-        val daysOffset = DateTimeUtils.toLocalDate(DateTimeUtils.startOfYear()).dayOfWeek.value - 1
+        val startDate = DateTimeUtils.nowLocalDate().minusYears(1)
+        val endDate = DateTimeUtils.nowLocalDate()
 
-        assertEquals(daysToToday + daysOffset, grid.childrenSize())
+        val daysOffset = startDate.dayOfWeek.value - 1
+
+        val dayAmount = startDate.datesUntil(endDate).count().toInt() + 1
+
+        assertEquals( daysOffset+  dayAmount, grid.childrenSize())
 
         for (day in 0..<daysOffset) {
             val cell = grid.child(day)
@@ -500,17 +512,17 @@ class WidgetTest {
             assertEquals("", cell.attr("style"))
         }
 
-        for (day in daysOffset..<(daysToToday + daysOffset - 2)) {
+        for (day in daysOffset..<(dayAmount + daysOffset - 2)) {
             val cell = grid.child(day)
             assertEquals("", cell.text())
             assertEquals("background-color: #0C0000;", cell.attr("style"))
         }
 
-        val secondLastCell = grid.child(daysToToday + daysOffset - 2)
+        val secondLastCell = grid.child(dayAmount + daysOffset - 2)
         assertEquals("", secondLastCell.text())
-        assertEquals("background-color: #BF0000;", secondLastCell.attr("style"))
+        assertEquals("background-color: #920000;", secondLastCell.attr("style"))
 
-        val lastCell = grid.child(daysToToday + daysOffset - 1)
+        val lastCell = grid.child(dayAmount + daysOffset - 1)
         assertEquals("", lastCell.text())
         assertEquals("background-color: #FF0000;", lastCell.attr("style"))
 
@@ -519,9 +531,9 @@ class WidgetTest {
         assertEquals(4, statCards.size)
 
         val expectedStats = listOf(
-            if (today.dayOfYear == 1) "4m 0s" else "6m 0s", // Year
-            if (today.dayOfMonth == 1) "4m 0s" else "6m 0s", // Month
-            if (today.dayOfWeek.value == 1) "4m 0s" else "6m 0s", // Week
+            if (endDate.dayOfYear == 1) "4m 0s" else "6m 0s", // Year
+            if (endDate.dayOfMonth == 1) "4m 0s" else "6m 0s", // Month
+            if (endDate.dayOfWeek.value == 1) "4m 0s" else "6m 0s", // Week
             "4m 0s" // Today
         )
 
