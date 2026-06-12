@@ -6,9 +6,9 @@
 
 *Upload, manage, and stream your music collection from anywhere*
 
-[![Build Status](https://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain&subject=Build)](https://jks.ndu.wtf/job/vibin-server/job/main/)
-[![Lines of Code](https://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain&subject=Lines%20of%20Code&status=${lineOfCode}&color=blue)](https://jks.ndu.wtf/job/vibin-server/job/main/)
-[![Code Coverage](https://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain&subject=Coverage&status=${instructionCoverage}&color=${colorInstructionCoverage})](https://jks.ndu.wtf/job/vibin-server/job/main/)
+![Build Status](https://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain&subject=Build)
+![Lines of Code](https://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain&subject=Lines%20of%20Code&status=${lineOfCode}&color=blue)
+![Code Coverage](https://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain&subject=Coverage&status=${instructionCoverage}&color=${colorInstructionCoverage})
 [![License](https://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain&subject=License&status=GPLv3&color=teal)](LICENSE)
 [![Docker Pulls](https://img.shields.io/docker/pulls/mickkc/vibin)](https://hub.docker.com/r/mickkc/vibin)
 ![Docker Image Version](https://img.shields.io/docker/v/mickkc/vibin)
