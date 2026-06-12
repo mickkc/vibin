@@ -1,11 +1,6 @@
 package de.mickkc.vibin.widgets.impl
 
-import de.mickkc.vibin.repos.AlbumRepo
-import de.mickkc.vibin.repos.ArtistRepo
-import de.mickkc.vibin.repos.ListenRepo
-import de.mickkc.vibin.repos.PlaylistRepo
-import de.mickkc.vibin.repos.TrackRepo
-import de.mickkc.vibin.repos.UserRepo
+import de.mickkc.vibin.repos.*
 import de.mickkc.vibin.widgets.BaseWidget
 import de.mickkc.vibin.widgets.WidgetContext
 import de.mickkc.vibin.widgets.components.statCard
@@ -18,6 +13,7 @@ class ServerStatsWidget(ctx: WidgetContext) : BaseWidget(ctx) {
     override fun render(interactive: Boolean): String {
 
         val totalDurationSeconds = TrackRepo.getTotalRuntimeSeconds()
+        val totalListenDurationSeconds = ListenTrackingRepo.getGlobalListenDuration()
 
         return buildString {
 
@@ -60,8 +56,8 @@ class ServerStatsWidget(ctx: WidgetContext) : BaseWidget(ctx) {
                     )
                     statCard(
                         this@ServerStatsWidget,
-                        ListenRepo.getTotalListenedTracks().toString(),
-                        t("widgets.server_stats.play_count"
+                        formatDuration(totalListenDurationSeconds),
+                        t("widgets.server_stats.listen_duration"
                         )
                     )
                 }
