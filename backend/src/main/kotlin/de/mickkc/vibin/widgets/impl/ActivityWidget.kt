@@ -9,7 +9,6 @@ import de.mickkc.vibin.widgets.components.statCard
 import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
 import java.time.DayOfWeek
-import java.time.LocalDate
 import java.util.*
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
@@ -28,13 +27,12 @@ class ActivityWidget(widgetContext: WidgetContext, val extended: Boolean = true)
 
     override fun render(interactive: Boolean): String {
 
-        val start = DateTimeUtils.startOfYear()
-        val startLocalDate = DateTimeUtils.toLocalDate(start)
+        val startLocalDate = DateTimeUtils.nowLocalDate().minusYears(1)
 
-        val durationsPerDay = ListenTrackingRepo.getListenDurationPerDay(ctx.userId, start)
+        val durationsPerDay = ListenTrackingRepo.getListenDurationPerDay(ctx.userId, DateTimeUtils.localDateToTimestamp(startLocalDate))
         val longestDurationPerDay = durationsPerDay.maxOfOrNull { it.second } ?: 0
 
-        val end = LocalDate.now()
+        val end = DateTimeUtils.nowLocalDate()
 
         return buildString {
             appendHTML(prettyPrint = false).div("widget-body") {
@@ -53,11 +51,13 @@ class ActivityWidget(widgetContext: WidgetContext, val extended: Boolean = true)
                         div {}
                     }
 
-                    for (day in startLocalDate.dayOfYear..end.dayOfYear) {
-                        val duration = durationsPerDay.find { it.first.dayOfYear == day }?.second ?: 0
+                    val dateStream = startLocalDate.datesUntil(end.plusDays(1))
+
+                    for (day in dateStream) {
+                        val duration = durationsPerDay.find { it.first.isEqual(day) }?.second ?: 0
                         val intensity = if (longestDurationPerDay > 0) duration.toFloat() / longestDurationPerDay else 0f
 
-                        val ratio = 0.05f + (if (duration > 0) 0.45f else 0f) + (intensity * 0.5f)
+                        val ratio = 0.05f + (if (duration > 0) 0.1f else 0f) + (intensity * 0.85f)
                         val bgColor = WidgetUtils.blendColors(ctx.backgroundColor, ctx.accentColor, ratio)
 
                         div {
