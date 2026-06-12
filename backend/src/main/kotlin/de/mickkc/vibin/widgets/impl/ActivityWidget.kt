@@ -10,20 +10,8 @@ import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
 import java.time.DayOfWeek
 import java.util.*
-import kotlin.time.Duration.Companion.days
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 
 class ActivityWidget(widgetContext: WidgetContext, val extended: Boolean = true) : BaseWidget(widgetContext) {
-
-    private fun secondsToTimeStr(seconds: Long): String = buildList {
-        val duration = seconds.seconds
-        if (duration >= 1.days) add("${duration.inWholeDays}d")
-        if (duration >= 1.hours) add("${duration.inWholeHours % 24}h")
-        if (duration >= 1.minutes) add("${duration.inWholeMinutes % 60}m")
-        add("${duration.inWholeSeconds % 60}s")
-    }.joinToString(" ")
 
     override fun render(interactive: Boolean): String {
 
@@ -73,10 +61,10 @@ class ActivityWidget(widgetContext: WidgetContext, val extended: Boolean = true)
                     val durationToday = durationsPerDay.find { it.first.dayOfYear == end.dayOfYear }?.second ?: 0
 
                     div("stats") {
-                        statCard(this@ActivityWidget, secondsToTimeStr(durationThisYear), t("widgets.activity.year"))
-                        statCard(this@ActivityWidget, secondsToTimeStr(durationThisMonth), t("widgets.activity.month"))
-                        statCard(this@ActivityWidget, secondsToTimeStr(durationThisWeek), t("widgets.activity.week"))
-                        statCard(this@ActivityWidget, secondsToTimeStr(durationToday), t("widgets.activity.today"))
+                        statCard(this@ActivityWidget, DateTimeUtils.formatDuration(durationThisYear), t("widgets.activity.year"))
+                        statCard(this@ActivityWidget, DateTimeUtils.formatDuration(durationThisMonth), t("widgets.activity.month"))
+                        statCard(this@ActivityWidget, DateTimeUtils.formatDuration(durationThisWeek), t("widgets.activity.week"))
+                        statCard(this@ActivityWidget, DateTimeUtils.formatDuration(durationToday), t("widgets.activity.today"))
                     }
                 }
 
