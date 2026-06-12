@@ -7,6 +7,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 object StreamBuilder {
 
+    const val STREAM_VALIDITY_SECONDS = 24L * 60L * 60L // 24 hours
+
     fun build(track: TrackEntity): Streamable = transaction {
 
         val cover = track.cover ?: track.album.cover
@@ -14,12 +16,12 @@ object StreamBuilder {
         var coverExpiration: Long? = null
 
         if (cover != null) {
-            val result = AccessCryptoUtil.generateSignatureAndTimestamp(cover.sourceChecksum)
-            coverSignature = result.first
-            coverExpiration = result.second
+            val coverCryptoResult = AccessCryptoUtil.generateSignatureAndTimestamp(cover.sourceChecksum, STREAM_VALIDITY_SECONDS)
+            coverSignature = coverCryptoResult.first
+            coverExpiration = coverCryptoResult.second
         }
 
-        val (trackSignature, trackExpiration) = AccessCryptoUtil.generateSignatureAndTimestamp(track.checksum)
+        val (trackSignature, trackExpiration) = AccessCryptoUtil.generateSignatureAndTimestamp(track.checksum, STREAM_VALIDITY_SECONDS)
 
         return@transaction Streamable(
             trackId = track.id.value,
