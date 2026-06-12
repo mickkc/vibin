@@ -57,7 +57,7 @@ class ActivityWidget(widgetContext: WidgetContext, val extended: Boolean = true)
                         val duration = durationsPerDay.find { it.first.isEqual(day) }?.second ?: 0
                         val intensity = if (longestDurationPerDay > 0) duration.toFloat() / longestDurationPerDay else 0f
 
-                        val ratio = 0.05f + (if (duration > 0) 0.45f else 0f) + (intensity * 0.5f)
+                        val ratio = 0.05f + (if (duration > 0) 0.1f else 0f) + (intensity * 0.85f)
                         val bgColor = WidgetUtils.blendColors(ctx.backgroundColor, ctx.accentColor, ratio)
 
                         div {
