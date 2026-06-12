@@ -1,6 +1,7 @@
 package de.mickkc.vibin.widgets.impl
 
 import de.mickkc.vibin.repos.*
+import de.mickkc.vibin.utils.DateTimeUtils
 import de.mickkc.vibin.widgets.BaseWidget
 import de.mickkc.vibin.widgets.WidgetContext
 import de.mickkc.vibin.widgets.components.statCard
@@ -31,7 +32,7 @@ class ServerStatsWidget(ctx: WidgetContext) : BaseWidget(ctx) {
                     )
                     statCard(
                         this@ServerStatsWidget,
-                        formatDuration(totalDurationSeconds),
+                        DateTimeUtils.formatDuration(totalDurationSeconds),
                         t("widgets.server_stats.total_duration")
                     )
                     statCard(
@@ -56,26 +57,12 @@ class ServerStatsWidget(ctx: WidgetContext) : BaseWidget(ctx) {
                     )
                     statCard(
                         this@ServerStatsWidget,
-                        formatDuration(totalListenDurationSeconds),
+                        DateTimeUtils.formatDuration(totalListenDurationSeconds),
                         t("widgets.server_stats.listen_duration"
                         )
                     )
                 }
             }
         }
-    }
-
-    private fun formatDuration(totalSeconds: Long): String = buildString {
-        val hours = totalSeconds / 3600
-        val minutes = (totalSeconds % 3600) / 60
-        val seconds = totalSeconds % 60
-
-        if (hours > 0) {
-            append("${hours}h ")
-        }
-        if (minutes > 0 || hours > 0) {
-            append("${minutes}m ")
-        }
-        append("${seconds}s")
     }
 }

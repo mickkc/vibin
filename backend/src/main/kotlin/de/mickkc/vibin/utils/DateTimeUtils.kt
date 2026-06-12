@@ -30,4 +30,18 @@ object DateTimeUtils {
     fun localDateToTimestamp(localDate: LocalDate): Long {
         return localDate.toEpochSecond(LocalTime.MIN, ZoneOffset.UTC)
     }
+
+    fun formatDuration(totalSeconds: Long): String = buildString {
+        val hours = totalSeconds / 3600
+        val minutes = (totalSeconds % 3600) / 60
+        val seconds = totalSeconds % 60
+
+        if (hours > 0) {
+            append("${hours}h ")
+        }
+        if (minutes > 0 || hours > 0) {
+            append("${minutes}m ")
+        }
+        append("${seconds}s")
+    }
 }
