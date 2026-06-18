@@ -3,6 +3,7 @@ package de.mickkc.vibin.routes
 import com.google.gson.Gson
 import de.mickkc.vibin.auth.CryptoUtil
 import de.mickkc.vibin.db.ListenType
+import de.mickkc.vibin.repos.ControlRepo
 import de.mickkc.vibin.repos.ListenRepo
 import de.mickkc.vibin.repos.ListenTrackingRepo
 import de.mickkc.vibin.repos.SessionRepo
@@ -42,6 +43,8 @@ fun Application.configureWebSocketRoutes() = routing {
         val logger: Logger = LoggerFactory.getLogger("WebSocketPlayback-User-$userId-Session-$sessionId")
         logger.info("WebSocket connection established: ${this.call.request.local.remoteHost}")
 
+        ControlRepo.add(sessionId, userId)
+
         runCatching {
             incoming.consumeEach { frame ->
                 if (frame !is Frame.Text) return@consumeEach
@@ -60,12 +63,15 @@ fun Application.configureWebSocketRoutes() = routing {
                     }
                     "play" -> {
                         ListenTrackingRepo.trackResumed(sessionId, parsedFrame.timestamp)
+                        ControlRepo.setIsPlaying(sessionId, true)
                     }
                     "pause" -> {
                         ListenTrackingRepo.trackPaused(sessionId, parsedFrame.timestamp)
+                        ControlRepo.setIsPlaying(sessionId, false)
                     }
                     "stop" -> {
                         ListenTrackingRepo.stopped(sessionId, parsedFrame.timestamp)
+                        ControlRepo.setIsPlaying(sessionId, false)
                     }
                     "skipped_next" -> {
                         ListenTrackingRepo.trackSkipped(sessionId, parsedFrame.timestamp)
@@ -77,6 +83,7 @@ fun Application.configureWebSocketRoutes() = routing {
                         val trackId = (parsedFrame.data["trackId"] as? Double)?.toLong()
                         if (trackId != null) {
                             ListenTrackingRepo.trackStarted(sessionId, userId, trackId, parsedFrame.timestamp)
+                            ControlRepo.setIsCurrentTrackId(sessionId, trackId)
                         }
                     }
                     "listen" -> {
@@ -110,6 +117,8 @@ fun Application.configureWebSocketRoutes() = routing {
         }.also {
             ListenTrackingRepo.stopped(sessionId, ListenTrackingRepo.getNowWithOffset(sessionId))
             ListenTrackingRepo.deleteSessionData(sessionId)
+            ControlRepo.setIsPlaying(sessionId, false)
+            ControlRepo.remove(sessionId)
             logger.info("WebSocket connection closed")
         }
 

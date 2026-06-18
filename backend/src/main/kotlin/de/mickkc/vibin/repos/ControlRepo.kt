@@ -23,7 +23,7 @@ data class ControlSession(
     val userId: Long,
     var playing: Boolean,
     var currentTrackId: Long?,
-    var queue: List<Long?>,
+    var queue: List<Long>,
     var lastUpdate: Long = now(),
     val lock: Lock = ReentrantLock(),
     var removed: Boolean = false
@@ -61,7 +61,7 @@ object ControlRepo {
      * @param init Optional initialization code, executed thread-safely (Is this even a word?)
      * @return The created session object
      */
-    fun add(sessionId: String, userId: Long, init: ((ControlSession) -> Unit)?): ControlSession {
+    fun add(sessionId: String, userId: Long, init: ((ControlSession) -> Unit)? = null): ControlSession {
         var isNew = false
         val session = sessions.computeIfAbsent(sessionId) {
             isNew = true
