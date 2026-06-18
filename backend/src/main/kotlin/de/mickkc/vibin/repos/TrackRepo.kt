@@ -460,7 +460,7 @@ object TrackRepo {
         }
     }
 
-    private fun toDtoInternal(trackEntity: TrackEntity): TrackDto {
+    internal fun toDtoInternal(trackEntity: TrackEntity): TrackDto {
         return TrackDto(
             id = trackEntity.id.value,
             title = trackEntity.title,

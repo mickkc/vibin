@@ -1,6 +1,8 @@
 package de.mickkc.vibin.repos
 
+import de.mickkc.vibin.dto.ControlSessionDto
 import de.mickkc.vibin.utils.DateTimeUtils.now
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.Lock
@@ -149,5 +151,25 @@ object ControlRepo {
 
     fun setQueue(sessionId: String, queue: List<Long>): ControlSession? = apply(sessionId) {
         it.queue = queue
+    }
+
+    fun toDto(session: ControlSession): ControlSessionDto = toDtoInternal(session)
+    fun toDto(sessions: Iterable<ControlSession>): List<ControlSessionDto> = sessions.map { toDtoInternal(it) }
+
+    fun toDtoInternal(session: ControlSession): ControlSessionDto = transaction {
+        return@transaction ControlSessionDto(
+            sessionId = session.sessionId,
+            userId = session.userId,
+            playing = session.playing,
+            currentTrack = session.currentTrackId
+                ?.let { TrackRepo.getById(it) }
+                ?.let { TrackRepo.toDtoInternal(it) },
+            queue = session.queue.mapNotNull {
+                TrackRepo.getById(it)
+            }.map {
+                TrackRepo.toMinimalDtoInternal(it)
+            },
+            lastUpdate = session.lastUpdate
+        )
     }
 }
