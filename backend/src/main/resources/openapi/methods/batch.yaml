@@ -1,0 +1,26 @@
+Run:
+  post:
+    summary: Edit multiple tracks at once
+    operationId: batchEditTracks
+    tags:
+      - Batch
+    security:
+      - tokenAuth: []
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '../models/batch.yaml#/BatchEdit'
+    responses:
+      200:
+        description: All changes performed (not applied if dryRun was true)
+        content:
+          application/json:
+            schema:
+              $ref: '../models/batch.yaml#/BatchEditResult'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

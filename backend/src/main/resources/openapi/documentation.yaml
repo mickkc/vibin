@@ -77,6 +77,12 @@ paths:
   /api/artists/autocomplete:
     $ref: 'methods/artists.yaml#/Autocomplete'
 
+  # █▄▄ ▄▀█ ▀█▀ █▀▀ █░█
+  # █▄█ █▀█ ░█░ █▄▄ █▀█
+
+  /api/tracks/edit/batch:
+    $ref: 'methods/batch.yaml#/Run'
+
   # █▀▀ █░█ █▀▀ █▀▀ █▄▀
   # █▄▄ █▀█ ██▄ █▄▄ █░█
 

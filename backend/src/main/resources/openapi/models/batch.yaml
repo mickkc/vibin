@@ -1,0 +1,146 @@
+BatchEditAction:
+  type: object
+  properties:
+    actionType:
+      type: string
+      enum:
+        - ADD_TAGS
+        - REMOVE_TAGS
+        - ADD_TO_PLAYLIST
+        - REMOVE_FROM_PLAYLIST
+        - TITLE
+        - CHANGE_COMMENT
+        - REMOVE_LISTEN_DURATION
+        - REGENERATE_FILE_METADATA
+        - CHANGE_ALBUM
+      required: true
+      example: "ADD_TAGS"
+    data:
+      oneOf:
+        - $ref: '#/BatchEditIdsData'
+        - $ref: '#/BatchEditIdData'
+        - $ref: '#/BatchEditStringData'
+        - $ref: '#/BatchEditIdData'
+
+BatchEditIdData:
+  type: object
+  properties:
+    id:
+      type: integer
+      format: int64
+      description: The id of the tag, playlist or album
+      required: true
+      example: 1
+
+BatchEditIdsData:
+  type: object
+  properties:
+    ids:
+      type: array
+      description: The ids of the tags, playlists or albums
+      required: true
+      items:
+        type: integer
+        format: int64
+        example: 1
+
+BatchEditStringData:
+  type: object
+  properties:
+    from:
+      type: string
+      description: The regex pattern to replace
+      example: "Old text"
+      required: true
+    to:
+      type: string
+      description: The string that should replace the 'from' pattern (supports regex groups from the pattern).
+      example: "New text"
+      required: true
+
+BatchEdit:
+  type: object
+  properties:
+    trackIds:
+      type: array
+      description: Specific track ids to modify
+      required: false
+      items:
+        type: integer
+        format: int64
+        example: 1
+    query:
+      type: string
+      description: Advanced search query to find tracks to modify
+      required: false
+      example: "a:\"Rick Astley\""
+    actions:
+      type: array
+      required: true
+      desciption: The actions to run on the selected / found tracks
+      items:
+        $ref: '#/BatchEditAction'
+    dryRun:
+      type: boolean
+      required: true
+      description: If true, don't write anything to the database. Instead, simulate and return the result for review
+      example: true
+
+BatchEditResultChange:
+  type: object
+  properties:
+    track:
+      $ref: 'track.yaml#/MinimalTrack'
+      nullable: false
+    type:
+      type: string
+      enum:
+        - TAGS
+        - PLAYLIST
+        - NAME
+        - COMMENT
+        - LISTEN_DURATION
+        - FILE_METADATA
+        - ALBUM
+      example: TAGS
+      nullable: false
+      description: What has changed
+    before:
+      type: string
+      nullable: false
+      description: The value before the change
+      example: Calm, Lofi
+    after:
+      type: string
+      nullable: false
+      description: The value after the change
+      example: Calm, Lofi, Chill
+
+BatchEditResult:
+  type: object
+  properties:
+    affectedTracks:
+      type: integer
+      description: The total count of unique modified tracks
+      nullable: false
+      example: 10
+    affectedFields:
+      type: integer
+      description: The total count of all modified fields across all tracks and actions
+      nullable: false
+      example: 20
+    changes:
+      type: array
+      items:
+        $ref: '#/BatchEditResultChange'
+      nullable: false
+      description: All changes that were (or would be) performed.
+    didWriteToDatabase:
+      type: boolean
+      description: Whether anything was actually written to the database (false if dry run or no changes performed)
+      nullable: false
+      example: true
+    error:
+      type: string
+      description: The error that occured, or null if there was none.
+      nullable: true
