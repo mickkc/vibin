@@ -22,6 +22,33 @@ Base:
         schema:
           type: integer
           format: int32
+      - name: sort
+        in: query
+        description: Sort criteria
+        required: false
+        example: "TITLE"
+        schema:
+          type: string
+          enum:
+            - TITLE
+            - RELEASE_YEAR
+            - AUDIO_QUALITY
+            - AUDIO_DURATION
+            - LISTEN_DURATION
+            - DATE_ADDED
+            - DATE_MODIFIED
+            - LAST_LISTENED_TO
+            - RANDOM
+      - name: dir
+        in: query
+        description: Sort direction
+        required: false
+        example: "ASC"
+        schema:
+          type: string
+          enum:
+            - ASC
+            - DESC
     responses:
       200:
         description: A paginated list of minimal track info
@@ -223,6 +250,33 @@ Search:
         schema:
           type: boolean
           default: false
+      - name: sort
+        in: query
+        description: Sort criteria
+        required: false
+        example: "TITLE"
+        schema:
+          type: string
+          enum:
+            - TITLE
+            - RELEASE_YEAR
+            - AUDIO_QUALITY
+            - AUDIO_DURATION
+            - LISTEN_DURATION
+            - DATE_ADDED
+            - DATE_MODIFIED
+            - LAST_LISTENED_TO
+            - RANDOM
+      - name: dir
+        in: query
+        description: Sort direction
+        required: false
+        example: "ASC"
+        schema:
+          type: string
+          enum:
+            - ASC
+            - DESC
     responses:
       200:
         description: List of tracks matching the search query
