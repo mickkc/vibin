@@ -8,8 +8,8 @@ info:
     url: "https://codeberg.org/mickkc/vibin"
     email: "contact@mickkc.dev"
   license:
-    name: Licensed under VPL v1.0
-    url: "https://github.com/mickkc/vibin/blob/main/LICENSE.md"
+    name: Licensed under GPL v3
+    url: "https://codeberg.org/mickkc/vibin/src/branch/main/LICENSE"
 servers:
   - url: 'http://localhost:8080'
 paths:
