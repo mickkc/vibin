@@ -8,6 +8,20 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 
+enum class SessionPlayState {
+    PLAYING,
+    PAUSED,
+    STOPPED,
+    BUFFERING,
+    UNKNOWN
+}
+
+enum class SessionRepeatState {
+    OFF,
+    CURRENT_TRACK,
+    ALL
+}
+
 /**
  * @property sessionId The session id - should be unique for each session.
  * @property userId The id of the user this session belongs to.
@@ -23,12 +37,24 @@ import java.util.concurrent.locks.ReentrantLock
 data class ControlSession(
     val sessionId: String,
     val userId: Long,
-    var playing: Boolean,
+    var state: SessionPlayState,
     var currentTrackId: Long?,
     var queue: List<Long>,
+    var repeatState: SessionRepeatState,
+    var shuffleState: Boolean,
+    var volume: Float,
+    var speed: Float,
     var lastUpdate: Long = now(),
     val lock: Lock = ReentrantLock(),
-    var removed: Boolean = false
+    var removed: Boolean = false,
+    var setState: (suspend (SessionPlayState) -> Boolean)? = null,
+    var setCurrentTrackId: (suspend (Long) -> Boolean)? = null,
+    var setTrackIdFromQueue: (suspend (Int) -> Boolean)? = null,
+    var setQueue: (suspend (List<Long>, Int?) -> Boolean)? = null,
+    var setRepeatState: (suspend (SessionRepeatState) -> Boolean)? = null,
+    var setShuffleState: (suspend (Boolean) -> Boolean)? = null,
+    var setVolume: (suspend (Float) -> Boolean)? = null,
+    var setSpeed: (suspend (Float) -> Boolean)? = null
 )
 
 object ControlRepo {
@@ -67,7 +93,7 @@ object ControlRepo {
         var isNew = false
         val session = sessions.computeIfAbsent(sessionId) {
             isNew = true
-            ControlSession(sessionId, userId, false, null, emptyList())
+            ControlSession(sessionId, userId, SessionPlayState.UNKNOWN, null, emptyList(), SessionRepeatState.OFF, false, 1f, 1f)
         }
         if (isNew) {
             lock(session) { init?.invoke(session) }
@@ -141,8 +167,8 @@ object ControlRepo {
         return result
     }
 
-    fun setIsPlaying(sessionId: String, isPlaying: Boolean): ControlSession? = apply(sessionId) {
-        it.playing = isPlaying
+    fun setState(sessionId: String, state: SessionPlayState): ControlSession? = apply(sessionId) {
+        it.state = state
     }
 
     fun setIsCurrentTrackId(sessionId: String, trackId: Long?): ControlSession? = apply(sessionId) {
@@ -153,6 +179,22 @@ object ControlRepo {
         it.queue = queue
     }
 
+    fun setRepeatState(sessionId: String, repeatState: SessionRepeatState): ControlSession? = apply(sessionId) {
+        it.repeatState = repeatState
+    }
+
+    fun setShuffleState(sessionId: String, shuffleState: Boolean): ControlSession? = apply(sessionId) {
+        it.shuffleState = shuffleState
+    }
+
+    fun setVolume(sessionId: String, volume: Float): ControlSession? = apply(sessionId) {
+        it.volume = volume
+    }
+
+    fun setSpeed(sessionId: String, speed: Float): ControlSession? = apply(sessionId) {
+        it.speed = speed
+    }
+
     fun toDto(session: ControlSession): ControlSessionDto = toDtoInternal(session)
     fun toDto(sessions: Iterable<ControlSession>): List<ControlSessionDto> = sessions.map { toDtoInternal(it) }
 
@@ -160,7 +202,7 @@ object ControlRepo {
         return@transaction ControlSessionDto(
             sessionId = session.sessionId,
             userId = session.userId,
-            playing = session.playing,
+            state = session.state.name,
             currentTrack = session.currentTrackId
                 ?.let { TrackRepo.getById(it) }
                 ?.let { TrackRepo.toDtoInternal(it) },
@@ -169,6 +211,10 @@ object ControlRepo {
             }.map {
                 TrackRepo.toMinimalDtoInternal(it)
             },
+            volume = session.volume,
+            speed = session.speed,
+            repeat = session.repeatState.name,
+            shuffle = session.shuffleState,
             lastUpdate = session.lastUpdate
         )
     }

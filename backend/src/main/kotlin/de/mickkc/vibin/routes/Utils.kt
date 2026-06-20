@@ -279,6 +279,35 @@ suspend fun ApplicationCall.getIntParameter(paramName: String): Int? {
     return intValue
 }
 
+suspend fun ApplicationCall.getFloatOrDefault(paramName: String, default: Float): Float? {
+    val paramValue = this.parameters[paramName] ?: return default
+
+    val intValue = paramValue.toFloatOrNull()
+    if (intValue == null) {
+        invalidParameter(paramName)
+        return null
+    }
+
+    return intValue
+}
+
+suspend fun ApplicationCall.getFloatParameter(paramName: String): Float? {
+    val paramValue = this.parameters[paramName]
+
+    if (paramValue == null) {
+        missingParameter(paramName)
+        return null
+    }
+
+    val intValue = paramValue.toFloatOrNull()
+    if (intValue == null) {
+        invalidParameter(paramName)
+        return null
+    }
+
+    return intValue
+}
+
 suspend inline fun<reified E : Enum<E>> ApplicationCall.getEnum(paramName: String, default: E?): E? {
     val strParam = if (default != null) getStringOrDefault(paramName, default.name) else getStringParameter(paramName)
     if (strParam == null) return null

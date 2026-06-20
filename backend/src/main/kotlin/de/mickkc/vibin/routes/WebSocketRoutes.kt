@@ -3,22 +3,22 @@ package de.mickkc.vibin.routes
 import com.google.gson.Gson
 import de.mickkc.vibin.auth.CryptoUtil
 import de.mickkc.vibin.db.ListenType
-import de.mickkc.vibin.repos.ControlRepo
-import de.mickkc.vibin.repos.ListenRepo
-import de.mickkc.vibin.repos.ListenTrackingRepo
-import de.mickkc.vibin.repos.SessionRepo
+import de.mickkc.vibin.repos.*
+import de.mickkc.vibin.utils.DateTimeUtils
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 @Serializable
-data class WsFrame(val type: String, val data: Map<String, @Serializable @Contextual Any>, val timestamp: Long)
+data class WsFrame(val type: String, val data: Map<String, @Serializable @Contextual Any?>, val timestamp: Long)
 
 fun Application.configureWebSocketRoutes() = routing {
 
@@ -43,7 +43,45 @@ fun Application.configureWebSocketRoutes() = routing {
         val logger: Logger = LoggerFactory.getLogger("WebSocketPlayback-User-$userId-Session-$sessionId")
         logger.info("WebSocket connection established: ${this.call.request.local.remoteHost}")
 
-        ControlRepo.add(sessionId, userId)
+        val gson = Gson()
+
+        suspend fun sendData(type: String, data: Map<String, @Serializable @Contextual Any?>): Boolean = withContext(Dispatchers.IO) {
+            try {
+                outgoing.send(Frame.Text(gson.toJson(WsFrame(type, data, DateTimeUtils.now()))))
+                return@withContext true
+            }
+            catch (e: Exception) {
+                logger.error("Error sending event to websocket.", e)
+                return@withContext false
+            }
+        }
+
+        ControlRepo.add(sessionId, userId) { session ->
+            session.setState = {
+                sendData("state", mapOf("state" to it.name))
+            }
+            session.setCurrentTrackId = {
+                sendData("currentTrack", mapOf("id" to it))
+            }
+            session.setTrackIdFromQueue = {
+                sendData("currentTrack", mapOf("queueId" to it))
+            }
+            session.setQueue = { queueIds: List<Long>, index: Int? ->
+                sendData("queue", mapOf("ids" to queueIds, "index" to index))
+            }
+            session.setShuffleState = { state ->
+                sendData("shuffle", mapOf("state" to state))
+            }
+            session.setRepeatState = { state ->
+                sendData("repeat", mapOf("state" to state))
+            }
+            session.setVolume = { volume ->
+                sendData("volume", mapOf("volume" to volume))
+            }
+            session.setSpeed = { speed ->
+                sendData("speed", mapOf("speed" to speed))
+            }
+        }
 
         runCatching {
             incoming.consumeEach { frame ->
@@ -63,15 +101,15 @@ fun Application.configureWebSocketRoutes() = routing {
                     }
                     "play" -> {
                         ListenTrackingRepo.trackResumed(sessionId, parsedFrame.timestamp)
-                        ControlRepo.setIsPlaying(sessionId, true)
+                        ControlRepo.setState(sessionId, SessionPlayState.PLAYING)
                     }
                     "pause" -> {
                         ListenTrackingRepo.trackPaused(sessionId, parsedFrame.timestamp)
-                        ControlRepo.setIsPlaying(sessionId, false)
+                        ControlRepo.setState(sessionId, SessionPlayState.PAUSED)
                     }
                     "stop" -> {
                         ListenTrackingRepo.stopped(sessionId, parsedFrame.timestamp)
-                        ControlRepo.setIsPlaying(sessionId, false)
+                        ControlRepo.setState(sessionId, SessionPlayState.STOPPED)
                     }
                     "skipped_next" -> {
                         ListenTrackingRepo.trackSkipped(sessionId, parsedFrame.timestamp)
@@ -107,6 +145,47 @@ fun Application.configureWebSocketRoutes() = routing {
                             )
                         }
                     }
+                    "repeat" -> {
+                        val mode = parsedFrame.data["mode"] as? String
+                        if (mode == null) {
+                            logger.error("Invalid repeat mode in websocket message.")
+                        }
+                        else {
+                            when (mode) {
+                                "all" -> ControlRepo.setRepeatState(sessionId, SessionRepeatState.ALL)
+                                "one" -> ControlRepo.setRepeatState(sessionId, SessionRepeatState.CURRENT_TRACK)
+                                "off" -> ControlRepo.setRepeatState(sessionId, SessionRepeatState.OFF)
+                                else -> logger.warn("Invalid repeat mode: $mode")
+                            }
+                        }
+                    }
+                    "shuffle" -> {
+                        val mode = parsedFrame.data["shuffle"] as? Boolean
+                        if (mode == null) {
+                            logger.error("Invalid shuffle mode in websocket message.")
+                        }
+                        else {
+                            ControlRepo.setShuffleState(sessionId, mode)
+                        }
+                    }
+                    "volume" -> {
+                        val volume = parsedFrame.data["volume"] as? Double
+                        if (volume == null) {
+                            logger.error("Invalid volume in websocket message.")
+                        }
+                        else {
+                            ControlRepo.setVolume(sessionId, volume.toFloat())
+                        }
+                    }
+                    "speed" -> {
+                        val speed = parsedFrame.data["speed"] as? Double
+                        if (speed == null) {
+                            logger.error("Invalid speed in websocket message.")
+                        }
+                        else {
+                            ControlRepo.setSpeed(sessionId, speed.toFloat())
+                        }
+                    }
                     else -> {
                         logger.warn("Unknown WebSocket frame type: ${parsedFrame.type}")
                     }
@@ -117,7 +196,7 @@ fun Application.configureWebSocketRoutes() = routing {
         }.also {
             ListenTrackingRepo.stopped(sessionId, ListenTrackingRepo.getNowWithOffset(sessionId))
             ListenTrackingRepo.deleteSessionData(sessionId)
-            ControlRepo.setIsPlaying(sessionId, false)
+            ControlRepo.setState(sessionId, SessionPlayState.STOPPED)
             ControlRepo.remove(sessionId)
             logger.info("WebSocket connection closed")
         }
