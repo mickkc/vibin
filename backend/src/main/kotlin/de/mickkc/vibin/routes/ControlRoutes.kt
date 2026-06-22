@@ -12,6 +12,13 @@ import io.ktor.server.routing.*
 suspend fun RoutingCall.getControlSession(paramName: String = "id"): ControlSession? {
     val userId = getUserId() ?: return null.also { unauthorized() }
     val sessionId = getStringParameter(paramName) ?: return null
+
+    if (sessionId.trim().lowercase() == "current") {
+        val currentSession = ControlRepo.getCurrentSession(userId)
+        if (currentSession == null) notFound()
+        return currentSession
+    }
+
     val session = ControlRepo.getById(sessionId) ?: return null.also { notFound() }
 
     if (userId != session.userId) {
