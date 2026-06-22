@@ -1,0 +1,59 @@
+GetSessions:
+  get:
+    summary: Get all controlable sessions for the loogged in user
+    opereationId: getControlSessions
+    tags:
+      - Control
+    security:
+      - tokenAuth: []
+    responses:
+      200:
+        description: Controlable sessions
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../models/control.yaml#/ControlSession'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+GetSession:
+  get:
+    summary: Get a controlable session by its ID
+    operationId: getControlSessionById
+    tags:
+      - Control
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: id
+        in: path
+        schema:
+          type: string
+        required: true
+        description: The session ID, or "current" to use the last updated session
+        example: current
+    responses:
+      200:
+        description: The session object
+        content:
+          application/json:
+            schema:
+              $ref: '../models/control.yaml#/ControlSession'
+      404:
+        description: Session not found (or no current session if ID is "current")
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
