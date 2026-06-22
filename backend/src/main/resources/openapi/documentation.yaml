@@ -146,6 +146,18 @@ paths:
   /api/playlists/containing/{trackId}:
     $ref: 'methods/playlistTracks.yaml#/ContainingTrack'
 
+  # █▀ █▀▀ █▀ █▀ █ █▀█ █▄░█ █▀
+  # ▄█ ██▄ ▄█ ▄█ █ █▄█ █░▀█ ▄█
+
+  /api/auth/sessions:
+    $ref: 'methods/sessions.yaml#/GetAll'
+
+  /api/auth/sessions/all:
+    $ref: 'methods/sessions.yaml#/InvalidateAll'
+
+  /api/auth/sessions/{id}:
+    $ref: 'methods/sessions.yaml#/Invalidate'
+
   # █▀ █▀▀ ▀█▀ ▀█▀ █ █▄░█ █▀▀ █▀
   # ▄█ ██▄ ░█░ ░█░ █ █░▀█ █▄█ ▄█
   
