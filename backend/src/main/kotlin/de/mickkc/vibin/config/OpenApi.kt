@@ -1,7 +1,7 @@
 package de.mickkc.vibin.config
 
 import io.ktor.server.application.*
-import io.ktor.server.plugins.openapi.*
+import io.ktor.server.plugins.swagger.*
 import io.ktor.server.routing.*
 import io.swagger.v3.core.util.Yaml
 import io.swagger.v3.parser.OpenAPIV3Parser
@@ -15,7 +15,7 @@ fun Application.configureOpenApi() {
     val combinedSpec = combineOpenApiSpec()
 
     routing {
-        openAPI(path = "/api/docs", swaggerFile = combinedSpec.absolutePath)
+        swaggerUI("/api/docs", combinedSpec)
     }
 }
 
