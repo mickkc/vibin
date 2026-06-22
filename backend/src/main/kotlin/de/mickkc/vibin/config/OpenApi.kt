@@ -1,6 +1,7 @@
 package de.mickkc.vibin.config
 
 import io.ktor.server.application.*
+import io.ktor.server.http.content.*
 import io.ktor.server.plugins.swagger.*
 import io.ktor.server.routing.*
 import io.swagger.v3.core.util.Yaml
@@ -15,7 +16,11 @@ fun Application.configureOpenApi() {
     val combinedSpec = combineOpenApiSpec()
 
     routing {
-        swaggerUI("/api/docs", combinedSpec)
+        swaggerUI("/api/docs", combinedSpec) {
+            customStyle("/api/swagger/static/swagger-dark.css")
+        }
+
+        staticResources("/api/swagger/static", "openapi.static")
     }
 }
 
