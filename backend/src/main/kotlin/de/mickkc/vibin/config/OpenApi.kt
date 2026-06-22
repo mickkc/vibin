@@ -19,7 +19,7 @@ fun Application.configureOpenApi() {
     }
 }
 
-private fun combineOpenApiSpec(): File {
+fun combineOpenApiSpec(): File {
     val options = ParseOptions().apply {
         isResolve = true
         isResolveFully = false
