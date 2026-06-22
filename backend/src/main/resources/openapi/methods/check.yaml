@@ -3,7 +3,6 @@ Check:
     summary: healthcheck endpoint
     operationId: checkHealth
     tags:
-      - Misc
       - Healthcheck
     responses:
       200:

@@ -13,40 +13,7 @@ info:
 servers:
   - url: 'http://localhost:8080'
 paths:
-  
-  # ▄▀█ █░█ ▀█▀ █░█
-  # █▀█ █▄█ ░█░ █▀█
 
-  /api/auth/login:
-    $ref: 'methods/auth.yaml#/Login'
-
-  /api/auth/validate:
-    $ref: 'methods/auth.yaml#/Validate'
-
-  /api/auth/logout:
-    $ref: 'methods/auth.yaml#/Logout'
-
-  # █▀▄▀█ █▀▀ █▀▄ █ ▄▀█ ▀█▀ █▀█ █▄▀ █▀▀ █▄░█
-  # █░▀░█ ██▄ █▄▀ █ █▀█ ░█░ █▄█ █░█ ██▄ █░▀█
-
-  /api/auth/media/token:
-    $ref: 'methods/mediaTokens.yaml#/MediaToken'
-
-  /api/auth/media:
-    $ref: 'methods/mediaTokens.yaml#/Validate'
-
-  # █▀ █▀▀ █▀ █▀ █ █▀█ █▄░█ █▀
-  # ▄█ ██▄ ▄█ ▄█ █ █▄█ █░▀█ ▄█
-
-  /api/auth/sessions:
-    $ref: 'methods/sessions.yaml#/GetAll'
-
-  /api/auth/sessions/{sessionId}:
-    $ref: 'methods/sessions.yaml#/Invalidate'
-
-  /api/auth/sessions/all:
-    $ref: 'methods/sessions.yaml#/InvalidateAll'
-  
   # ▄▀█ █░░ █▄▄ █░█ █▀▄▀█ █▀
   # █▀█ █▄▄ █▄█ █▄█ █░▀░█ ▄█
 
@@ -77,17 +44,23 @@ paths:
   /api/artists/autocomplete:
     $ref: 'methods/artists.yaml#/Autocomplete'
 
+  # ▄▀█ █░█ ▀█▀ █░█
+  # █▀█ █▄█ ░█░ █▀█
+
+  /api/auth/login:
+    $ref: 'methods/auth.yaml#/Login'
+
+  /api/auth/validate:
+    $ref: 'methods/auth.yaml#/Validate'
+
+  /api/auth/logout:
+    $ref: 'methods/auth.yaml#/Logout'
+
   # █▄▄ ▄▀█ ▀█▀ █▀▀ █░█
   # █▄█ █▀█ ░█░ █▄▄ █▀█
 
   /api/tracks/edit/batch:
     $ref: 'methods/batch.yaml#/Run'
-
-  # █▀▀ █░█ █▀▀ █▀▀ █▄▀
-  # █▄▄ █▀█ ██▄ █▄▄ █░█
-
-  /api/check:
-    $ref: 'methods/check.yaml#/Check'
 
   # █▀▀ ▄▀█ █░█ █▀█ █▀█ █ ▀█▀ █▀▀ █▀
   # █▀░ █▀█ ▀▄▀ █▄█ █▀▄ █ ░█░ ██▄ ▄█
@@ -100,6 +73,30 @@ paths:
 
   /api/favorites/{type}/check/{entityId}:
     $ref: 'methods/favorites.yaml#/Check'
+
+  # █░█ █▀▀ ▄▀█ █░░ ▀█▀ █░█ █▀▀ █░█ █▀▀ █▀▀ █▄▀
+  # █▀█ ██▄ █▀█ █▄▄ ░█░ █▀█ █▄▄ █▀█ ██▄ █▄▄ █░█
+
+  /api/check:
+    $ref: 'methods/check.yaml#/Check'
+
+  # █░░ █▄█ █▀█ █ █▀▀ █▀
+  # █▄▄ ░█░ █▀▄ █ █▄▄ ▄█
+
+  /api/tracks/{id}/lyrics:
+    $ref: 'methods/lyrics.yaml#/Get'
+
+  /api/tracks/{id}/lyrics/check:
+    $ref: 'methods/lyrics.yaml#/Check'
+
+  # █▀▄▀█ █▀▀ █▀▄ █ ▄▀█ ▀█▀ █▀█ █▄▀ █▀▀ █▄░█
+  # █░▀░█ ██▄ █▄▀ █ █▀█ ░█░ █▄█ █░█ ██▄ █░▀█
+
+  /api/auth/media/token:
+    $ref: 'methods/mediaTokens.yaml#/MediaToken'
+
+  /api/auth/media:
+    $ref: 'methods/mediaTokens.yaml#/Validate'
 
   # █▀▄▀█ █▀▀ ▀█▀ ▄▀█ █▀▄ ▄▀█ ▀█▀ ▄▀█
   # █░▀░█ ██▄ ░█░ █▀█ █▄▀ █▀█ ░█░ █▀█
@@ -212,24 +209,6 @@ paths:
   /api/tasks/{id}/run:
     $ref: 'methods/tasks.yaml#/Run'
 
-  # █░█ █▀█ █░░ █▀█ ▄▀█ █▀▄ █▀
-  # █▄█ █▀▀ █▄▄ █▄█ █▀█ █▄▀ ▄█
-
-  /api/uploads:
-    $ref: 'methods/uploads.yaml#/Base'
-
-  /api/uploads/{id}/metadata:
-    $ref: 'methods/uploads.yaml#/AddMetadata'
-
-  /api/uploads/{id}:
-    $ref: 'methods/uploads.yaml#/Delete'
-
-  /api/uploads/{id}/apply:
-    $ref: 'methods/uploads.yaml#/Apply'
-
-  /api/uploads/tracks/{id}:
-    $ref: 'methods/uploads.yaml#/GetUploadedTracks'
-
   # ▀█▀ █▀█ ▄▀█ █▀▀ █▄▀ █▀
   # ░█░ █▀▄ █▀█ █▄▄ █░█ ▄█
 
@@ -254,12 +233,6 @@ paths:
   /api/tracks/newest:
     $ref: 'methods/tracks.yaml#/Newest'
 
-  /api/tracks/{id}/lyrics:
-    $ref: 'methods/lyrics.yaml#/Get'
-
-  /api/tracks/{id}/lyrics/check:
-    $ref: 'methods/lyrics.yaml#/Check'
-
   /api/tracks/{id}/download:
     $ref: 'methods/tracks.yaml#/Download'
 
@@ -269,11 +242,23 @@ paths:
   /api/tracks/{id}/stream:
     $ref: 'methods/tracks.yaml#/Stream'
 
-  # █▀█ █▀▀ █░░ ▄▀█ ▀█▀ █▀▀ █▀▄   ▀█▀ █▀█ ▄▀█ █▀▀ █▄▀ █▀
-  # █▀▄ ██▄ █▄▄ █▀█ ░█░ ██▄ █▄▀   ░█░ █▀▄ █▀█ █▄▄ █░█ ▄█
+  # █░█ █▀█ █░░ █▀█ ▄▀█ █▀▄ █▀
+  # █▄█ █▀▀ █▄▄ █▄█ █▀█ █▄▀ ▄█
 
-  /api/tracks/{id}/related:
-    $ref: 'methods/relatedTracks.yaml#/Base'
+  /api/uploads:
+    $ref: 'methods/uploads.yaml#/Base'
+
+  /api/uploads/{id}/metadata:
+    $ref: 'methods/uploads.yaml#/AddMetadata'
+
+  /api/uploads/{id}:
+    $ref: 'methods/uploads.yaml#/Delete'
+
+  /api/uploads/{id}/apply:
+    $ref: 'methods/uploads.yaml#/Apply'
+
+  /api/uploads/tracks/{id}:
+    $ref: 'methods/uploads.yaml#/GetUploadedTracks'
 
   # █░█ █▀ █▀▀ █▀█ █▀
   # █▄█ ▄█ ██▄ █▀▄ ▄█
@@ -292,6 +277,13 @@ paths:
   
   /api/users/username/{username}/exists:
     $ref: 'methods/users.yaml#/CheckUsername'
+
+
+  # █▀█ █▀▀ █░░ ▄▀█ ▀█▀ █▀▀ █▀▄   ▀█▀ █▀█ ▄▀█ █▀▀ █▄▀ █▀
+  # █▀▄ ██▄ █▄▄ █▀█ ░█░ ██▄ █▄▀   ░█░ █▀▄ █▀█ █▄▄ █░█ ▄█
+
+  /api/tracks/{id}/related:
+    $ref: 'methods/relatedTracks.yaml#/Base'
 
   # █░█░█ █ █▀▄ █▀▀ █▀▀ ▀█▀ █▀
   # ▀▄▀▄▀ █ █▄▀ █▄█ ██▄ ░█░ ▄█
