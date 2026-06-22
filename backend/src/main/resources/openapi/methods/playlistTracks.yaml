@@ -3,8 +3,7 @@ Base:
     summary: Add a track to a playlist
     operationId: addTrackToPlaylist
     tags:
-      - Playlists
-      - Tracks
+      - PlaylistTracks
     security:
       - tokenAuth: []
     parameters:
@@ -40,8 +39,7 @@ Base:
     summary: Remove a track from a playlist
     operationId: removeTrackFromPlaylist
     tags:
-      - Playlists
-      - Tracks
+      - PlaylistTracks
     security:
       - tokenAuth: []
     parameters:
@@ -77,8 +75,7 @@ Base:
     summary: Move a track within a playlist
     operationId: moveTrackInPlaylist
     tags:
-      - Playlists
-      - Tracks
+      - PlaylistTracks
     security:
       - tokenAuth: []
     parameters:
@@ -124,8 +121,7 @@ ContainingTrack:
     summary: Get all playlists containing a specific track
     operationId: getPlaylistsContainingTrack
     tags:
-      - Playlists
-      - Tracks
+      - PlaylistTracks
     security:
       - tokenAuth: []
     parameters:

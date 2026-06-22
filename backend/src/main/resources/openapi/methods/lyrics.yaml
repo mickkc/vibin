@@ -3,7 +3,6 @@ Get:
     summary: Get track lyrics
     operationId: getTrackLyrics
     tags:
-      - Tracks
       - Lyrics
     security:
       - tokenAuth: [ ]
@@ -41,7 +40,6 @@ Check:
     summary: Check if lyrics are available for a track
     operationId: checkTrackLyrics
     tags:
-      - Tracks
       - Lyrics
     security:
       - tokenAuth: [ ]
