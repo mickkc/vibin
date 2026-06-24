@@ -185,6 +185,9 @@ paths:
   /api/stats/recent:
     $ref: 'methods/stats.yaml#/Recent'
 
+  /api/stats/recent/nontracks:
+    $ref: 'methods/stats.yaml#/RecentNonTracks'
+
   /api/stats/{type}/top{limit}:
     $ref: 'methods/stats.yaml#/Top'
 
