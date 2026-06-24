@@ -9,12 +9,18 @@ Check:
         description: Healthcheck successful
         content:
           application/json:
-            type: object
-            properties:
-              status:
-                type: string
-                nullable: false
-                example: "ok"
-              version:
-                type: string
-                example: "0.0.1"
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  nullable: false
+                  example: "ok"
+                version:
+                  type: string
+                  example: "0.0.1"
+                supportedAppVersions:
+                  type: array
+                  items:
+                    type: string
+                    example: "0.0.1"
