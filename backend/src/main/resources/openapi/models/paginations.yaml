@@ -8,7 +8,7 @@ PaginatedUserResponse:
     total:
       type: integer
       format: int64
-    page:
+    currentPage:
       type: integer
       format: int32
     pageSize:
@@ -29,7 +29,7 @@ PaginatedAlbumResponse:
     total:
       type: integer
       format: int64
-    page:
+    currentPage:
       type: integer
       format: int32
     pageSize:
@@ -50,7 +50,7 @@ PaginatedArtistResponse:
     total:
       type: integer
       format: int64
-    page:
+    currentPage:
       type: integer
       format: int32
     pageSize:
@@ -71,7 +71,7 @@ PaginatedPlaylistResponse:
     total:
       type: integer
       format: int64
-    page:
+    currentPage:
       type: integer
       format: int32
     pageSize:
@@ -92,7 +92,7 @@ PaginatedMinimalTrackResponse:
     total:
       type: integer
       format: int64
-    page:
+    currentPage:
       type: integer
       format: int32
     pageSize:

@@ -8,10 +8,8 @@ Tag:
       type: string
     description:
       type: string
-    color:
-      type: string
-      example: "#ff0000"
-      nullable: true
+    importance:
+      type: integer
     createdAt:
       type: integer
       format: int64
@@ -29,6 +27,5 @@ TagEditData:
     description:
       type: string
       nullable: true
-    color:
-      type: string
-      nullable: true
+    importance:
+      type: integer

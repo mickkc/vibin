@@ -8,6 +8,9 @@ Album:
       type: string
     description:
       type: string
+    coverId:
+      type: integer
+      format: int64
     year:
       type: integer
       nullable: true
@@ -36,7 +39,7 @@ AlbumData:
     tracks:
       type: array
       items:
-        $ref: 'track.yaml#/MinimalTrack'
+        $ref: 'track.yaml#/Track'
 
 AlbumMetadata:
   type: object
