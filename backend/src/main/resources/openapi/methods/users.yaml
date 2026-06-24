@@ -158,12 +158,11 @@ Image:
           format: int64
       - name: quality
         in: query
-        description: Size of the profile picture (small, large or original (default))
+        description: The quality (width & height) of the image. 0 means the original quality.
         required: false
+        default: 0
         schema:
-          type: string
-          enum: [small, large, original]
-          default: original
+          type: integer
     responses:
       200:
         description: User profile picture

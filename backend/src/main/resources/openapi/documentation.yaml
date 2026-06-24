@@ -28,21 +28,27 @@ paths:
 
   /api/albums/{id}/cover:
     $ref: 'methods/albums.yaml#/Cover'
-  
+
+  /api/albums/autocomplete:
+    $ref: 'methods/albums.yaml#/Autocomplete'
+
   # ▄▀█ █▀█ ▀█▀ █ █▀ ▀█▀ █▀
   # █▀█ █▀▄ ░█░ █ ▄█ ░█░ ▄█
-  
+
   /api/artists:
     $ref: 'methods/artists.yaml#/Base'
-  
+
   /api/artists/{id}:
     $ref: 'methods/artists.yaml#/Id'
 
   /api/artists/ids:
     $ref: 'methods/artists.yaml#/Ids'
-  
+
   /api/artists/autocomplete:
     $ref: 'methods/artists.yaml#/Autocomplete'
+
+  /api/artists/{id}/image:
+    $ref: 'methods/artists.yaml#/Image'
 
   # ▄▀█ █░█ ▀█▀ █░█
   # █▀█ █▄█ ░█░ █▀█
@@ -140,6 +146,9 @@ paths:
   /api/playlists/random:
     $ref: 'methods/playlists.yaml#/Random'
 
+  /api/playlists/users/{userId}:
+    $ref: 'methods/playlists.yaml#/ForUser'
+
   /api/playlists/{playlistId}/tracks:
     $ref: 'methods/playlistTracks.yaml#/Base'
 
@@ -208,6 +217,9 @@ paths:
   
   /api/tags/check/{name}:
     $ref: 'methods/tags.yaml#/CheckName'
+
+  /api/tags/autocomplete:
+    $ref: 'methods/tags.yaml#/Autocomplete'
 
   # ▀█▀ ▄▀█ █▀ █▄▀ █▀
   # ░█░ █▀█ ▄█ █░█ ▄█

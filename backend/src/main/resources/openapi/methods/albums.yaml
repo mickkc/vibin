@@ -227,12 +227,11 @@ Cover:
           format: int64
       - name: quality
         in: query
-        description: Size of the cover image (small, large or original (default))
+        description: The quality (width & height) of the image. 0 means the original quality.
         required: false
+        default: 0
         schema:
-          type: string
-          enum: [small, large, original]
-          default: original
+          type: integer
     responses:
       200:
         description: Album cover image
@@ -241,6 +240,47 @@ Cover:
             schema:
               type: string
               format: binary
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Autocomplete:
+  get:
+    summary: Get album name autocompletions
+    operationId: getAlbumAutocomplete
+    tags:
+      - Albums
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: query
+        in: query
+        description: The search query
+        required: true
+        example: Whenever
+        schema:
+          type: string
+      - name: limit
+        in: query
+        description: Maximum amount of results
+        required: false
+        default: 10
+        example: 10
+        schema:
+          type: integer
+    responses:
+      200:
+        description: Autocompleted album names
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+                example: Whenever You Need Somebody
       default:
         description: Error
         content:

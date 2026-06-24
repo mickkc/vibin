@@ -212,6 +212,13 @@ Image:
         schema:
           type: integer
           format: int64
+      - name: quality
+        in: query
+        description: The quality (width & height) of the image. 0 means the original quality.
+        required: false
+        default: 0
+        schema:
+          type: integer
     responses:
       200:
         description: Artist image data
