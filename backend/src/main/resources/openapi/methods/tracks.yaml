@@ -388,37 +388,6 @@ Download:
             schema:
               $ref: '../models/error.yaml#/Error'
 
-Stream:
-  get:
-    summary: Stream track file
-    operationId: streamTrackFile
-    tags:
-      - Tracks
-    security:
-      - tokenAuth: [ ]
-    parameters:
-      - name: id
-        in: path
-        description: ID of the track to stream
-        required: true
-        schema:
-          type: integer
-          format: int64
-    responses:
-      200:
-        description: Track stream
-        content:
-          audio/any:
-            schema:
-              type: string
-              format: binary
-      default:
-        description: Error
-        content:
-          application/json:
-            schema:
-              $ref: '../models/error.yaml#/Error'
-
 Cover:
   get:
     summary: Get track cover image

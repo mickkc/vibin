@@ -293,9 +293,6 @@ paths:
   /api/tracks/{id}/cover:
     $ref: 'methods/tracks.yaml#/Cover'
 
-  /api/tracks/{id}/stream:
-    $ref: 'methods/tracks.yaml#/Stream'
-
   # █░█ █▀█ █░░ █▀█ ▄▀█ █▀▄ █▀
   # █▄█ █▀▀ █▄▄ █▄█ █▀█ █▄▀ ▄█
 
