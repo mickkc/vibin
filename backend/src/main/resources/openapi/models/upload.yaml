@@ -45,12 +45,9 @@ Upload:
     lyrics:
       type: string
       nullable: true
-    coverUrl:
-      type: string
-      nullable: true
     uploaderId:
       type: integer
       format: int64
-    lastUpdate:
+    lastUpdated:
       type: integer
       format: int64

@@ -185,6 +185,13 @@ Image:
         schema:
           type: integer
           format: int64
+      - name: quality
+        in: query
+        description: The quality (width & height) of the image. 0 means the original quality.
+        required: false
+        schema:
+          type: integer
+          default: 0
     responses:
       200:
         description: Playlist image data
@@ -199,6 +206,32 @@ Image:
           application/json:
             schema:
               $ref: '../models/error.yaml#/Error'
+
+ForUser:
+  get:
+    summary: Get all playlists for a user (including collaborated playlists)
+    operationId: getPlaylistsForUser
+    tags:
+      - Playlists
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        description: The user's id
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: The user's playlists
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../models/playlist.yaml#/Playlist'
 
 Random:
   get:

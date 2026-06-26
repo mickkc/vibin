@@ -1,0 +1,62 @@
+Streamable:
+  type: object
+  properties:
+    trackId:
+      type: integer
+      format: int64
+      description: Track id
+      example: 1
+      nullable: false
+    title:
+      type: string
+      example: "Never Gonna Give You Up"
+      description: Track title
+      nullable: false
+    artist:
+      type: string
+      example: "Rick Astley, Another Artist"
+      description: Track artists, separated by commas
+      nullable: false
+    album:
+      type: string
+      example: "Whenever You Need Somebody"
+      nullable: false
+    duration:
+      type: integer
+      format: int64
+      example: 213072
+      description: Track duration in milliseconds
+      nullable: false
+    volumeOffset:
+      type: number
+      format: double
+      example: -0.21
+      description: Volume offset for playback normalization
+      nullable: true
+    coverChecksum:
+      type: string
+      nullable: true
+      example: 25d36f9959a017d268a1fc3c4495542b
+      description: The cover image file checksum
+    coverSignature:
+      type: string
+      nullable: true
+      example: 7ZW4q-urNcjWcQunum7UISNcu3CzLt_OBrQaUuWDE3s
+      description: The cover image signature
+    coverExpiration:
+      type: integer
+      format: int64
+      example: 1782511260
+      nullable: true
+      description: The cover image signature expiration timestamp
+    streamSignature:
+      type: string
+      nullable: false
+      example: oaxRgHZD9iO7ig3B2i6Elu2-Ks5MNFKiR7Od_xhhihg
+      description: The stream signature
+    streamExpiration:
+      type: integer
+      format: int64
+      example: 1782511260
+      nullable: false
+      description: The stream signature expiration timestamp

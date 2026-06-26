@@ -14,7 +14,7 @@ Playlist:
       type: array
       items:
         $ref: 'user.yaml#/User'
-    vibeDef:
+    vibedef:
       type: string
       nullable: true
     owner:
@@ -47,7 +47,7 @@ PlaylistEditData:
         type: integer
         format: int64
       nullable: true
-    vibeDef:
+    vibedef:
       type: string
       nullable: true
 

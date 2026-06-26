@@ -31,6 +31,52 @@ Recent:
             schema:
               $ref: '../models/error.yaml#/Error'
 
+RecentNonTracks:
+  get:
+    summary: Get the most recently listened to non-tracks (albums, artists, playlists)
+    operationId: getRecentNonTracks
+    tags:
+      - Stats
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: limit
+        in: query
+        description: Number of recent items to retrieve
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 5
+    responses:
+      200:
+        description: List of recently listened to items
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  key:
+                    type: string
+                    enum:
+                      - ALBUM
+                      - ARTIST
+                      - PLAYLIST
+                    example: ALBUM
+                  value:
+                    oneOf:
+                      - $ref: '../models/album.yaml#/Album'
+                      - $ref: '../models/artist.yaml#/Artist'
+                      - $ref: '../models/playlist.yaml#/Playlist'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
 Top:
   get:
     summary: Get the top listened to tracks or artists
@@ -56,12 +102,11 @@ Top:
           format: int32
       - name: since
         in: query
-        description: The timestamp in seconds since epoch to get stats since
+        description: The timestamp in seconds since epoch to get stats since (default is since the start of the current month)
         required: false
         schema:
           type: integer
           format: int64
-          default: Start of month
     responses:
       200:
         description: List of top tracks or artists
@@ -137,12 +182,11 @@ Activity:
           format: int64
       - name: since
         in: query
-        description: The timestamp in seconds since epoch to get the activity since
+        description: The timestamp in seconds since epoch to get the activity since (default is since the start of the current month)
         required: false
         schema:
           type: integer
           format: int64
-          default: Start of month
       - name: limit
         in: query
         description: The maximum number of items per category

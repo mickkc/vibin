@@ -8,6 +8,10 @@ Artist:
       type: string
     description:
       type: string
+    imageId:
+      type: integer
+      format: int64
+      nullable: true
     createdAt:
       type: integer
       format: int64

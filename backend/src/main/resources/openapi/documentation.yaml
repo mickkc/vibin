@@ -28,21 +28,27 @@ paths:
 
   /api/albums/{id}/cover:
     $ref: 'methods/albums.yaml#/Cover'
-  
+
+  /api/albums/autocomplete:
+    $ref: 'methods/albums.yaml#/Autocomplete'
+
   # ▄▀█ █▀█ ▀█▀ █ █▀ ▀█▀ █▀
   # █▀█ █▀▄ ░█░ █ ▄█ ░█░ ▄█
-  
+
   /api/artists:
     $ref: 'methods/artists.yaml#/Base'
-  
+
   /api/artists/{id}:
     $ref: 'methods/artists.yaml#/Id'
 
   /api/artists/ids:
     $ref: 'methods/artists.yaml#/Ids'
-  
+
   /api/artists/autocomplete:
     $ref: 'methods/artists.yaml#/Autocomplete'
+
+  /api/artists/{id}/image:
+    $ref: 'methods/artists.yaml#/Image'
 
   # ▄▀█ █░█ ▀█▀ █░█
   # █▀█ █▄█ ░█░ █▀█
@@ -79,6 +85,18 @@ paths:
 
   /api/check:
     $ref: 'methods/check.yaml#/Check'
+
+  # █ █▀▄▀█ ▄▀█ █▀▀ █▀▀ █▀
+  # █ █░▀░█ █▀█ █▄█ ██▄ ▄█
+
+  /api/images/by-checksum/{checksum}:
+    $ref: 'methods/images.yaml#/ByChecksum'
+
+  /api/images/by-id/{id}:
+    $ref: 'methods/images.yaml#/ById'
+
+  /api/images/default:
+    $ref: 'methods/images.yaml#/Default'
 
   # █░░ █▄█ █▀█ █ █▀▀ █▀
   # █▄▄ ░█░ █▀▄ █ █▄▄ ▄█
@@ -140,11 +158,20 @@ paths:
   /api/playlists/random:
     $ref: 'methods/playlists.yaml#/Random'
 
+  /api/playlists/users/{userId}:
+    $ref: 'methods/playlists.yaml#/ForUser'
+
   /api/playlists/{playlistId}/tracks:
     $ref: 'methods/playlistTracks.yaml#/Base'
 
   /api/playlists/containing/{trackId}:
     $ref: 'methods/playlistTracks.yaml#/ContainingTrack'
+
+  # █▀█ █▀▀ █░░ ▄▀█ ▀█▀ █▀▀ █▀▄   ▀█▀ █▀█ ▄▀█ █▀▀ █▄▀ █▀
+  # █▀▄ ██▄ █▄▄ █▀█ ░█░ ██▄ █▄▀   ░█░ █▀▄ █▀█ █▄▄ █░█ ▄█
+
+  /api/tracks/{id}/related:
+    $ref: 'methods/relatedTracks.yaml#/Base'
 
   # █▀ █▀▀ █▀ █▀ █ █▀█ █▄░█ █▀
   # ▄█ ██▄ ▄█ ▄█ █ █▄█ █░▀█ ▄█
@@ -176,6 +203,9 @@ paths:
   /api/stats/recent:
     $ref: 'methods/stats.yaml#/Recent'
 
+  /api/stats/recent/nontracks:
+    $ref: 'methods/stats.yaml#/RecentNonTracks'
+
   /api/stats/{type}/top{limit}:
     $ref: 'methods/stats.yaml#/Top'
 
@@ -190,6 +220,15 @@ paths:
 
   /api/stats/tracks/{id}/duration:
     $ref: 'methods/stats.yaml#/TrackListenDuration'
+
+  # █▀ ▀█▀ █▀█ █▀▀ ▄▀█ █▀▄▀█ █▀
+  # ▄█ ░█░ █▀▄ ██▄ █▀█ █░▀░█ ▄█
+
+  /api/streams:
+    $ref: 'methods/streams.yaml#/GetStreamables'
+
+  /api/streams/{id}:
+    $ref: 'methods/streams.yaml#/Stream'
 
   # ▀█▀ ▄▀█ █▀▀ █▀
   # ░█░ █▀█ █▄█ ▄█
@@ -209,13 +248,16 @@ paths:
   /api/tags/check/{name}:
     $ref: 'methods/tags.yaml#/CheckName'
 
+  /api/tags/autocomplete:
+    $ref: 'methods/tags.yaml#/Autocomplete'
+
   # ▀█▀ ▄▀█ █▀ █▄▀ █▀
   # ░█░ █▀█ ▄█ █░█ ▄█
 
   /api/tasks:
     $ref: 'methods/tasks.yaml#/Get'
 
-  /api/tasks/{taskId}/enable:
+  /api/tasks/{id}/enable:
     $ref: 'methods/tasks.yaml#/Enable'
 
   /api/tasks/{id}/run:
@@ -250,9 +292,6 @@ paths:
 
   /api/tracks/{id}/cover:
     $ref: 'methods/tracks.yaml#/Cover'
-
-  /api/tracks/{id}/stream:
-    $ref: 'methods/tracks.yaml#/Stream'
 
   # █░█ █▀█ █░░ █▀█ ▄▀█ █▀▄ █▀
   # █▄█ █▀▀ █▄▄ █▄█ █▀█ █▄▀ ▄█
@@ -289,13 +328,6 @@ paths:
   
   /api/users/username/{username}/exists:
     $ref: 'methods/users.yaml#/CheckUsername'
-
-
-  # █▀█ █▀▀ █░░ ▄▀█ ▀█▀ █▀▀ █▀▄   ▀█▀ █▀█ ▄▀█ █▀▀ █▄▀ █▀
-  # █▀▄ ██▄ █▄▄ █▀█ ░█░ ██▄ █▄▀   ░█░ █▀▄ █▀█ █▄▄ █░█ ▄█
-
-  /api/tracks/{id}/related:
-    $ref: 'methods/relatedTracks.yaml#/Base'
 
   # █░█░█ █ █▀▄ █▀▀ █▀▀ ▀█▀ █▀
   # ▀▄▀▄▀ █ █▄▀ █▄█ ██▄ ░█░ ▄█

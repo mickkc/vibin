@@ -11,6 +11,10 @@ User:
       nullable: true
     description:
       type: string
+    imageId:
+      type: integer
+      format: int64
+      nullable: true
     email:
       type: string
       nullable: true
@@ -37,6 +41,9 @@ UserEditData:
       type: string
       nullable: true
     displayName:
+      type: string
+      nullable: true
+    description:
       type: string
       nullable: true
     email:

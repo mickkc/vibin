@@ -36,7 +36,7 @@ ById:
       - name: bgColor
         in: query
         required: false
-        description: Optionally ovierride the background color of the widget (hex code)
+        description: Optionally override the background color of the widget (hex code)
         schema:
           type: string
           example: "000000"

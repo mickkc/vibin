@@ -12,6 +12,10 @@ Track:
       type: array
       items:
         $ref: 'artist.yaml#/Artist'
+    coverId:
+      type: integer
+      format: int64
+      nullable: true
     explicit:
       type: boolean
     trackNumber:
@@ -41,8 +45,17 @@ Track:
     comment:
       type: string
       nullable: true
+    bitrate:
+      type: integer
+      nullable: true
     path:
       type: string
+    sampleRate:
+      type: integer
+      nullable: true
+    channels:
+      type: integer
+      nullable: true
     tags:
       type: array
       items:
@@ -179,6 +192,10 @@ MinimalTrack:
         $ref: 'idName.yaml#/IdName'
     album:
       $ref: 'idName.yaml#/IdName'
+    coverId:
+      type: integer
+      format: int64
+      nullable: true
     duration:
       type: integer
       format: int64

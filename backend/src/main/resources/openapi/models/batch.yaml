@@ -13,7 +13,7 @@ BatchEditAction:
         - REMOVE_LISTEN_DURATION
         - REGENERATE_FILE_METADATA
         - CHANGE_ALBUM
-      required: true
+      nullable: false
       example: "ADD_TAGS"
     data:
       oneOf:
@@ -29,7 +29,7 @@ BatchEditIdData:
       type: integer
       format: int64
       description: The id of the tag, playlist or album
-      required: true
+      nullable: false
       example: 1
 
 BatchEditIdsData:
@@ -38,7 +38,7 @@ BatchEditIdsData:
     ids:
       type: array
       description: The ids of the tags, playlists or albums
-      required: true
+      nullable: false
       items:
         type: integer
         format: int64
@@ -51,12 +51,12 @@ BatchEditStringData:
       type: string
       description: The regex pattern to replace
       example: "Old text"
-      required: true
+      nullable: false
     to:
       type: string
       description: The string that should replace the 'from' pattern (supports regex groups from the pattern).
       example: "New text"
-      required: true
+      nullable: false
 
 BatchEdit:
   type: object
@@ -64,7 +64,7 @@ BatchEdit:
     trackIds:
       type: array
       description: Specific track ids to modify
-      required: false
+      nullable: true
       items:
         type: integer
         format: int64
@@ -72,17 +72,17 @@ BatchEdit:
     query:
       type: string
       description: Advanced search query to find tracks to modify
-      required: false
+      nullable: true
       example: "a:\"Rick Astley\""
     actions:
       type: array
-      required: true
-      desciption: The actions to run on the selected / found tracks
+      nullable: false
+      description: The actions to run on the selected / found tracks
       items:
         $ref: '#/BatchEditAction'
     dryRun:
       type: boolean
-      required: true
+      nullable: false
       description: If true, don't write anything to the database. Instead, simulate and return the result for review
       example: true
 
@@ -142,5 +142,5 @@ BatchEditResult:
       example: true
     error:
       type: string
-      description: The error that occured, or null if there was none.
+      description: The error that occurred, or null if there was none.
       nullable: true

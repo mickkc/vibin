@@ -55,6 +55,7 @@ Fetch:
         description: The type of metadata to search for
         required: true
         schema:
+          type: string
           enum:
             - track
             - artist

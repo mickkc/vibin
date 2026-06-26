@@ -5,7 +5,7 @@ GetAll:
     tags:
       - Sessions
     security:
-      - bearerAuth: [ ]
+      - tokenAuth: [ ]
     responses:
       200:
         description: A list of sessions and the index of the current session
@@ -35,9 +35,10 @@ Invalidate:
     tags:
       - Sessions
     security:
-      - bearerAuth: []
+      - tokenAuth: []
     parameters:
-      - name: sessionId
+      - name: id
+        description: The session id
         in: path
         required: true
         schema:
@@ -64,7 +65,7 @@ InvalidateAll:
     tags:
       - Sessions
     security:
-      - bearerAuth: [ ]
+      - tokenAuth: [ ]
     responses:
       200:
         description: Success
