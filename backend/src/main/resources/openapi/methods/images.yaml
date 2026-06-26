@@ -1,0 +1,129 @@
+ByChecksum:
+  get:
+    summary: Get an image by its checksum
+    operationId: getImageByChecksum
+    tags:
+      - Images
+    parameters:
+      - name: checksum
+        in: path
+        description: The image checksum
+        required: true
+        schema:
+          type: string
+      - name: sig
+        in: query
+        description: The image signature
+        required: true
+        schema:
+          type: string
+      - name: exp
+        in: query
+        description: The image signature expiration timestamp
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: quality
+        in: query
+        description: The quality (width & height) of the image. 0 means the original quality.
+        required: false
+        default: 0
+        schema:
+          type: integer
+    responses:
+      200:
+        description: The image
+        content:
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+ById:
+  get:
+    summary: Get an image by its id
+    operationId: getImageById
+    tags:
+      - Images
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: id
+        in: path
+        description: The image id
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: quality
+        in: query
+        description: The quality (width & height) of the image. 0 means the original quality.
+        required: false
+        default: 0
+        schema:
+          type: integer
+    responses:
+      200:
+        description: The image
+        content:
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Default:
+  get:
+    summary: Get a default image by its type
+    operationId: getDefaultImage
+    tags:
+      - Images
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: quality
+        in: query
+        description: The quality (width & height) of the image. 0 means the original quality.
+        required: false
+        default: 0
+        schema:
+          type: integer
+      - name: type
+        in: query
+        description: Item type
+        required: true
+        example: track
+        schema:
+          type: string
+          enum:
+            - album
+            - artist
+            - playlist
+            - track
+            - user
+    responses:
+      200:
+        description: The default image
+        content:
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
