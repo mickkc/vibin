@@ -10,7 +10,7 @@ GetStreamables:
       - name: ids
         in: query
         required: true
-        description: track ids, comma-seperated
+        description: track ids, comma-separated
         example: 1,2,4,8,16,32
         schema:
           type: string

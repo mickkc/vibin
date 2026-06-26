@@ -385,7 +385,7 @@ Download:
       200:
         description: Track file
         content:
-          audio/any:
+          audio/*:
             schema:
               type: string
               format: binary

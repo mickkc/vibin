@@ -15,7 +15,7 @@ Streamable:
     artist:
       type: string
       example: "Rick Astley, Another Artist"
-      description: Track artists, seperated by commas
+      description: Track artists, separated by commas
       nullable: false
     album:
       type: string
@@ -25,7 +25,7 @@ Streamable:
       type: integer
       format: int64
       example: 213072
-      descripition: Track duration in milliseconds
+      description: Track duration in milliseconds
       nullable: false
     volumeOffset:
       type: number

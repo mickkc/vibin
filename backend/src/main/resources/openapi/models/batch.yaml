@@ -77,7 +77,7 @@ BatchEdit:
     actions:
       type: array
       required: true
-      desciption: The actions to run on the selected / found tracks
+      description: The actions to run on the selected / found tracks
       items:
         $ref: '#/BatchEditAction'
     dryRun:
@@ -142,5 +142,5 @@ BatchEditResult:
       example: true
     error:
       type: string
-      description: The error that occured, or null if there was none.
+      description: The error that occurred, or null if there was none.
       nullable: true
