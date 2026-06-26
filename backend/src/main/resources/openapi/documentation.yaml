@@ -221,6 +221,15 @@ paths:
   /api/stats/tracks/{id}/duration:
     $ref: 'methods/stats.yaml#/TrackListenDuration'
 
+  # █▀ ▀█▀ █▀█ █▀▀ ▄▀█ █▀▄▀█ █▀
+  # ▄█ ░█░ █▀▄ ██▄ █▀█ █░▀░█ ▄█
+
+  /api/streams:
+    $ref: 'methods/streams.yaml#/GetStreamables'
+
+  /api/streams/{id}:
+    $ref: 'methods/streams.yaml#/Stream'
+
   # ▀█▀ ▄▀█ █▀▀ █▀
   # ░█░ █▀█ █▄█ ▄█
 

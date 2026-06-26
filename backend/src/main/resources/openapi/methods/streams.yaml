@@ -1,0 +1,101 @@
+GetStreamables:
+  get:
+    summary: Get streamables for multiple tracks
+    operationId: getStreamables
+    tags:
+      - Streams
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: ids
+        in: query
+        required: true
+        description: track ids, comma-seperated
+        example: 1,2,4,8,16,32
+        schema:
+          type: string
+    responses:
+      200:
+        description: Streamable objects, in the same order as the input ids
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../models/streamable.yaml#/Streamable'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+            $ref: '../models/error.yaml#/Error'
+
+Stream:
+  get:
+    summary: Transcode and stream a track
+    operationId: streamTrack
+    tags:
+      - Streams
+    parameters:
+      - name: id
+        in: path
+        description: The track id
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: sig
+        in: query
+        description: The track signature
+        required: true
+        schema:
+          type: string
+      - name: exp
+        in: query
+        description: The track signature expiration timestamp
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: format
+        in: query
+        description: The stream format
+        required: false
+        default: mp3
+        schema:
+          type: string
+          enum:
+            - mp3
+            - opus
+            - aac
+            - original
+      - name: bitrate
+        in: query
+        description: The stream bitrate
+        required: false
+        minimum: 1
+        schema:
+          type: integer
+      - name: start
+        in: query
+        description: Duration in seconds to start at
+        required: false
+        minimum: 0
+        default: 0
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: The transcoded audio data
+        content:
+          audio/*:
+            schema:
+              type: string
+              format: binary
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
