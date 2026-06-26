@@ -136,32 +136,32 @@ Id:
             schema:
               $ref: '../models/error.yaml#/Error'
 
-    delete:
-      summary: Delete an artist
-      operationId: deleteArtist
-      tags:
-        - Artists
-      security:
-        - tokenAuth: [ ]
-      parameters:
-        - name: id
-          in: path
-          description: The ID of the artist to delete
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        200:
-          description: Success
-          content:
-            application/json:
+  delete:
+    summary: Delete an artist
+    operationId: deleteArtist
+    tags:
+      - Artists
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: The ID of the artist to delete
+        required: true
+        schema:
+          type: integer
+          format: int64
+    responses:
+      200:
+        description: Success
+        content:
+          application/json:
             schema:
               $ref: '../models/success.yaml#/Success'
-        default:
-          description: Error
-          content:
-            application/json:
+      default:
+        description: Error
+        content:
+          application/json:
             schema:
               $ref: '../models/error.yaml#/Error'
 
@@ -263,9 +263,9 @@ Autocomplete:
         content:
           application/json:
             schema:
-            type: array
-            items:
-              type: string
+              type: array
+              items:
+                type: string
       default:
         description: Error
         content:

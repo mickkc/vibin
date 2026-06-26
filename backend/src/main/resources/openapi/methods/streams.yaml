@@ -28,7 +28,7 @@ GetStreamables:
         content:
           application/json:
             schema:
-            $ref: '../models/error.yaml#/Error'
+              $ref: '../models/error.yaml#/Error'
 
 Stream:
   get:
