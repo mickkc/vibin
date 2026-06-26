@@ -61,7 +61,6 @@ Stream:
         in: query
         description: The stream format
         required: false
-        default: mp3
         schema:
           type: string
           enum:
@@ -69,22 +68,23 @@ Stream:
             - opus
             - aac
             - original
+          default: mp3
       - name: bitrate
         in: query
         description: The stream bitrate
         required: false
-        minimum: 1
         schema:
           type: integer
+          minimum: 1
       - name: start
         in: query
         description: Duration in seconds to start at
         required: false
-        minimum: 0
-        default: 0
         schema:
           type: integer
           format: int64
+          minimum: 0
+          default: 0
     responses:
       200:
         description: The transcoded audio data

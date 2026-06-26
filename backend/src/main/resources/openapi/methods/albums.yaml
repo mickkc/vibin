@@ -178,7 +178,7 @@ ByArtist:
     tags:
       - Albums
     security:
-      - bearerAuth: [ ]
+      - tokenAuth: [ ]
     parameters:
       - name: id
         in: path
@@ -229,9 +229,9 @@ Cover:
         in: query
         description: The quality (width & height) of the image. 0 means the original quality.
         required: false
-        default: 0
         schema:
           type: integer
+          default: 0
     responses:
       200:
         description: Album cover image
@@ -267,10 +267,10 @@ Autocomplete:
         in: query
         description: Maximum amount of results
         required: false
-        default: 10
         example: 10
         schema:
           type: integer
+          default: 10
     responses:
       200:
         description: Autocompleted album names

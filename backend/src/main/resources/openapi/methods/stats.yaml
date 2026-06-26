@@ -43,7 +43,7 @@ RecentNonTracks:
       - name: limit
         in: query
         description: Number of recent items to retrieve
-        required: true
+        required: false
         schema:
           type: integer
           format: int32
@@ -102,12 +102,11 @@ Top:
           format: int32
       - name: since
         in: query
-        description: The timestamp in seconds since epoch to get stats since
+        description: The timestamp in seconds since epoch to get stats since (default is since the start of the current month)
         required: false
         schema:
           type: integer
           format: int64
-          default: Start of month
     responses:
       200:
         description: List of top tracks or artists
@@ -183,12 +182,11 @@ Activity:
           format: int64
       - name: since
         in: query
-        description: The timestamp in seconds since epoch to get the activity since
+        description: The timestamp in seconds since epoch to get the activity since (default is since the start of the current month)
         required: false
         schema:
           type: integer
           format: int64
-          default: Start of month
       - name: limit
         in: query
         description: The maximum number of items per category

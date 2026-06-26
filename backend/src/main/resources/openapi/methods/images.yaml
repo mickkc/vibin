@@ -28,8 +28,8 @@ ByChecksum:
         in: query
         description: The quality (width & height) of the image. 0 means the original quality.
         required: false
-        default: 0
         schema:
+          default: 0
           type: integer
     responses:
       200:
@@ -66,9 +66,9 @@ ById:
         in: query
         description: The quality (width & height) of the image. 0 means the original quality.
         required: false
-        default: 0
         schema:
           type: integer
+          default: 0
     responses:
       200:
         description: The image
@@ -97,9 +97,9 @@ Default:
         in: query
         description: The quality (width & height) of the image. 0 means the original quality.
         required: false
-        default: 0
         schema:
           type: integer
+          default: 0
       - name: type
         in: query
         description: Item type
