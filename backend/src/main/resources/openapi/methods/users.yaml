@@ -84,6 +84,14 @@ Id:
       - Users
     security:
       - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: ID of the user to retrieve
+        required: true
+        schema:
+          type: integer
+          format: int64
     requestBody:
       required: true
       content:

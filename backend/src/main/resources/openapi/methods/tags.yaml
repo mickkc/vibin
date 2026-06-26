@@ -70,6 +70,14 @@ Id:
       - Tags
     security:
       - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        description: The ID of the tag to update
+        required: true
+        schema:
+          type: integer
+          format: int64
     requestBody:
       required: true
       content:
@@ -227,7 +235,7 @@ CheckName:
       - tokenAuth: [ ]
     parameters:
       - name: name
-        in: query
+        in: path
         description: The tag name to check for availability
         required: true
         schema:

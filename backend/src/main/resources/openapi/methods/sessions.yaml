@@ -37,7 +37,8 @@ Invalidate:
     security:
       - bearerAuth: []
     parameters:
-      - name: sessionId
+      - name: id
+        description: The session id
         in: path
         required: true
         schema:

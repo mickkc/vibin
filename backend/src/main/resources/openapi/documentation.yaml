@@ -257,7 +257,7 @@ paths:
   /api/tasks:
     $ref: 'methods/tasks.yaml#/Get'
 
-  /api/tasks/{taskId}/enable:
+  /api/tasks/{id}/enable:
     $ref: 'methods/tasks.yaml#/Enable'
 
   /api/tasks/{id}/run:
