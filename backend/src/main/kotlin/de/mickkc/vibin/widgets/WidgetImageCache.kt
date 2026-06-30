@@ -33,6 +33,8 @@ object WidgetImageCache {
 
     private const val DEFAULT_HEIGHT = 720
 
+    private const val DEFAULT_WIDTH = 1080
+
     /**
      * The size of the Chrome window decorations.
      * This needs to be added to the auto-detected widget height to get the actual Chrome window size.
@@ -40,12 +42,29 @@ object WidgetImageCache {
     @Volatile
     private var viewportHeightOffset: Int? = null
 
+    /**
+     * Pool of long-lived Chrome drivers used to render widgets.
+     */
+    private val driverPool = ChromeDriverPool(
+        maxSize = EnvUtil.getOrDefault(
+            EnvUtil.WIDGET_IMAGE_RENDER_POOL_SIZE,
+            EnvUtil.DEFAULT_WIDGET_IMAGE_RENDER_POOL_SIZE
+        ).toInt()
+    ) {
+        ChromeDriver(createChromeOptions(DEFAULT_WIDTH, DEFAULT_HEIGHT))
+    }
+
     init {
         if (!widgetImageCachePath.exists()) {
             widgetImageCachePath.mkdirs()
             logger.info("Created widget image cache directory: ${widgetImageCachePath.absolutePath}")
         }
         logger.info("Widget image cache expiration set to $cacheExpirationMinutes minutes")
+
+        Runtime.getRuntime().addShutdownHook(Thread {
+            logger.info("Shutting down widget image render pool")
+            driverPool.close()
+        })
     }
 
     /**
@@ -119,7 +138,8 @@ object WidgetImageCache {
             tempHtmlFile.writeText(processedHtml)
             val uri = tempHtmlFile.toURI().toString()
 
-            return withDriver(width, height ?: DEFAULT_HEIGHT) { driver ->
+            return driverPool.withDriver { driver ->
+                driver.manage().window().size = Dimension(width, height ?: DEFAULT_HEIGHT)
                 driver.get(uri)
 
                 if (height == null) {
@@ -153,30 +173,6 @@ object WidgetImageCache {
         }
         logger.debug("Detected natural content height $naturalHeight for width $width (viewport offset: $offset)")
         return naturalHeight + offset
-    }
-
-    /**
-     * Launches a Chrome driver at [width]x[height] and passes it to [action].
-     *
-     * @param width The viewport width to launch the browser with
-     * @param height The viewport height to launch the browser with
-     * @param action Called with the newly launched driver
-     * @return The result of [action]
-     */
-    private fun <T> withDriver(width: Int, height: Int, action: (ChromeDriver) -> T): T {
-        val options = createChromeOptions(width, height)
-
-        val driver = ChromeDriver(options)
-
-        try {
-            return action(driver)
-        } finally {
-            try {
-                driver.quit()
-            } catch (e: Exception) {
-                logger.error("Error quitting ChromeDriver", e)
-            }
-        }
     }
 
     private fun measureWidgetHeight(driver: ChromeDriver): Int {
