@@ -10,7 +10,7 @@ enum class PermissionType(val id: String, val grantedByDefault: Boolean) {
     VIEW_TRACKS("view_tracks", true),
     STREAM_TRACKS("stream_tracks", true),
     MANAGE_TRACKS("manage_tracks", false),
-    UPLOAD_TRACKS("upload_tracks", true),
+    UPLOAD_TRACKS("upload_tracks", false),
     DOWNLOAD_TRACKS("download_tracks", true),
     DELETE_TRACKS("delete_tracks", false),
 
@@ -36,7 +36,7 @@ enum class PermissionType(val id: String, val grantedByDefault: Boolean) {
     MANAGE_USERS("manage_users", false),
     MANAGE_OWN_USER("edit_own_user", true),
     DELETE_USERS("delete_users", false),
-    DELETE_OWN_USER("delete_own_user", false),
+    DELETE_OWN_USER("delete_own_user", true),
     CREATE_USERS("create_users", false),
 
     VIEW_TAGS("view_tags", true),
@@ -48,8 +48,8 @@ enum class PermissionType(val id: String, val grantedByDefault: Boolean) {
     MANAGE_TASKS("manage_tasks", false),
     MANAGE_WIDGETS("manage_widgets", true),
 
-    CREATE_TRACK_RELATIONS("create_track_relations", true),
-    DELETE_TRACK_RELATIONS("delete_track_relations", true);
+    CREATE_TRACK_RELATIONS("create_track_relations", false),
+    DELETE_TRACK_RELATIONS("delete_track_relations", false);
 
     companion object {
         private val map = entries.associateBy(PermissionType::id)
