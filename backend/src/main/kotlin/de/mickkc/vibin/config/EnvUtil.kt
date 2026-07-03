@@ -96,4 +96,7 @@ object EnvUtil {
     const val SMTP_USERNAME = "SMTP_USERNAME"
     const val SMTP_PASSWORD = "SMTP_PASSWORD"
     const val SMTP_FROM = "SMTP_FROM"
+
+    const val REAL_IP_HEADER = "REAL_IP_HEADER"
+    const val DEFAULT_REAL_IP_HEADER = "X-Forwarded-For"
 }
