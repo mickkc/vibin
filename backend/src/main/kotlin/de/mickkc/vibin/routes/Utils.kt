@@ -4,6 +4,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import de.mickkc.vibin.auth.UserPrincipal
+import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.dto.errors.ErrorDto
 import de.mickkc.vibin.dto.errors.ErrorDtoType
@@ -77,23 +78,27 @@ fun ApplicationCall.hasPermissions(vararg permissions: PermissionType): Boolean 
 
 /**
  * Generates a client ID for rate limiting based on the client's IP address.
- * Checks proxy headers (X-Forwarded-For, X-Real-IP) first, then falls back to remote address.
+ * Checks the configured proxy header first, then falls back to remote address.
  *
  * @return A unique identifier for the client
  */
 fun ApplicationCall.getClientId(): String {
-    // TODO: Add config option to enable/disable proxy header checks
-    val forwardedFor = request.headers["X-Forwarded-For"]
-    if (forwardedFor != null) {
-        val clientIp = forwardedFor.split(",").firstOrNull()?.trim()
-        if (!clientIp.isNullOrEmpty()) {
-            return clientIp
-        }
-    }
 
-    val realIp = request.headers["X-Real-IP"]
-    if (!realIp.isNullOrEmpty()) {
-        return realIp
+    val realIpHeader = EnvUtil.getOrDefault(EnvUtil.REAL_IP_HEADER, EnvUtil.DEFAULT_REAL_IP_HEADER)
+
+    // Example values:
+    // X-Forwarded-For: 0.0.0.0, 1.1.1.1, 2.2.2.2 (first is the client IP, then potential proxies / load balancers)
+    // X-Real-IP: 0.0.0.0
+    // Forwarded: for=0.0.0.0;proto=http;by=1.1.1.1 (for is the client IP, by is the proxy)
+
+    if (realIpHeader.isNotEmpty()) {
+        val realIp = request.headers[realIpHeader]
+        if (realIp != null) {
+            val clientIp = realIp.split(",", ";").firstOrNull()?.trim()
+            if (!clientIp.isNullOrEmpty()) {
+                return clientIp
+            }
+        }
     }
 
     return request.local.remoteAddress
