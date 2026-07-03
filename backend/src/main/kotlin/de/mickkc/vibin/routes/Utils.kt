@@ -91,7 +91,7 @@ fun ApplicationCall.getClientId(): String {
     // X-Real-IP: 0.0.0.0
     // Forwarded: for=0.0.0.0;proto=http;by=1.1.1.1 (for is the client IP, by is the proxy)
 
-    if (realIpHeader.isEmpty()) {
+    if (realIpHeader.isNotEmpty()) {
         val realIp = request.headers[realIpHeader]
         if (realIp != null) {
             val clientIp = realIp.split(",", ";").firstOrNull()?.trim()
