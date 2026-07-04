@@ -15,8 +15,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.nio.file.Path
-import kotlin.io.path.exists
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -31,20 +29,19 @@ object DirectoryWatcher {
 
 
     fun configure() {
-        val musicDir = EnvUtil.getOrDefault(EnvUtil.MUSIC_DIR, EnvUtil.DEFAULT_MUSIC_DIR)
-        if (musicDir.isBlank()) {
+        val musicDir = EnvUtil.getOrNull(EnvUtil.MUSIC_DIR)
+        if (musicDir == null) {
             logger.warn("MUSIC_DIR is not set. Directory watcher will not be started.")
             return
         }
 
-        val musicPath = Path.of(musicDir)
-        if (!musicPath.exists()) {
+        if (!musicDir.exists()) {
             logger.warn("MUSIC_DIR path '$musicDir' does not exist. Directory watcher will not be started.")
             return
         }
 
         watcher = DirectoryWatcher.builder()
-            .path(musicPath)
+            .path(musicDir.toPath())
             .fileHashing(false)
             .listener { event ->
                 fsEvents.trySend(event)

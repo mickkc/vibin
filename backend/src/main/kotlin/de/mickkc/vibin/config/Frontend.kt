@@ -1,18 +1,16 @@
 package de.mickkc.vibin.config
 
+import de.mickkc.vibin.routes.forbidden
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import de.mickkc.vibin.routes.forbidden
-import kotlin.io.path.Path
 
 fun Application.configureFrontendRoutes() = routing {
 
-    val frontendDir = EnvUtil.get(EnvUtil.FRONTEND_DIR)
+    val frontendPath = EnvUtil.getOrNull(EnvUtil.FRONTEND_DIR)?.toPath()
 
-    if (frontendDir != null) {
-        val frontendDirPath = Path(frontendDir)
+    if (frontendPath != null) {
 
         get("/") {
             call.respondRedirect("/web/", permanent = true)
@@ -20,9 +18,9 @@ fun Application.configureFrontendRoutes() = routing {
 
         get(Regex("/web/.*")) {
             val relativePath = call.request.uri.removePrefix("/web/").split("?").first()
-            val filePath = frontendDirPath.resolve(relativePath).normalize()
+            val filePath = frontendPath.resolve(relativePath).normalize()
 
-            if (!filePath.startsWith(frontendDirPath)) {
+            if (!filePath.startsWith(frontendPath)) {
                 return@get call.forbidden()
             }
 
@@ -31,7 +29,7 @@ fun Application.configureFrontendRoutes() = routing {
             if (file.exists() && file.isFile) {
                 call.respondFile(file)
             } else {
-                call.respondFile(frontendDirPath.resolve("index.html").toFile())
+                call.respondFile(frontendPath.resolve("index.html").toFile())
             }
         }
     }

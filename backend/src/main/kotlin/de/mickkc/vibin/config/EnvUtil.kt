@@ -1,47 +1,48 @@
 package de.mickkc.vibin.config
 
-import org.openqa.selenium.InvalidArgumentException
+import java.io.File
+
+data class EnvKey<T>(
+    val name: String,
+    val default: T?,
+    val parser: (String) -> T?
+)
 
 object EnvUtil {
 
-    private val overrides: MutableMap<String, String> = mutableMapOf()
+    val overrides: MutableMap<String, String> = mutableMapOf()
 
     /**
      * Retrieves the value of an environment variable.
      *
      * @param key The name of the environment variable.
-     * @return The value of the environment variable, or null if it is not set.
+     * @return The value of the environment variable, or null if it is not set and has no default value.
      */
-    fun get(key: String): String? {
-        return overrides[key] ?: System.getenv(key)
+    fun<T> getOrNull(key: EnvKey<T>): T? {
+        val strValue = overrides[key.name] ?: System.getenv(key.name)
+        if (strValue == null) {
+            return key.default
+        }
+        return key.parser(strValue)
     }
 
     /**
-     * Retrieves the value of an environment variable or throws an exception if it is not set.
+     * Retrieves the value of an environment variable or throws an exception if it is not set and has no default value.
      *
      * @param key The name of the environment variable.
      * @return The value of the environment variable.
      * @throws IllegalStateException if the environment variable is not set.
      */
-    fun getOrError(key: String): String {
-        return overrides[key] ?: System.getenv(key) ?: throw IllegalStateException("Environment variable $key is not set")
-    }
+    inline fun<reified T> getOrError(key: EnvKey<T>): T {
+        val strValue = overrides[key.name] ?: System.getenv(key.name)
+        if (strValue == null) {
+            if (key.default != null) return key.default
+            throw IllegalStateException("Required environment variable ${key.name} is not set.")
 
-    /**
-     * Retrieves the value of an environment variable or returns a default value if it is not set.
-     *
-     * @param key The name of the environment variable.
-     * @param default The default value to return if the environment variable is not set.
-     * @return The value of the environment variable, or the default value if it is not set.
-     */
-    fun getOrDefault(key: String, default: String): String {
-        return overrides[key] ?: System.getenv(key) ?: default
-    }
-
-    fun getBooleanOrError(key: String, default: String): Boolean {
-        val strValue = overrides[key] ?: System.getenv(key) ?: default
-        return strValue.toBooleanStrictOrNull()
-            ?: throw InvalidArgumentException("Invalid value for $key: '$strValue', expected 'true' or 'false'")
+        }
+        return key.parser(strValue) ?: throw IllegalStateException(
+            "The value \"$strValue\" of the environment variable ${key.name} could not be parsed to ${T::class.java.name}."
+        )
     }
 
     /**
@@ -50,58 +51,45 @@ object EnvUtil {
      * @param key The name of the environment variable.
      * @param value The value to override with.
      */
-    fun addOverride(key: String, value: String) {
-        overrides[key] = value
+    fun addOverride(key: EnvKey<*>, value: String) {
+        overrides[key.name] = value
     }
 
-    const val DB_HOST = "DB_HOST"
-    const val DB_PORT = "DB_PORT"
-    const val DB_NAME = "DB_NAME"
-    const val DB_USER = "DB_USER"
-    const val DB_PASSWORD = "DB_PASSWORD"
+    private fun fileParser(s: String): File = File(s)
 
-    const val MUSIC_DIR = "MUSIC_DIR"
-    const val DEFAULT_MUSIC_DIR = "/opt/vibin/music"
-    const val UPLOADS_DIR = "UPLOADS_DIR"
-    const val DEFAULT_UPLOADS_DIR = "/opt/vibin/uploads"
+    val DB_HOST = EnvKey("DB_HOST", null, String::trim)
+    val DB_PORT = EnvKey("DB_PORT", null, String::toIntOrNull)
+    val DB_NAME = EnvKey("DB_NAME", null, String::trim)
+    val DB_USER = EnvKey("DB_USER", null, String::trim)
+    val DB_PASSWORD = EnvKey("DB_PASSWORD", null, String::trim)
 
-    const val THUMBNAIL_DIR = "THUMBNAIL_DIR"
-    const val DEFAULT_THUMBNAIL_DIR = "/opt/vibin/thumbnails"
-    const val FRONTEND_DIR = "FRONTEND_DIR"
+    val MUSIC_DIR = EnvKey("MUSIC_DIR", File("/opt/vibin/music"), ::fileParser)
+    val UPLOADS_DIR = EnvKey("UPLOADS_DIR", File("/opt/vibin/uploads"), ::fileParser)
 
-    const val IMAGE_CACHE_DIR = "IMAGE_CACHE_DIR"
-    const val DEFAULT_IMAGE_CACHE_DIR = "/opt/vibin/image_cache"
-    const val WIDGET_IMAGE_CACHE_DIR = "WIDGET_IMAGE_CACHE_DIR"
-    const val DEFAULT_WIDGET_IMAGE_CACHE_DIR = "/opt/vibin/widget_image_cache"
+    val THUMBNAIL_DIR = EnvKey("THUMBNAIL_DIR", File("/opt/vibin/thumbnails"), ::fileParser)
+    val FRONTEND_DIR = EnvKey("FRONTEND_DIR", null, ::fileParser)
 
-    const val WIDGET_CACHE_EXPIRATION_MINUTES = "WIDGET_CACHE_EXPIRATION_MINUTES"
-    const val DEFAULT_WIDGET_CACHE_EXPIRATION_MINUTES = "20"
+    val IMAGE_CACHE_DIR = EnvKey("IMAGE_CACHE_DIR", File("/opt/vibin/image_cache"), ::fileParser)
+    val WIDGET_IMAGE_CACHE_DIR = EnvKey("WIDGET_IMAGE_CACHE_DIR", File("/opt/vibin/widget_image_cache"), ::fileParser)
 
-    const val WIDGET_IMAGE_CACHE_RATE_LIMIT_REQUESTS = "WIDGET_IMAGE_CACHE_RATE_LIMIT_REQUESTS"
-    const val DEFAULT_WIDGET_IMAGE_CACHE_RATE_LIMIT_REQUESTS = "5"
-    const val CHROME_BINARY_PATH = "CHROME_BINARY_PATH"
-    const val DEFAULT_CHROME_BINARY_PATH = "/usr/bin/chromium"
+    val WIDGET_CACHE_EXPIRATION_MINUTES = EnvKey("WIDGET_CACHE_EXPIRATION_MINUTES", 20, String::toIntOrNull)
 
-    const val SMTP_HOST = "SMTP_HOST"
-    const val SMTP_PORT = "SMTP_PORT"
-    const val SMTP_STARTTLS = "SMT_STARTTLS"
-    const val DEFAULT_SMTP_STARTTLS = "false"
-    const val SMTP_STARTTLS_REQUIRED = "SMTP_STARTTLS_REQUIRED"
-    const val DEFAULT_SMTP_STARTTLS_REQUIRED = "true"
-    const val SMTP_SSL = "SMTP_SSL"
-    const val DEFAULT_SMTP_SSL = "true"
+    val WIDGET_IMAGE_CACHE_RATE_LIMIT_REQUESTS = EnvKey("WIDGET_IMAGE_CACHE_RATE_LIMIT_REQUESTS", 5, String::toIntOrNull)
+    val CHROME_BINARY_PATH = EnvKey("CHROME_BINARY_PATH", "/usr/bin/chromium", String::trim)
 
-    const val SMTP_AUTH = "SMTP_AUTH"
-    const val DEFAULT_SMTP_AUTH = "true"
-    const val SMTP_USERNAME = "SMTP_USERNAME"
-    const val SMTP_PASSWORD = "SMTP_PASSWORD"
-    const val SMTP_FROM = "SMTP_FROM"
+    val SMTP_HOST = EnvKey("SMTP_HOST", null, String::trim)
+    val SMTP_PORT = EnvKey("SMTP_PORT", null, String::toIntOrNull)
+    val SMTP_STARTTLS = EnvKey("SMT_STARTTLS", false, String::toBooleanStrictOrNull)
+    val SMTP_STARTTLS_REQUIRED = EnvKey("SMTP_STARTTLS_REQUIRED", true, String::toBooleanStrictOrNull)
+    val SMTP_SSL = EnvKey("SMTP_SSL", true, String::toBooleanStrictOrNull)
 
-    const val REAL_IP_HEADER = "REAL_IP_HEADER"
-    const val DEFAULT_REAL_IP_HEADER = "X-Forwarded-For"
+    val SMTP_AUTH = EnvKey("SMTP_AUTH", true, String::toBooleanStrictOrNull)
+    val SMTP_USERNAME = EnvKey("SMTP_USERNAME", null, String::trim)
+    val SMTP_PASSWORD = EnvKey("SMTP_PASSWORD", null, String::trim)
+    val SMTP_FROM = EnvKey("SMTP_FROM", null, String::trim)
 
-    const val SERVER_HOST = "SERVER_HOST"
-    const val DEFAULT_SERVER_HOST = "0.0.0.0"
-    const val SERVER_PORT = "SERVER_PORT"
-    const val DEFAULT_SERVER_PORT = "8080"
+    val REAL_IP_HEADER = EnvKey("REAL_IP_HEADER", "X-Forwarded-For", String::trim)
+
+    val SERVER_HOST = EnvKey("SERVER_HOST", "0.0.0.0", String::trim)
+    val SERVER_PORT = EnvKey("SERVER_PORT", 8080, String::toIntOrNull)
 }

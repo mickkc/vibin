@@ -25,35 +25,26 @@ object MailSender {
 
         val props = Properties()
 
-        val host = EnvUtil.get(EnvUtil.SMTP_HOST)
+        val host = EnvUtil.getOrNull(EnvUtil.SMTP_HOST)
         if (host == null) {
             logger.info("No SMTP Host provided, no mails will be sent.")
             return
         }
 
-        fromAddress = EnvUtil.get(EnvUtil.SMTP_FROM)
-        if (fromAddress == null) {
-            logger.error("No sender email address provided.")
-            throw InvalidArgumentException("No sender email address provided.")
+        fromAddress = EnvUtil.getOrError(EnvUtil.SMTP_FROM)
+
+        val auth = EnvUtil.getOrError(EnvUtil.SMTP_AUTH)
+        val useStartTls = EnvUtil.getOrError(EnvUtil.SMTP_STARTTLS)
+        val useTlsSsl = EnvUtil.getOrError(EnvUtil.SMTP_SSL)
+
+        var port = EnvUtil.getOrNull(EnvUtil.SMTP_PORT)
+
+        if (port == null) {
+            port = if (useStartTls) 587 else if (useTlsSsl) 465 else 25
         }
-
-        val auth = EnvUtil.getBooleanOrError(EnvUtil.SMTP_AUTH, EnvUtil.DEFAULT_SMTP_AUTH)
-        val useStartTls = EnvUtil.getBooleanOrError(EnvUtil.SMTP_STARTTLS, EnvUtil.DEFAULT_SMTP_STARTTLS)
-        val useTlsSsl = EnvUtil.getBooleanOrError(EnvUtil.SMTP_SSL, EnvUtil.DEFAULT_SMTP_SSL)
-
-        val portStr = EnvUtil.get(EnvUtil.SMTP_PORT)
-        val port: Int
-
-        when (portStr) {
-            null -> port = if (useStartTls) 587 else if (useTlsSsl) 465 else 25
-            else -> {
-                val parsedPort = portStr.toIntOrNull()
-                if (parsedPort == null || parsedPort < 1 || parsedPort > 65535) {
-                    logger.error("Invalid SMTP Port '$portStr', expected an integer between 1 and 65535.")
-                    throw InvalidArgumentException("Invalid SMTP Port '$portStr'.")
-                }
-                port = parsedPort
-            }
+        else if (port !in 1..65535) {
+            logger.error("Invalid SMTP Port '$port', expected an integer between 1 and 65535.")
+            throw InvalidArgumentException("Invalid SMTP Port '$port'.")
         }
 
         if (useStartTls && useTlsSsl) {
@@ -61,14 +52,14 @@ object MailSender {
         }
 
         if (useStartTls) {
-            val tlsREquired = EnvUtil.getBooleanOrError(EnvUtil.SMTP_STARTTLS_REQUIRED, EnvUtil.DEFAULT_SMTP_STARTTLS_REQUIRED)
+            val tlsRequired = EnvUtil.getOrError(EnvUtil.SMTP_STARTTLS_REQUIRED)
 
             props.apply {
                 put("mail.smtp.host", host)
                 put("mail.smtp.port", port.toString())
                 put("mail.smtp.auth", auth.toString())
                 put("mail.smtp.starttls.enable", "true")
-                put("mail.smtp.starttls.required", tlsREquired.toString())
+                put("mail.smtp.starttls.required", tlsRequired.toString())
             }
         }
         else if (useTlsSsl) {
@@ -90,17 +81,8 @@ object MailSender {
         }
         if (auth) {
 
-            val username = EnvUtil.get(EnvUtil.SMTP_USERNAME)
-            if (username == null) {
-                logger.error("No SMTP_USERNAME defined, but SMTP_AUTH is set to true!")
-                throw InvalidArgumentException("No SMTP_USERNAME defined.")
-            }
-
-            val password = EnvUtil.get(EnvUtil.SMTP_PASSWORD)
-            if (password == null) {
-                logger.error("No SMTP_PASSWORD defined, but SMTP_AUTH is set to true!")
-                throw InvalidArgumentException("No SMTP_PASSWORD defined.")
-            }
+            val username = EnvUtil.getOrError(EnvUtil.SMTP_USERNAME)
+            val password = EnvUtil.getOrError(EnvUtil.SMTP_PASSWORD)
 
             session = Session.getInstance(props, object : Authenticator() {
                 override fun getPasswordAuthentication(): PasswordAuthentication {
