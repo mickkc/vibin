@@ -99,4 +99,9 @@ object EnvUtil {
 
     const val REAL_IP_HEADER = "REAL_IP_HEADER"
     const val DEFAULT_REAL_IP_HEADER = "X-Forwarded-For"
+
+    const val SERVER_HOST = "SERVER_HOST"
+    const val DEFAULT_SERVER_HOST = "0.0.0.0"
+    const val SERVER_PORT = "SERVER_PORT"
+    const val DEFAULT_SERVER_PORT = "8080"
 }
