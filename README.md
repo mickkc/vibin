@@ -17,6 +17,11 @@
 
 ---
 
+|![Screenshot 1](https://codeberg.org/mickkc/vibin-app/raw/branch/main/fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg)|![Screenshot 2](https://codeberg.org/mickkc/vibin-app/raw/branch/main/fastlane/metadata/android/en-US/images/phoneScreenshots/2.jpg)|![Screenshot 3](https://codeberg.org/mickkc/vibin-app/raw/branch/main/fastlane/metadata/android/en-US/images/phoneScreenshots/3.jpg)|![Screenshot 4](https://codeberg.org/mickkc/vibin-app/raw/branch/main/fastlane/metadata/android/en-US/images/phoneScreenshots/4.jpg)|![Screenshot 5](https://codeberg.org/mickkc/vibin-app/raw/branch/main/fastlane/metadata/android/en-US/images/phoneScreenshots/5.jpg)|
+|-|-|-|-|-|
+
+---
+
 > [!CAUTION]
 > **Development Status**: This project is actively being developed. Breaking changes may occur without prior notice. Use at your own risk.
 
@@ -50,7 +55,6 @@
 - Tag-based organization
 - Lyrics & metadata search support
 - Customizable widgets for embedding
-
 </td>
 </tr>
 </table>
