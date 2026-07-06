@@ -17,17 +17,18 @@
 
 ---
 
+|![Screenshot 1](https://codeberg.org/mickkc/vibin-app/raw/branch/main/fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg)|![Screenshot 2](https://codeberg.org/mickkc/vibin-app/raw/branch/main/fastlane/metadata/android/en-US/images/phoneScreenshots/2.jpg)|![Screenshot 3](https://codeberg.org/mickkc/vibin-app/raw/branch/main/fastlane/metadata/android/en-US/images/phoneScreenshots/3.jpg)|![Screenshot 4](https://codeberg.org/mickkc/vibin-app/raw/branch/main/fastlane/metadata/android/en-US/images/phoneScreenshots/4.jpg)|![Screenshot 5](https://codeberg.org/mickkc/vibin-app/raw/branch/main/fastlane/metadata/android/en-US/images/phoneScreenshots/5.jpg)|
+|-|-|-|-|-|
+
+---
+
 > [!CAUTION]
 > **Development Status**: This project is actively being developed. Breaking changes may occur without prior notice. Use at your own risk.
 
 <!-- TOC -->
   * [Features](#features)
-  * [Installation](#installation)
-    * [Manual Installation](#manual-installation)
-    * [Docker](#docker)
-    * [Apps](#apps)
+  * [Quickstart](#quickstart)
   * [Usage](#usage)
-  * [Contributing](#contributing)
   * [License](#license)
 <!-- TOC -->
 
@@ -54,23 +55,16 @@
 - Tag-based organization
 - Lyrics & metadata search support
 - Customizable widgets for embedding
-
 </td>
 </tr>
 </table>
 
-## Installation
-
-### Manual Installation
-
-> Coming soon
-
-### Docker
+## Quickstart
 
 1. Make sure you have [Docker](https://docs.docker.com/engine/install) and [Docker Compose](https://docs.docker.com/compose/install/)
    installed on your system.
 2. Download / copy the [example docker-compose.yml](docker-compose.yml.example) file and the [example .env](.env.example) file and 
-   modify them to your needs.
+   modify them to your needs using the [configuration wiki](https://codeberg.org/mickkc/vibin/wiki/Configuration.md#environment-variables).
 3. Run the following command:
     ```bash
     docker compose up -d
@@ -79,21 +73,14 @@
 5. Login with the default credentials (username `Admin`, password `admin`)
 6. CHANGE THE PASSWORD OF THE ADMIN USER IMMEDIATELY!
 
-### Apps
-
-> Coming soon
+> [!NOTE]
+> For other installation methods, check out the [configuration wiki page](https://codeberg.org/mickkc/vibin/wiki/Configuration.md).
 
 ---
 
 ## Usage
 
-> Documentation in progress
-
----
-
-## Contributing
-
-This project is not currently accepting contributions.
+To learn more about Vibin', you can check out the [Wiki](https://codeberg.org/mickkc/vibin/wiki) (work in progress).
 
 ---
 
