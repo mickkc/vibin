@@ -74,7 +74,7 @@
 6. CHANGE THE PASSWORD OF THE ADMIN USER IMMEDIATELY!
 
 > [!NOTE]
-> For other installation methods, check out the [configuration wiki page](https://codeberg.org/mickkc/vibin/wiki/Configuration.md).
+> For other installation methods, check out the [installation wiki page](https://codeberg.org/mickkc/vibin/wiki/Installation.md).
 
 ---
 
