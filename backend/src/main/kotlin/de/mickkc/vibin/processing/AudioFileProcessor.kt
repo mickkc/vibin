@@ -52,10 +52,9 @@ object AudioFileProcessor {
      * @return A list of File objects representing the music files.
      */
     fun getMusicFilesInMusicDir(): List<File> {
-        val baseDir = EnvUtil.getOrDefault(EnvUtil.MUSIC_DIR, EnvUtil.DEFAULT_MUSIC_DIR)
-        val musicDir = File(baseDir)
+        val musicDir = EnvUtil.getOrError(EnvUtil.MUSIC_DIR)
         if (!musicDir.exists() || !musicDir.isDirectory) {
-            logger.error("MUSIC_DIR path '$baseDir' does not exist or is not a directory.")
+            logger.error("MUSIC_DIR path '${musicDir.absolutePath}' does not exist or is not a directory.")
             return emptyList()
         }
         val allFiles = musicDir.walkTopDown().filter { it.isFile }.toList()
@@ -69,10 +68,9 @@ object AudioFileProcessor {
      * Reprocesses all audio files in the configured music directory.
      */
     suspend fun reprocessAll(): Int {
-        val baseDir = EnvUtil.getOrDefault(EnvUtil.MUSIC_DIR, EnvUtil.DEFAULT_MUSIC_DIR)
-        val musicDir = File(baseDir)
+        val musicDir = EnvUtil.getOrError(EnvUtil.MUSIC_DIR)
         if (!musicDir.exists() || !musicDir.isDirectory) {
-            logger.error("MUSIC_DIR path '$baseDir' does not exist or is not a directory.")
+            logger.error("MUSIC_DIR path '${musicDir.absolutePath}' does not exist or is not a directory.")
             return 0
         }
         val processedTracks = processAllFilesInDirectory(musicDir)

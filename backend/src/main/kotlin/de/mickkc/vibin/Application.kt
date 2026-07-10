@@ -12,11 +12,8 @@ import io.ktor.server.netty.*
 import kotlinx.coroutines.launch
 
 fun main() {
-    val host = EnvUtil.getOrDefault(EnvUtil.SERVER_HOST, EnvUtil.DEFAULT_SERVER_HOST)
-    val port = EnvUtil.getOrDefault(EnvUtil.SERVER_PORT, EnvUtil.DEFAULT_SERVER_PORT).let {
-        it.toIntOrNull()
-            ?: throw IllegalStateException("\"$it\" is not a valid port. Please fix your SERVER_PORT setting.")
-    }
+    val host = EnvUtil.getOrError(EnvUtil.SERVER_HOST)
+    val port = EnvUtil.getOrError(EnvUtil.SERVER_PORT)
 
     embeddedServer(Netty, port = port, host = host, module = Application::mainModule)
         .start(wait = true)

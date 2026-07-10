@@ -22,16 +22,14 @@ import kotlin.io.path.createTempFile
 object WidgetImageCache {
 
     private val logger: Logger = LoggerFactory.getLogger(WidgetImageCache::class.java)
-    private val widgetImageCachePath = File(
-        EnvUtil.getOrDefault(EnvUtil.WIDGET_IMAGE_CACHE_DIR, EnvUtil.DEFAULT_WIDGET_IMAGE_CACHE_DIR)
-    )
+    private val widgetImageCachePath = EnvUtil.getOrError(EnvUtil.WIDGET_IMAGE_CACHE_DIR)
 
     val rateLimiter = RateLimiter(
-        maxRequests = EnvUtil.getOrDefault(EnvUtil.WIDGET_IMAGE_CACHE_RATE_LIMIT_REQUESTS, EnvUtil.DEFAULT_WIDGET_IMAGE_CACHE_RATE_LIMIT_REQUESTS).toInt(),
-        windowMinutes = EnvUtil.getOrDefault(EnvUtil.WIDGET_CACHE_EXPIRATION_MINUTES, EnvUtil.DEFAULT_WIDGET_CACHE_EXPIRATION_MINUTES).toInt()
+        maxRequests = EnvUtil.getOrError(EnvUtil.WIDGET_IMAGE_CACHE_RATE_LIMIT_REQUESTS),
+        windowMinutes = EnvUtil.getOrError(EnvUtil.WIDGET_CACHE_EXPIRATION_MINUTES)
     )
 
-    private val cacheExpirationMinutes = EnvUtil.getOrDefault(EnvUtil.WIDGET_CACHE_EXPIRATION_MINUTES, EnvUtil.DEFAULT_WIDGET_CACHE_EXPIRATION_MINUTES).toLong()
+    private val cacheExpirationMinutes = EnvUtil.getOrError(EnvUtil.WIDGET_CACHE_EXPIRATION_MINUTES)
 
     private const val DEFAULT_HEIGHT = 720
 
@@ -206,7 +204,7 @@ object WidgetImageCache {
     private fun createChromeOptions(width: Int, height: Int): ChromeOptions {
         val options = ChromeOptions()
 
-        val binary = EnvUtil.getOrDefault(EnvUtil.CHROME_BINARY_PATH, EnvUtil.DEFAULT_CHROME_BINARY_PATH)
+        val binary = EnvUtil.getOrError(EnvUtil.CHROME_BINARY_PATH)
 
         if (binary.isNotBlank()) {
             logger.info("Using custom Chrome binary at: $binary")

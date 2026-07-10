@@ -14,7 +14,7 @@ object PathUtils {
      * @return A File object representing the path to the thumbnail.
      */
     fun getThumbnailPath(name: String): File {
-        val basePath = EnvUtil.getOrDefault(EnvUtil.THUMBNAIL_DIR, EnvUtil.DEFAULT_THUMBNAIL_DIR)
+        val basePath = EnvUtil.getOrError(EnvUtil.THUMBNAIL_DIR)
         return getFile(basePath, name)
     }
 
@@ -25,7 +25,7 @@ object PathUtils {
      * @return A File object representing the thumbnail file.
      */
     fun getThumbnailFileFromPath(path: String): File {
-        val basePath = EnvUtil.getOrDefault(EnvUtil.THUMBNAIL_DIR, EnvUtil.DEFAULT_THUMBNAIL_DIR)
+        val basePath = EnvUtil.getOrError(EnvUtil.THUMBNAIL_DIR)
         return getFile(basePath, path)
     }
 
@@ -36,7 +36,7 @@ object PathUtils {
      * @return The relative path of the track as a String.
      */
     fun getTrackPathFromFile(file: File): String {
-        val songsDir = File(EnvUtil.getOrDefault(EnvUtil.MUSIC_DIR, EnvUtil.DEFAULT_MUSIC_DIR))
+        val songsDir = EnvUtil.getOrError(EnvUtil.MUSIC_DIR)
         return file.toRelativeString(songsDir)
     }
 
@@ -47,21 +47,20 @@ object PathUtils {
      * @return A File object representing the track file.
      */
     fun getTrackFileFromPath(path: String): File {
-        val songsDir = EnvUtil.getOrDefault(EnvUtil.MUSIC_DIR, EnvUtil.DEFAULT_MUSIC_DIR)
+        val songsDir = EnvUtil.getOrError(EnvUtil.MUSIC_DIR)
         return getFile(songsDir, path)
     }
 
     fun getUploadFileFromPath(path: String): File {
 
-        val uploadsPath = EnvUtil.getOrDefault(EnvUtil.UPLOADS_DIR, EnvUtil.DEFAULT_UPLOADS_DIR)
+        val uploadsPath = EnvUtil.getOrError(EnvUtil.UPLOADS_DIR)
         return getFile(uploadsPath, path)
     }
 
-    private fun getFile(base: String, relativePath: String): File {
+    private fun getFile(base: File, relativePath: String): File {
+        val path = Path(base.absolutePath, relativePath)
 
-        val path = Path(base, relativePath)
-
-        if (!path.normalize().startsWith(Path(base).normalize())) {
+        if (!path.normalize().startsWith(Path(base.absolutePath).normalize())) {
             throw SecurityException("Attempted directory traversal attack: $relativePath")
         }
 

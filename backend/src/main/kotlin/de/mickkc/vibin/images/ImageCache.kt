@@ -1,11 +1,11 @@
 package de.mickkc.vibin.images
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.db.images.ImageEntity
 import de.mickkc.vibin.processing.ThumbnailProcessor
 import de.mickkc.vibin.utils.PathUtils
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.io.File
 
 object ImageCache {
@@ -80,6 +80,6 @@ object ImageCache {
     }
 
     fun getImageCachePath(): File {
-        return File(EnvUtil.getOrDefault(EnvUtil.IMAGE_CACHE_DIR, EnvUtil.DEFAULT_IMAGE_CACHE_DIR))
+        return EnvUtil.getOrError(EnvUtil.IMAGE_CACHE_DIR)
     }
 }

@@ -149,7 +149,7 @@ fun Application.configureWidgetRoutes() = routing {
 
         val imageBytes = WidgetImageCache.getOrCreateImage(widget, widgetTypes, ctx, width, height)
 
-        val imageCacheDuration = EnvUtil.getOrDefault(EnvUtil.WIDGET_CACHE_EXPIRATION_MINUTES, EnvUtil.DEFAULT_WIDGET_CACHE_EXPIRATION_MINUTES).toLong()
+        val imageCacheDuration = EnvUtil.getOrError(EnvUtil.WIDGET_CACHE_EXPIRATION_MINUTES)
         call.response.headers.append(HttpHeaders.CacheControl, "public, max-age=${imageCacheDuration * 60}, stale-while-revalidate=60")
 
         call.respondBytes(imageBytes, ContentType.Image.PNG)
