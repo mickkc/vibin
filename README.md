@@ -63,7 +63,7 @@
 
 1. Make sure you have [Docker](https://docs.docker.com/engine/install) and [Docker Compose](https://docs.docker.com/compose/install/)
    installed on your system.
-2. Download / copy the [example docker-compose.yml](docker-compose.yml.example) file and the [example .env](.env.example) file and 
+2. Download / copy the [example docker-compose.yml](docker-compose.example.yml) file and the [example .env](.env.example) file and 
    modify them to your needs using the [configuration wiki](https://codeberg.org/mickkc/vibin/wiki/Configuration.md#environment-variables).
 3. Run the following command:
     ```bash

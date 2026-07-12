@@ -11,7 +11,8 @@ services:
       - .env
     restart: unless-stopped
     depends_on:
-      - vibin_db
+      vibin_db:
+        condition: service_healthy
     networks:
       - vibin_net
 
@@ -23,6 +24,16 @@ services:
     volumes:
       - /opt/vibin/db:/var/lib/postgresql
     restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"${DB_USER}\" -d \"${DB_NAME}\" -h 127.0.0.1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - vibin_net
 
