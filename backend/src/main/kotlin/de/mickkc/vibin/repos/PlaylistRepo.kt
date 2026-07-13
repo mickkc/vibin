@@ -37,7 +37,7 @@ object PlaylistRepo {
         val playlists = PlaylistEntity.find (op and (PlaylistTable.name.lowerCase() like "%${params.query.lowercase()}%"))
         val count = playlists.count()
         val results = playlists
-            .orderBy(PlaylistTable.name to SortOrder.DESC)
+            .orderBy(PlaylistTable.name to SortOrder.ASC)
             .limit(params.pageSize)
             .offset(params.offset)
             .toList()
@@ -46,7 +46,7 @@ object PlaylistRepo {
 
     fun getAllForUser(userId: Long, isSelf: Boolean): List<PlaylistEntity> = transaction {
         val op = if (isSelf) createCollaborationOp(userId) else createPublicCollaborationOp(userId)
-        PlaylistEntity.find(op).toList()
+        PlaylistEntity.find(op).orderBy(PlaylistTable.name to SortOrder.ASC).toList()
     }
 
     fun getOwnedByUser(userId: Long): List<PlaylistEntity> = transaction {
