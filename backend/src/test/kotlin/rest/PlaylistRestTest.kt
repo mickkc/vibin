@@ -32,7 +32,7 @@ class PlaylistRestTest {
 
     @Test
     fun testViewOwnPlaylists() = testApp { client ->
-        PlaylistTestUtils.createPlaylist("Another Playlist", false, 1)
+        PlaylistTestUtils.createPlaylist("The Last Playlist", false, 1)
         PlaylistTestUtils.createPlaylist("My Public Playlist", true, 1)
         PlaylistTestUtils.createPlaylist("My Private Playlist", false, 1)
         assertEquals(3, PlaylistRepo.count(1))
