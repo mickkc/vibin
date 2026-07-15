@@ -46,10 +46,7 @@ object WidgetImageCache {
      * Pool of long-lived Chrome drivers used to render widgets.
      */
     private val driverPool = ChromeDriverPool(
-        maxSize = EnvUtil.getOrDefault(
-            EnvUtil.WIDGET_IMAGE_RENDER_POOL_SIZE,
-            EnvUtil.DEFAULT_WIDGET_IMAGE_RENDER_POOL_SIZE
-        ).toInt()
+        maxSize = EnvUtil.getOrError(EnvUtil.WIDGET_IMAGE_RENDER_POOL_SIZE)
     ) {
         ChromeDriver(createChromeOptions(DEFAULT_WIDTH, DEFAULT_HEIGHT))
     }

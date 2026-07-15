@@ -76,6 +76,7 @@ object EnvUtil {
 
     val WIDGET_IMAGE_CACHE_RATE_LIMIT_REQUESTS = EnvKey("WIDGET_IMAGE_CACHE_RATE_LIMIT_REQUESTS", 5, String::toIntOrNull)
     val CHROME_BINARY_PATH = EnvKey("CHROME_BINARY_PATH", "/usr/bin/chromium", String::trim)
+    val WIDGET_IMAGE_RENDER_POOL_SIZE = EnvKey("WIDGET_IMAGE_RENDER_POOL_SIZE", 2, String::toIntOrNull)
 
     val SMTP_HOST = EnvKey("SMTP_HOST", null, String::trim)
     val SMTP_PORT = EnvKey("SMTP_PORT", null, String::toIntOrNull)
