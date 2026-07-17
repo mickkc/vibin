@@ -1,16 +1,16 @@
 package de.mickkc.vibin.routes
 
 import de.mickkc.vibin.repos.ControlRepo
-import de.mickkc.vibin.repos.ControlSession
 import de.mickkc.vibin.repos.SessionPlayState
 import de.mickkc.vibin.repos.SessionRepeatState
 import de.mickkc.vibin.repos.SetQueueRequest
+import de.mickkc.vibin.websockets.WsPlaybackSession
 import io.ktor.server.application.*
 import io.ktor.server.auth.authenticate
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-suspend fun RoutingCall.getControlSession(paramName: String = "id"): ControlSession? {
+suspend fun RoutingCall.getControlSession(paramName: String = "id"): WsPlaybackSession? {
     val userId = getUserId() ?: return null.also { unauthorized() }
     val sessionId = getStringParameter(paramName) ?: return null
 
@@ -46,47 +46,47 @@ fun Application.configureControlRoutes() = routing {
 
         post("/api/control/sessions/{id}/play") {
             val session = call.getControlSession() ?: return@post
-            val playing = session.setState?.invoke(SessionPlayState.PLAYING) ?: false
+            val playing = session.sendState(SessionPlayState.PLAYING)
             call.success(playing)
         }
 
         post("/api/control/sessions/{id}/pause") {
             val session = call.getControlSession() ?: return@post
-            val paused = session.setState?.invoke(SessionPlayState.PAUSED) ?: false
+            val paused = session.sendState(SessionPlayState.PAUSED)
             call.success(paused)
         }
 
         post("/api/control/sessions/{id}/stop") {
             val session = call.getControlSession() ?: return@post
-            val stopped = session.setState?.invoke(SessionPlayState.STOPPED) ?: false
+            val stopped = session.sendState(SessionPlayState.STOPPED)
             call.success(stopped)
         }
 
         post("/api/control/sessions/{id}/track") {
             val session = call.getControlSession() ?: return@post
             val trackId = call.getLongParameter("trackId") ?: return@post
-            val updated = session.setCurrentTrackId?.invoke(trackId) ?: false
+            val updated = session.sendCurrentTrackId(trackId)
             call.success(updated)
         }
 
         post("/api/control/sessions/{id}/queue/track") {
             val session = call.getControlSession() ?: return@post
             val trackPosition = call.getIntParameter("pos") ?: return@post
-            val updated = session.setTrackIdFromQueue?.invoke(trackPosition) ?: false
+            val updated = session.sendCurrentQueueTrackId(trackPosition)
             call.success(updated)
         }
 
         post("/api/control/sessions/{id}/repeat") {
             val session = call.getControlSession() ?: return@post
             val state = call.getEnum<SessionRepeatState>("state", null) ?: return@post
-            val updated = session.setRepeatState?.invoke(state) ?: false
+            val updated = session.sendRepeatState(state)
             call.success(updated)
         }
 
         post("/api/control/sessions/{id}/shuffle") {
             val session = call.getControlSession() ?: return@post
             val state = call.getBooleanParameter("state") ?: return@post
-            val updated = session.setShuffleState?.invoke(state) ?: false
+            val updated = session.sendShuffleState(state)
             call.success(updated)
         }
 
@@ -98,7 +98,7 @@ fun Application.configureControlRoutes() = routing {
                 return@post call.invalidParameter("volume")
             }
 
-            val updated = session.setVolume?.invoke(volume) ?: false
+            val updated = session.sendVolume(volume)
             call.success(updated)
         }
 
@@ -110,7 +110,7 @@ fun Application.configureControlRoutes() = routing {
                 return@post call.invalidParameter("speed")
             }
 
-            val updated = session.setSpeed?.invoke(speed) ?: false
+            val updated = session.sendSpeed(speed)
             call.success(updated)
         }
 
@@ -124,9 +124,9 @@ fun Application.configureControlRoutes() = routing {
 
             val ids = idsStr.split(',').mapNotNull { it.trim().toLongOrNull() }
 
-            val updated = session.setQueue?.invoke(SetQueueRequest(
+            val updated = session.sendQueue(SetQueueRequest(
                 ids, startId, audioType, audioTypeId, shuffle
-            )) ?: false
+            ))
 
             call.success(updated)
         }

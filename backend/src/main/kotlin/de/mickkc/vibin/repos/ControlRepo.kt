@@ -3,12 +3,11 @@ package de.mickkc.vibin.repos
 import de.mickkc.vibin.dto.ControlSessionDto
 import de.mickkc.vibin.dto.ControlSessionQueueItemInDto
 import de.mickkc.vibin.dto.ControlSessionQueueItemOutDto
-import de.mickkc.vibin.utils.DateTimeUtils.now
+import de.mickkc.vibin.websockets.WsPlaybackSession
+import io.ktor.websocket.*
+import kotlinx.coroutines.channels.SendChannel
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.locks.Lock
-import java.util.concurrent.locks.ReentrantLock
 
 enum class SessionPlayState {
     PLAYING,
@@ -32,64 +31,9 @@ data class SetQueueRequest(
     val shuffle: Boolean?
 )
 
-/**
- * @property sessionId The session id - should be unique for each session.
- * @property userId The id of the user this session belongs to.
- * @property playing Playing status; true if playing, false if not.
- * @property currentTrackId The id of the current track, or null if there is none.
- * @property queue A list of track ids that are currently in the queue.
- *                 This includes tracks before the current track as well as the current track itself.
- * @property lastUpdate The timestamp the session was last updated.
- * @property lock The lock used to avoid race conditions while modifying.
- * @property removed Because multiple actions could be performed on one session at once, the session could be removed,
- *                   and then be updated. To prevent this, all updates fail if removed is true.
- */
-data class ControlSession(
-    val sessionId: String,
-    val userId: Long,
-    var state: SessionPlayState,
-    var currentTrackId: Long?,
-    var queue: List<ControlSessionQueueItemOutDto>,
-    var repeatState: SessionRepeatState,
-    var shuffleState: Boolean,
-    var volume: Float,
-    var speed: Float,
-    var lastUpdate: Long = now(),
-    val lock: Lock = ReentrantLock(),
-    var removed: Boolean = false,
-    var setState: (suspend (SessionPlayState) -> Boolean)? = null,
-    var setCurrentTrackId: (suspend (Long) -> Boolean)? = null,
-    var setTrackIdFromQueue: (suspend (Int) -> Boolean)? = null,
-    var setQueue: (suspend (SetQueueRequest) -> Boolean)? = null,
-    var setRepeatState: (suspend (SessionRepeatState) -> Boolean)? = null,
-    var setShuffleState: (suspend (Boolean) -> Boolean)? = null,
-    var setVolume: (suspend (Float) -> Boolean)? = null,
-    var setSpeed: (suspend (Float) -> Boolean)? = null
-)
-
 object ControlRepo {
 
-    private val sessions = ConcurrentHashMap<String, ControlSession>()
-    private val logger = LoggerFactory.getLogger(ControlRepo::class.java)
-
-    /**
-     * Locks the sessions lock, executes `block` on it, and releases the lock.
-     *
-     * @param session The session to modify
-     * @param block The code to update the session
-     */
-    private fun lock(session: ControlSession, block: (ControlSession) -> Unit) {
-        try {
-            session.lock.lock()
-            block(session)
-        }
-        catch (e: Exception) {
-            logger.error("An error occured while processing session ${session.sessionId}!", e)
-        }
-        finally {
-            session.lock.unlock()
-        }
-    }
+    private val sessions = ConcurrentHashMap<String, WsPlaybackSession>()
 
     /**
      * Adds a new session, optionally initializing it using `init`.
@@ -99,14 +43,14 @@ object ControlRepo {
      * @param init Optional initialization code, executed thread-safely (Is this even a word?)
      * @return The created session object
      */
-    fun add(sessionId: String, userId: Long, init: ((ControlSession) -> Unit)? = null): ControlSession {
+    fun add(userId: Long, sessionId: String, outgoing: SendChannel<Frame>, init: ((WsPlaybackSession) -> Unit)? = null): WsPlaybackSession {
         var isNew = false
         val session = sessions.computeIfAbsent(sessionId) {
             isNew = true
-            ControlSession(sessionId, userId, SessionPlayState.UNKNOWN, null, emptyList(), SessionRepeatState.OFF, false, 1f, 1f)
+            WsPlaybackSession(userId, sessionId, outgoing)
         }
         if (isNew) {
-            lock(session) { init?.invoke(session) }
+            session.apply { init?.invoke(session) }
         }
         return session
     }
@@ -117,9 +61,9 @@ object ControlRepo {
      * @param sessionId The id of the session to remove.
      * @return The session that was removed (null if no session was removed).
      */
-    fun remove(sessionId: String): ControlSession? {
+    fun remove(sessionId: String): WsPlaybackSession? {
         val session = sessions.remove(sessionId) ?: return null
-        lock(session) { session.removed = true }
+        session.apply { session.removed = true }
         return session
     }
 
@@ -129,7 +73,7 @@ object ControlRepo {
      * @param id The session id
      * @return The session, or null if not found.
      */
-    fun getById(id: String): ControlSession? {
+    fun getById(id: String): WsPlaybackSession? {
         return sessions[id]
     }
 
@@ -141,7 +85,7 @@ object ControlRepo {
      * @param userId The ID of the user to get the sessions for
      * @return All Sessions belonging to the user. If the user does not exist or has no current sessions, the list is empty.
      */
-    fun getAllForUser(userId: Long): List<ControlSession> {
+    fun getAllForUser(userId: Long): List<WsPlaybackSession> {
         return sessions.values.filter { it.userId == userId }
     }
 
@@ -153,71 +97,23 @@ object ControlRepo {
      * @param userId The ID of the user to get the current session for
      * @return The users current session. If the user does not exist or has no current sessions, this is null.
      */
-    fun getCurrentSession(userId: Long): ControlSession? {
+    fun getCurrentSession(userId: Long): WsPlaybackSession? {
         return getAllForUser(userId).maxByOrNull { it.lastUpdate }
     }
 
-    /**
-     * Applies the `block` to the session, if a session with the specified `sessionId` is found.
-     *
-     * @param sessionId The id of the session to modify
-     * @param block The changes applied to the session (if found)
-     * @return The modified session, or null if no session with `sessionId` was found.
-     */
-    private fun apply(sessionId: String, block: (ControlSession) -> Unit): ControlSession? {
-        val session = getById(sessionId) ?: return null
-        var result: ControlSession? = null
-        lock(session) {
-            if (!session.removed) {
-                block(session)
-                session.lastUpdate = now()
-                result = session
-            }
-        }
-        return result
-    }
-
-    fun setState(sessionId: String, state: SessionPlayState): ControlSession? = apply(sessionId) {
-        it.state = state
-    }
-
-    fun setIsCurrentTrackId(sessionId: String, trackId: Long?): ControlSession? = apply(sessionId) {
-        it.currentTrackId = trackId
-    }
-
-    fun setQueue(sessionId: String, queue: List<ControlSessionQueueItemInDto>): ControlSession? = transaction {
-        apply(sessionId) {
-            it.queue = queue.map { inDto ->
-                ControlSessionQueueItemOutDto(
-                    id = inDto.id,
-                    track = inDto.trackId
-                        ?.let { TrackRepo.getById(inDto.trackId) }
-                        ?.let { TrackRepo.toMinimalDtoInternal(it) }
-                )
-            }
+    fun queueInToOut(inList: List<ControlSessionQueueItemInDto>): List<ControlSessionQueueItemOutDto> = transaction {
+        return@transaction inList.map { item ->
+            ControlSessionQueueItemOutDto(
+                id = item.id,
+                track = item.trackId?.let { TrackRepo.getById(it) }?.let { TrackRepo.toMinimalDtoInternal(it) }
+            )
         }
     }
 
-    fun setRepeatState(sessionId: String, repeatState: SessionRepeatState): ControlSession? = apply(sessionId) {
-        it.repeatState = repeatState
-    }
+    fun toDto(session: WsPlaybackSession): ControlSessionDto = toDtoInternal(session)
+    fun toDto(sessions: Iterable<WsPlaybackSession>): List<ControlSessionDto> = sessions.map { toDtoInternal(it) }
 
-    fun setShuffleState(sessionId: String, shuffleState: Boolean): ControlSession? = apply(sessionId) {
-        it.shuffleState = shuffleState
-    }
-
-    fun setVolume(sessionId: String, volume: Float): ControlSession? = apply(sessionId) {
-        it.volume = volume
-    }
-
-    fun setSpeed(sessionId: String, speed: Float): ControlSession? = apply(sessionId) {
-        it.speed = speed
-    }
-
-    fun toDto(session: ControlSession): ControlSessionDto = toDtoInternal(session)
-    fun toDto(sessions: Iterable<ControlSession>): List<ControlSessionDto> = sessions.map { toDtoInternal(it) }
-
-    fun toDtoInternal(session: ControlSession): ControlSessionDto = transaction {
+    fun toDtoInternal(session: WsPlaybackSession): ControlSessionDto = transaction {
         return@transaction ControlSessionDto(
             sessionId = session.sessionId,
             userId = session.userId,
