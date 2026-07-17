@@ -4,6 +4,7 @@ import de.mickkc.vibin.repos.ControlRepo
 import de.mickkc.vibin.repos.ControlSession
 import de.mickkc.vibin.repos.SessionPlayState
 import de.mickkc.vibin.repos.SessionRepeatState
+import de.mickkc.vibin.repos.SetQueueRequest
 import io.ktor.server.application.*
 import io.ktor.server.auth.authenticate
 import io.ktor.server.response.*
@@ -75,22 +76,6 @@ fun Application.configureControlRoutes() = routing {
             call.success(updated)
         }
 
-        post("/api/control/sessions/{id}/queue") {
-            val session = call.getControlSession() ?: return@post
-            val queue = call.getStringParameter("queue") ?: return@post
-            val index = call.getIntOrDefault("index", -1)
-
-            try {
-                val trackIds = queue.split(",").map { it.trim().toLong() }
-
-                val updated = session.setQueue?.invoke(trackIds, if (index == -1) null else index) ?: false
-                call.success(updated)
-            }
-            catch (_: NumberFormatException) {
-                call.invalidParameter("queue")
-            }
-        }
-
         post("/api/control/sessions/{id}/repeat") {
             val session = call.getControlSession() ?: return@post
             val state = call.getEnum<SessionRepeatState>("state", null) ?: return@post
@@ -126,6 +111,23 @@ fun Application.configureControlRoutes() = routing {
             }
 
             val updated = session.setSpeed?.invoke(speed) ?: false
+            call.success(updated)
+        }
+
+        post("/api/control/sessions/{id}/queue") {
+            val session = call.getControlSession() ?: return@post
+            val idsStr = call.getStringParameter("ids") ?: return@post
+            val audioType = call.parameters["audioType"]
+            val audioTypeId = call.parameters["audioTypeId"]?.toLongOrNull()
+            val shuffle = call.parameters["shuffle"]?.toBooleanStrictOrNull()
+            val startId = call.parameters["startId"]?.toLongOrNull()
+
+            val ids = idsStr.split(',').mapNotNull { it.trim().toLongOrNull() }
+
+            val updated = session.setQueue?.invoke(SetQueueRequest(
+                ids, startId, audioType, audioTypeId, shuffle
+            )) ?: false
+
             call.success(updated)
         }
     }

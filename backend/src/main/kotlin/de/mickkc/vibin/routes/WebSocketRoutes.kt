@@ -3,6 +3,7 @@ package de.mickkc.vibin.routes
 import com.google.gson.Gson
 import de.mickkc.vibin.auth.CryptoUtil
 import de.mickkc.vibin.db.ListenType
+import de.mickkc.vibin.dto.ControlSessionQueueItemInDto
 import de.mickkc.vibin.repos.*
 import de.mickkc.vibin.utils.DateTimeUtils
 import io.ktor.server.application.*
@@ -66,8 +67,14 @@ fun Application.configureWebSocketRoutes() = routing {
             session.setTrackIdFromQueue = {
                 sendData("currentTrack", mapOf("queueId" to it))
             }
-            session.setQueue = { queueIds: List<Long>, index: Int? ->
-                sendData("queue", mapOf("ids" to queueIds, "index" to index))
+            session.setQueue = {
+                sendData("queue", mapOf(
+                    "ids" to it.ids,
+                    "startId" to it.startId,
+                    "audioType" to it.audioType,
+                    "audioTypeId" to it.audioTypeId,
+                    "shuffle" to it.shuffle
+                ))
             }
             session.setShuffleState = { state ->
                 sendData("shuffle", mapOf("state" to state))
@@ -184,6 +191,33 @@ fun Application.configureWebSocketRoutes() = routing {
                         }
                         else {
                             ControlRepo.setSpeed(sessionId, speed.toFloat())
+                        }
+                    }
+                    "queue" -> {
+                        val queue = parsedFrame.data["queue"] as? List<*>
+                        if (queue == null) {
+                            logger.error("Invalid queue in websocket message.")
+                        }
+                        else {
+                            try {
+                                ControlRepo.setQueue(sessionId, queue.map { item ->
+                                    val map = item as? Map<*, *>
+                                        ?: throw InvalidBodyException("Queue Item is not a map.")
+
+                                    val id = map["id"] as? String
+                                        ?: throw InvalidBodyException("Queue Item ID is not a String.")
+
+                                    val pos = map["pos"] as? Double
+                                        ?: throw InvalidBodyException("Queue Item position is not a number.")
+
+                                    val trackId = map["trackId"] as Double?
+
+                                    return@map ControlSessionQueueItemInDto(id, pos.toInt(), trackId?.toLong())
+                                })
+                            }
+                            catch (e: Exception) {
+                                logger.error("Error while updating queue in websocket:", e)
+                            }
                         }
                     }
                     else -> {

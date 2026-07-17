@@ -1,6 +1,8 @@
 package de.mickkc.vibin.repos
 
 import de.mickkc.vibin.dto.ControlSessionDto
+import de.mickkc.vibin.dto.ControlSessionQueueItemInDto
+import de.mickkc.vibin.dto.ControlSessionQueueItemOutDto
 import de.mickkc.vibin.utils.DateTimeUtils.now
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
@@ -22,6 +24,14 @@ enum class SessionRepeatState {
     ALL
 }
 
+data class SetQueueRequest(
+    val ids: List<Long>,
+    val startId: Long?,
+    val audioType: String?,
+    val audioTypeId: Long?,
+    val shuffle: Boolean?
+)
+
 /**
  * @property sessionId The session id - should be unique for each session.
  * @property userId The id of the user this session belongs to.
@@ -39,7 +49,7 @@ data class ControlSession(
     val userId: Long,
     var state: SessionPlayState,
     var currentTrackId: Long?,
-    var queue: List<Long>,
+    var queue: List<ControlSessionQueueItemOutDto>,
     var repeatState: SessionRepeatState,
     var shuffleState: Boolean,
     var volume: Float,
@@ -50,7 +60,7 @@ data class ControlSession(
     var setState: (suspend (SessionPlayState) -> Boolean)? = null,
     var setCurrentTrackId: (suspend (Long) -> Boolean)? = null,
     var setTrackIdFromQueue: (suspend (Int) -> Boolean)? = null,
-    var setQueue: (suspend (List<Long>, Int?) -> Boolean)? = null,
+    var setQueue: (suspend (SetQueueRequest) -> Boolean)? = null,
     var setRepeatState: (suspend (SessionRepeatState) -> Boolean)? = null,
     var setShuffleState: (suspend (Boolean) -> Boolean)? = null,
     var setVolume: (suspend (Float) -> Boolean)? = null,
@@ -175,8 +185,17 @@ object ControlRepo {
         it.currentTrackId = trackId
     }
 
-    fun setQueue(sessionId: String, queue: List<Long>): ControlSession? = apply(sessionId) {
-        it.queue = queue
+    fun setQueue(sessionId: String, queue: List<ControlSessionQueueItemInDto>): ControlSession? = transaction {
+        apply(sessionId) {
+            it.queue = queue.map { inDto ->
+                ControlSessionQueueItemOutDto(
+                    id = inDto.id,
+                    track = inDto.trackId
+                        ?.let { TrackRepo.getById(inDto.trackId) }
+                        ?.let { TrackRepo.toMinimalDtoInternal(it) }
+                )
+            }
+        }
     }
 
     fun setRepeatState(sessionId: String, repeatState: SessionRepeatState): ControlSession? = apply(sessionId) {
@@ -206,11 +225,7 @@ object ControlRepo {
             currentTrack = session.currentTrackId
                 ?.let { TrackRepo.getById(it) }
                 ?.let { TrackRepo.toDtoInternal(it) },
-            queue = session.queue.mapNotNull {
-                TrackRepo.getById(it)
-            }.map {
-                TrackRepo.toMinimalDtoInternal(it)
-            },
+            queue = session.queue,
             volume = session.volume,
             speed = session.speed,
             repeat = session.repeatState.name,
