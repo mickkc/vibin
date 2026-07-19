@@ -68,6 +68,46 @@ paths:
   /api/tracks/edit/batch:
     $ref: 'methods/batch.yaml#/Run'
 
+
+  # █▀▀ █▀█ █▄░█ ▀█▀ █▀█ █▀█ █░░
+  # █▄▄ █▄█ █░▀█ ░█░ █▀▄ █▄█ █▄▄
+
+  /api/control/sessions:
+    $ref: 'methods/control.yaml#/GetSessions'
+
+  /api/control/sessions/{id}:
+    $ref: 'methods/control.yaml#/GetSession'
+
+  /api/control/sessions/{id}/play:
+    $ref: 'methods/control.yaml#/Play'
+
+  /api/control/sessions/{id}/pause:
+    $ref: 'methods/control.yaml#/Pause'
+
+  /api/control/sessions/{id}/stop:
+    $ref: 'methods/control.yaml#/Stop'
+
+  /api/control/sessions/{id}/track:
+    $ref: 'methods/control.yaml#/PlayId'
+
+  /api/control/sessions/{id}/queue/track:
+    $ref: 'methods/control.yaml#/PlayQueuePos'
+
+  /api/control/sessions/{id}/repeat:
+    $ref: 'methods/control.yaml#/SetRepeatMode'
+
+  /api/control/sessions/{id}/shuffle:
+    $ref: 'methods/control.yaml#/SetShuffleMode'
+
+  /api/control/sessions/{id}/volume:
+    $ref: 'methods/control.yaml#/SetVolume'
+
+  /api/control/sessions/{id}/speed:
+    $ref: 'methods/control.yaml#/SetSpeed'
+
+  /api/control/sessions/{id}/queue:
+    $ref: 'methods/control.yaml#/SetQueue'
+
   # █▀▀ ▄▀█ █░█ █▀█ █▀█ █ ▀█▀ █▀▀ █▀
   # █▀░ █▀█ ▀▄▀ █▄█ █▀▄ █ ░█░ ██▄ ▄█
 

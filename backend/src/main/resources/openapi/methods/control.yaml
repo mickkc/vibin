@@ -57,3 +57,405 @@ GetSession:
           application/json:
             schema:
               $ref: '../models/error.yaml#/Error'
+
+Play:
+  post:
+    summary: Start/resume the playback of a session
+    operationId: startPlayback
+    tags:
+      - Control
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        schema:
+          type: string
+        required: true
+        description: The session ID, or "current" to use the last updated session
+        example: current
+    responses:
+      200:
+        description: Success. False if the message could not be sent (e.g. the websocket disconnected)
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Pause:
+  post:
+    summary: Pause the playback of a session
+    operationId: pausePlayback
+    tags:
+      - Control
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        schema:
+          type: string
+        required: true
+        description: The session ID, or "current" to use the last updated session
+        example: current
+    responses:
+      200:
+        description: Success. False if the message could not be sent (e.g. the websocket disconnected)
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+Stop:
+  post:
+    summary: Stop the playback of a session
+    operationId: stopPlayback
+    tags:
+      - Control
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        schema:
+          type: string
+        required: true
+        description: The session ID, or "current" to use the last updated session
+        example: current
+    responses:
+      200:
+        description: Success. False if the message could not be sent (e.g. the websocket disconnected)
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+PlayId:
+  post:
+    summary: Play a single track by ID
+    operationId: playTrackById
+    tags:
+      - Control
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        schema:
+          type: string
+        required: true
+        description: The session ID, or "current" to use the last updated session
+        example: current
+      - name: trackId
+        in: query
+        schema:
+          type: integer
+          format: int64
+        required: true
+        description: The track ID to play
+        example: 1
+    responses:
+      200:
+        description: Success. False if the message could not be sent (e.g. the websocket disconnected)
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+PlayQueuePos:
+  post:
+    summary: Skip to the track at the specified position inside the queue
+    operationId: playTrackInQueue
+    tags:
+      - Control
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        schema:
+          type: string
+        required: true
+        description: The session ID, or "current" to use the last updated session
+        example: current
+      - name: pos
+        in: query
+        schema:
+          type: integer
+        required: true
+        description: The 0-based index of the track in the queue to play
+        example: 5
+    responses:
+      200:
+        description: Success. False if the message could not be sent (e.g. the websocket disconnected)
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+SetRepeatMode:
+  post:
+    summary: Set the repeat mode for the playback session
+    operationId: setRepeatMode
+    tags:
+      - Control
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        schema:
+          type: string
+        required: true
+        description: The session ID, or "current" to use the last updated session
+        example: current
+      - name: state
+        in: query
+        schema:
+          type: string
+          enum:
+            - OFF
+            - CURRENT_TRACK
+            - ALL
+        required: true
+        description: The repeat mode
+        example: 5
+    responses:
+      200:
+        description: Success. False if the message could not be sent (e.g. the websocket disconnected)
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+SetShuffleMode:
+  post:
+    summary: Set the shuffle mode for the playback session
+    operationId: setShuffleMode
+    tags:
+      - Control
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        schema:
+          type: string
+        required: true
+        description: The session ID, or "current" to use the last updated session
+        example: current
+      - name: state
+        in: query
+        schema:
+          type: boolean
+        required: true
+        description: Whether to enable shuffle mode
+        example: 5
+    responses:
+      200:
+        description: Success. False if the message could not be sent (e.g. the websocket disconnected)
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+SetVolume:
+  post:
+    summary: Set the volume for the playback session
+    operationId: setVolume
+    tags:
+      - Control
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        schema:
+          type: string
+        required: true
+        description: The session ID, or "current" to use the last updated session
+        example: current
+      - name: volume
+        in: query
+        schema:
+          type: number
+          format: float
+          min: 0
+          max: 1
+        required: true
+        description: The volume to set
+        example: 5
+    responses:
+      200:
+        description: Success. False if the message could not be sent (e.g. the websocket disconnected)
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+SetSpeed:
+  post:
+    summary: Set the speed for the playback session
+    operationId: setSpeed
+    tags:
+      - Control
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        schema:
+          type: string
+        required: true
+        description: The session ID, or "current" to use the last updated session
+        example: current
+      - name: speed
+        in: query
+        schema:
+          type: number
+          format: float
+          min: 0.1
+          max: 2.0
+        required: true
+        description: The speed to set
+        example: 5
+    responses:
+      200:
+        description: Success. False if the message could not be sent (e.g. the websocket disconnected)
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+SetQueue:
+  post:
+    summary: Update the entire queue and play a specific track
+    operationId: setSpeed
+    tags:
+      - Control
+    security:
+      - tokenAuth: [ ]
+    parameters:
+      - name: id
+        in: path
+        schema:
+          type: string
+        required: true
+        description: The session ID, or "current" to use the last updated session
+        example: current
+      - name: ids
+        in: query
+        schema:
+          type: string
+        required: true
+        description: The track ids, seperated by commas
+        example: 1,4,5,23,13
+      - name: audioType
+        in: query
+        schema:
+          type: string
+          enum:
+            - album
+            - playlist
+            - artist
+            - unspecified
+        required: false
+        description: The source of the tracks.
+        example: album
+        default: unspecified
+      - name: audioTypeId
+        in: query
+        schema:
+          type: integer
+          format: int64
+        required: false
+        description: The id of the source album/playlist/artist, if any of those are set.
+        example: 1
+        default: null
+      - name: shuffle
+        in: query
+        schema:
+          type: boolean
+        required: false
+        description: If enabled, the tracks will be shuffled before adding them to the queue, and shuffling will be enabled.
+          If disabled, the tracks will keep their order, and shuffling will be disabled. If not specified, the already set
+          shuffling mode is kept.
+        example: true
+        default: null
+      - name: startId
+        in: query
+        schema:
+          type: integer
+          format: int64
+        required: false
+        description: If specified, the track with this ID will be played first, even if shuffle is enabled.
+        example: 5
+        default: null
+
+    responses:
+      200:
+        description: Success. False if the message could not be sent (e.g. the websocket disconnected)
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
