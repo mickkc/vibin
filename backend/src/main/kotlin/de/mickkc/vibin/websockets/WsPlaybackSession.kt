@@ -146,6 +146,9 @@ class WsPlaybackSession(
                 ListenTrackingRepo.stopped(sessionId, frame.timestamp)
                 _setState(SessionPlayState.STOPPED)
             }
+            "buffering" -> {
+                _setState(SessionPlayState.BUFFERING)
+            }
             "skipped_next" -> {
                 ListenTrackingRepo.trackSkipped(sessionId, frame.timestamp)
             }
