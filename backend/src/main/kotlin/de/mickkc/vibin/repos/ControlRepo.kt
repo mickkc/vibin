@@ -3,7 +3,7 @@ package de.mickkc.vibin.repos
 import de.mickkc.vibin.dto.ControlSessionDto
 import de.mickkc.vibin.dto.ControlSessionQueueItemInDto
 import de.mickkc.vibin.dto.ControlSessionQueueItemOutDto
-import de.mickkc.vibin.websockets.WsPlaybackSession
+import de.mickkc.vibin.websockets.Session
 import io.ktor.websocket.*
 import kotlinx.coroutines.channels.SendChannel
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -33,7 +33,7 @@ data class SetQueueRequest(
 
 object ControlRepo {
 
-    private val sessions = ConcurrentHashMap<String, WsPlaybackSession>()
+    private val sessions = ConcurrentHashMap<String, Session>()
 
     /**
      * Adds a new session, optionally initializing it using `init`.
@@ -43,11 +43,11 @@ object ControlRepo {
      * @param init Optional initialization code, executed thread-safely (Is this even a word?)
      * @return The created session object
      */
-    fun add(userId: Long, sessionId: String, outgoing: SendChannel<Frame>, init: ((WsPlaybackSession) -> Unit)? = null): WsPlaybackSession {
+    fun add(userId: Long, sessionId: String, outgoing: SendChannel<Frame>, init: ((Session) -> Unit)? = null): Session {
         var isNew = false
         val session = sessions.computeIfAbsent(sessionId) {
             isNew = true
-            WsPlaybackSession(userId, sessionId, outgoing)
+            Session(userId, sessionId, outgoing)
         }
         if (isNew) {
             session.apply { init?.invoke(session) }
@@ -61,7 +61,7 @@ object ControlRepo {
      * @param sessionId The id of the session to remove.
      * @return The session that was removed (null if no session was removed).
      */
-    fun remove(sessionId: String): WsPlaybackSession? {
+    fun remove(sessionId: String): Session? {
         val session = sessions.remove(sessionId) ?: return null
         session.apply { session.removed = true }
         return session
@@ -73,7 +73,7 @@ object ControlRepo {
      * @param id The session id
      * @return The session, or null if not found.
      */
-    fun getById(id: String): WsPlaybackSession? {
+    fun getById(id: String): Session? {
         return sessions[id]
     }
 
@@ -85,7 +85,7 @@ object ControlRepo {
      * @param userId The ID of the user to get the sessions for
      * @return All Sessions belonging to the user. If the user does not exist or has no current sessions, the list is empty.
      */
-    fun getAllForUser(userId: Long): List<WsPlaybackSession> {
+    fun getAllForUser(userId: Long): List<Session> {
         return sessions.values.filter { it.userId == userId }
     }
 
@@ -97,7 +97,7 @@ object ControlRepo {
      * @param userId The ID of the user to get the current session for
      * @return The users current session. If the user does not exist or has no current sessions, this is null.
      */
-    fun getCurrentSession(userId: Long): WsPlaybackSession? {
+    fun getCurrentSession(userId: Long): Session? {
         return getAllForUser(userId).maxByOrNull { it.lastUpdate }
     }
 
@@ -110,10 +110,10 @@ object ControlRepo {
         }
     }
 
-    fun toDto(session: WsPlaybackSession): ControlSessionDto = toDtoInternal(session)
-    fun toDto(sessions: Iterable<WsPlaybackSession>): List<ControlSessionDto> = sessions.map { toDtoInternal(it) }
+    fun toDto(session: Session): ControlSessionDto = toDtoInternal(session)
+    fun toDto(sessions: Iterable<Session>): List<ControlSessionDto> = sessions.map { toDtoInternal(it) }
 
-    fun toDtoInternal(session: WsPlaybackSession): ControlSessionDto = transaction {
+    fun toDtoInternal(session: Session): ControlSessionDto = transaction {
         return@transaction ControlSessionDto(
             sessionId = session.sessionId,
             userId = session.userId,

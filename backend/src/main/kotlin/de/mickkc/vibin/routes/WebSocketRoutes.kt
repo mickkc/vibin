@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import de.mickkc.vibin.auth.CryptoUtil
 import de.mickkc.vibin.repos.ControlRepo
 import de.mickkc.vibin.repos.SessionRepo
+import de.mickkc.vibin.websockets.listener.TrackingListener
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
@@ -35,6 +36,8 @@ fun Application.configureWebSocketRoutes() = routing {
 
         val sessionId = CryptoUtil.createToken(16)
         val session = ControlRepo.add(userId, sessionId, outgoing)
+
+        session.registerListener(TrackingListener(session))
 
         session.logger.info("WebSocket connection established: ${this.call.request.local.remoteHost}")
 

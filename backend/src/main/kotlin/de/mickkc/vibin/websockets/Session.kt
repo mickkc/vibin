@@ -22,7 +22,7 @@ import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 
 @Suppress("FunctionName") // set*() methods interfer with kotlins setter generation for these values
-class WsPlaybackSession(
+class Session(
     val userId: Long,
     val sessionId: String,
     val outgoing: SendChannel<Frame>,
@@ -37,6 +37,7 @@ class WsPlaybackSession(
     val lock: Lock = ReentrantLock(),
     var removed: Boolean = false,
 ) {
+    private val listeners: MutableList<SessionListener> = mutableListOf()
 
     private val outgoingMessageFlow = MutableSharedFlow<WsFrame>()
 
@@ -48,6 +49,15 @@ class WsPlaybackSession(
     val logger: Logger = LoggerFactory.getLogger("Websocket-Playback-User-$userId-$sessionId")
 
     private val gson = Gson()
+
+    fun registerListener(listener: SessionListener) {
+        listeners.add(listener)
+    }
+
+    fun unregisterListener(listener: SessionListener) {
+        listener.onUnregister()
+        listeners.remove(listener)
+    }
 
     /**
      * Send data to the client.
@@ -101,8 +111,8 @@ class WsPlaybackSession(
      * @param block The code to execute once the session is available.
      * @return The session, or null if the session has been removed while waiting.
      */
-    fun apply(block: (WsPlaybackSession) -> Unit): WsPlaybackSession? {
-        var result: WsPlaybackSession? = null
+    fun apply(block: (Session) -> Unit): Session? {
+        var result: Session? = null
         try {
             lock.lock()
             if (!removed) {
@@ -117,6 +127,10 @@ class WsPlaybackSession(
         return result
     }
 
+    suspend fun applyToListeners(block: suspend SessionListener.() -> Unit) {
+        listeners.forEach { it.block() }
+    }
+
     /**
      * Handles an incomming websocket frame.
      *
@@ -126,129 +140,139 @@ class WsPlaybackSession(
      */
     suspend fun handle(frame: WsFrame) {
         outgoingMessageFlow.emit(frame)
+        applyToListeners { onFrame(frame) }
+
         when (frame.type) {
-            "ping" -> {}
+            "ping" -> {
+                applyToListeners { onPing(frame.timestamp) }
+            }
             "finished_track" -> {
                 val trackId = (frame.data["trackId"] as? Double)?.toLong()
-                if (trackId != null) {
-                    ListenTrackingRepo.trackFinished(sessionId, trackId, frame.timestamp)
-                }
+                applyToListeners { onTrackFinished(trackId, frame.timestamp) }
             }
             "play" -> {
-                ListenTrackingRepo.trackResumed(sessionId, frame.timestamp)
                 _setState(SessionPlayState.PLAYING)
+                applyToListeners { onPlay(frame.timestamp) }
             }
             "pause" -> {
-                ListenTrackingRepo.trackPaused(sessionId, frame.timestamp)
                 _setState(SessionPlayState.PAUSED)
+                applyToListeners { onPause(frame.timestamp) }
             }
             "stop" -> {
-                ListenTrackingRepo.stopped(sessionId, frame.timestamp)
                 _setState(SessionPlayState.STOPPED)
+                applyToListeners { onStop(frame.timestamp) }
             }
             "buffering" -> {
                 _setState(SessionPlayState.BUFFERING)
+                applyToListeners { onBuffering(frame.timestamp) }
             }
             "skipped_next" -> {
-                ListenTrackingRepo.trackSkipped(sessionId, frame.timestamp)
+                val trackId = (frame.data["trackId"] as? Double)?.toLong()
+                if (trackId != null) {
+                    applyToListeners { onTrackSkippedNext(trackId, frame.timestamp) }
+                }
             }
             "skipped_prev" -> {
-                ListenTrackingRepo.trackSkipped(sessionId, frame.timestamp)
+                val trackId = (frame.data["trackId"] as? Double)?.toLong()
+                if (trackId != null) {
+                    applyToListeners { onTrackSkippedPrev(trackId, frame.timestamp) }
+                }
             }
             "started_track" -> {
                 val trackId = (frame.data["trackId"] as? Double)?.toLong()
                 if (trackId != null) {
-                    ListenTrackingRepo.trackStarted(sessionId, userId, trackId, frame.timestamp)
                     _setCurrentTrackId(trackId)
+                    applyToListeners { onTrackStarted(trackId, frame.timestamp) }
                 }
             }
             "listen" -> {
                 val type = frame.data["type"] as? String
-                val id = (frame.data["id"] as? Double)?.toLong()
-                if (type != null && id != null) {
-                    ListenRepo.listenedTo(
-                        userId = userId,
-                        entityId = id,
-                        type = when (type) {
-                            "track" -> ListenType.TRACK
-                            "album" -> ListenType.ALBUM
-                            "playlist" -> ListenType.PLAYLIST
-                            "artist" -> ListenType.ARTIST
-                            else -> {
-                                logger.error("Unknown listen type: $type")
-                                return
-                            }
-                        },
-                        at = frame.timestamp
-                    )
-                }
-            }
-            "repeat" -> {
-                val mode = frame.data["mode"] as? String
-                if (mode == null) {
-                    logger.error("Invalid repeat mode in websocket message.")
-                }
-                else {
-                    when (mode) {
-                        "all" -> _setRepeatState(SessionRepeatState.ALL)
-                        "one" -> _setRepeatState(SessionRepeatState.CURRENT_TRACK)
-                        "off" -> _setRepeatState(SessionRepeatState.OFF)
-                        else -> logger.warn("Invalid repeat mode: $mode")
+                val id = (frame.data["id"] as? Double)?.toLong() ?: return
+
+                val parsedType = when (type) {
+                    "track" -> ListenType.TRACK
+                    "album" -> ListenType.ALBUM
+                    "playlist" -> ListenType.PLAYLIST
+                    "artist" -> ListenType.ARTIST
+                    else -> {
+                        logger.error("Unknown listen type: $type")
+                        return
                     }
                 }
+
+                applyToListeners { onListen(parsedType, id, frame.timestamp) }
+            }
+            "repeat" -> {
+                val parsedMode = when (val mode = frame.data["mode"] as? String) {
+                    "all" -> SessionRepeatState.ALL
+                    "one" -> SessionRepeatState.CURRENT_TRACK
+                    "off" -> SessionRepeatState.OFF
+                    else -> {
+                        logger.warn("Invalid repeat mode: $mode")
+                        return
+                    }
+                }
+
+                _setRepeatState(parsedMode)
+                applyToListeners { onRepeatChanged(parsedMode, frame.timestamp) }
             }
             "shuffle" -> {
                 val mode = frame.data["shuffle"] as? Boolean
                 if (mode == null) {
                     logger.error("Invalid shuffle mode in websocket message.")
+                    return
                 }
-                else {
-                    _setShuffleState(mode)
-                }
+
+                _setShuffleState(mode)
+                applyToListeners { onShuffleChanged(mode, frame.timestamp) }
             }
             "volume" -> {
                 val volume = frame.data["volume"] as? Double
                 if (volume == null) {
                     logger.error("Invalid volume in websocket message.")
+                    return
                 }
-                else {
-                    _setVolume(volume.toFloat())
-                }
+
+                _setVolume(volume.toFloat())
+                applyToListeners { onVolumeChanged(volume, frame.timestamp) }
             }
             "speed" -> {
                 val speed = frame.data["speed"] as? Double
                 if (speed == null) {
                     logger.error("Invalid speed in websocket message.")
+                    return
                 }
-                else {
-                    _setSpeed(speed.toFloat())
-                }
+
+                _setSpeed(speed.toFloat())
+                applyToListeners { onSpeedChanged(speed, frame.timestamp) }
             }
             "queue" -> {
                 val queue = frame.data["queue"] as? List<*>
                 if (queue == null) {
                     logger.error("Invalid queue in websocket message.")
+                    return
                 }
-                else {
-                    try {
-                        _setQueue(queue.map { item ->
-                            val map = item as? Map<*, *>
-                                ?: throw InvalidBodyException("Queue Item is not a map.")
 
-                            val id = map["id"] as? String
-                                ?: throw InvalidBodyException("Queue Item ID is not a String.")
+                try {
+                    val queue = queue.map { item ->
+                        val map = item as? Map<*, *>
+                            ?: throw InvalidBodyException("Queue Item is not a map.")
 
-                            val pos = map["pos"] as? Double
-                                ?: throw InvalidBodyException("Queue Item position is not a number.")
+                        val id = map["id"] as? String
+                            ?: throw InvalidBodyException("Queue Item ID is not a String.")
 
-                            val trackId = map["trackId"] as Double?
+                        val pos = map["pos"] as? Double
+                            ?: throw InvalidBodyException("Queue Item position is not a number.")
 
-                            return@map ControlSessionQueueItemInDto(id, pos.toInt(), trackId?.toLong())
-                        })
+                        val trackId = map["trackId"] as Double?
+
+                        return@map ControlSessionQueueItemInDto(id, pos.toInt(), trackId?.toLong())
                     }
-                    catch (e: Exception) {
-                        logger.error("Error while updating queue in websocket:", e)
-                    }
+                    _setQueue(queue)
+                    applyToListeners { onQueueChanged(queue, frame.timestamp) }
+                }
+                catch (e: Exception) {
+                    logger.error("Error while updating queue in websocket:", e)
                 }
             }
             else -> {
@@ -267,7 +291,10 @@ class WsPlaybackSession(
         logger.info("WebSocket connection closed")
         _setState(SessionPlayState.STOPPED)
         outgoingMessageFlow.emit(WsFrame("close", emptyMap(), now()))
-        ListenTrackingRepo.stopped(sessionId, ListenTrackingRepo.getNowWithOffset(sessionId))
-        ListenTrackingRepo.deleteSessionData(sessionId)
+        applyToListeners {
+            onUnregister()
+            onClose()
+        }
+        listeners.clear()
     }
 }

@@ -4,13 +4,13 @@ import de.mickkc.vibin.repos.ControlRepo
 import de.mickkc.vibin.repos.SessionPlayState
 import de.mickkc.vibin.repos.SessionRepeatState
 import de.mickkc.vibin.repos.SetQueueRequest
-import de.mickkc.vibin.websockets.WsPlaybackSession
+import de.mickkc.vibin.websockets.Session
 import io.ktor.server.application.*
 import io.ktor.server.auth.authenticate
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-suspend fun RoutingCall.getControlSession(paramName: String = "id"): WsPlaybackSession? {
+suspend fun RoutingCall.getControlSession(paramName: String = "id"): Session? {
     val userId = getUserId() ?: return null.also { unauthorized() }
     val sessionId = getStringParameter(paramName) ?: return null
 
