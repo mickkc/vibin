@@ -1,0 +1,66 @@
+ControlSession:
+  type: object
+  properties:
+    sessionId:
+      type: string
+      description: A unique session ID
+      nullable: false
+      example: 2medVs20UwSaHRsd
+    userId:
+      type: integer
+      format: int64
+      description: The id of the user that started the session
+      nullable: false
+      example: 1
+    state:
+      type: string
+      description: The player state
+      enum:
+        - PLAYING
+        - PAUSED
+        - STOPPED
+        - BUFFERING
+        - UNKNOWN
+      nullable: false
+      example: PLAYING
+    currentTrack:
+      $ref: 'track.yaml#/Track'
+      description: The currently playing track, or null if there is none.
+      nullable: true
+    queue:
+      type: array
+      items:
+        $ref: 'track.yaml#/MinimalTrack'
+    shuffle:
+      type: boolean
+      nullable: false
+      example: true
+    repeat:
+      type: string
+      enum:
+        - OFF
+        - CURRENT_TRACK
+        - ALL
+      nullable: false
+      example: ALL
+    speed:
+      type: number
+      format: float
+      description: The playback speed
+      nullable: false
+      minimum: 0.1
+      maximum: 2.0
+      example: 1.0
+    volume:
+      type: number
+      format: float
+      description: The volume (adjusted for track volume, if enabled)
+      nullable: false
+      minimum: 0.0
+      maximum: 1.0
+      example: 1.0
+    lastUpdate:
+      type: integer
+      format: int64
+      description: Timestamp of the last time this session was updated
+      nullable: false

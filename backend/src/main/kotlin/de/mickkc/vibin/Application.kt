@@ -41,6 +41,7 @@ fun Application.module() {
     configureHTTP()
     configureStatusPages()
     configureWebSockets()
+    configureControlRoutes()
 
     configureOpenApi()
 
