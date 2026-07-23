@@ -5,18 +5,18 @@ import de.mickkc.vibin.widgets.BaseWidget
 import de.mickkc.vibin.widgets.WidgetContext
 import de.mickkc.vibin.widgets.WidgetUtils
 import kotlinx.html.*
-import kotlinx.html.stream.appendHTML
 
 class UserWidget(ctx: WidgetContext) : BaseWidget(ctx) {
 
-    override fun render(interactive: Boolean): String = buildString {
+    override fun FlowContent.apply() {
 
-        val user = UserRepo.getById(ctx.userId) ?: return t("widgets.user.not_found")
+        val user = UserRepo.getById(ctx.userId)
+            ?: return p { +t("widgets.user.not_found") }
 
         val image = UserRepo.getProfilePicture(user)
         val avatarUrl = WidgetUtils.getImageUrl(image, "user", 192)
 
-        appendHTML(prettyPrint = false).div("widget-body") {
+        div("widget-body") {
 
             div("user-container") {
                 img(

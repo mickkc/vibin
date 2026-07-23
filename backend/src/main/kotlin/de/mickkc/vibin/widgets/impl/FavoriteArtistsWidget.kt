@@ -5,13 +5,13 @@ import de.mickkc.vibin.repos.FavoriteRepo
 import de.mickkc.vibin.widgets.BaseWidget
 import de.mickkc.vibin.widgets.WidgetContext
 import de.mickkc.vibin.widgets.components.favoritesSection
+import kotlinx.html.FlowContent
 import kotlinx.html.div
-import kotlinx.html.stream.appendHTML
 
 class FavoriteArtistsWidget(ctx: WidgetContext) : BaseWidget(ctx) {
 
-    override fun render(interactive: Boolean): String = buildString {
-        appendHTML(prettyPrint = false).div("widget-body") {
+    override fun FlowContent.apply() {
+        div("widget-body") {
 
             val favorites = FavoriteRepo.getFavoriteArtistsForUser(ctx.userId)
 
