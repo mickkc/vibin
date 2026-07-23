@@ -1,7 +1,13 @@
 package de.mickkc.vibin.widgets
 
 import kotlinx.css.*
+import kotlinx.css.properties.Animation
+import kotlinx.css.properties.IterationCount
 import kotlinx.css.properties.TextDecoration
+import kotlinx.css.properties.Timing
+import kotlinx.css.properties.Transform
+import kotlinx.css.properties.Transition
+import kotlinx.css.properties.s
 
 object WidgetStyles {
 
@@ -215,6 +221,73 @@ object WidgetStyles {
             rule(".joined-favorites .favorite-items") {
                 width = 100.vw - 4.rem
             }
+        }
+
+        rule(".listening-to") {
+            display = Display.flex
+            flexDirection = FlexDirection.row
+            gap = 1.rem
+            alignItems = Align.start
+
+            rule(".details") {
+                fontSize = 1.5.rem
+                fontWeight = FontWeight.w700
+                paddingTop = 0.5.rem
+                flex = Flex.GROW
+            }
+
+            rule(".artists") {
+                opacity = 0.8
+                fontSize = 1.2.rem
+            }
+
+            rule(".state") {
+                opacity = 0.5
+                fontSize = 0.9.rem
+                marginTop = 0.75.rem
+                marginBottom = 0.75.rem
+            }
+        }
+
+        rule(".progress") {
+            width = 100.pct
+            display = Display.flex
+            flexDirection = FlexDirection.row
+            gap = 1.rem
+            alignItems = Align.center
+        }
+
+        rule(".progress > p") {
+            fontSize = 1.rem
+        }
+
+        rule(".progress-container") {
+            height = 5.px
+            borderRadius = 2.5.px
+            overflow = Overflow.hidden
+            flex = Flex.GROW
+        }
+
+        rule(".progress-bar") {
+            height = 100.pct
+            width = 0.pct
+            borderRadius = 2.5.px
+            transition += Transition("width", 1.s, Timing.ease)
+        }
+
+        keyframes("indeterminate") {
+            from { transform += Transform("translateX", arrayOf((-100).pct)) }
+            to { transform += Transform("translateX", arrayOf(350.pct)) }
+        }
+
+        rule(".progress-bar.indeterminate") {
+            width = 40.pct
+            animation += Animation(
+                name = "indeterminate",
+                duration = 1.5.s,
+                timing = Timing.easeInOut,
+                iterationCount = IterationCount.infinite
+            )
         }
 
     }.toString()

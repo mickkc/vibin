@@ -21,6 +21,7 @@ object WidgetBuilder {
                 WidgetType.FAVORITE_ARTISTS -> FavoriteArtistsWidget(ctx)
                 WidgetType.JOINED_FAVORITES -> JoinedFavoritesWidget(ctx)
                 WidgetType.SERVER_STATS -> ServerStatsWidget(ctx)
+                WidgetType.LISTENING_TO -> ListeningToWidget(ctx)
             }.also { it.interactive = interactive }
         }
 

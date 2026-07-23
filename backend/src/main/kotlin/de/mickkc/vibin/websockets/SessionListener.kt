@@ -5,7 +5,7 @@ import de.mickkc.vibin.dto.ControlSessionQueueItemInDto
 import de.mickkc.vibin.repos.SessionRepeatState
 import de.mickkc.vibin.routes.WsFrame
 
-abstract class SessionListener(val session: Session) {
+abstract class SessionListener(var session: Session) {
 
     /**
      * The app has pinged the server.
@@ -108,7 +108,7 @@ abstract class SessionListener(val session: Session) {
      * The listener was unregistered.
      * Also called before it gets closed.
      */
-    open fun onUnregister() {}
+    open suspend fun onUnregister() {}
 
-    fun unregister() = session.unregisterListener(this)
+    suspend fun unregister() = session.unregisterListener(this)
 }

@@ -34,6 +34,7 @@ data class SetQueueRequest(
 object ControlRepo {
 
     private val sessions = ConcurrentHashMap<String, Session>()
+    private val latestSessions = ConcurrentHashMap<Long, Session>()
 
     /**
      * Adds a new session, optionally initializing it using `init`.
@@ -64,6 +65,12 @@ object ControlRepo {
     fun remove(sessionId: String): Session? {
         val session = sessions.remove(sessionId) ?: return null
         session.apply { session.removed = true }
+
+        val latestSession = latestSessions[session.userId]
+        if (latestSession == null || latestSession.lastUpdate < session.lastUpdate) {
+            latestSessions[session.userId] = session
+        }
+
         return session
     }
 
@@ -99,6 +106,10 @@ object ControlRepo {
      */
     fun getCurrentSession(userId: Long): Session? {
         return getAllForUser(userId).maxByOrNull { it.lastUpdate }
+    }
+
+    fun getLatestSession(userId: Long): Session? {
+        return latestSessions[userId]
     }
 
     fun queueInToOut(inList: List<ControlSessionQueueItemInDto>): List<ControlSessionQueueItemOutDto> = transaction {

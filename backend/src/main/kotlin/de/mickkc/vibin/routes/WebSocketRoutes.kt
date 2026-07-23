@@ -55,8 +55,8 @@ fun Application.configureWebSocketRoutes() = routing {
             session.logger.error("WebSocket error: ${e.localizedMessage}", e)
         }
         finally {
-            session.close()
             ControlRepo.remove(sessionId)
+            session.close()
         }
     }
 }
