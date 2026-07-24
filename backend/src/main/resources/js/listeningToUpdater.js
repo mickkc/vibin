@@ -25,6 +25,11 @@ function updateDuration() {
     else {
         progressRow.style.visibility = 'visible';
 
+        // Clamp current progrsess between 0 and the current track duration
+        if (lastData.duration !== null) {
+            currentProgress = Math.min(lastData.duration / 1000, Math.max(0, currentProgress));
+        }
+
         if (currentProgress === null || lastData.duration === null) {
             progressBarElement.classList.add('indeterminate');
             positionTextElement.style.display = 'none';
