@@ -19,7 +19,7 @@ let currentProgress = 0;
 let lastData = null;
 
 function updateDuration() {
-    if (lastData.old) {
+    if (lastData == null || lastData.old) {
         progressRow.style.visibility = 'hidden';
     }
     else {
