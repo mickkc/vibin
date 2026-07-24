@@ -1,10 +1,10 @@
-const title = document.getElementById("listeningToTitle");
-const artists = document.getElementById("listeningToArtists");
-const state = document.getElementById("listeningToState");
-const cover = document.getElementById("listeningToAlbumCover");
-const progressBar = document.getElementById("listeningToProgress");
-const position = document.getElementById("listeningToPosition");
-const duraiton = document.getElementById("listeningToDuration");
+const titleElement = document.getElementById("listeningToTitle");
+const artistsElement = document.getElementById("listeningToArtists");
+const stateElement = document.getElementById("listeningToState");
+const coverElement = document.getElementById("listeningToAlbumCover");
+const progressBarElement = document.getElementById("listeningToProgress");
+const positionTextElement = document.getElementById("listeningToPosition");
+const durationTextElement = document.getElementById("listeningToDuration");
 const progressRow = document.getElementById("listeningToProgressRow");
 
 const wsUrl = location.href.replace(/^http/, "ws") + "/listeningto/ws";
@@ -12,8 +12,10 @@ const wsUrl = location.href.replace(/^http/, "ws") + "/listeningto/ws";
 const ws = new WebSocket(wsUrl);
 let pingInterval = undefined;
 
-let progress = 0;
+// The current progress in seconds
+let currentProgress = 0;
 
+// The last received track data
 let lastData = null;
 
 function updateDuration() {
@@ -23,27 +25,27 @@ function updateDuration() {
     else {
         progressRow.style.visibility = 'visible';
 
-        if (progress === null || lastData.duration === null) {
-            progressBar.classList.add('indeterminate');
-            position.style.display = 'none';
-            duraiton.style.display = 'none';
+        if (currentProgress === null || lastData.duration === null) {
+            progressBarElement.classList.add('indeterminate');
+            positionTextElement.style.display = 'none';
+            durationTextElement.style.display = 'none';
             return;
         }
 
-        position.style.display = 'block';
-        position.innerText = formatTime(progress);
+        positionTextElement.style.display = 'block';
+        positionTextElement.innerText = formatTime(currentProgress);
 
-        duraiton.style.display = 'block';
-        duraiton.innerText = formatTime(lastData.duration / 1000);
+        durationTextElement.style.display = 'block';
+        durationTextElement.innerText = formatTime(lastData.duration / 1000);
 
-        progressBar.classList.remove('indeterminate');
-        progressBar.style.width = `${Math.min(100, Math.max(0, (progress * 1000 / lastData.duration * 100)))}%`;
+        progressBarElement.classList.remove('indeterminate');
+        progressBarElement.style.width = `${Math.min(100, Math.max(0, (currentProgress * 1000 / lastData.duration * 100)))}%`;
     }
 }
 
 setInterval(() => {
-    if (lastData !== null && progress !== null && lastData.state === 'PLAYING') {
-        progress++;
+    if (lastData !== null && currentProgress !== null && lastData.state === 'PLAYING') {
+        currentProgress++;
         updateDuration();
     }
 }, 1000);
@@ -97,11 +99,11 @@ ws.addEventListener("message", (m) => {
 
         switch (frame.type) {
             case "state":
-                title.innerText = frame.data.title;
-                artists.innerText = frame.data.artists;
+                titleElement.innerText = frame.data.title;
+                artistsElement.innerText = frame.data.artists;
 
                 if (frame.data.old) {
-                    state.innerText = `⏹ Offline (last seen: ${getRelativeDate(frame.data.updated)})`
+                    stateElement.innerText = `⏹ Offline (last seen: ${getRelativeDate(frame.data.updated)})`
                 }
                 else {
                     let stateStr = undefined;
@@ -121,16 +123,16 @@ ws.addEventListener("message", (m) => {
                     }
 
                     if (stateStr !== undefined) {
-                        state.innerText = stateStr;
+                        stateElement.innerText = stateStr;
                     }
                 }
 
                 if (frame.data.cover != null) {
-                    cover.src = frame.data.cover;
+                    coverElement.src = frame.data.cover;
                 }
-                cover.title = frame.data.album;
+                coverElement.title = frame.data.album;
 
-                progress = frame.data.position;
+                currentProgress = frame.data.position;
                 lastData = frame.data;
                 updateDuration();
                 break;
