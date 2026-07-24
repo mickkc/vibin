@@ -91,8 +91,16 @@ ws.addEventListener("open", () => {
 });
 
 ws.addEventListener("error", (e) => {
-    console.log("Error:", e)
+    console.log("Error:", e);
 });
+
+ws.addEventListener("close", (e) => {
+    console.log("Closing websocket conection...");
+    if (pingInterval !== undefined) {
+        clearInterval(pingInterval);
+        pingInterval = undefined;
+    }
+})
 
 ws.addEventListener("message", (m) => {
     console.log("Message:", m);
@@ -141,6 +149,8 @@ ws.addEventListener("message", (m) => {
                 lastData = frame.data;
                 updateDuration();
                 break;
+            default:
+                console.warn(`Unrecognized websocket frame type: ${frame.type}.`)
         }
     }
 
