@@ -103,8 +103,8 @@ function getRelativeDate(ts) {
 
     if (diff === 0) return lang.date.today;
     if (diff === 1) return lang.date.yesterday;
-    if (diff < 7) return lang.date.daysAgo.replace("{0}", diff);
-    if (diff < 30) return lang.date.weeksAgo.replace("{0}", diff);
+    if (diff < 7) return lang.date.daysAgo.replace("{0}", diff.toString());
+    if (diff < 30) return lang.date.weeksAgo.replace("{0}", diff.toString());
 
     return date.toLocaleDateString()
 }
@@ -132,7 +132,7 @@ ws.addEventListener("error", (e) => {
 });
 
 ws.addEventListener("close", (e) => {
-    console.log("Closing websocket conection...");
+    console.log("Closing websocket conection...", e);
     if (pingInterval !== undefined) {
         clearInterval(pingInterval);
         pingInterval = undefined;
