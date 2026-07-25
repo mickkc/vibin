@@ -66,6 +66,9 @@ class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
                     }
                     div("progress") {
                         id = "listeningToProgressRow"
+                        if (initialSession == null || initialSession.removed) {
+                            style = "visibility: hidden"
+                        }
 
                         p {
                             id = "listeningToPosition"
