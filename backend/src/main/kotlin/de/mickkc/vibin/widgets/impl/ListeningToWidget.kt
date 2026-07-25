@@ -1,6 +1,7 @@
 package de.mickkc.vibin.widgets.impl
 
 import de.mickkc.vibin.repos.ControlRepo
+import de.mickkc.vibin.repos.SessionPlayState
 import de.mickkc.vibin.repos.TrackRepo
 import de.mickkc.vibin.utils.DateTimeUtils
 import de.mickkc.vibin.widgets.BaseWidget
@@ -56,8 +57,15 @@ class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
                         id = "listeningToState"
                         if (initialSession != null) {
                             unsafe {
-                                +t("widgets.listening_to.state.offline", getRelativeDate(initialSession.lastUpdate))
-
+                                if (initialSession.removed) {
+                                    +t("widgets.listening_to.state.offline", getRelativeDate(initialSession.lastUpdate))
+                                }
+                                else +when (initialSession.state) {
+                                    SessionPlayState.PLAYING -> t("widgets.listening_to.state.playing")
+                                    SessionPlayState.PAUSED -> t("widgets.listening_to.state.paused")
+                                    SessionPlayState.STOPPED -> t("widgets.listening_to.state.stopped")
+                                    else -> ""
+                                }
                             }
                         }
                         else {
@@ -66,7 +74,7 @@ class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
                     }
                     div("progress") {
                         id = "listeningToProgressRow"
-                        if (initialSession == null || initialSession.removed) {
+                        if (initialSession == null || initialSession.removed || !interactive) {
                             style = "visibility: hidden"
                         }
 
