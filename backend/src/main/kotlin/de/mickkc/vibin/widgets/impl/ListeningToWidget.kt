@@ -24,7 +24,7 @@ class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
         val initialTrack = initialSession?.currentTrackId?.let { TrackRepo.getById(it) }
         val initialAlbum = initialTrack?.let { TrackRepo.getAlbum(it) }
         val initialArtists = initialTrack?.let { TrackRepo.getArtists(it) }?.joinToString { it.name }
-        val coverUrl = initialTrack?.let { WidgetUtils.getImageUrl(TrackRepo.getCover(initialTrack), "track", 128) }
+        val coverUrl = WidgetUtils.getImageUrl(initialTrack?.let { TrackRepo.getCover(it) }, "track", 128)
 
         div("widget-body") {
             h2 {
@@ -33,20 +33,20 @@ class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
             div("listening-to") {
                 img(t("widgets.listening_to.album_cover"), coverUrl, classes = "cover") {
                     id = "listeningToAlbumCover"
-                    title = initialAlbum?.title ?: t("widgets.listening_to.fetching")
+                    title = initialAlbum?.title ?: t("widgets.listening_to.unknown")
                 }
                 div("details") {
                     p("title") {
                         id = "listeningToTitle"
-                        +(initialTrack?.title ?: t("widgets.listening_to.fetching"))
+                        +(initialTrack?.title ?: t("widgets.listening_to.unknown"))
                     }
                     p("artists") {
                         id = "listeningToArtists"
-                        +(initialArtists ?: t("widgets.listening_to.fetching"))
+                        +(initialArtists ?: t("widgets.listening_to.unknown"))
                     }
                     p("state") {
                         id = "listeningToState"
-                        +t("widgets.listening_to.fetching")
+                        +t("widgets.listening_to.empty_state")
                     }
                     div("progress") {
                         id = "listeningToProgressRow"
