@@ -83,6 +83,8 @@ class ListeningToWidgetListener(session: Session, val userId: Long, val outgoing
         reconnecting = true
 
         try {
+            unregister()
+
             var currentSession: Session? = null
             while (currentSession == null) {
                 if (stopped) break
