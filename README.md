@@ -90,7 +90,7 @@ This project is licensed under the **[GNU General Public License v3.0](LICENSE)*
 
 ```
 Vibin - Self-hosted music streaming server
-Copyright (C) 2025
+Copyright (C) 2025 mickkc
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -98,3 +98,5 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 ```
 
+**Mascot:** The project mascot was commissioned from a freelance artist. All rights have been exclusively assigned to
+the project maintainer and are licensed under the same GPLv3 terms.
