@@ -20,7 +20,7 @@ abstract class BaseWidget(val ctx: WidgetContext) : Template<FlowContent> {
 
     fun t(key: String, vararg args: Any?): String {
         val bundle = getResourceBundle()
-        return String.format(bundle.getString(key), args)
+        return String.format(bundle.getString(key), *args)
     }
 
     private fun getResourceBundle(): ResourceBundle {

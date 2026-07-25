@@ -2,12 +2,28 @@ package de.mickkc.vibin.widgets.impl
 
 import de.mickkc.vibin.repos.ControlRepo
 import de.mickkc.vibin.repos.TrackRepo
+import de.mickkc.vibin.utils.DateTimeUtils
 import de.mickkc.vibin.widgets.BaseWidget
 import de.mickkc.vibin.widgets.WidgetContext
 import de.mickkc.vibin.widgets.WidgetUtils
 import kotlinx.html.*
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
+
+    fun getRelativeDate(ts: Long): String {
+        val now = DateTimeUtils.nowLocalDate()
+        val date = DateTimeUtils.toLocalDate(ts)
+
+        val diff = ChronoUnit.DAYS.between(date, now)
+
+        return if (diff == 0L) t("widgets.listening_to.date.today")
+        else if (diff == 1L) t("widgets.listening_to.date.yesterday")
+        else if (diff < 7L) t("widgets.listening_to.date.days_ago", diff)
+        else if (diff < 30L) t("widgets.listening_to.date.weeks_ago", diff / 7L)
+        else date.format(DateTimeFormatter.ofPattern(t("widgets.listening_to.date.format")))
+    }
 
     override fun FlowContent.apply() {
 
@@ -38,7 +54,15 @@ class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
                     }
                     p("state") {
                         id = "listeningToState"
-                        +t("widgets.listening_to.state.empty")
+                        if (initialSession != null) {
+                            unsafe {
+                                +t("widgets.listening_to.state.offline", getRelativeDate(initialSession.lastUpdate))
+
+                            }
+                        }
+                        else {
+                            +t("widgets.listening_to.state.empty")
+                        }
                     }
                     div("progress") {
                         id = "listeningToProgressRow"
@@ -75,12 +99,12 @@ class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
                                 "date": {
                                     "today": "${t("widgets.listening_to.date.today")}",
                                     "yesterday": "${t("widgets.listening_to.date.yesterday")}",
-                                    "daysAgo": "${t("widgets.listening_to.date.days_ago")}",
-                                    "weeksAgo": "${t("widgets.listening_to.date.weeks_ago")}"
+                                    "daysAgo": "${t("widgets.listening_to.date.days_ago", "{0}")}",
+                                    "weeksAgo": "${t("widgets.listening_to.date.weeks_ago", "{0}")}"
                                 },
                                 "state": {
                                     "empty": "${t("widgets.listening_to.state.empty")}",
-                                    "offline": "${t("widgets.listening_to.state.offline")}",
+                                    "offline": "${t("widgets.listening_to.state.offline", "{0}")}",
                                     "playing": "${t("widgets.listening_to.state.playing")}",
                                     "paused": "${t("widgets.listening_to.state.paused")}",
                                     "stopped": "${t("widgets.listening_to.state.stopped")}"
