@@ -1,3 +1,39 @@
+/**
+ * @typedef {Object} langDate
+ * @property {string} today
+ * @property {string} yesterday
+ * @property {string} daysAgo
+ * @property {string} weeksAgo
+ */
+
+/**
+ * @typedef {Object} langState
+ * @property {string} empty
+ * @property {string} offline
+ * @property {string} playing
+ * @property {string} paused
+ * @property {string} stopped
+ */
+
+/**
+ * @typedef {Object} lang
+ * @property {langDate} date Date localization strings.
+ * @property {Object} state State localization strings.
+ */
+
+/**
+ * @typedef {Object} trackState
+ * @property {string} title Track title.
+ * @property {string} artists Track artists, seperated by commas.
+ * @property {string} album The track's album name.
+ * @property {string|null} cover Url to the track's cover. Null if unchanged (same cover as before).
+ * @property {string} state "PLAYING", "PAUSED", "STOPPED"
+ * @property {number} updated Unix timestamp in seconds of the last time the session was updated.
+ * @property {boolean} old True if thew session no longer exists (client that created it is offline)
+ * @property {number} duration Track duration in milliseconds.
+ * @property {number} position Current position / progress in seconds.
+ */
+
 const titleElement = document.getElementById("listeningToTitle");
 const artistsElement = document.getElementById("listeningToArtists");
 const stateElement = document.getElementById("listeningToState");
@@ -16,6 +52,7 @@ let pingInterval = undefined;
 let currentProgress = 0;
 
 // The last received track data
+/** @type {trackState|null} */
 let lastData = null;
 
 function updateDuration() {
@@ -112,16 +149,19 @@ ws.addEventListener("message", (m) => {
 
         switch (frame.type) {
             case "state":
-                titleElement.innerText = frame.data.title;
-                artistsElement.innerText = frame.data.artists;
+                /** @type {trackState} */
+                const data = frame.data;
 
-                if (frame.data.old) {
+                titleElement.innerText = data.title;
+                artistsElement.innerText = data.artists;
+
+                if (data.old) {
                     stateElement.innerHTML = lang.state.offline.replace("{0}", getRelativeDate(frame.data.updated));
                 }
                 else {
                     let stateStr = undefined;
 
-                    switch (frame.data.state) {
+                    switch (data.state) {
                         case "PLAYING":
                             stateStr = lang.state.playing;
                             break;
@@ -140,13 +180,13 @@ ws.addEventListener("message", (m) => {
                     }
                 }
 
-                if (frame.data.cover != null) {
-                    coverElement.src = frame.data.cover;
+                if (data.cover != null) {
+                    coverElement.src = data.cover;
                 }
-                coverElement.title = frame.data.album;
+                coverElement.title = data.album;
 
-                currentProgress = frame.data.position;
-                lastData = frame.data;
+                currentProgress = data.position;
+                lastData = data;
                 updateDuration();
                 break;
             default:
