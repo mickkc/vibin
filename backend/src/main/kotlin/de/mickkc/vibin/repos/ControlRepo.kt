@@ -66,9 +66,8 @@ object ControlRepo {
         val session = sessions.remove(sessionId) ?: return null
         session.apply { session.removed = true }
 
-        val latestSession = latestSessions[session.userId]
-        if (latestSession == null || latestSession.lastUpdate < session.lastUpdate) {
-            latestSessions[session.userId] = session
+        latestSessions.compute(session.userId) { _, existing ->
+            if (existing == null || existing.lastUpdate < session.lastUpdate) session else existing
         }
 
         return session
