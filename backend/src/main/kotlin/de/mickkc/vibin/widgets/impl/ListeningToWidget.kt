@@ -5,15 +5,7 @@ import de.mickkc.vibin.repos.TrackRepo
 import de.mickkc.vibin.widgets.BaseWidget
 import de.mickkc.vibin.widgets.WidgetContext
 import de.mickkc.vibin.widgets.WidgetUtils
-import kotlinx.html.FlowContent
-import kotlinx.html.div
-import kotlinx.html.h2
-import kotlinx.html.id
-import kotlinx.html.img
-import kotlinx.html.p
-import kotlinx.html.script
-import kotlinx.html.style
-import kotlinx.html.title
+import kotlinx.html.*
 
 class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
 
@@ -46,7 +38,7 @@ class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
                     }
                     p("state") {
                         id = "listeningToState"
-                        +t("widgets.listening_to.empty_state")
+                        +t("widgets.listening_to.state.empty")
                     }
                     div("progress") {
                         id = "listeningToProgressRow"
@@ -74,10 +66,32 @@ class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
                     }
                 }
             }
-        }
 
-        if (interactive) {
-            script(src = "/api/js/listeningToUpdater.js") {}
+            if (interactive) {
+                script {
+                    unsafe {
+                        +"""
+                            const lang = {
+                                "date": {
+                                    "today": "${t("widgets.listening_to.date.today")}",
+                                    "yesterday": "${t("widgets.listening_to.date.yesterday")}",
+                                    "daysAgo": "${t("widgets.listening_to.date.days_ago")}",
+                                    "weeksAgo": "${t("widgets.listening_to.date.weeks_ago")}"
+                                },
+                                "state": {
+                                    "empty": "${t("widgets.listening_to.state.empty")}",
+                                    "offline": "${t("widgets.listening_to.state.offline")}",
+                                    "playing": "${t("widgets.listening_to.state.playing")}",
+                                    "paused": "${t("widgets.listening_to.state.paused")}",
+                                    "stopped": "${t("widgets.listening_to.state.stopped")}"
+                                }
+                            };
+                        """.trimIndent()
+                    }
+                }
+
+                script(src = "/api/js/listeningToUpdater.js") {}
+            }
         }
     }
 }

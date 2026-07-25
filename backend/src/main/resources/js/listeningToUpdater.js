@@ -64,10 +64,10 @@ function getRelativeDate(ts) {
 
     const diff = Math.floor((today - targetDate) / (1000 * 60 * 60 * 24));
 
-    if (diff === 0) return 'today';
-    if (diff === 1) return 'yesterday';
-    if (diff < 7) return `${diff} days ago`;
-    if (diff < 30) return `${diff} weeks ago`;
+    if (diff === 0) return lang.date.today;
+    if (diff === 1) return lang.date.yesterday;
+    if (diff < 7) return lang.date.daysAgo.replace("{0}", diff);
+    if (diff < 30) return lang.date.weeksAgo.replace("{0}", diff);
 
     return date.toLocaleDateString()
 }
@@ -116,27 +116,27 @@ ws.addEventListener("message", (m) => {
                 artistsElement.innerText = frame.data.artists;
 
                 if (frame.data.old) {
-                    stateElement.innerText = `⏹ Offline (last seen: ${getRelativeDate(frame.data.updated)})`
+                    stateElement.innerHTML = lang.state.offline.replace("{0}", getRelativeDate(frame.data.updated));
                 }
                 else {
                     let stateStr = undefined;
 
                     switch (frame.data.state) {
                         case "PLAYING":
-                            stateStr = "▶ Playing";
+                            stateStr = lang.state.playing;
                             break;
                         case "PAUSED":
-                            stateStr = "⏸ Paused"
+                            stateStr = lang.state.paused;
                             break;
                         case "STOPPED":
-                            stateStr = "⏹ Stopped";
+                            stateStr = lang.state.stopped;
                             break;
                         default:
                             break;
                     }
 
                     if (stateStr !== undefined) {
-                        stateElement.innerText = stateStr;
+                        stateElement.innerHTML = stateStr;
                     }
                 }
 
