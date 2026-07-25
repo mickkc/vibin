@@ -43,7 +43,10 @@ const positionTextElement = document.getElementById("listeningToPosition");
 const durationTextElement = document.getElementById("listeningToDuration");
 const progressRow = document.getElementById("listeningToProgressRow");
 
-const wsUrl = location.href.replace(/^http/, "ws") + "/listeningto/ws";
+const wsUrl = location.href
+    .replace(/^http/, "ws")
+    .replace(/\?.*$/, "")
+    + "/listeningto/ws";
 
 const ws = new WebSocket(wsUrl);
 let pingInterval = undefined;
