@@ -10,6 +10,7 @@ import io.ktor.serialization.gson.*
 import org.slf4j.LoggerFactory
 import de.mickkc.vibin.parsing.parsers.AlbumSearchProvider
 import de.mickkc.vibin.parsing.parsers.ArtistSearchProvider
+import de.mickkc.vibin.parsing.parsers.BaseMetadataProvider
 import de.mickkc.vibin.parsing.parsers.FileParser
 import de.mickkc.vibin.parsing.parsers.TrackSearchProvider
 import de.mickkc.vibin.parsing.parsers.deezer.DeezerProvider
@@ -116,11 +117,21 @@ object Parser {
         ))
     }
 
-    fun getFileProviders() = fileParsers.keys
-    fun getTrackSearchProviders() = trackSearchProviders.keys
-    fun getArtistSearchProviders() = artistSearchProviders.keys
-    fun getAlbumSearchProviders() = albumSearchProviders.keys
-    fun getLyricsSearchProviders() = lyricsSearchProviders.keys
+    /**
+     * Returns the keys (names) of all providers inside the Map that are available.
+     *
+     * @param providers A map containing all providers
+     * @return The keys of all available providers.
+     */
+    private fun getAvailableProviderKeys(providers: Map<String, BaseMetadataProvider>): Set<String> {
+        return providers.mapNotNull { if (it.value.isAvailable()) it.key else null }.toSet()
+    }
+
+    fun getAvailableFileProviders() = getAvailableProviderKeys(fileParsers)
+    fun getAvailableTrackSearchProviders() =  getAvailableProviderKeys(trackSearchProviders)
+    fun getAvailableArtistSearchProviders() = getAvailableProviderKeys(artistSearchProviders)
+    fun getAvailableAlbumSearchProviders() = getAvailableProviderKeys(albumSearchProviders)
+    fun getAvailableLyricsSearchProviders() = getAvailableProviderKeys(lyricsSearchProviders)
 
     suspend fun searchTrack(query: String, provider: String): List<TrackInfoMetadata>? {
         val parser = trackSearchProviders[provider] ?: return null

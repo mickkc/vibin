@@ -18,11 +18,11 @@ fun Application.configureMetadataRoutes() = routing {
 
         get("/api/metadata/providers") {
             call.respond(mapOf(
-                "file" to Parser.getFileProviders(),
-                "track" to Parser.getTrackSearchProviders(),
-                "artist" to Parser.getArtistSearchProviders(),
-                "album" to Parser.getAlbumSearchProviders(),
-                "lyrics" to Parser.getLyricsSearchProviders()
+                "file" to Parser.getAvailableFileProviders(),
+                "track" to Parser.getAvailableTrackSearchProviders(),
+                "artist" to Parser.getAvailableArtistSearchProviders(),
+                "album" to Parser.getAvailableAlbumSearchProviders(),
+                "lyrics" to Parser.getAvailableLyricsSearchProviders()
             ))
         }
 
