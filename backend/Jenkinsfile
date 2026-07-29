@@ -99,7 +99,7 @@ pipeline {
 
                             sh(
                                 script: """
-                                    curl -x POST \
+                                    curl -X POST \
                                         -H "Authorization: token ${CODEBERG_TOKEN}" \
                                         -H "Content-Type: application/json" \
                                         -d '{\"body\": \"${comment}\"}' \
