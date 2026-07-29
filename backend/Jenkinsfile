@@ -57,7 +57,8 @@ pipeline {
         stage('Print Change ID') {
             steps {
                 script {
-                    echo "Change ID: ${env.CHANGE_ID}"
+                    echo "Commit ID: ${env.GIT_COMMIT}"
+                    echo "Committer name: ${env.GIT_COMMITTER_NAME}"
                 }
             }
         }
