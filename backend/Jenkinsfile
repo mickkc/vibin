@@ -65,6 +65,9 @@ pipeline {
                         def owner = parts[-2]
                         def repo = parts[-1]
 
+                        env.OWNER = owner
+                        env.REPO = repo
+
                         withEnv(["OWNER=${owner}", "REPO=${repo}"]) {
                             def prList = sh(
                                 script: '''
@@ -99,6 +102,59 @@ pipeline {
             echo 'Build failed'
         }
         always {
+            withCredentials([string(credentialsId: 'CODEBERG_TOKEN', variable: 'CODEBERG_TOKEN')]) {
+                script {
+                    try {
+                        def currentBranchHash = env.GIT_COMMIT
+
+                        def repoUrl = env.GIT_URL
+                        def parts = repoUrl.split('/')
+                        def owner = parts[-2]
+                        def repo = parts[-1]
+
+                        def prList = sh(
+                            script: """
+                                curl -s -H "Authorization: token ${CODEBERG_TOKEN}" "https://codeberg.org/api/v1/repos/${owner}/${repo}/pulls?state=open"
+                            """,
+                            returnStdout: true
+                        )
+
+                        def prs = readJSON(text: prList)
+                        def prNo = null
+
+                        for (pr in prs) {
+                            if (pr.head?.sha == currentBranchHash) {
+                                prNo = pr.number
+                            }
+                        }
+
+                        env.PR_NUMBER = prNo
+                        echo "Found PR number: ${prNo}"
+
+                        if (prNo != null) {
+                            def comment = currentBuild.result == 'SUCCESS'
+                                ? "All tests passed! (This is a test.)"
+                                : "Tests failed. (This is a test.)"
+
+                            def prList = sh(
+                                script: """
+                                    curl -x POST \
+                                        -H "Authorization: token ${CODEBERG_TOKEN}" \
+                                        -H "Content-Type: application/json" \
+                                        -d '{\"body\": \"${comment}\"}' \
+                                        "https://codeberg.org/api/v1/repos/${owner}/${repo}/issues/${prNumber}/comments"
+                                """,
+                                returnStdout: true
+                            )
+                        }
+                    } catch (Exception e) {
+                        echo "Failed to send PR comment: ${e.message}"
+                        e.printStackTrace()
+                    }
+
+                }
+            }
+
             script {
                 try {
                     // Send pipeline and test results to n8n webhook (for notifications)
