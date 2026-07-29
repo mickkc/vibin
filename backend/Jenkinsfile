@@ -8,6 +8,7 @@ pipeline {
     environment {
         GRADLE_OPTS = '-Dorg.gradle.daemon=false'
         BUILD_WEBHOOK_URL = credentials('BUILD_WEBHOOK_URL')
+        CODEBERG_TOKEN = credentials('CODEBERG_TOKEN')
     }
 
     stages {
@@ -54,7 +55,7 @@ pipeline {
             }
         }
 
-        stage('Print Change ID') {
+        stage('Find PR number') {
             steps {
                 script {
                     def currentBranchHash = env.GIT_COMMIT
@@ -64,9 +65,24 @@ pipeline {
                     def owner = parts[-2]
                     def repo = parts[-1]
 
-                    echo "Repo URL: ${repoUrl}"
-                    echo "Owner: ${owner}"
-                    echo "Repo: ${repo}"
+                    def prList = sh(
+                        script: """
+                            curl -s -H "Authorization: token ${env.CODEBERG_TOKEN}" "https://codeberg.org/api/v1/repos/${owner}/${repo}/pulls?state=open"
+                        """,
+                        returnStdout: true
+                    )
+
+                    def prs = readJSON(text: prList)
+                    def prNo = null
+
+                    for (pr in prs) {
+                        if (pr.head?.sha == currentBranchHash) {
+                            prNo = pr.number
+                        }
+                    }
+
+                    env.PR_NUMBER = prNo
+                    echo "Found PR number: ${prNo}"
                 }
             }
         }
