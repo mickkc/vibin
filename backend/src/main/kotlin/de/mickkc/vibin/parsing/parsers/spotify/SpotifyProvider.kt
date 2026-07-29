@@ -175,4 +175,8 @@ class SpotifyProvider(val client: HttpClient) : ArtistSearchProvider, TrackSearc
             return null
         }
     }
+
+    override fun isAvailable(): Boolean {
+        return Settings.get(SpotifyClientId).isNotBlank() && Settings.get(SpotifyClientSecret).isNotBlank()
+    }
 }

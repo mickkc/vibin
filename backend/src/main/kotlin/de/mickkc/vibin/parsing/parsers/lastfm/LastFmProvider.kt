@@ -221,4 +221,8 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
     override suspend fun parse(data: PreparseData): TrackInfoMetadata? {
         return searchTrack(data.audioFile.file.nameWithoutExtension)?.firstOrNull()
     }
+
+    override fun isAvailable(): Boolean {
+        return Settings.get(LastFmApiKey).isNotBlank()
+    }
 }
