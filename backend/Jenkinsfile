@@ -53,6 +53,14 @@ pipeline {
                 archiveArtifacts artifacts: 'backend/**/build/libs/*.jar', fingerprint: true
             }
         }
+
+        stage('Print Change ID') {
+            steps {
+                script {
+                    echo "Change ID: ${env.CHANGE_ID}"
+                }
+            }
+        }
     }
 
     post {
