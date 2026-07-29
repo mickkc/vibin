@@ -97,7 +97,7 @@ pipeline {
                                 ? "All tests passed! (This is a test.)"
                                 : "Tests failed. (This is a test.)"
 
-                            def prList = sh(
+                            sh(
                                 script: """
                                     curl -x POST \
                                         -H "Authorization: token ${CODEBERG_TOKEN}" \
