@@ -57,8 +57,16 @@ pipeline {
         stage('Print Change ID') {
             steps {
                 script {
-                    echo "Commit ID: ${env.GIT_COMMIT}"
-                    echo "Committer name: ${env.GIT_COMMITTER_NAME}"
+                    def currentBranchHash = env.GIT_COMMIT
+
+                    def repoUrl = env.GIT_URL
+                    def parts = repoUrl.split('/')
+                    def owner = parts[-2]
+                    def repo = parts[-1]
+
+                    echo "Repo URL: ${repoUrl}"
+                    echo "Owner: ${owner}"
+                    echo "Repo: ${repo}"
                 }
             }
         }
