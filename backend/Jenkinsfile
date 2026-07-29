@@ -103,7 +103,7 @@ pipeline {
                                         -H "Authorization: token ${CODEBERG_TOKEN}" \
                                         -H "Content-Type: application/json" \
                                         -d '{\"body\": \"${comment}\"}' \
-                                        "https://codeberg.org/api/v1/repos/${owner}/${repo}/issues/${prNumber}/comments"
+                                        "https://codeberg.org/api/v1/repos/${owner}/${repo}/issues/${prNo}/comments"
                                 """,
                                 returnStdout: true
                             )
