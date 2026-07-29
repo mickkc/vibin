@@ -126,7 +126,7 @@ pipeline {
 
                             - 🧪 Total Tests: ${testSummary.totalCount}
                             - ✅ Passed Tests: ${testSummary.passCount}
-                            - ⚠️ Failed Tests: ${testSummary.passCount}
+                            - ⚠️ Failed Tests: ${testSummary.failCount}
                             - ⏭️ Skipped Tests: ${testSummary.skipCount}
 
                             [See all test results](${env.BUILD_URL}testReport/)
@@ -136,16 +136,23 @@ pipeline {
 
                             def footer = "\n\n> This action was performed automatically by a Jenkins pipeline (not AI :D)."
 
-                            sh(
+                            def fullBody = header + body + footer
+                            def jsonBody = groovy.json.JsonOutput.toJson([body: fullBody])
+
+                            writeFile(file: 'comment.json', text: jsonBody)
+
+                            def response = sh(
                                 script: """
                                     curl -X POST \
                                         -H "Authorization: token ${CODEBERG_TOKEN}" \
                                         -H "Content-Type: application/json" \
-                                        -d '{\"body\": \"${header + body + footer}\"}' \
+                                        -d @comment.json \
                                         "https://codeberg.org/api/v1/repos/${owner}/${repo}/issues/${prNo}/comments"
                                 """,
                                 returnStdout: true
                             )
+
+                            echo "API response: ${response}"
                         }
                     } catch (Exception e) {
                         echo "Failed to send PR comment: ${e.message}"
