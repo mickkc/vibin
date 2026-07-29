@@ -53,45 +53,6 @@ pipeline {
                 archiveArtifacts artifacts: 'backend/**/build/libs/*.jar', fingerprint: true
             }
         }
-
-        stage('Find PR number') {
-            steps {
-                withCredentials([string(credentialsId: 'CODEBERG_TOKEN', variable: 'CODEBERG_TOKEN')]) {
-                    script {
-                        def currentBranchHash = env.GIT_COMMIT
-
-                        def repoUrl = env.GIT_URL
-                        def parts = repoUrl.split('/')
-                        def owner = parts[-2]
-                        def repo = parts[-1]
-
-                        env.OWNER = owner
-                        env.REPO = repo
-
-                        withEnv(["OWNER=${owner}", "REPO=${repo}"]) {
-                            def prList = sh(
-                                script: '''
-                                    curl -s -H "Authorization: token $CODEBERG_TOKEN" "https://codeberg.org/api/v1/repos/$OWNER/$REPO/pulls?state=open"
-                                ''',
-                                returnStdout: true
-                            )
-
-                            def prs = readJSON(text: prList)
-                            def prNo = null
-
-                            for (pr in prs) {
-                                if (pr.head?.sha == currentBranchHash) {
-                                    prNo = pr.number
-                                }
-                            }
-
-                            env.PR_NUMBER = prNo
-                            echo "Found PR number: ${prNo}"
-                        }
-                    }
-                }
-            }
-        }
     }
 
     post {
