@@ -65,24 +65,26 @@ pipeline {
                         def owner = parts[-2]
                         def repo = parts[-1]
 
-                        def prList = sh(
-                            script: '''
-                                curl -s -H "Authorization: token $CODEBERG_TOKEN" "https://codeberg.org/api/v1/repos/${owner}/${repo}/pulls?state=open"
-                            ''',
-                            returnStdout: true
-                        )
+                        withEnv(["OWNER=${owner}", "REPO=${repo}"]) {
+                            def prList = sh(
+                                script: '''
+                                    curl -s -H "Authorization: token $CODEBERG_TOKEN" "https://codeberg.org/api/v1/repos/$OWNER/$REPO/pulls?state=open"
+                                ''',
+                                returnStdout: true
+                            )
 
-                        def prs = readJSON(text: prList)
-                        def prNo = null
+                            def prs = readJSON(text: prList)
+                            def prNo = null
 
-                        for (pr in prs) {
-                            if (pr.head?.sha == currentBranchHash) {
-                                prNo = pr.number
+                            for (pr in prs) {
+                                if (pr.head?.sha == currentBranchHash) {
+                                    prNo = pr.number
+                                }
                             }
-                        }
 
-                        env.PR_NUMBER = prNo
-                        echo "Found PR number: ${prNo}"
+                            env.PR_NUMBER = prNo
+                            echo "Found PR number: ${prNo}"
+                        }
                     }
                 }
             }
