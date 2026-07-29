@@ -4,18 +4,24 @@ import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.db.widgets.SharedWidgetEntity
 import de.mickkc.vibin.dto.widgets.CreateWidgetDto
 import de.mickkc.vibin.images.ImageCache
-import de.mickkc.vibin.utils.AccessCryptoUtil
 import de.mickkc.vibin.permissions.PermissionType
+import de.mickkc.vibin.repos.ControlRepo
 import de.mickkc.vibin.repos.ImageRepo
 import de.mickkc.vibin.repos.WidgetRepo
+import de.mickkc.vibin.utils.AccessCryptoUtil
 import de.mickkc.vibin.utils.PathUtils
+import de.mickkc.vibin.websockets.listener.ListeningToWidgetListener
 import de.mickkc.vibin.widgets.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
+import io.ktor.server.http.content.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.websocket.*
+import io.ktor.websocket.*
+import kotlinx.coroutines.channels.consumeEach
 
 private data class WidgetColors(
     val backgroundColor: Int,
@@ -220,6 +226,40 @@ fun Application.configureWidgetRoutes() = routing {
             WidgetImageCache.evictCacheForWidget(id)
 
             call.success()
+        }
+    }
+
+    staticResources("/api/js", "js")
+
+    webSocket("/api/widgets/{id}/listeningto/ws") {
+        val id = call.getStringParameter("id")
+            ?: return@webSocket close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "No Widget ID provided"))
+        val widget = WidgetRepo.getWidget(id)
+            ?: return@webSocket close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "Invalid widget ID"))
+
+        if (!WidgetRepo.getTypes(widget).contains(WidgetType.LISTENING_TO)) {
+            return@webSocket close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "Widget does not contain the 'listening to' widget type."))
+        }
+
+        val userId = WidgetRepo.getUserId(widget)
+
+        val session = ControlRepo.getCurrentSession(userId)
+            ?: ControlRepo.getLatestSession(userId)
+            ?: return@webSocket close(CloseReason(CloseReason.Codes.TRY_AGAIN_LATER, "No current or previous session for user."))
+
+        val listener = ListeningToWidgetListener(session, userId, outgoing)
+
+        try {
+            listener.reconnect()
+            incoming.consumeEach { frame ->
+                outgoing.send(frame)
+            }
+        }
+        catch (e: Exception) {
+            listener.logger.error("Error in websocket connection to listening status.", e)
+        }
+        finally {
+            listener.stop()
         }
     }
 }

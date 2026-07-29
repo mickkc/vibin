@@ -135,6 +135,14 @@ object ListenTrackingRepo {
         }
     }
 
+    fun getCurrentProgress(sessionId: String, trackId: Long): Long? {
+        val session = listenMap[sessionId] ?: return null
+        if (session.trackId != trackId) return null
+        if (session.listenStartTimestamp == null) return null
+        val elapsedTime = DateTimeUtils.now() - session.listenStartTimestamp!!
+        return session.totalListenedSeconds + elapsedTime
+    }
+
     /**
      * Called when the listening session is stopped.
      *

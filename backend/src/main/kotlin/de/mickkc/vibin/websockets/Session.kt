@@ -33,6 +33,8 @@ class Session(
     var shuffleState: Boolean = false,
     var volume: Float = 1f,
     var speed: Float = 1f,
+    @Volatile var lastPosition: Long = 0L,
+    @Volatile var lastPositionUpdate: Long = now(),
     var lastUpdate: Long = now(),
     val lock: Lock = ReentrantLock(),
     var removed: Boolean = false,
@@ -54,7 +56,7 @@ class Session(
         listeners.add(listener)
     }
 
-    fun unregisterListener(listener: SessionListener) {
+    suspend fun unregisterListener(listener: SessionListener) {
         listener.onUnregister()
         listeners.remove(listener)
     }
@@ -131,6 +133,14 @@ class Session(
         listeners.forEach { it.block() }
     }
 
+    private fun tryUpdatePosition(frame: WsFrame) {
+        val position = (frame.data["position"] as? Double)?.toLong()
+        if (position != null) {
+            lastPosition = position
+            lastPositionUpdate = now()
+        }
+    }
+
     /**
      * Handles an incomming websocket frame.
      *
@@ -140,7 +150,6 @@ class Session(
      */
     suspend fun handle(frame: WsFrame) {
         outgoingMessageFlow.emit(frame)
-        applyToListeners { onFrame(frame) }
 
         when (frame.type) {
             "ping" -> {
@@ -151,14 +160,17 @@ class Session(
                 applyToListeners { onTrackFinished(trackId, frame.timestamp) }
             }
             "play" -> {
+                tryUpdatePosition(frame)
                 _setState(SessionPlayState.PLAYING)
                 applyToListeners { onPlay(frame.timestamp) }
             }
             "pause" -> {
+                tryUpdatePosition(frame)
                 _setState(SessionPlayState.PAUSED)
                 applyToListeners { onPause(frame.timestamp) }
             }
             "stop" -> {
+                tryUpdatePosition(frame)
                 _setState(SessionPlayState.STOPPED)
                 applyToListeners { onStop(frame.timestamp) }
             }
@@ -279,6 +291,8 @@ class Session(
                 logger.warn("Unknown WebSocket frame type: ${frame.type}")
             }
         }
+
+        applyToListeners { onFrame(frame) }
     }
 
     /**

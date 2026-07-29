@@ -1,12 +1,7 @@
 package de.mickkc.vibin.widgets
 
-import de.mickkc.vibin.widgets.impl.ActivityWidget
-import de.mickkc.vibin.widgets.impl.FavoriteAlbumsWidget
-import de.mickkc.vibin.widgets.impl.FavoriteArtistsWidget
-import de.mickkc.vibin.widgets.impl.FavoriteTracksWidget
-import de.mickkc.vibin.widgets.impl.JoinedFavoritesWidget
-import de.mickkc.vibin.widgets.impl.ServerStatsWidget
-import de.mickkc.vibin.widgets.impl.UserWidget
+import de.mickkc.vibin.widgets.impl.*
+import io.ktor.server.html.*
 import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
 
@@ -26,7 +21,8 @@ object WidgetBuilder {
                 WidgetType.FAVORITE_ARTISTS -> FavoriteArtistsWidget(ctx)
                 WidgetType.JOINED_FAVORITES -> JoinedFavoritesWidget(ctx)
                 WidgetType.SERVER_STATS -> ServerStatsWidget(ctx)
-            }
+                WidgetType.LISTENING_TO -> ListeningToWidget(ctx)
+            }.also { it.interactive = interactive }
         }
 
         val bgColor = WidgetUtils.colorToHex(ctx.backgroundColor)
@@ -48,9 +44,7 @@ object WidgetBuilder {
                 body {
                     style = "margin: 0; padding: 0; background-color: $bgColor; color: $fgColor; accent-color: $accentColor"
                     widgets.forEach { widget ->
-                        unsafe {
-                            +widget.render(interactive)
-                        }
+                        insert(widget) {}
                         if (widget != widgets.last()) {
                             div {
                                 style = "width: 100%; height: 1px; background-color: ${fgColor}33; margin: 1rem 0;"

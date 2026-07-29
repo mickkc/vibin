@@ -2,6 +2,7 @@ package de.mickkc.vibin.repos
 
 import de.mickkc.vibin.db.TrackListenDurationTable
 import de.mickkc.vibin.db.UserEntity
+import de.mickkc.vibin.db.albums.AlbumEntity
 import de.mickkc.vibin.db.artists.ArtistEntity
 import de.mickkc.vibin.db.artists.TrackArtistConnection
 import de.mickkc.vibin.db.images.ColorSchemeEntity
@@ -57,6 +58,10 @@ object TrackRepo {
 
     fun getArtists(track: TrackEntity): List<ArtistEntity> = transaction {
         return@transaction track.artists.toList()
+    }
+
+    fun getAlbum(track: TrackEntity): AlbumEntity = transaction {
+        return@transaction track.album
     }
 
     fun getByArtistId(artistId: Long, userId: Long? = null): List<TrackEntity> = transaction {
