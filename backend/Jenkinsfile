@@ -106,28 +106,21 @@ pipeline {
                             def testSummary = junit 'backend/**/build/test-results/test/*.xml'
 
                             def header = currentBuild.result == 'SUCCESS'
-                                ? "# ✅ Build succeeded!\n\n"
-                                : "# 🚨 Build failed!\n\n"
+                                ? "# ✔ Build succeeded!\n\n"
+                                : "# ⚠ Build failed!\n\n"
 
                             def body = """\
 
-                            ## Commit
+                            ```text
+                            ${env.COMMIT_MSG}
+                            ```
 
-                            - Branch: `${GIT_BRANCH}`
-                            - Hash: `${currentBranchHash}`
-                            - Subject: `${env.COMMIT_SUBJECT}`
-                            - Full message:
-                                ```
-                                ${env.COMMIT_MSG}
-                                ```
+                            **Test summary** for commit `${currentBranchHash}` on branch `${GIT_BRANCH}`:
 
-
-                            ## Test summary
-
-                            - 🧪 Total Tests: ${testSummary.totalCount}
-                            - ✅ Passed Tests: ${testSummary.passCount}
-                            - ⚠️ Failed Tests: ${testSummary.failCount}
-                            - ⏭️ Skipped Tests: ${testSummary.skipCount}
+                            - **Total Tests**: ${testSummary.totalCount}
+                            - **Passed Tests**: ${testSummary.passCount}
+                            - **Failed Tests**: ${testSummary.failCount}
+                            - **Skipped Tests**: ${testSummary.skipCount}
 
                             [See all test results](${env.BUILD_URL}testReport/)
 
