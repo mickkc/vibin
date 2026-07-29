@@ -66,9 +66,9 @@ pipeline {
                         def repo = parts[-1]
 
                         def prList = sh(
-                            script: """
-                                curl -s -H "Authorization: token ${CODEBERG_TOKEN}" "https://codeberg.org/api/v1/repos/${owner}/${repo}/pulls?state=open"
-                            """,
+                            script: '''
+                                curl -s -H "Authorization: token $CODEBERG_TOKEN" "https://codeberg.org/api/v1/repos/${owner}/${repo}/pulls?state=open"
+                            ''',
                             returnStdout: true
                         )
 
