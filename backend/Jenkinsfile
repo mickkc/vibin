@@ -8,7 +8,6 @@ pipeline {
     environment {
         GRADLE_OPTS = '-Dorg.gradle.daemon=false'
         BUILD_WEBHOOK_URL = credentials('BUILD_WEBHOOK_URL')
-        CODEBERG_TOKEN = credentials('CODEBERG_TOKEN')
     }
 
     stages {
@@ -57,32 +56,34 @@ pipeline {
 
         stage('Find PR number') {
             steps {
-                script {
-                    def currentBranchHash = env.GIT_COMMIT
+                withCredentials([string(credentialsId: 'CODEBERG_TOKEN', variable: 'CODEBERG_TOKEN')]) {
+                    script {
+                        def currentBranchHash = env.GIT_COMMIT
 
-                    def repoUrl = env.GIT_URL
-                    def parts = repoUrl.split('/')
-                    def owner = parts[-2]
-                    def repo = parts[-1]
+                        def repoUrl = env.GIT_URL
+                        def parts = repoUrl.split('/')
+                        def owner = parts[-2]
+                        def repo = parts[-1]
 
-                    def prList = sh(
-                        script: """
-                            curl -s -H "Authorization: token ${env.CODEBERG_TOKEN}" "https://codeberg.org/api/v1/repos/${owner}/${repo}/pulls?state=open"
-                        """,
-                        returnStdout: true
-                    )
+                        def prList = sh(
+                            script: """
+                                curl -s -H "Authorization: token ${CODEBERG_TOKEN}" "https://codeberg.org/api/v1/repos/${owner}/${repo}/pulls?state=open"
+                            """,
+                            returnStdout: true
+                        )
 
-                    def prs = readJSON(text: prList)
-                    def prNo = null
+                        def prs = readJSON(text: prList)
+                        def prNo = null
 
-                    for (pr in prs) {
-                        if (pr.head?.sha == currentBranchHash) {
-                            prNo = pr.number
+                        for (pr in prs) {
+                            if (pr.head?.sha == currentBranchHash) {
+                                prNo = pr.number
+                            }
                         }
-                    }
 
-                    env.PR_NUMBER = prNo
-                    echo "Found PR number: ${prNo}"
+                        env.PR_NUMBER = prNo
+                        echo "Found PR number: ${prNo}"
+                    }
                 }
             }
         }
