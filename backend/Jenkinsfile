@@ -17,6 +17,15 @@ pipeline {
             }
         }
 
+        stage('Get commit info') {
+            steps {
+                script {
+                    env.COMMIT_MSG = sh(script: 'git log -1 --pretty=%B', returnStdout: true).trim()
+                    env.COMMIT_SUBJECT = sh(script: 'git log -1 --pretty=%s', returnStdout: true).trim()
+                }
+            }
+        }
+
         stage('Build') {
             steps {
                 script {
@@ -63,6 +72,89 @@ pipeline {
             echo 'Build failed'
         }
         always {
+            withCredentials([string(credentialsId: 'CODEBERG_TOKEN', variable: 'CODEBERG_TOKEN')]) {
+                script {
+                    try {
+                        def currentBranchHash = env.GIT_COMMIT
+
+                        def repoUrl = env.GIT_URL
+                        def parts = repoUrl.split('/')
+                        def owner = parts[-2]
+                        def repo = parts[-1]
+
+                        def prList = sh(
+                            script: """
+                                curl -s -H "Authorization: token ${CODEBERG_TOKEN}" "https://codeberg.org/api/v1/repos/${owner}/${repo}/pulls?state=open"
+                            """,
+                            returnStdout: true
+                        )
+
+                        def prs = readJSON(text: prList)
+                        def prNo = null
+
+                        for (pr in prs) {
+                            if (pr.head?.sha == currentBranchHash) {
+                                prNo = pr.number
+                            }
+                        }
+
+                        env.PR_NUMBER = prNo
+                        echo "Found PR number: ${prNo}"
+
+                        if (prNo != null) {
+
+                            def testSummary = junit 'backend/**/build/test-results/test/*.xml'
+
+                            def header = currentBuild.result == 'SUCCESS'
+                                ? "# ✔ Build succeeded!\n\n"
+                                : "# ⚠ Build failed!\n\n"
+
+                            def body = """\
+
+                            ```text
+                            ${env.COMMIT_MSG}
+                            ```
+
+                            **Test summary** for commit `${currentBranchHash}` on branch `${GIT_BRANCH}`:
+
+                            - **Total Tests**: ${testSummary.totalCount}
+                            - **Passed Tests**: ${testSummary.passCount}
+                            - **Failed Tests**: ${testSummary.failCount}
+                            - **Skipped Tests**: ${testSummary.skipCount}
+
+                            [See all test results](${env.BUILD_URL}testReport/)
+
+                            ---
+                            """.stripIndent()
+
+                            def footer = "\n\n> This action was performed automatically by a Jenkins pipeline (not AI :D)."
+
+                            def fullBody = header + body + footer
+                            def jsonBody = groovy.json.JsonOutput.toJson([body: fullBody])
+
+                            writeFile(file: 'comment.json', text: jsonBody)
+
+                            def response = sh(
+                                script: """
+                                    curl -X POST \
+                                        -H "Authorization: token ${CODEBERG_TOKEN}" \
+                                        -H "Content-Type: application/json" \
+                                        -d @comment.json \
+                                        "https://codeberg.org/api/v1/repos/${owner}/${repo}/issues/${prNo}/comments"
+                                """,
+                                returnStdout: true
+                            )
+
+                            echo "API response: ${response}"
+                        }
+                    } catch (Exception e) {
+                        echo "Failed to send PR comment: ${e.message}"
+                        e.printStackTrace()
+                    }
+
+                }
+            }
+
             script {
                 try {
                     // Send pipeline and test results to n8n webhook (for notifications)
