@@ -9,7 +9,7 @@ info:
     email: "contact@mickkc.dev"
   license:
     name: Licensed under GPL v3
-    url: "https://codeberg.org/mickkc/vibin/src/branch/main/LICENSE"
+    url: "https://codeberg.org/mickkc/vibin/src/branch/main/LICENSE.md"
 servers:
   - url: 'http://localhost:8080'
 paths:
