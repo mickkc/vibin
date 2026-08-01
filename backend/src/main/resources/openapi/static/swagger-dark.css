@@ -49,7 +49,7 @@ body { background: #11140e; }
 .swagger-ui .info .title small.version-stamp pre { color: #b7f397; }
 
 /* Links */
-.swagger-ui .info a,
+.swagger-ui a,
 .swagger-ui a.nostyle { color: #9cd67d; }
 
 .swagger-ui .opblock-summary-path a { color: #e2e3d9; }
