@@ -112,7 +112,7 @@ pipeline {
                             def body = """\
 
                             ```text
-                            ${env.COMMIT_MSG}
+                            {{msg}}
                             ```
 
                             **Test summary** for commit `${currentBranchHash}` on branch `${GIT_BRANCH}`:
@@ -125,7 +125,7 @@ pipeline {
                             [See all test results](${env.BUILD_URL}testReport/)
 
                             ---
-                            """.stripIndent()
+                            """.stripIndent().replace("{{msg}}", env.COMMIT_MSG)
 
                             def footer = "\n\n> This action was performed automatically by a Jenkins pipeline (not AI :D)."
 
