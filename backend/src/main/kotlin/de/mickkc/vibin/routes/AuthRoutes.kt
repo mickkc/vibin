@@ -12,6 +12,7 @@ import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.PermissionRepo
 import de.mickkc.vibin.repos.SessionRepo
 import de.mickkc.vibin.repos.UserRepo
+import de.mickkc.vibin.security.LoginNotificationManager
 
 fun Application.configureAuthRoutes() = routing {
 
@@ -22,6 +23,7 @@ fun Application.configureAuthRoutes() = routing {
 
         val username = call.getStringParameter("username") ?: return@postP
         val password = call.getStringParameter("password") ?: return@postP
+        val deviceId = call.getStringParameter("deviceId") ?: return@postP
 
         val user = UserRepo.getByUsername(username)?.takeIf { it.isActive }
             ?: return@postP call.unauthorized("Invalid username or password")
@@ -36,6 +38,7 @@ fun Application.configureAuthRoutes() = routing {
         val session = SessionRepo.addSession(user, token)
 
         logger.info("Successful login for user: $username")
+        LoginNotificationManager.sendIfNotTrusted(deviceId, session, user)
 
         call.respond(LoginResultDto(
             success = true,
