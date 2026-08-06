@@ -23,6 +23,7 @@ val serverSettings = listOf(
     AlbumMetadataFetchType,
     AlbumMetadataSource,
     LyricsMetadataSource,
+    LoginNotificationTokenValidity
 )
 
 object WelcomeTexts : ServerSetting<List<String>>(
@@ -169,4 +170,11 @@ object IsFirstScan : ServerSetting<Boolean>(
     parser = { value -> value.toBoolean() },
     serializer = { value -> value.toString() },
     defaultValue = true
+)
+
+object LoginNotificationTokenValidity : ServerSetting<String>(
+    key = "login_notification_validity",
+    parser = { value -> value },
+    serializer = { value -> value },
+    defaultValue = "3h"
 )

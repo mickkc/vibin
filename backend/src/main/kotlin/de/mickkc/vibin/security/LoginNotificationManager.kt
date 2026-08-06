@@ -5,6 +5,7 @@ import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.config.EnvUtil.EXTERNAL_URL
 import de.mickkc.vibin.db.SessionEntity
 import de.mickkc.vibin.db.UserEntity
+import de.mickkc.vibin.db.security.LoginNotificationEntity
 import de.mickkc.vibin.dto.users.UserEditDto
 import de.mickkc.vibin.mail.MailLayout
 import de.mickkc.vibin.mail.MailSender
@@ -13,13 +14,17 @@ import de.mickkc.vibin.mail.SingleParagraphMailContent
 import de.mickkc.vibin.repos.SecurityRepo
 import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.security.exception.LoginNotificationAlreadyHandledException
+import de.mickkc.vibin.security.exception.LoginNotificationExpiredException
 import de.mickkc.vibin.settings.Settings
+import de.mickkc.vibin.settings.server.LoginNotificationTokenValidity
 import de.mickkc.vibin.settings.user.SendMailOnNewLogin
+import de.mickkc.vibin.utils.DateTimeUtils
 import io.ktor.server.html.*
 import kotlinx.html.html
 import kotlinx.html.stream.appendHTML
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import kotlin.time.Duration.Companion.hours
 
 object LoginNotificationManager {
 
@@ -87,16 +92,34 @@ object LoginNotificationManager {
         logger.info("Sent login notification Email for user ${user.username}.")
     }
 
+    fun validateNotificationAge(notificationEntity: LoginNotificationEntity): Boolean {
+        val durationStr = Settings.get(LoginNotificationTokenValidity)
+        val duration = DateTimeUtils.parseDuration(durationStr) ?: 3.hours.inWholeSeconds.also {
+            logger.warn("Invalid duration: '$durationStr', using a default of 3 hours for the login notification token validity.")
+        }
+
+        val age = DateTimeUtils.now() - notificationEntity.createdAt
+        return age < duration
+    }
+
     /**
      * Called when the user clicked on the "Don't notify again" button.
      *
      * Marks the device ID as trusted, and invalidates all other tokens for that device ID.
      *
      * @param token The token (part of the URL on the button)
+     * @throws LoginNotificationAlreadyHandledException The notification has already been handled (trusted device or
+     *                                                  changed password)
+     * @throws LoginNotificationExpiredException The notification has expired because the token is too old.
      */
     fun trustDeviceIdFromLoginEmail(token: String) {
         val notification = SecurityRepo.getLoginNotificationFromToken(token)
                 ?: throw LoginNotificationAlreadyHandledException()
+
+        if (!validateNotificationAge(notification)) {
+            SecurityRepo.deleteLoginNotification(notification)
+            throw LoginNotificationExpiredException()
+        }
 
         SecurityRepo.trustDeviceId(notification.deviceId)
         SecurityRepo.deleteLoginNotificationsWithDeviceId(notification.deviceId)
@@ -110,10 +133,18 @@ object LoginNotificationManager {
      *
      * @param token The token (part of the URL on the button)
      * @param newPassword The new password provided by the user
+     * @throws LoginNotificationAlreadyHandledException The notification has already been handled (trusted device or
+     *                                                  changed password)
+     * @throws LoginNotificationExpiredException The notification has expired because the token is too old.
      */
     suspend fun changePasswordFromLoginEmail(token: String, newPassword: String) {
         val notification = SecurityRepo.getLoginNotificationFromToken(token)
             ?: throw LoginNotificationAlreadyHandledException()
+
+        if (!validateNotificationAge(notification)) {
+            SecurityRepo.deleteLoginNotification(notification)
+            throw LoginNotificationExpiredException()
+        }
 
         val user = SecurityRepo.getUserFromNotification(notification)
         SecurityRepo.invalidateSessionFromNotification(notification)

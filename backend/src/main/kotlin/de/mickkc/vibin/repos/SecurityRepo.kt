@@ -74,6 +74,10 @@ object SecurityRepo {
             .forEach { it.delete() }
     }
 
+    fun deleteLoginNotification(notification: LoginNotificationEntity) = transaction {
+        notification.delete()
+    }
+
     /**
      * Gets the user entity that the notification was sent to.
      *
