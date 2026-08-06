@@ -1,40 +1,25 @@
 package de.mickkc.vibin.mail
 
-import io.ktor.server.html.Placeholder
-import io.ktor.server.html.Template
-import io.ktor.server.html.insert
-import kotlinx.html.FlowContent
-import kotlinx.html.HTML
-import kotlinx.html.TABLE
-import kotlinx.html.a
-import kotlinx.html.body
-import kotlinx.html.h1
-import kotlinx.html.head
-import kotlinx.html.img
-import kotlinx.html.lang
-import kotlinx.html.meta
-import kotlinx.html.p
-import kotlinx.html.role
-import kotlinx.html.span
-import kotlinx.html.style
-import kotlinx.html.table
-import kotlinx.html.td
-import kotlinx.html.title
-import kotlinx.html.tr
-import kotlinx.html.unsafe
+import io.ktor.server.html.*
+import kotlinx.html.*
 
-class MailLayout(val subject: String) : Template<HTML> {
+class MailLayout(val subjectKey: String) : Template<HTML> {
+
+    data class MailLayoutButton(
+        val titleKey: String,
+        val url: String
+    )
 
     /**
      * Language of the e-mail (en, de, ...)
      */
-    var language: String? = null
+    var language: String? = MailTranslator.language
 
     /**
      * Big header text above the content.
      * If the text is null, no header will be displayed.
      */
-    var headerText: String? = null
+    var headerTextKey: String? = null
 
     /**
      * The actual content.
@@ -45,13 +30,13 @@ class MailLayout(val subject: String) : Template<HTML> {
      * The primary (filled) button, where the first value is the text,
      * and the second value is the url that opens when the user clicks on the button.
      */
-    var primaryButton: Pair<String, String>? = null
+    var primaryButton: MailLayoutButton? = null
 
     /**
      * The secondary (outlined) button, where the first value is the text,
      * and the second value is the url that opens when the user clicks on the button.
      */
-    var secondaryButton: Pair<String, String>? = null
+    var secondaryButton: MailLayoutButton? = null
 
     private fun buildStyle(): String {
         return """
@@ -81,7 +66,7 @@ class MailLayout(val subject: String) : Template<HTML> {
             meta(name = "viewport", content = "width=device-width, initial-scale=1.0")
             meta(name = "color-scheme", content = "dark")
             meta(name = "supported-color-schemes", content = "dark")
-            title(content = subject)
+            title(content = MailTranslator.getTranslation(subjectKey))
 
             style {
                 unsafe {
@@ -134,16 +119,13 @@ class MailLayout(val subject: String) : Template<HTML> {
                     td {
                         attributes["bgcolor"] = "#1D211B"
                         style = "background-color: #1D211B; padding: 40px 32px 32px; border-radius: 0 0 16px 16px;"
-                        if (headerText != null) {
+                        if (headerTextKey != null) {
                             h1 {
                                 style = "margin: 0 0 16px; font-size: 28px; font-weight: 600; line-height: 1.25; color: #E0E4DB; letter-spacing: -0.3px;"
-                                +headerText!!
+                                +MailTranslator.getTranslation(headerTextKey!!)
                             }
                         }
-                        p {
-                            style = "margin: 0 0 24px; font-size: 15px; line-height: 1.6; color: #a0b0a0;"
-                            insert(content)
-                        }
+                        insert(content)
                         table {
                             applyTableStyle()
 
@@ -153,9 +135,9 @@ class MailLayout(val subject: String) : Template<HTML> {
                                         attributes["bgcolor"] = "#A1D39A"
                                         style = "background-color: #A1D39A; border-radius: 100px; padding: 0;"
 
-                                        a(primaryButton!!.second) {
+                                        a(primaryButton!!.url) {
                                             style = "display: inline-block; padding: 12px 28px; font-size: 14px; font-weight: 600; color: #10140F; text-decoration: none; letter-spacing: 0.25px;"
-                                            +primaryButton!!.first
+                                            +MailTranslator.getTranslation(primaryButton!!.titleKey)
                                         }
                                     }
                                 }
@@ -164,9 +146,9 @@ class MailLayout(val subject: String) : Template<HTML> {
                                     td {
                                         style = "padding-left: 12px;"
 
-                                        a(secondaryButton!!.second) {
+                                        a(secondaryButton!!.url) {
                                             style = "display: inline-block; padding: 11px 28px; font-size: 14px; font-weight: 600; color: #A1D39A; text-decoration: none; letter-spacing: 0.25px; border: 1.5px solid #A1D39A; border-radius: 100px;"
-                                            +secondaryButton!!.first
+                                            +MailTranslator.getTranslation(secondaryButton!!.titleKey)
                                         }
                                     }
                                 }

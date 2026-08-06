@@ -1,15 +1,23 @@
 package de.mickkc.vibin.security
 
 import de.mickkc.vibin.auth.CryptoUtil
+import de.mickkc.vibin.config.EnvUtil
+import de.mickkc.vibin.config.EnvUtil.EXTERNAL_URL
 import de.mickkc.vibin.db.SessionEntity
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.dto.users.UserEditDto
+import de.mickkc.vibin.mail.MailLayout
 import de.mickkc.vibin.mail.MailSender
+import de.mickkc.vibin.mail.MailTranslator
+import de.mickkc.vibin.mail.SingleParagraphMailContent
 import de.mickkc.vibin.repos.SecurityRepo
 import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.security.exception.LoginNotificationAlreadyHandledException
 import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.settings.user.SendMailOnNewLogin
+import io.ktor.server.html.*
+import kotlinx.html.html
+import kotlinx.html.stream.appendHTML
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -44,9 +52,36 @@ object LoginNotificationManager {
             return
         }
 
+        val externalUrl = EnvUtil.getOrNull(EXTERNAL_URL)?.trim()?.removeSuffix("/")
+        if (externalUrl == null) {
+            logger.error("Can't send login notification because the external URL is not set. Please set the ${EXTERNAL_URL.name} environment variable.")
+            return
+        }
+
         val invalidationToken = CryptoUtil.createToken(64)
 
-        // TODO: Actually send mail
+        MailSender.sendMail(
+            to = user.email!!,
+            subject = MailTranslator.getTranslation("mails.new_sign_in.subject"),
+            body = buildString {
+                appendHTML().html {
+                    insert(MailLayout("mails.new_sign_in.subject")) {
+                        headerTextKey = "mails.new_sign_in.subject"
+                        primaryButton = MailLayout.MailLayoutButton(
+                            titleKey = "mails.new_sign_in.buttons.secure_account",
+                            url = "$externalUrl/api/mail/secure-account?tk=$invalidationToken"
+                        )
+                        secondaryButton = MailLayout.MailLayoutButton(
+                            titleKey = "mails.new_sign_in.buttons.trust_device",
+                            url = "$externalUrl/api/mail/trust-device?tk=$invalidationToken"
+                        )
+                        content {
+                            insert(SingleParagraphMailContent("mails.new_sign_in.body")) {}
+                        }
+                    }
+                }
+            }
+        )
 
         SecurityRepo.sentLoginNotificationEmail(deviceId, invalidationToken, session)
         logger.info("Sent login notification Email for user ${user.username}.")
