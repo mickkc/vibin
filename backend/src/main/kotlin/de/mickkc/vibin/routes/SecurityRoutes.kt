@@ -57,7 +57,7 @@ fun Application.configureSecurityRoutes() = routing {
             return@get call.invalidNotificationToken()
         }
 
-        call.respondHtmlTemplate(BaseTemplate(TemplateTranslator.getTranslation("web.security.reset_password.title"))) {
+        call.respondHtmlTemplate(BaseTemplate(TemplateTranslator.getTranslation("web.security.trust_device.title"))) {
             content {
                 insert(TrustDeviceTemplate(token)) {}
             }

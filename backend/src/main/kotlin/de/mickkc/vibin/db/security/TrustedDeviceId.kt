@@ -8,4 +8,8 @@ object TrustedDeviceIdTable : LongIdTable("trusted_device") {
     val deviceId = varchar("device_id", 32)
     val userId = reference("user_id", UserTable)
     val trustedAt = long("trusted_at").clientDefault { DateTimeUtils.now() }
+
+    init {
+        uniqueIndex("device_user", deviceId, userId)
+    }
 }
