@@ -39,7 +39,7 @@ object LoginNotificationManager {
      * @param user The user to send the Email to, if they have an Email address.
      */
     fun sendIfNotTrusted(deviceId: String, session: SessionEntity, user: UserEntity) {
-        if (SecurityRepo.isDeviceIdTrusted(deviceId)) {
+        if (SecurityRepo.isDeviceIdTrusted(deviceId, user.id.value)) {
             return
         }
 
@@ -121,7 +121,9 @@ object LoginNotificationManager {
             throw LoginNotificationExpiredException()
         }
 
-        SecurityRepo.trustDeviceId(notification.deviceId)
+        val user = SecurityRepo.getUserFromNotification(notification)
+
+        SecurityRepo.trustDeviceId(notification.deviceId, user.id.value)
         SecurityRepo.deleteLoginNotificationsWithDeviceId(notification.deviceId)
     }
 

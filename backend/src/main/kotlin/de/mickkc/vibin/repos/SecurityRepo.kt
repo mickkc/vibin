@@ -5,33 +5,36 @@ import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.security.LoginNotificationEntity
 import de.mickkc.vibin.db.security.LoginNotificationTable
 import de.mickkc.vibin.db.security.TrustedDeviceIdTable
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insertIgnore
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object SecurityRepo {
 
     /**
-     * Checks if a device ID is already marked as trusted.
+     * Checks if a device ID is already marked as trusted for the specified user.
      *
      * @param deviceId The device ID to check
      * @return true if the device ID is in the list of trusted IDs, false if not
      */
-    fun isDeviceIdTrusted(deviceId: String): Boolean = transaction {
+    fun isDeviceIdTrusted(deviceId: String, userId: Long): Boolean = transaction {
         TrustedDeviceIdTable.select(TrustedDeviceIdTable.id)
-            .where { TrustedDeviceIdTable.id eq deviceId }
+            .where { (TrustedDeviceIdTable.id eq deviceId) and (TrustedDeviceIdTable.userId eq userId) }
             .any()
     }
 
     /**
      * Adds a device ID to the list of trusted Device IDs.
      *
-     * Trusted device IDs will not cause a notification to be sent when logging in wit them.
+     * Trusted device IDs will not cause a notification to be sent when logging in with them.
      *
      * @param deviceId The device ID to trust
+     * @param userIdL The user ID to trust this device ID for
      */
-    fun trustDeviceId(deviceId: String) = transaction {
+    fun trustDeviceId(deviceId: String, userIdL: Long) = transaction {
         TrustedDeviceIdTable.insertIgnore {
             it[id] = deviceId
+            it[userId] = userIdL
         }.execute(this)
     }
 
