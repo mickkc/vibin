@@ -1,6 +1,7 @@
 package de.mickkc.vibin.repos
 
 import de.mickkc.vibin.db.SessionEntity
+import de.mickkc.vibin.db.SessionTable
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.security.LoginNotificationEntity
 import de.mickkc.vibin.db.security.LoginNotificationTable
@@ -70,10 +71,14 @@ object SecurityRepo {
      * After that, changing the password will not be possible from any Email that was sent with this device ID.
      *
      * @param deviceId The device ID to invalidate all messages for
+     * @param userId The user ID to invalidate messages for
      */
-    fun deleteLoginNotificationsWithDeviceId(deviceId: String) = transaction {
+    fun deleteLoginNotificationsWithDeviceId(deviceId: String, userId: Long) = transaction {
         LoginNotificationEntity
-            .find { LoginNotificationTable.deviceId eq deviceId }
+            .find { (LoginNotificationTable.deviceId eq deviceId) and (LoginNotificationTable.sessionId inSubQuery SessionTable
+                .select(SessionTable.userId)
+                .where { SessionTable.userId eq userId })
+            }
             .forEach { it.delete() }
     }
 
