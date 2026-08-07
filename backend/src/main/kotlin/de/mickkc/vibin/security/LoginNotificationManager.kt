@@ -6,10 +6,8 @@ import de.mickkc.vibin.config.EnvUtil.EXTERNAL_URL
 import de.mickkc.vibin.db.SessionEntity
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.security.LoginNotificationEntity
-import de.mickkc.vibin.dto.users.UserEditDto
 import de.mickkc.vibin.mail.MailLayout
 import de.mickkc.vibin.mail.MailSender
-import de.mickkc.vibin.templates.TemplateTranslator
 import de.mickkc.vibin.mail.SingleParagraphMailContent
 import de.mickkc.vibin.repos.SecurityRepo
 import de.mickkc.vibin.repos.UserRepo
@@ -18,8 +16,10 @@ import de.mickkc.vibin.security.exception.LoginNotificationExpiredException
 import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.settings.server.LoginNotificationTokenValidity
 import de.mickkc.vibin.settings.user.SendMailOnNewLogin
+import de.mickkc.vibin.templates.TemplateTranslator
 import de.mickkc.vibin.utils.DateTimeUtils
 import io.ktor.server.html.*
+import io.ktor.server.plugins.*
 import kotlinx.html.html
 import kotlinx.html.stream.appendHTML
 import org.slf4j.Logger
@@ -141,7 +141,7 @@ object LoginNotificationManager {
      *                                                  changed password)
      * @throws LoginNotificationExpiredException The notification has expired because the token is too old.
      */
-    suspend fun changePasswordFromLoginEmail(token: String, newPassword: String) {
+    fun changePasswordFromLoginEmail(token: String, newPassword: String) {
         val notification = SecurityRepo.getLoginNotificationFromToken(token)
             ?: throw LoginNotificationAlreadyHandledException()
 
@@ -151,12 +151,12 @@ object LoginNotificationManager {
         }
 
         val user = SecurityRepo.getUserFromNotification(notification)
+        if (!UserRepo.updatePassword(user.id.value, newPassword)) {
+            throw NotFoundException("Could not reset password for user ${user.username} because they were not found in the database.")
+        }
+
         SecurityRepo.invalidateSessionFromNotification(notification)
         SecurityRepo.deleteLoginNotificationsWithDeviceId(notification.deviceId)
-
-        UserRepo.updateOrCreateUser(user.id.value, UserEditDto(
-            password = newPassword
-        ))
     }
 
     fun isLoginNotificationTokenValid(token: String): Boolean {

@@ -110,6 +110,12 @@ object UserRepo {
         }
     }
 
+    fun updatePassword(userId: Long, newPassword: String): Boolean = transaction {
+        val user = UserEntity.findById(userId) ?: return@transaction false
+        user.passwordHash = CryptoUtil.hashPassword(newPassword, user.salt)
+        return@transaction true
+    }
+
     fun deleteUser(userId: Long, deleteData: Boolean): Boolean = transaction {
 
         val user = UserEntity.findById(userId) ?: return@transaction false

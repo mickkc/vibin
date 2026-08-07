@@ -96,6 +96,7 @@ object SecurityRepo {
      *
      * @param notificationEntity The message that has been sent to the user via Email.
      */
+    @Deprecated("Invalidate all sessions with non-trusted device IDs after https://codeberg.org/mickkc/vibin/issues/73 was implemented.", level = DeprecationLevel.WARNING)
     fun invalidateSessionFromNotification(notificationEntity: LoginNotificationEntity) = transaction {
         SessionRepo.invalidateSessionById(notificationEntity.session.id.value)
     }
