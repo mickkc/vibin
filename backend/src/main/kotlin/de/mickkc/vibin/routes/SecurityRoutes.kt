@@ -102,4 +102,25 @@ fun Application.configureSecurityRoutes() = routing {
 
         call.processDone()
     }
+
+    post("/api/mail/trust-device") {
+        val parameters = call.receiveParameters()
+
+        val token = parameters["token"] ?: return@post call.returnHTmlError("web.security.error.missing_token")
+
+        try {
+            LoginNotificationManager.trustDeviceIdFromLoginEmail(token)
+        }
+        catch (e: Exception) {
+            logger.error("An error occurred while trying to trust a device.", e)
+
+            if (e is LoginNotificationExpiredException || e is LoginNotificationAlreadyHandledException) {
+                return@post call.invalidNotificationToken()
+            }
+
+            return@post call.returnHTmlError("web.security.error.server_error")
+        }
+
+        call.processDone()
+    }
 }
