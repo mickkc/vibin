@@ -35,7 +35,7 @@ object SecurityRepo {
         TrustedDeviceIdTable.insertIgnore {
             it[deviceId] = deviceIdS
             it[userId] = userIdL
-        }//.execute(this)
+        }
     }
 
     /**
