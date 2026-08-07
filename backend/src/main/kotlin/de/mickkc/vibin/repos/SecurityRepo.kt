@@ -19,7 +19,7 @@ object SecurityRepo {
      */
     fun isDeviceIdTrusted(deviceId: String, userId: Long): Boolean = transaction {
         TrustedDeviceIdTable.select(TrustedDeviceIdTable.id)
-            .where { (TrustedDeviceIdTable.id eq deviceId) and (TrustedDeviceIdTable.userId eq userId) }
+            .where { (TrustedDeviceIdTable.deviceId eq deviceId) and (TrustedDeviceIdTable.userId eq userId) }
             .any()
     }
 
@@ -28,14 +28,14 @@ object SecurityRepo {
      *
      * Trusted device IDs will not cause a notification to be sent when logging in with them.
      *
-     * @param deviceId The device ID to trust
+     * @param deviceIdS The device ID to trust
      * @param userIdL The user ID to trust this device ID for
      */
-    fun trustDeviceId(deviceId: String, userIdL: Long) = transaction {
+    fun trustDeviceId(deviceIdS: String, userIdL: Long) = transaction {
         TrustedDeviceIdTable.insertIgnore {
-            it[id] = deviceId
+            it[deviceId] = deviceIdS
             it[userId] = userIdL
-        }.execute(this)
+        }//.execute(this)
     }
 
     /**
