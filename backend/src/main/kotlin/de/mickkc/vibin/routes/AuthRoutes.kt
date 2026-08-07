@@ -25,6 +25,10 @@ fun Application.configureAuthRoutes() = routing {
         val password = call.getStringParameter("password") ?: return@postP
         val deviceId = call.getStringParameter("deviceId") ?: return@postP
 
+        if (deviceId.length > 32) {
+            return@postP call.invalidParameter("deviceId", "deviceId.length <= 32")
+        }
+
         val user = UserRepo.getByUsername(username)?.takeIf { it.isActive }
             ?: return@postP call.unauthorized("Invalid username or password")
 

@@ -1,5 +1,7 @@
 package de.mickkc.vibin.templates.security
 
+import de.mickkc.vibin.config.EnvUtil
+import de.mickkc.vibin.config.EnvUtil.EXTERNAL_URL
 import de.mickkc.vibin.templates.TemplateTranslator
 import io.ktor.server.html.Template
 import kotlinx.html.FlowContent
@@ -10,6 +12,12 @@ import kotlinx.html.img
 import kotlinx.html.p
 
 class ErrorTemplate(val errorKey: String, val refererHeader: String?) : Template<FlowContent> {
+
+    val validatedRefererUrl = refererHeader?.takeIf {
+        val externalUrl = EnvUtil.getOrNull(EXTERNAL_URL)
+            ?: return@takeIf false
+        return@takeIf it.startsWith(externalUrl)
+    }
 
     override fun FlowContent.apply() {
         div("row") {
@@ -22,8 +30,8 @@ class ErrorTemplate(val errorKey: String, val refererHeader: String?) : Template
         p("desc") {
             +TemplateTranslator.getTranslation(errorKey)
         }
-        if (refererHeader != null) {
-            a(refererHeader, classes = "btn primary") {
+        if (validatedRefererUrl != null) {
+            a(validatedRefererUrl, classes = "btn primary") {
                 +TemplateTranslator.getTranslation("web.security.error.go_back")
             }
         }
