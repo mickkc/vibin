@@ -130,8 +130,10 @@ object LoginNotificationManager {
     /**
      * Called when a user clicked on the "Change password" button.
      *
-     * Invalidates all sessions started with the affected device ID and changes the password to the one the user has
-     * provided after clicking the button.
+     * Invalidates the affected session and changes the password to the one the user has provided after clicking the
+     * button.
+     *
+     * TODO: Invalidate all sessions from untrusted device IDs after https://codeberg.org/mickkc/vibin/issues/73 was implemented.
      *
      * @param token The token (part of the URL on the button)
      * @param newPassword The new password provided by the user
@@ -150,6 +152,7 @@ object LoginNotificationManager {
 
         val user = SecurityRepo.getUserFromNotification(notification)
         SecurityRepo.invalidateSessionFromNotification(notification)
+        SecurityRepo.deleteLoginNotificationsWithDeviceId(notification.deviceId)
 
         UserRepo.updateOrCreateUser(user.id.value, UserEditDto(
             password = newPassword
