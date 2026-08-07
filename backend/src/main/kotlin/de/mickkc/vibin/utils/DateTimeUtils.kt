@@ -1,11 +1,15 @@
 package de.mickkc.vibin.utils
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 
 object DateTimeUtils {
+
+    val logger: Logger = LoggerFactory.getLogger(DateTimeUtils::class.java)
 
     fun now(): Long = System.currentTimeMillis() / 1000
 
@@ -46,28 +50,40 @@ object DateTimeUtils {
     }
 
     fun parseDuration(durationStr: String): Long? {
+
+        val cleanedDurationStr = durationStr
+            .replace(Regex("(?<=[a-zA-Z])[a-zA-Z]+|\\s"), "")
+
+        if (cleanedDurationStr != durationStr)
+            logger.trace("Cleaned up duration string: '$durationStr' -> '$cleanedDurationStr'.")
+
+        if (cleanedDurationStr.isEmpty()) {
+            logger.warn("Could not parse '$durationStr' as a duration: Empty string after processing.")
+            return null
+        }
+
         var numberBuffer = ""
         var durationSeconds = 0L
 
-        durationStr.forEach { c ->
+        cleanedDurationStr.forEach { c ->
             if (c.isDigit())
                 numberBuffer += c
             else {
                 if (numberBuffer.isEmpty()) {
-                    // Unit without amount
+                    logger.warn("Could not parse '$durationStr' as a duration: Unit without amount: $c.")
                     return null
                 }
 
                 when (c) {
-                    'y' -> durationSeconds += numberBuffer.toLong() * 31_556_952L
+                    'y', 'Y' -> durationSeconds += numberBuffer.toLong() * 31_556_952L
                     'M' -> durationSeconds += numberBuffer.toLong() * 2_629_746L
-                    'w' -> durationSeconds += numberBuffer.toLong() * 604_800L
-                    'd' -> durationSeconds += numberBuffer.toLong() * 86_400L
-                    'h' -> durationSeconds += numberBuffer.toLong() * 3_600L
+                    'w', 'W' -> durationSeconds += numberBuffer.toLong() * 604_800L
+                    'd', 'D' -> durationSeconds += numberBuffer.toLong() * 86_400L
+                    'h', 'H' -> durationSeconds += numberBuffer.toLong() * 3_600L
                     'm' -> durationSeconds += numberBuffer.toLong() * 60L
-                    's' -> durationSeconds += numberBuffer.toLong()
+                    's', 'S' -> durationSeconds += numberBuffer.toLong()
                     else -> {
-                        // Invalid unit
+                        logger.warn("Could not parse '$durationStr' as a duration: Invalid unit: $c.")
                         return null
                     }
                 }
@@ -76,7 +92,7 @@ object DateTimeUtils {
         }
 
         if (numberBuffer.isNotEmpty()) {
-            // Amount without value
+            logger.warn("Could not parse '$durationStr' as a duration: Amount without value: $numberBuffer.")
             return null
         }
 
