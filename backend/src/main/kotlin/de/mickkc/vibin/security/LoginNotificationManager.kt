@@ -74,7 +74,7 @@ object LoginNotificationManager {
                         headerTextKey = "mails.new_sign_in.subject"
                         primaryButton = MailLayout.MailLayoutButton(
                             titleKey = "mails.new_sign_in.buttons.secure_account",
-                            url = "$externalUrl/api/mail/secure-account?tk=$invalidationToken"
+                            url = "$externalUrl/api/mail/reset-password?tk=$invalidationToken"
                         )
                         secondaryButton = MailLayout.MailLayoutButton(
                             titleKey = "mails.new_sign_in.buttons.trust_device",
