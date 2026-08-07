@@ -1,5 +1,6 @@
 package de.mickkc.vibin.mail
 
+import de.mickkc.vibin.templates.TemplateTranslator
 import io.ktor.server.html.*
 import kotlinx.html.*
 
@@ -13,7 +14,7 @@ class MailLayout(val subjectKey: String) : Template<HTML> {
     /**
      * Language of the e-mail (en, de, ...)
      */
-    var language: String? = MailTranslator.language
+    var language: String? = TemplateTranslator.language
 
     /**
      * Big header text above the content.
@@ -66,7 +67,7 @@ class MailLayout(val subjectKey: String) : Template<HTML> {
             meta(name = "viewport", content = "width=device-width, initial-scale=1.0")
             meta(name = "color-scheme", content = "dark")
             meta(name = "supported-color-schemes", content = "dark")
-            title(content = MailTranslator.getTranslation(subjectKey))
+            title(content = TemplateTranslator.getTranslation(subjectKey))
 
             style {
                 unsafe {
@@ -122,7 +123,7 @@ class MailLayout(val subjectKey: String) : Template<HTML> {
                         if (headerTextKey != null) {
                             h1 {
                                 style = "margin: 0 0 16px; font-size: 28px; font-weight: 600; line-height: 1.25; color: #E0E4DB; letter-spacing: -0.3px;"
-                                +MailTranslator.getTranslation(headerTextKey!!)
+                                +TemplateTranslator.getTranslation(headerTextKey!!)
                             }
                         }
                         insert(content)
@@ -137,7 +138,7 @@ class MailLayout(val subjectKey: String) : Template<HTML> {
 
                                         a(primaryButton!!.url) {
                                             style = "display: inline-block; padding: 12px 28px; font-size: 14px; font-weight: 600; color: #10140F; text-decoration: none; letter-spacing: 0.25px;"
-                                            +MailTranslator.getTranslation(primaryButton!!.titleKey)
+                                            +TemplateTranslator.getTranslation(primaryButton!!.titleKey)
                                         }
                                     }
                                 }
@@ -148,7 +149,7 @@ class MailLayout(val subjectKey: String) : Template<HTML> {
 
                                         a(secondaryButton!!.url) {
                                             style = "display: inline-block; padding: 11px 28px; font-size: 14px; font-weight: 600; color: #A1D39A; text-decoration: none; letter-spacing: 0.25px; border: 1.5px solid #A1D39A; border-radius: 100px;"
-                                            +MailTranslator.getTranslation(secondaryButton!!.titleKey)
+                                            +TemplateTranslator.getTranslation(secondaryButton!!.titleKey)
                                         }
                                     }
                                 }

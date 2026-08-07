@@ -9,7 +9,7 @@ import de.mickkc.vibin.db.security.LoginNotificationEntity
 import de.mickkc.vibin.dto.users.UserEditDto
 import de.mickkc.vibin.mail.MailLayout
 import de.mickkc.vibin.mail.MailSender
-import de.mickkc.vibin.mail.MailTranslator
+import de.mickkc.vibin.templates.TemplateTranslator
 import de.mickkc.vibin.mail.SingleParagraphMailContent
 import de.mickkc.vibin.repos.SecurityRepo
 import de.mickkc.vibin.repos.UserRepo
@@ -67,7 +67,7 @@ object LoginNotificationManager {
 
         MailSender.sendMail(
             to = user.email!!,
-            subject = MailTranslator.getTranslation("mails.new_sign_in.subject"),
+            subject = TemplateTranslator.getTranslation("mails.new_sign_in.subject"),
             body = buildString {
                 appendHTML().html {
                     insert(MailLayout("mails.new_sign_in.subject")) {
@@ -152,5 +152,10 @@ object LoginNotificationManager {
         UserRepo.updateOrCreateUser(user.id.value, UserEditDto(
             password = newPassword
         ))
+    }
+
+    fun isLoginNotificationTokenValid(token: String): Boolean {
+        val notification = SecurityRepo.getLoginNotificationFromToken(token) ?: return false
+        return validateNotificationAge(notification)
     }
 }

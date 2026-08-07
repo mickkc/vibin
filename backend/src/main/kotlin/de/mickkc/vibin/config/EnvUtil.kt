@@ -94,5 +94,5 @@ object EnvUtil {
     val SERVER_HOST = EnvKey("SERVER_HOST", "0.0.0.0", String::trim)
     val SERVER_PORT = EnvKey("SERVER_PORT", 8080, String::toIntOrNull)
     val EXTERNAL_URL = EnvKey("EXTERNAL_URL", null, String::trim)
-    val EMAIL_LANGUAGE = EnvKey("EMAIL_LANGUAGE", "en", String::trim)
+    val SERVER_LANGUAGE = EnvKey("SERVER_LANGUAGE", "en", String::trim)
 }

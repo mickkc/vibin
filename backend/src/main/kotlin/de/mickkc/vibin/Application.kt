@@ -76,6 +76,8 @@ fun Application.module() {
     configureStreamRoutes()
     configureImageRoutes()
 
+    configureSecurityRoutes()
+
     Tasks.configure()
     TaskScheduler.start()
 
