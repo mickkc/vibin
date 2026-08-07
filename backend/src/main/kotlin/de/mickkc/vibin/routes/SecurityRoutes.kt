@@ -64,7 +64,7 @@ fun Application.configureSecurityRoutes() = routing {
         }
     }
 
-    suspend fun ApplicationCall.returnHTmlError(reasonKey: String) {
+    suspend fun ApplicationCall.returnHtmlError(reasonKey: String) {
         respondHtmlTemplate(BaseTemplate(TemplateTranslator.getTranslation("web.security.error.title"))) {
             content {
                 insert(ErrorTemplate(reasonKey, request.headers["Referer"])) {}
@@ -75,16 +75,16 @@ fun Application.configureSecurityRoutes() = routing {
     post("/api/mail/reset-password") {
         val parameters = call.receiveParameters()
 
-        val token = parameters["token"] ?: return@post call.returnHTmlError("web.security.error.missing_token")
-        val newPassword = parameters["newPassword"] ?: return@post call.returnHTmlError("web.security.error.missing_password")
-        val confirmNewPassword = parameters["confirmNewPassword"] ?: return@post call.returnHTmlError("web.security.error.missing_confirm_password")
+        val token = parameters["token"] ?: return@post call.returnHtmlError("web.security.error.missing_token")
+        val newPassword = parameters["newPassword"] ?: return@post call.returnHtmlError("web.security.error.missing_password")
+        val confirmNewPassword = parameters["confirmNewPassword"] ?: return@post call.returnHtmlError("web.security.error.missing_confirm_password")
 
         if (newPassword != confirmNewPassword) {
-            return@post call.returnHTmlError("web.security.error.passwords_dont_match")
+            return@post call.returnHtmlError("web.security.error.passwords_dont_match")
         }
 
         if (newPassword.length < 8) {
-            return@post call.returnHTmlError("web.security.error.password_too_short")
+            return@post call.returnHtmlError("web.security.error.password_too_short")
         }
 
         try {
@@ -97,7 +97,7 @@ fun Application.configureSecurityRoutes() = routing {
                 return@post call.invalidNotificationToken()
             }
 
-            return@post call.returnHTmlError("web.security.error.server_error")
+            return@post call.returnHtmlError("web.security.error.server_error")
         }
 
         call.processDone()
@@ -106,7 +106,7 @@ fun Application.configureSecurityRoutes() = routing {
     post("/api/mail/trust-device") {
         val parameters = call.receiveParameters()
 
-        val token = parameters["token"] ?: return@post call.returnHTmlError("web.security.error.missing_token")
+        val token = parameters["token"] ?: return@post call.returnHtmlError("web.security.error.missing_token")
 
         try {
             LoginNotificationManager.trustDeviceIdFromLoginEmail(token)
@@ -118,7 +118,7 @@ fun Application.configureSecurityRoutes() = routing {
                 return@post call.invalidNotificationToken()
             }
 
-            return@post call.returnHTmlError("web.security.error.server_error")
+            return@post call.returnHtmlError("web.security.error.server_error")
         }
 
         call.processDone()
