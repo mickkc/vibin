@@ -15,6 +15,7 @@ class BaseTemplate(val pageTitle: String) : Template<HTML> {
                 content = "ie=edge"
             }
             meta("viewport", "width=device-width, initial-scale=1")
+            meta("referrer", "same-origin")
             title { +"Vibin' - $pageTitle" }
             link(rel = "stylesheet", href = "/api/web/styles.css")
             link(rel = "icon", href = "/api/web/favicon.ico")
