@@ -59,7 +59,7 @@ object LoginNotificationManager {
      * @param user The user to send the Email to, if they have an Email address.
      */
     fun sendIfNotTrusted(deviceId: String, session: SessionEntity, user: UserEntity) {
-        if (SecurityRepo.isDeviceIdTrusted(deviceId, user.id.value)) {
+        if (SecurityRepo.isDeviceIdTrusted(deviceId, user)) {
             return
         }
 
@@ -108,7 +108,7 @@ object LoginNotificationManager {
             }
         )
 
-        SecurityRepo.sentLoginNotificationEmail(deviceId, invalidationToken, session)
+        SecurityRepo.sentLoginNotificationEmail(deviceId, invalidationToken, session, user)
         logger.info("Sent login notification Email for user ${user.username}.")
     }
 
@@ -143,8 +143,8 @@ object LoginNotificationManager {
 
         val user = SecurityRepo.getUserFromNotification(notification)
 
-        SecurityRepo.trustDeviceId(notification.deviceId, user.id.value)
-        SecurityRepo.deleteLoginNotificationsWithDeviceId(notification.deviceId, user.id.value)
+        SecurityRepo.trustDeviceId(notification.deviceIdHash, user)
+        SecurityRepo.deleteLoginNotificationsWithDeviceId(notification.deviceIdHash, user)
     }
 
     /**
@@ -176,7 +176,7 @@ object LoginNotificationManager {
         }
 
         SecurityRepo.invalidateSessionFromNotification(notification)
-        SecurityRepo.deleteLoginNotificationsWithDeviceId(notification.deviceId, user.id.value)
+        SecurityRepo.deleteLoginNotificationsWithDeviceId(notification.deviceIdHash, user)
     }
 
     fun isLoginNotificationTokenValid(token: String): Boolean = withLock(token) {

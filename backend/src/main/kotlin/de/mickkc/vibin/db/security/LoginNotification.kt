@@ -2,22 +2,24 @@ package de.mickkc.vibin.db.security
 
 import de.mickkc.vibin.db.SessionEntity
 import de.mickkc.vibin.db.SessionTable
-import de.mickkc.vibin.db.StringEntityClass
-import de.mickkc.vibin.db.StringIdTable
 import de.mickkc.vibin.utils.DateTimeUtils
-import org.jetbrains.exposed.dao.Entity
+import org.jetbrains.exposed.dao.LongEntity
+import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.LongIdTable
 
-object LoginNotificationTable : StringIdTable("login_notification", columnName = "invalidate_token", columnLength = 64) {
+object LoginNotificationTable : LongIdTable("login_notification") {
+    val tokenHash = binary("token_hash", 256)
     val sessionId = reference("session_id", SessionTable)
-    val deviceId = varchar("device_id", 32)
+    val deviceIdHash = binary("device_id_hash", 256)
     val createdAt = long("created_at").clientDefault { DateTimeUtils.now() }
 }
 
-class LoginNotificationEntity (id: EntityID<String>) : Entity<String>(id) {
-    companion object : StringEntityClass<LoginNotificationEntity>(LoginNotificationTable)
+class LoginNotificationEntity (id: EntityID<Long>) : LongEntity(id) {
+    companion object : LongEntityClass<LoginNotificationEntity>(LoginNotificationTable)
 
+    var tokenHash by LoginNotificationTable.tokenHash
     var session by SessionEntity.Companion referencedOn LoginNotificationTable.sessionId
-    var deviceId by LoginNotificationTable.deviceId
+    var deviceIdHash by LoginNotificationTable.deviceIdHash
     var createdAt by LoginNotificationTable.createdAt
 }

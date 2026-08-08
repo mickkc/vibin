@@ -5,11 +5,11 @@ import de.mickkc.vibin.utils.DateTimeUtils
 import org.jetbrains.exposed.dao.id.LongIdTable
 
 object TrustedDeviceIdTable : LongIdTable("trusted_device") {
-    val deviceId = varchar("device_id", 32)
+    val deviceIdHash = binary("device_id_hash", 256).index()
     val userId = reference("user_id", UserTable)
     val trustedAt = long("trusted_at").clientDefault { DateTimeUtils.now() }
 
     init {
-        uniqueIndex("device_user", deviceId, userId)
+        uniqueIndex("device_user", deviceIdHash, userId)
     }
 }

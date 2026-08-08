@@ -1,5 +1,6 @@
 package de.mickkc.vibin.repos
 
+import de.mickkc.vibin.auth.CryptoUtil
 import de.mickkc.vibin.db.SessionEntity
 import de.mickkc.vibin.db.SessionTable
 import de.mickkc.vibin.db.UserEntity
@@ -20,9 +21,10 @@ object SecurityRepo {
      * @param deviceId The device ID to check
      * @return true if the device ID is in the list of trusted IDs, false if not
      */
-    fun isDeviceIdTrusted(deviceId: String, userId: Long): Boolean = transaction {
+    fun isDeviceIdTrusted(deviceId: String, user: UserEntity): Boolean = transaction {
+        val hashed = CryptoUtil.hashPassword(deviceId, user.salt)
         TrustedDeviceIdTable.select(TrustedDeviceIdTable.id)
-            .where { (TrustedDeviceIdTable.deviceId eq deviceId) and (TrustedDeviceIdTable.userId eq userId) }
+            .where { (TrustedDeviceIdTable.deviceIdHash eq hashed) and (TrustedDeviceIdTable.userId eq user.id.value) }
             .any()
     }
 
@@ -31,13 +33,13 @@ object SecurityRepo {
      *
      * Trusted device IDs will not cause a notification to be sent when logging in with them.
      *
-     * @param deviceIdS The device ID to trust
-     * @param userIdL The user ID to trust this device ID for
+     * @param hashedDeviceId The hashed device ID (wit the user's salt) to trust
+     * @param user The user to trust this device ID for
      */
-    fun trustDeviceId(deviceIdS: String, userIdL: Long) = transaction {
+    fun trustDeviceId(hashedDeviceId: ByteArray, user: UserEntity) = transaction {
         TrustedDeviceIdTable.insertIgnore {
-            it[deviceId] = deviceIdS
-            it[userId] = userIdL
+            it[deviceIdHash] = hashedDeviceId
+            it[userId] = user.id.value
         }
     }
 
@@ -49,11 +51,17 @@ object SecurityRepo {
      * @param deviceId The device ID used to log in
      * @param token The token generated for this notification (not the session!)
      * @param session The session created by the login (used to invalidate later)
+     * @param user The user the mail has been sent to
      */
-    fun sentLoginNotificationEmail(deviceId: String, token: String, session: SessionEntity): LoginNotificationEntity = transaction {
-        LoginNotificationEntity.new(token) {
+    fun sentLoginNotificationEmail(deviceId: String, token: String, session: SessionEntity, user: UserEntity): LoginNotificationEntity = transaction {
+
+        val hashedDeviceId = CryptoUtil.hashPassword(deviceId, user.salt)
+        val hashedToken = CryptoUtil.hashPassword(token, user.salt)
+
+        LoginNotificationEntity.new {
+            this.tokenHash = hashedToken
             this.session = session
-            this.deviceId = deviceId
+            this.deviceIdHash = hashedDeviceId
         }
     }
 
@@ -64,7 +72,10 @@ object SecurityRepo {
      * @return The notification for that token, or null if does not exist.
      */
     fun getLoginNotificationFromToken(token: String): LoginNotificationEntity? = transaction {
-        LoginNotificationEntity.findById(token)
+        LoginNotificationEntity.all().firstOrNull {
+            val hashed = CryptoUtil.hashPassword(token, it.session.user.salt)
+            hashed.contentEquals(it.tokenHash)
+        }
     }
 
     /**
@@ -82,14 +93,14 @@ object SecurityRepo {
      *
      * After that, changing the password will not be possible from any Email that was sent with this device ID.
      *
-     * @param deviceId The device ID to invalidate all messages for
-     * @param userId The user ID to invalidate messages for
+     * @param deviceIdHash The device ID hash to invalidate all messages for
+     * @param user The user to invalidate messages for
      */
-    fun deleteLoginNotificationsWithDeviceId(deviceId: String, userId: Long) = transaction {
+    fun deleteLoginNotificationsWithDeviceId(deviceIdHash: ByteArray, user: UserEntity) = transaction {
         LoginNotificationEntity
-            .find { (LoginNotificationTable.deviceId eq deviceId) and (LoginNotificationTable.sessionId inSubQuery SessionTable
-                .select(SessionTable.userId)
-                .where { SessionTable.userId eq userId })
+            .find { (LoginNotificationTable.deviceIdHash eq deviceIdHash) and (LoginNotificationTable.sessionId inSubQuery SessionTable
+                .select(SessionTable.id)
+                .where { SessionTable.userId eq user.id.value })
             }
             .forEach { it.delete() }
     }
