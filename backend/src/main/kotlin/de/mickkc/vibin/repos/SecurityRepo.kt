@@ -6,7 +6,9 @@ import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.security.LoginNotificationEntity
 import de.mickkc.vibin.db.security.LoginNotificationTable
 import de.mickkc.vibin.db.security.TrustedDeviceIdTable
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insertIgnore
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -63,6 +65,16 @@ object SecurityRepo {
      */
     fun getLoginNotificationFromToken(token: String): LoginNotificationEntity? = transaction {
         LoginNotificationEntity.findById(token)
+    }
+
+    /**
+     * Removes all login notifications before the specified timestamp.
+     *
+     * @param timestamp The timestamp in seconds. Notifications created before this timestamp are removed
+     * @return The amount of deleted notifications
+     */
+    fun removeLoginNotificationsBefore(timestamp: Long): Int = transaction {
+        LoginNotificationTable.deleteWhere { createdAt less timestamp }
     }
 
     /**
