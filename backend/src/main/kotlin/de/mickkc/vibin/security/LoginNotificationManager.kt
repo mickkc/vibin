@@ -1,5 +1,6 @@
 package de.mickkc.vibin.security
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import de.mickkc.vibin.auth.CryptoUtil
 import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.config.EnvUtil.EXTERNAL_URL
@@ -24,11 +25,30 @@ import kotlinx.html.html
 import kotlinx.html.stream.appendHTML
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.time.Duration.Companion.hours
 
 object LoginNotificationManager {
 
     val logger: Logger = LoggerFactory.getLogger(LoginNotificationManager::class.java)
+
+    private val notificationLocks = Caffeine.newBuilder()
+        .maximumSize(10_000)
+        .expireAfterAccess(1, TimeUnit.HOURS)
+        .build<String, ReentrantLock> { ReentrantLock() }
+
+    private fun <T>withLock(token: String, block: () -> T): T {
+        val lock = notificationLocks.get(token)
+
+        lock.lock()
+        try {
+            return block()
+        }
+        finally {
+            lock.unlock()
+        }
+    }
 
     /**
      * Sends a login notification to the specified user, if SMTP-support is enabled, and the user has an email address
@@ -112,7 +132,7 @@ object LoginNotificationManager {
      *                                                  changed password)
      * @throws LoginNotificationExpiredException The notification has expired because the token is too old.
      */
-    fun trustDeviceIdFromLoginEmail(token: String) {
+    fun trustDeviceIdFromLoginEmail(token: String) = withLock(token) {
         val notification = SecurityRepo.getLoginNotificationFromToken(token)
                 ?: throw LoginNotificationAlreadyHandledException()
 
@@ -141,7 +161,7 @@ object LoginNotificationManager {
      *                                                  changed password)
      * @throws LoginNotificationExpiredException The notification has expired because the token is too old.
      */
-    fun changePasswordFromLoginEmail(token: String, newPassword: String) {
+    fun changePasswordFromLoginEmail(token: String, newPassword: String) = withLock(token) {
         val notification = SecurityRepo.getLoginNotificationFromToken(token)
             ?: throw LoginNotificationAlreadyHandledException()
 
@@ -159,8 +179,8 @@ object LoginNotificationManager {
         SecurityRepo.deleteLoginNotificationsWithDeviceId(notification.deviceId, user.id.value)
     }
 
-    fun isLoginNotificationTokenValid(token: String): Boolean {
-        val notification = SecurityRepo.getLoginNotificationFromToken(token) ?: return false
-        return validateNotificationAge(notification)
+    fun isLoginNotificationTokenValid(token: String): Boolean = withLock(token) {
+        val notification = SecurityRepo.getLoginNotificationFromToken(token) ?: return@withLock false
+        return@withLock validateNotificationAge(notification)
     }
 }
