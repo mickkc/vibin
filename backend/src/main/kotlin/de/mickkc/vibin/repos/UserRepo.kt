@@ -50,6 +50,18 @@ object UserRepo {
         UserEntity.findById(id)
     }
 
+    /**
+     * Updates or creates a user according to the editDto.
+     *
+     * IMPORTANT: This does not validate the old password. So either the password must be validated before calling this
+     * function, or it should be used in an admin / system context!
+     *
+     * @param id The user ID, or null to create a new user
+     * @param editDto The dto containing user data. Values that are null will not be updated or have the default value
+     *                when creating a new user. The `username` and `password` fields are required when creating a new
+     *                user.
+     * @return The created / updated user or null, if the user wit the ID could not be found (this only affects updating).
+     */
     suspend fun updateOrCreateUser(id: Long?, editDto: UserEditDto): UserEntity? {
         val user = transaction {
             if (id != null)
@@ -96,6 +108,12 @@ object UserRepo {
             user.updatedAt = DateTimeUtils.now()
             user
         }
+    }
+
+    fun updatePassword(userId: Long, newPassword: String): Boolean = transaction {
+        val user = UserEntity.findById(userId) ?: return@transaction false
+        user.passwordHash = CryptoUtil.hashPassword(newPassword, user.salt)
+        return@transaction true
     }
 
     fun deleteUser(userId: Long, deleteData: Boolean): Boolean = transaction {

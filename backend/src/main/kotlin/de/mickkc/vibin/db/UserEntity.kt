@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
 import de.mickkc.vibin.db.images.ImageEntity
 import de.mickkc.vibin.db.images.ImageTable
+import de.mickkc.vibin.db.security.TrustedDeviceIdTable
 import de.mickkc.vibin.repos.PlaylistRepo
 import de.mickkc.vibin.repos.SessionRepo
 
@@ -63,6 +64,9 @@ class UserEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, UserTable) {
         // Remove sessions and media tokens associated with this user
         SessionRepo.invalidateAllSessionsForUser(userId)
         SessionRepo.invalidateAllMediaTokensForUser(userId)
+
+        // Remove all trusted devices for this user
+        TrustedDeviceIdTable.deleteWhere { TrustedDeviceIdTable.userId eq userId }
 
         super.delete()
     }

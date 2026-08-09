@@ -9,7 +9,8 @@ val userSettings = listOf(
     RelatedArtistScoreMultiplier,
     RelatedAlbumScoreMultiplier,
     RelatedTagsScoreMultiplier,
-    RelatedTagsNegativeScoreMultiplier
+    RelatedTagsNegativeScoreMultiplier,
+    SendMailOnNewLogin
 )
 
 object ShowActivitiesToOthers : UserSetting<Boolean>(
@@ -59,4 +60,11 @@ object RelatedTagsNegativeScoreMultiplier : UserSetting<Float>(
     parser = { value -> value.toFloat() },
     serializer = { value -> value.toString() },
     defaultValue = 0.5f
+)
+
+object SendMailOnNewLogin : UserSetting<Boolean>(
+    key = "send_mail_on_new_login",
+    parser = { value -> value.toBoolean() },
+    serializer = { value -> value.toString() },
+    defaultValue = false
 )

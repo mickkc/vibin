@@ -1,5 +1,7 @@
 package de.mickkc.vibin.db
 
+import de.mickkc.vibin.db.security.LoginNotificationEntity
+import de.mickkc.vibin.db.security.LoginNotificationTable
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -27,4 +29,14 @@ class SessionEntity(id: EntityID<Long>) : LongEntity(id) {
     var token by SessionTable.token
     var createdAt by SessionTable.createdAt
     var lastUsed by SessionTable.lastUsed
+
+    override fun delete() {
+
+        val sessionId = id
+
+        LoginNotificationEntity.find { LoginNotificationTable.sessionId eq sessionId }
+            .forEach { it.delete() }
+
+        super.delete()
+    }
 }

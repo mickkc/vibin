@@ -4,13 +4,13 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UserEditDto(
-    val username: String?,
-    val displayName: String?,
-    val description: String?,
-    val email: String?,
-    val isAdmin: Boolean?,
-    val isActive: Boolean?,
-    val profilePictureUrl: String?,
-    val oldPassword: String?,
-    val password: String?
+    val username: String? = null,
+    val displayName: String? = null,
+    val description: String? = null,
+    val email: String? = null,
+    val isAdmin: Boolean? = null,
+    val isActive: Boolean? = null,
+    val profilePictureUrl: String? = null,
+    val oldPassword: String? = null,
+    val password: String? = null
 )
