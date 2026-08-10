@@ -6,6 +6,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Duration.Companion.milliseconds
 
 object TaskManager {
 
@@ -44,7 +45,7 @@ object TaskManager {
     suspend fun waitForTaskCompletion(taskId: String) {
         val task = tasks[taskId] ?: return
         while (task.isRunning()) {
-            delay(100)
+            delay(100.milliseconds)
         }
     }
 
