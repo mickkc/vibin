@@ -16,6 +16,8 @@ import de.mickkc.vibin.settings.server.UploadPath
 import de.mickkc.vibin.utils.ChecksumUtil
 import de.mickkc.vibin.utils.DateTimeUtils
 import de.mickkc.vibin.utils.PathUtils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.nio.file.Files
 import java.util.*
@@ -173,7 +175,7 @@ object UploadManager {
      * @return The created TrackEntity, or null if the operation failed.
      * @throws FileAlreadyExistsException if the target file already exists.
      */
-    suspend fun apply(id: String): TrackEntity {
+    suspend fun apply(id: String): TrackEntity = withContext(Dispatchers.IO) {
 
         val mutex = getMutex(id)
         mutex.lock()
@@ -216,7 +218,7 @@ object UploadManager {
 
             storage.remove(upload.id)
 
-            return track
+            return@withContext track
         }
         finally {
             mutex.unlock()
