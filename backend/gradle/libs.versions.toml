@@ -3,11 +3,11 @@ exposed = "0.61.0"
 h2 = "2.3.232"
 kotlin = "2.1.10"
 ktor = "3.2.3"
-logback = "1.5.13"
+logback = "1.6.1"
 postgres = "42.7.7"
 jaudiotagger = "1.4.22"
 flyway = "6.5.2"
-swagger-parser = "2.1.30"
+swagger-parser = "2.1.45"
 
 [libraries]
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
@@ -44,7 +44,7 @@ kotlinx-html-jvm = { module = "org.jetbrains.kotlinx:kotlinx-html-jvm", version 
 kotlin-css = { module = "org.jetbrains.kotlin-wrappers:kotlin-css-jvm", version = "2025.6.4" }
 selenium-java = { module = "org.seleniumhq.selenium:selenium-java", version = "4.22.0" }
 
-angus-mail = { module = "org.eclipse.angus:angus-mail", version = "2.0.3" }
+angus-mail = { module = "org.eclipse.angus:angus-mail", version = "2.0.5" }
 
 jsoup = { module = "org.jsoup:jsoup", version = "1.21.2" }
 ph-css = { module = "com.helger:ph-css", version = "8.1.1" }
