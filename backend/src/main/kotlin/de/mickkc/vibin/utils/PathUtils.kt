@@ -86,9 +86,8 @@ object PathUtils {
         )
     }
 
-    private val allowedNameChars = ('a'..'z') + ('A'..'Z') + ('0'..'9') + listOf(
-        '-', '_', '.', ' '
-    )
+    @Suppress("SuspiciousCallOnCollectionToAddOrRemovePath") // List items should explicitly be joined into one list
+    private val allowedNameChars = ('a'..'z') + ('A'..'Z') + ('0'..'9') + listOf('-', '_', '.', ' ')
 
     fun sanitizePath(path: String): String {
         return path.split("/", "\\").joinToString(File.separator) { component ->

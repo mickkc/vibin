@@ -16,6 +16,7 @@ object CryptoUtil {
 
     val secureRandom = SecureRandom()
 
+    @Suppress("SuspiciousCallOnCollectionToAddOrRemovePath") // List items should explicitly be joined into one list
     private val tokenChars = ('A'..'Z') + ('a'..'z') + ('0'..'9')
 
     fun getSalt(): ByteArray {

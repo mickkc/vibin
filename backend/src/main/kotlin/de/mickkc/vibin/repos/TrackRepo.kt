@@ -387,7 +387,7 @@ object TrackRepo {
         if (track.album == related.album) score += getScoreMultiplier(RelatedAlbumScoreMultiplier, userId)
         val sharedTags = track.tags.intersect(related.tags.toSet()).size
         score += sharedTags * getScoreMultiplier(RelatedTagsScoreMultiplier, userId)
-        val notSharedTags = (track.tags + related.tags).toSet().size - sharedTags
+        val notSharedTags = (track.tags + related.tags.toList()).toSet().size - sharedTags
         score -= notSharedTags * getScoreMultiplier(RelatedTagsNegativeScoreMultiplier, userId)
         return score
     }
