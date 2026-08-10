@@ -1,6 +1,7 @@
 rootProject.name = "vibin"
 
 dependencyResolutionManagement {
+    @Suppress("UnstableApiUsage")
     repositories {
         mavenCentral()
         maven {
