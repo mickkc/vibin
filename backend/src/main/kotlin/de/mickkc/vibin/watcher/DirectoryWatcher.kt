@@ -16,6 +16,7 @@ import kotlinx.io.IOException
 import org.slf4j.LoggerFactory
 import java.io.File
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 object DirectoryWatcher {
@@ -72,7 +73,7 @@ object DirectoryWatcher {
             val firstEvent = fsEvents.receive()
             buffer.add(firstEvent)
 
-            delay(DEBOUNCE_DELAY_MS) // wait for more events
+            delay(DEBOUNCE_DELAY_MS.milliseconds) // wait for more events
 
             // Drain the channel for any additional events
             while (true) {
@@ -164,7 +165,7 @@ object DirectoryWatcher {
             val size = try {
                 file.length()
             } catch (e: IOException) {
-                delay(100)
+                delay(100.milliseconds)
                 continue
             }
 
@@ -181,7 +182,7 @@ object DirectoryWatcher {
                 lastSize = size
             }
 
-            delay(200)
+            delay(200.milliseconds)
         }
 
         return false

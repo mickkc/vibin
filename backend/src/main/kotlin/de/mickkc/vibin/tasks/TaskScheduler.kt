@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import de.mickkc.vibin.utils.DateTimeUtils
+import kotlin.time.Duration.Companion.seconds
 
 object TaskScheduler {
 
@@ -49,7 +50,7 @@ object TaskScheduler {
 
                 logger.info("Next task run in $delay seconds")
 
-                delay(delay * 1000L)
+                delay(delay.seconds)
             }
         }
     }
