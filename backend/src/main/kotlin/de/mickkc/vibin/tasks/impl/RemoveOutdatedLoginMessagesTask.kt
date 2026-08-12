@@ -21,8 +21,6 @@ object RemoveOutdatedLoginMessagesTask : BaseTask() {
 
         val now = DateTimeUtils.now()
         val duration = Settings.get(LoginNotificationTokenValidity)
-            .let { DateTimeUtils.parseDuration(it) }
-            ?: 3.hours.inWholeSeconds
 
         val removedNotifications = SecurityRepo.removeLoginNotificationsBefore(now - duration)
 

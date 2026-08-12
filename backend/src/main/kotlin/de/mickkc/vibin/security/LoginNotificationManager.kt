@@ -27,7 +27,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
-import kotlin.time.Duration.Companion.hours
 
 object LoginNotificationManager {
 
@@ -113,10 +112,7 @@ object LoginNotificationManager {
     }
 
     fun validateNotificationAge(notificationEntity: LoginNotificationEntity): Boolean {
-        val durationStr = Settings.get(LoginNotificationTokenValidity)
-        val duration = DateTimeUtils.parseDuration(durationStr) ?: 3.hours.inWholeSeconds.also {
-            logger.warn("Invalid duration: '$durationStr', using a default of 3 hours for the login notification token validity.")
-        }
+        val duration = Settings.get(LoginNotificationTokenValidity)
 
         val age = DateTimeUtils.now() - notificationEntity.createdAt
         return age < duration
