@@ -43,7 +43,7 @@ class SettingRestTest {
                 is MetadataFetchingType -> {
                     assertEquals(actualValue.name, settings[it.key])
                 }
-                is Int -> {
+                is Number -> {
                     assertEquals(actualValue.toDouble(), settings[it.key])
                 }
                 else -> {
