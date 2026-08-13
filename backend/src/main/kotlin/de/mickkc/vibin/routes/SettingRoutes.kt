@@ -38,16 +38,22 @@ fun Application.configureSettingRoutes() = routing {
 
                 val userId = call.getUserId() ?: return@putP call.unauthorized()
                 val settingValue = call.receive<String>()
+                val parsedValue = userSetting.parser(settingValue)
+                    ?: return@putP call.invalidParameter("body")
+
                 SettingsRepo.updateUserSetting(userSetting, userId, settingValue)
-                return@putP call.respond(KeyValueDto(userSetting.key, userSetting.parser(settingValue)))
+                return@putP call.respond(KeyValueDto(userSetting.key, parsedValue))
             }
             else {
                 if (!call.hasPermissions(PermissionType.CHANGE_SERVER_SETTINGS))
                     return@putP call.forbidden()
 
                 val settingValue = call.receive<String>()
+                val parsedValue = setting.parser(settingValue)
+                    ?: return@putP call.invalidParameter("body")
+
                 SettingsRepo.updateServerSetting(setting, settingValue)
-                call.respond(KeyValueDto(setting.key, setting.parser(settingValue)))
+                call.respond(KeyValueDto(setting.key, parsedValue))
             }
 
         }

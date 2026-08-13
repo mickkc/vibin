@@ -1,7 +1,10 @@
 package de.mickkc.vibin.settings.server
 
-import kotlinx.serialization.json.Json
 import de.mickkc.vibin.parsing.MetadataFetchingType
+import de.mickkc.vibin.utils.DateTimeUtils
+import kotlinx.serialization.json.Json
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
 
 val serverSettings = listOf(
     ArtistNameDelimiters,
@@ -23,7 +26,8 @@ val serverSettings = listOf(
     AlbumMetadataFetchType,
     AlbumMetadataSource,
     LyricsMetadataSource,
-    LoginNotificationTokenValidity
+    LoginNotificationTokenValidity,
+    SessionExpirationDuration
 )
 
 object WelcomeTexts : ServerSetting<List<String>>(
@@ -172,9 +176,16 @@ object IsFirstScan : ServerSetting<Boolean>(
     defaultValue = true
 )
 
-object LoginNotificationTokenValidity : ServerSetting<String>(
+object LoginNotificationTokenValidity : ServerSetting<Long>(
     key = "login_notification_validity",
-    parser = { value -> value },
-    serializer = { value -> value },
-    defaultValue = "3h"
+    parser = { value -> DateTimeUtils.parseDuration(value) },
+    serializer = { value -> DateTimeUtils.formatDurationFull(value) },
+    defaultValue = 3.hours.inWholeSeconds
+)
+
+object SessionExpirationDuration : ServerSetting<Long>(
+    key = "session_expiration_validity",
+    parser = { value -> DateTimeUtils.parseDuration(value) },
+    serializer = { value -> DateTimeUtils.formatDurationFull(value) },
+    defaultValue = 7.days.inWholeSeconds
 )

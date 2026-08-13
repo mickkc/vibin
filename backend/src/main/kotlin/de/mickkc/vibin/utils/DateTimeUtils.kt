@@ -49,6 +49,18 @@ object DateTimeUtils {
         append("${seconds}s")
     }
 
+    private val secondsMap = mapOf(
+        'y' to 31_556_952L,
+        'M' to 2_629_746L,
+        'w' to 604_800L,
+        'd' to 86_400L,
+        'h' to 3_600L,
+        'm' to 60L,
+        's' to 1
+    )
+
+    private val keysDesc = listOf('y', 'M', 'w', 'd', 'h', 'm', 's')
+
     fun parseDuration(durationStr: String): Long? {
 
         val cleanedDurationStr = durationStr
@@ -74,17 +86,15 @@ object DateTimeUtils {
                     return null
                 }
 
-                when (c) {
-                    'y', 'Y' -> durationSeconds += numberBuffer.toLong() * 31_556_952L
-                    'M' -> durationSeconds += numberBuffer.toLong() * 2_629_746L
-                    'w', 'W' -> durationSeconds += numberBuffer.toLong() * 604_800L
-                    'd', 'D' -> durationSeconds += numberBuffer.toLong() * 86_400L
-                    'h', 'H' -> durationSeconds += numberBuffer.toLong() * 3_600L
-                    'm' -> durationSeconds += numberBuffer.toLong() * 60L
-                    's', 'S' -> durationSeconds += numberBuffer.toLong()
+                durationSeconds += when (c) {
+                    'M' -> numberBuffer.toLong() * secondsMap[c]!!
                     else -> {
-                        logger.warn("Could not parse '$durationStr' as a duration: Invalid unit: $c.")
-                        return null
+                        val seconds = secondsMap[c.lowercaseChar()]
+                        if (seconds == null) {
+                            logger.warn("Could not parse '$durationStr' as a duration: Invalid unit: $c.")
+                            return null
+                        }
+                        numberBuffer.toLong() * seconds
                     }
                 }
                 numberBuffer = ""
@@ -97,5 +107,29 @@ object DateTimeUtils {
         }
 
         return durationSeconds
+    }
+
+    fun formatDurationFull(duration: Long): String {
+
+        if (duration < 0L) throw IllegalArgumentException("Duration can not be negative! Value: $duration")
+        if (duration == 0L) return "0s"
+
+        var remainingDuration = duration
+        var output = ""
+
+        do {
+            for (key in keysDesc) {
+                val value = secondsMap[key]!!
+                if (value > remainingDuration) continue
+
+                val amount = remainingDuration / value
+                output += "${amount}${key} "
+
+                remainingDuration -= amount * value
+                break
+            }
+        } while (remainingDuration > 0)
+
+        return output.trim()
     }
 }
