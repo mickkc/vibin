@@ -1,34 +1,24 @@
 package rest
 
+import de.mickkc.vibin.config.EnvUtil
+import de.mickkc.vibin.db.images.ImageEntity
+import de.mickkc.vibin.dto.TaskDto
+import de.mickkc.vibin.permissions.PermissionType
+import de.mickkc.vibin.repos.*
+import de.mickkc.vibin.tasks.TaskManager
+import de.mickkc.vibin.tasks.impl.*
+import de.mickkc.vibin.utils.DateTimeUtils
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import utils.*
-import de.mickkc.vibin.config.EnvUtil
-import de.mickkc.vibin.db.images.ImageEntity
-import de.mickkc.vibin.dto.TaskDto
-import de.mickkc.vibin.permissions.PermissionType
-import de.mickkc.vibin.repos.AlbumRepo
-import de.mickkc.vibin.repos.ArtistRepo
-import de.mickkc.vibin.repos.ImageRepo
-import de.mickkc.vibin.repos.TrackRepo
-import de.mickkc.vibin.tasks.TaskManager
-import de.mickkc.vibin.tasks.TaskResult
-import de.mickkc.vibin.tasks.impl.DeleteUnusedAlbumsTask
-import de.mickkc.vibin.tasks.impl.DeleteUnusedArtistsTask
-import de.mickkc.vibin.tasks.impl.DeleteUnusedImagesTask
-import de.mickkc.vibin.tasks.impl.RemoveDeletedTracksTask
-import de.mickkc.vibin.utils.DateTimeUtils
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.createFile
 import kotlin.io.path.createTempDirectory
 import kotlin.io.path.deleteExisting
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.*
+import kotlin.time.Duration.Companion.days
 
 class TaskRestTest {
 
@@ -385,6 +375,51 @@ class TaskRestTest {
         val deletedTrack = transaction { TrackRepo.getById(trackWithMissingFile.id.value) }
         assertEquals(null, deletedTrack)
     }
+    // endregion
+
+    // region DeleteExpiredSessionsTask
+
+    @Test
+    fun testDeleteExpiredSessionsTask_NoDeletedSessions() = testApp { client ->
+        // 1 session for the current user (not expired)
+        assertEquals(1L, SessionRepo.count())
+
+        val response = client.post("/api/tasks/delete_expired_sessions/run")
+        assertTrue(response.status.isSuccess())
+
+        TaskManager.waitForTaskCompletion(DeleteExpiredSessionsTask.id)
+        assertNotNull(DeleteExpiredSessionsTask.lastRun)
+
+        assertEquals(1L, SessionRepo.count())
+    }
+
+    @Test
+    fun testDeleteExpiredSessionsTask_WithDeletedSessions() = testApp { client ->
+
+        val user = UserRepo.getById(1L)!!
+
+        transaction {
+            // 1 session for the current user (not expired),
+            // 2 expired sessions (last used before now minus 1 week),
+            SessionRepo.addSession(user, "token1").lastUsed = DateTimeUtils.now() - 14.days.inWholeSeconds
+            SessionRepo.addSession(user, "token2").lastUsed = DateTimeUtils.now() - 8.days.inWholeSeconds
+
+            // 1 used before, but still valid
+            SessionRepo.addSession(user, "token3").lastUsed = DateTimeUtils.now() - 4.days.inWholeSeconds
+        }
+
+        assertEquals(4L, SessionRepo.count())
+
+        val response = client.post("/api/tasks/delete_expired_sessions/run")
+        assertTrue(response.status.isSuccess())
+
+        TaskManager.waitForTaskCompletion(DeleteExpiredSessionsTask.id)
+        assertNotNull(DeleteExpiredSessionsTask.lastRun)
+
+        assertEquals(2L, SessionRepo.count())
+        assertNotNull(SessionRepo.validateAndUpdateToken("token3"))
+    }
+
     // endregion
 
     // region Task Results
