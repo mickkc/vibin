@@ -1,6 +1,7 @@
 package parsers
 
 import de.mickkc.vibin.utils.DateTimeUtils
+import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -272,6 +273,17 @@ class DurationTest {
         val input = 0L
         val output = DateTimeUtils.formatDurationFull(input)
         assertEquals("0s", output)
+    }
+
+    // endregion
+
+    // region Negative
+
+    @Test
+    fun testDurationFormatting_Negative() {
+        assertThrows<IllegalArgumentException> { DateTimeUtils.formatDurationFull(-1L) }
+        assertThrows<IllegalArgumentException> { DateTimeUtils.formatDurationFull(-60L) }
+        assertThrows<IllegalArgumentException> { DateTimeUtils.formatDurationFull(-360L) }
     }
 
     // endregion

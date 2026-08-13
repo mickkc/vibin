@@ -111,6 +111,7 @@ object DateTimeUtils {
 
     fun formatDurationFull(duration: Long): String {
 
+        if (duration < 0L) throw IllegalArgumentException("Duration can not be negative! Value: $duration")
         if (duration == 0L) return "0s"
 
         var remainingDuration = duration
