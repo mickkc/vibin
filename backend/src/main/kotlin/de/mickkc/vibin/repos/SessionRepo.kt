@@ -12,6 +12,8 @@ import de.mickkc.vibin.dto.SessionDto
 import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.settings.server.SessionExpirationDuration
 import de.mickkc.vibin.utils.DateTimeUtils
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
+import org.jetbrains.exposed.sql.deleteWhere
 
 /**
  * Repository for managing [SessionEntity] instances.
@@ -91,6 +93,14 @@ object SessionRepo {
     fun invalidateAllOtherMediaTokensForUser(userId: Long, excludedDeviceId: String) = transaction {
         MediaTokenEntity.find { (MediaTokenTable.user eq userId) and (MediaTokenTable.deviceId neq excludedDeviceId) }
             .forEach { it.delete() }
+    }
+
+    fun removeAllExpired(): Int = transaction {
+        val expirationDuration = Settings.get(SessionExpirationDuration)
+        val start = DateTimeUtils.now() - expirationDuration
+        SessionTable.deleteWhere {
+            SessionTable.lastUsed less start
+        }
     }
 
     fun createMediaToken(user: UserEntity, deviceId: String): MediaTokenEntity = transaction {
