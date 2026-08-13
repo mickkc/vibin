@@ -26,7 +26,8 @@ val serverSettings = listOf(
     AlbumMetadataFetchType,
     AlbumMetadataSource,
     LyricsMetadataSource,
-    LoginNotificationTokenValidity
+    LoginNotificationTokenValidity,
+    SessionExpirationDuration
 )
 
 object WelcomeTexts : ServerSetting<List<String>>(
@@ -180,4 +181,11 @@ object LoginNotificationTokenValidity : ServerSetting<Long>(
     parser = { value -> DateTimeUtils.parseDuration(value) },
     serializer = { value -> DateTimeUtils.formatDurationFull(value) },
     defaultValue = 3.hours.inWholeSeconds
+)
+
+object SessionExpirationDuration : ServerSetting<Long>(
+    key = "session_expiration_validity",
+    parser = { value -> DateTimeUtils.parseDuration(value) },
+    serializer = { value -> DateTimeUtils.formatDurationFull(value) },
+    defaultValue = 7.days.inWholeSeconds
 )

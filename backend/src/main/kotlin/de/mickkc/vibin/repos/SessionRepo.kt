@@ -9,6 +9,8 @@ import de.mickkc.vibin.db.SessionEntity
 import de.mickkc.vibin.db.SessionTable
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.dto.SessionDto
+import de.mickkc.vibin.settings.Settings
+import de.mickkc.vibin.settings.server.SessionExpirationDuration
 import de.mickkc.vibin.utils.DateTimeUtils
 
 /**
@@ -39,6 +41,25 @@ object SessionRepo {
     }
 
     /**
+     * Checks if the session is expired and deletes it if it is.
+     * The session is expired if it was not used within the configured duration.
+     *
+     * @see SessionExpirationDuration the configured duration how long a session is valid.
+     * @param session The session to check
+     * @return The session if it is valid, null if not
+     */
+    private fun deleteIfExpired(session: SessionEntity): SessionEntity? {
+        val expirationDuration = Settings.get(SessionExpirationDuration)
+        val start = DateTimeUtils.now() - expirationDuration
+        if (session.lastUsed < start) {
+            session.delete()
+            return null
+        }
+
+        return session
+    }
+
+    /**
      * Validates the provided session token and returns the associated user ID if valid.
      * Updates the last used timestamp of the session upon successful validation.
      *
@@ -49,6 +70,7 @@ object SessionRepo {
         SessionEntity
             .find { SessionTable.token eq token }
             .firstOrNull()
+            ?.run { deleteIfExpired(this) }
             ?.also { it.lastUsed = DateTimeUtils.now() }
             ?.user?.id?.value
     }
@@ -95,11 +117,11 @@ object SessionRepo {
     }
 
     fun getAllSessionsForUser(userId: Long): List<SessionEntity> = transaction {
-        SessionEntity.find { SessionTable.userId eq userId }.toList()
+        SessionEntity.find { SessionTable.userId eq userId }.mapNotNull { deleteIfExpired(it) }.toList()
     }
 
     fun getUserFromSessionId(sessionId: Long): UserEntity? = transaction {
-        SessionEntity.findById(sessionId)?.user
+        SessionEntity.findById(sessionId)?.run { deleteIfExpired(this) }?.user
     }
 
     fun invalidateSessionById(sessionId: Long) = transaction {
