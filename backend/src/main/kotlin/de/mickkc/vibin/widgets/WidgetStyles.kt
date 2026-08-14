@@ -233,7 +233,7 @@ object WidgetStyles {
                 fontSize = 1.5.rem
                 fontWeight = FontWeight.w700
                 paddingTop = 0.5.rem
-                flex = Flex.GROW
+                flex = Flex.GROW_SHRINK
             }
 
             rule(".artists") {
