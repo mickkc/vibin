@@ -1,7 +1,6 @@
 package de.mickkc.vibin.settings.server
 
 import de.mickkc.vibin.parsing.MetadataFetchingType
-import de.mickkc.vibin.utils.DateTimeUtils
 import kotlinx.serialization.json.Json
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
@@ -178,14 +177,14 @@ object IsFirstScan : ServerSetting<Boolean>(
 
 object LoginNotificationTokenValidity : ServerSetting<Long>(
     key = "login_notification_validity",
-    parser = { value -> DateTimeUtils.parseDuration(value) },
-    serializer = { value -> DateTimeUtils.formatDurationFull(value) },
+    parser = { value -> value.toLong() },
+    serializer = { value -> value.toString() },
     defaultValue = 3.hours.inWholeSeconds
 )
 
 object SessionExpirationDuration : ServerSetting<Long>(
     key = "session_expiration_validity",
-    parser = { value -> DateTimeUtils.parseDuration(value) },
-    serializer = { value -> DateTimeUtils.formatDurationFull(value) },
+    parser = { value -> value.toLong() },
+    serializer = { value -> value.toString() },
     defaultValue = 7.days.inWholeSeconds
 )
