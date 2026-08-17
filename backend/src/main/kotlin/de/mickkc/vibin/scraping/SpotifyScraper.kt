@@ -20,6 +20,12 @@ class SpotifyScraper {
         URLEncoder.encode(value, StandardCharsets.UTF_8)
             .replace("+", "%20")
 
+    private data class SpotifyArtistResult(
+        val name: String,
+        val imageUrl: String?,
+        val url: String?
+    )
+
     /**
      * Searches for tracks.
      *
@@ -107,14 +113,12 @@ class SpotifyScraper {
      * This opens a new page inside the specified ChromeDriver.
      *
      * @param driver The chrome driver to use
-     * @param nameLink The <a> element linking to the artist
+     * @param artistUrl The link to the artist page
+     * @param artistName The artist's name
      * @return The description or null, if an error occurred
      */
-    private fun fetchArtistDescription(driver: ChromeDriver, nameLink: WebElement): String? {
-        val artistName = nameLink.text
+    private fun fetchArtistDescription(driver: ChromeDriver, artistUrl: String, artistName: String): String? {
         try {
-            val artistUrl = nameLink.getAttribute("href") ?: return null
-
             val wait = WebDriverWait(driver, Duration.ofSeconds(5))
 
             logger.info("Requesting info for artist '$artistName'...")
@@ -155,14 +159,20 @@ class SpotifyScraper {
 
                 val nameElement = e.findElements(By.cssSelector("a[href^='/artist/']"))?.firstOrNull()
                 val name = nameElement?.text ?: return@mapNotNull null
-
-                val description = if (fetchDescriptions) fetchArtistDescription(driver, nameElement) else null
-
-                ArtistMetadata(
+                val url = nameElement.getAttribute("href")
+                SpotifyArtistResult(
                     name = name,
-                    pictureUrl = imageUrl,
-                    biography = description
+                    imageUrl = imageUrl,
+                    url = url
                 )
+            }.map { artist ->
+                // The HTML elements are no longer accessible after the first `fetchArtistDescription` call, so the
+                // URLs were fetched before and are now used to load the descriptions (if enabled).
+                val description = if (fetchDescriptions && !artist.url.isNullOrEmpty()) {
+                    fetchArtistDescription(driver, artist.url, artist.name)
+                } else null
+                ArtistMetadata(artist.name, artist.imageUrl, description)
+
             }.also {
                 logger.info("Successfully scraped ${it.size} artists from Spotify.")
             }
