@@ -3,6 +3,8 @@ package de.mickkc.vibin.scraping
 import de.mickkc.vibin.parsing.AlbumMetadata
 import de.mickkc.vibin.parsing.ArtistMetadata
 import de.mickkc.vibin.parsing.TrackInfoMetadata
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.openqa.selenium.By
 import org.openqa.selenium.WebElement
 import org.openqa.selenium.chrome.ChromeDriver
@@ -33,53 +35,55 @@ class SpotifyScraper {
      * @param limit The maximum amount of results (0 means all that were found, which is usually 30)
      * @return A list of found albums, or null if an error occurred
      */
-    fun searchTracks(query: String, limit: Int = 0): List<TrackInfoMetadata>? = ScrapingChromeDrivers.withDriver { driver ->
-        try {
-            val urlSafeQuery = encodePathSegment(query)
-            val url = "https://open.spotify.com/search/$urlSafeQuery/tracks"
+    suspend fun searchTracks(query: String, limit: Int = 0): List<TrackInfoMetadata>? = withContext(Dispatchers.IO) {
+        ScrapingChromeDrivers.withDriver { driver ->
+            try {
+                val urlSafeQuery = encodePathSegment(query)
+                val url = "https://open.spotify.com/search/$urlSafeQuery/tracks"
 
-            logger.info("Opening track search page '$url'...")
-            driver.get(url)
+                logger.info("Opening track search page '$url'...")
+                driver.get(url)
 
-            val wait = WebDriverWait(driver, Duration.ofSeconds(5))
-            val elements = wait.until { driver ->
-                logger.info("Waiting for track search results to appear...")
-                val foundElements = driver.findElements(By.cssSelector("div[data-testid=\"tracklist-row\"]"))
-                foundElements.ifEmpty { null }
+                val wait = WebDriverWait(driver, Duration.ofSeconds(5))
+                val elements = wait.until { driver ->
+                    logger.info("Waiting for track search results to appear...")
+                    val foundElements = driver.findElements(By.cssSelector("div[data-testid=\"tracklist-row\"]"))
+                    foundElements.ifEmpty { null }
+                }
+                logger.info("Found ${elements?.size} track results.")
+
+                val limited = if (limit > 0) elements.take(limit) else elements
+
+                return@withDriver limited.mapNotNull { e ->
+                    val coverUrl = e.findElements(By.tagName("img"))?.singleOrNull()?.getAttribute("src")
+                    val fullSizeCoverUrl = coverUrl?.replace("00004851", "0000b273")
+
+                    val titleElement = e.findElements(By.cssSelector("a[href^='/track/']"))?.singleOrNull()
+                    val title = titleElement?.text ?: return@mapNotNull null
+
+                    val artistElement = e.findElements(By.cssSelector("a[href^='/artist/']"))
+                    val artistNames = artistElement?.map { it.text }
+
+                    val albumElement = e.findElements(By.cssSelector("a[href^='/album/']"))?.singleOrNull()
+                    val albumName = albumElement?.text
+
+                    val explicit = e.findElements(By.cssSelector("span[title=\"Explicit\"]"))
+
+                    TrackInfoMetadata(
+                        title = title,
+                        coverImageUrl = fullSizeCoverUrl,
+                        artists = artistNames,
+                        album = albumName,
+                        explicit = explicit?.isNotEmpty()
+                    )
+                }.also {
+                    logger.info("Successfully scraped ${it.size} tracks from Spotify.")
+                }
             }
-            logger.info("Found ${elements?.size} track results.")
-
-            val limited = if (limit > 0) elements.take(limit) else elements
-
-            return@withDriver limited.mapNotNull { e ->
-                val coverUrl = e.findElements(By.tagName("img"))?.singleOrNull()?.getAttribute("src")
-                val fullSizeCoverUrl = coverUrl?.replace("00004851", "0000b273")
-
-                val titleElement = e.findElements(By.cssSelector("a[href^='/track/']"))?.singleOrNull()
-                val title = titleElement?.text ?: return@mapNotNull null
-
-                val artistElement = e.findElements(By.cssSelector("a[href^='/artist/']"))
-                val artistNames = artistElement?.map { it.text }
-
-                val albumElement = e.findElements(By.cssSelector("a[href^='/album/']"))?.singleOrNull()
-                val albumName = albumElement?.text
-
-                val explicit = e.findElements(By.cssSelector("span[title=\"Explicit\"]"))
-
-                TrackInfoMetadata(
-                    title = title,
-                    coverImageUrl = fullSizeCoverUrl,
-                    artists = artistNames,
-                    album = albumName,
-                    explicit = explicit?.isNotEmpty()
-                )
-            }.also {
-                logger.info("Successfully scraped ${it.size} tracks from Spotify.")
+            catch (e: Exception) {
+                logger.error("Failed to scrape tracks from Spotify.", e)
+                return@withDriver null
             }
-        }
-        catch (e: Exception) {
-            logger.error("Failed to scrape tracks from Spotify.", e)
-            return@withDriver null
         }
     }
 
@@ -147,39 +151,41 @@ class SpotifyScraper {
      * @param fetchDescriptions If true, each artist's page gets scraped too, to get their description
      * @return A list of found albums, or null if an error occurred
      */
-    fun searchArtists(query: String, limit: Int = 0, fetchDescriptions: Boolean = false): List<ArtistMetadata>? = ScrapingChromeDrivers.withDriver { driver ->
-        try {
-            val urlSafeQuery = encodePathSegment(query)
-            val url = "https://open.spotify.com/search/$urlSafeQuery/artists"
+    suspend fun searchArtists(query: String, limit: Int = 0, fetchDescriptions: Boolean = false): List<ArtistMetadata>? = withContext(Dispatchers.IO) {
+        ScrapingChromeDrivers.withDriver { driver ->
+            try {
+                val urlSafeQuery = encodePathSegment(query)
+                val url = "https://open.spotify.com/search/$urlSafeQuery/artists"
 
-            val elements = searchCategoryCards(driver, url, limit)
+                val elements = searchCategoryCards(driver, url, limit)
 
-            return@withDriver elements.mapNotNull { e ->
-                val imageUrl = e.findElements(By.tagName("img"))?.firstOrNull()?.getAttribute("src")
+                return@withDriver elements.mapNotNull { e ->
+                    val imageUrl = e.findElements(By.tagName("img"))?.firstOrNull()?.getAttribute("src")
 
-                val nameElement = e.findElements(By.cssSelector("a[href^='/artist/']"))?.firstOrNull()
-                val name = nameElement?.text ?: return@mapNotNull null
-                val url = nameElement.getAttribute("href")
-                SpotifyArtistResult(
-                    name = name,
-                    imageUrl = imageUrl,
-                    url = url
-                )
-            }.map { artist ->
-                // The HTML elements are no longer accessible after the first `fetchArtistDescription` call, so the
-                // URLs were fetched before and are now used to load the descriptions (if enabled).
-                val description = if (fetchDescriptions && !artist.url.isNullOrEmpty()) {
-                    fetchArtistDescription(driver, artist.url, artist.name)
-                } else null
-                ArtistMetadata(artist.name, artist.imageUrl, description)
+                    val nameElement = e.findElements(By.cssSelector("a[href^='/artist/']"))?.firstOrNull()
+                    val name = nameElement?.text ?: return@mapNotNull null
+                    val url = nameElement.getAttribute("href")
+                    SpotifyArtistResult(
+                        name = name,
+                        imageUrl = imageUrl,
+                        url = url
+                    )
+                }.map { artist ->
+                    // The HTML elements are no longer accessible after the first `fetchArtistDescription` call, so the
+                    // URLs were fetched before and are now used to load the descriptions (if enabled).
+                    val description = if (fetchDescriptions && !artist.url.isNullOrEmpty()) {
+                        fetchArtistDescription(driver, artist.url, artist.name)
+                    } else null
+                    ArtistMetadata(artist.name, artist.imageUrl, description)
 
-            }.also {
-                logger.info("Successfully scraped ${it.size} artists from Spotify.")
+                }.also {
+                    logger.info("Successfully scraped ${it.size} artists from Spotify.")
+                }
             }
-        }
-        catch (e: Exception) {
-            logger.error("Failed to scrape tracks from Spotify.", e)
-            return@withDriver null
+            catch (e: Exception) {
+                logger.error("Failed to scrape artists from Spotify.", e)
+                return@withDriver null
+            }
         }
     }
 
@@ -190,40 +196,41 @@ class SpotifyScraper {
      * @param limit The maximum amount of results (0 means all that were found, which is usually 30)
      * @return A list of found albums, or null if an error occurred
      */
-    fun searchAlbums(query: String, limit: Int = 0): List<AlbumMetadata>? = ScrapingChromeDrivers.withDriver { driver ->
-        try {
-            val urlSafeQuery = encodePathSegment(query)
-            val url = "https://open.spotify.com/search/$urlSafeQuery/albums"
+    suspend fun searchAlbums(query: String, limit: Int = 0): List<AlbumMetadata>? = withContext(Dispatchers.IO) {
+        ScrapingChromeDrivers.withDriver { driver ->
+            try {
+                val urlSafeQuery = encodePathSegment(query)
+                val url = "https://open.spotify.com/search/$urlSafeQuery/albums"
 
-            val elements = searchCategoryCards(driver, url, limit)
+                val elements = searchCategoryCards(driver, url, limit)
 
-            return@withDriver elements.mapNotNull { e ->
-                val coverUrl = e.findElements(By.tagName("img"))?.firstOrNull()?.getAttribute("src")
-                val fullSizeCoverUrl = coverUrl?.replace("00001e02", "0000b273")
+                return@withDriver elements.mapNotNull { e ->
+                    val coverUrl = e.findElements(By.tagName("img"))?.firstOrNull()?.getAttribute("src")
+                    val fullSizeCoverUrl = coverUrl?.replace("00001e02", "0000b273")
 
-                val nameElement = e.findElements(By.cssSelector("a[href^='/album/']"))?.firstOrNull()
-                val name = nameElement?.text ?: return@mapNotNull null
+                    val nameElement = e.findElements(By.cssSelector("a[href^='/album/']"))?.firstOrNull()
+                    val name = nameElement?.text ?: return@mapNotNull null
 
-                val dateElement = e.findElements(By.tagName("time"))?.firstOrNull()
-                val date = dateElement?.getAttribute("datetime")?.toIntOrNull()
+                    val dateElement = e.findElements(By.tagName("time"))?.firstOrNull()
+                    val date = dateElement?.getAttribute("datetime")?.toIntOrNull()
 
-                val artistElement = e.findElements(By.cssSelector("a[href^='/artist/']"))
-                val artistNames = artistElement?.map { it.text }
+                    val artistElement = e.findElements(By.cssSelector("a[href^='/artist/']"))
+                    val artistNames = artistElement?.map { it.text }
 
-                AlbumMetadata(
-                    title = name,
-                    coverImageUrl = fullSizeCoverUrl,
-                    year = date,
-                    description = null,
-                    artistName = artistNames?.joinToString()
-                )
-            }.also {
-                logger.info("Successfully scraped ${it.size} albums from Spotify.")
+                    AlbumMetadata(
+                        title = name,
+                        coverImageUrl = fullSizeCoverUrl,
+                        year = date,
+                        description = null,
+                        artistName = artistNames?.joinToString()
+                    )
+                }.also {
+                    logger.info("Successfully scraped ${it.size} albums from Spotify.")
+                }
+            } catch (e: Exception) {
+                logger.error("Failed to scrape albums from Spotify.", e)
+                return@withDriver null
             }
-        }
-        catch (e: Exception) {
-            logger.error("Failed to scrape albums from Spotify.", e)
-            return@withDriver null
         }
     }
 }
