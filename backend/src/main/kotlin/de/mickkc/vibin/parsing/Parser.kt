@@ -20,6 +20,7 @@ import de.mickkc.vibin.parsing.parsers.lrclib.LrcLibProvider
 import de.mickkc.vibin.parsing.parsers.metadata.MetadataProvider
 import de.mickkc.vibin.parsing.parsers.preparser.PreParser
 import de.mickkc.vibin.parsing.parsers.spotify.SpotifyProvider
+import de.mickkc.vibin.parsing.parsers.spotify.SpotifyScrapingProvider
 import de.mickkc.vibin.parsing.parsers.theaudiodb.TheAudioDbProvider
 import de.mickkc.vibin.repos.AlbumRepo
 import de.mickkc.vibin.settings.server.FallbackMetadataSource
@@ -54,6 +55,7 @@ object Parser {
     private val iTunesProvider = ItunesProvider(client)
     private val deezerProvider = DeezerProvider(client)
     private val spotifyProvider = SpotifyProvider(client)
+    private val spotifyScrapingProvider = SpotifyScrapingProvider()
     private val theAudioDbProvider = TheAudioDbProvider(client)
     private val lastFmProvider = LastFmProvider(client)
 
@@ -62,6 +64,7 @@ object Parser {
         "iTunes" to iTunesProvider,
         "Deezer" to deezerProvider,
         "Spotify" to spotifyProvider,
+        "Spotify (Scraping)" to spotifyScrapingProvider,
         "Last.fm" to lastFmProvider
     )
 
@@ -69,6 +72,7 @@ object Parser {
         "iTunes" to iTunesProvider,
         "Deezer" to deezerProvider,
         "Spotify" to spotifyProvider,
+        "Spotify (Scraping)" to spotifyScrapingProvider,
         "Last.fm" to lastFmProvider
     )
 
@@ -76,6 +80,7 @@ object Parser {
         "Deezer" to deezerProvider,
         "TheAudioDb" to theAudioDbProvider,
         "Spotify" to spotifyProvider,
+        "Spotify (Scraping)" to spotifyScrapingProvider,
         "Last.fm" to lastFmProvider
     )
 
@@ -83,6 +88,7 @@ object Parser {
         "Deezer" to deezerProvider,
         "iTunes" to iTunesProvider,
         "Spotify" to spotifyProvider,
+        "Spotify (Scraping)" to spotifyScrapingProvider,
         "Last.fm" to lastFmProvider
     )
 
