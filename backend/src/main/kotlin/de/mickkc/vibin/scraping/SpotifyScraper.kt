@@ -10,10 +10,15 @@ import org.openqa.selenium.support.ui.WebDriverWait
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.time.Duration
 
 class SpotifyScraper {
     private val logger: Logger = LoggerFactory.getLogger(SpotifyScraper::class.java)
+
+    private fun encodePathSegment(value: String): String =
+        URLEncoder.encode(value, StandardCharsets.UTF_8)
+            .replace("+", "%20")
 
     /**
      * Searches for tracks.
@@ -24,7 +29,7 @@ class SpotifyScraper {
      */
     fun searchTracks(query: String, limit: Int = 0): List<TrackInfoMetadata>? = ScrapingChromeDrivers.withDriver { driver ->
         try {
-            val urlSafeQuery = URLEncoder.encode(query, Charsets.UTF_8)
+            val urlSafeQuery = encodePathSegment(query)
             val url = "https://open.spotify.com/search/$urlSafeQuery/tracks"
 
             logger.info("Opening track search page '$url'...")
@@ -140,7 +145,7 @@ class SpotifyScraper {
      */
     fun searchArtists(query: String, limit: Int = 0, fetchDescriptions: Boolean = false): List<ArtistMetadata>? = ScrapingChromeDrivers.withDriver { driver ->
         try {
-            val urlSafeQuery = URLEncoder.encode(query, Charsets.UTF_8)
+            val urlSafeQuery = encodePathSegment(query)
             val url = "https://open.spotify.com/search/$urlSafeQuery/artists"
 
             val elements = searchCategoryCards(driver, url, limit)
@@ -177,7 +182,7 @@ class SpotifyScraper {
      */
     fun searchAlbums(query: String, limit: Int = 0): List<AlbumMetadata>? = ScrapingChromeDrivers.withDriver { driver ->
         try {
-            val urlSafeQuery = URLEncoder.encode(query, Charsets.UTF_8)
+            val urlSafeQuery = encodePathSegment(query)
             val url = "https://open.spotify.com/search/$urlSafeQuery/albums"
 
             val elements = searchCategoryCards(driver, url, limit)
