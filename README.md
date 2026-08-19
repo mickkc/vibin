@@ -64,7 +64,7 @@
 1. Make sure you have [Docker](https://docs.docker.com/engine/install) and [Docker Compose](https://docs.docker.com/compose/install/)
    installed on your system.
 2. Download / copy the [example docker-compose.yml](docker-compose.example.yml) file and the [example .env](.env.example) file and 
-   modify them to your needs using the [configuration wiki](https://codeberg.org/mickkc/vibin/wiki/Configuration.md#environment-variables).
+   modify them to your needs using the [configuration wiki](https://vibin.rip/docs/config).
 3. Run the following command:
     ```bash
     docker compose up -d
@@ -74,13 +74,13 @@
 6. CHANGE THE PASSWORD OF THE ADMIN USER IMMEDIATELY!
 
 > [!NOTE]
-> For other installation methods, check out the [installation wiki page](https://codeberg.org/mickkc/vibin/wiki/Installation.md).
+> For other installation methods, check out the [installation wiki page](https://vibin.rip/docs/installation).
 
 ---
 
 ## Usage
 
-To learn more about Vibin', you can check out the [Wiki](https://codeberg.org/mickkc/vibin/wiki) (work in progress).
+To learn more about Vibin', you can check out the [Wiki](https://vibin.rip/docs/category/usage) (work in progress).
 
 ---
 
