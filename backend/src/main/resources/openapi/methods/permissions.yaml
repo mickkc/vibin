@@ -71,7 +71,7 @@ ForUser:
           format: int64
       - name: permissionId
         in: query
-        description: ID of the permission to update. Check out [the wiki](https://codeberg.org/mickkc/vibin/wiki/Permissions.md) for a list of all permissions.
+        description: ID of the permission to update. Check out [the wiki](https://vibin.rip/docs/permissions) for a list of all permissions.
         required: true
         schema:
           type: string
