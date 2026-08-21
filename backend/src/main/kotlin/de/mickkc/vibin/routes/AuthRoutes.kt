@@ -39,7 +39,7 @@ fun Application.configureAuthRoutes() = routing {
         }
 
         val token = CryptoUtil.createToken()
-        val session = SessionRepo.addSession(user, token)
+        val session = SessionRepo.addSession(user, token, deviceId)
 
         logger.info("Successful login for user: $username")
         LoginNotificationManager.sendIfNotTrusted(deviceId, session, user)
