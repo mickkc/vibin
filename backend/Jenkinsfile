@@ -1,3 +1,5 @@
+def FAILED_STAGE
+
 pipeline {
     agent any
 
@@ -13,6 +15,9 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
+                script {
+                    FAILED_STAGE=env.STAGE_NAME
+                }
                 checkout scm
             }
         }
@@ -20,6 +25,7 @@ pipeline {
         stage('Get commit info') {
             steps {
                 script {
+                    FAILED_STAGE=env.STAGE_NAME
                     env.COMMIT_MSG = sh(script: 'git log -1 --pretty=%B', returnStdout: true).trim()
                     env.COMMIT_SUBJECT = sh(script: 'git log -1 --pretty=%s', returnStdout: true).trim()
                 }
@@ -29,6 +35,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
+                    FAILED_STAGE=env.STAGE_NAME
                     dir("backend") {
                         sh './gradlew clean build -x test'
                     }
@@ -39,6 +46,7 @@ pipeline {
         stage('Test') {
             steps {
                 script {
+                    FAILED_STAGE=env.STAGE_NAME
                     dir("backend") {
                         sh './gradlew test'
                     }
@@ -46,10 +54,8 @@ pipeline {
             }
             post {
                 always {
-                    // Publish test results
-                    junit 'backend/**/build/test-results/test/*.xml'
-
                     // Publish Jacoco coverage report
+                    // (test results are published once, in the pipeline-level post block)
                     recordCoverage tools: [[parser: 'JACOCO', pattern: 'backend/**/build/reports/jacoco/test/jacocoTestReport.xml']],
                                    sourceCodeRetention: 'LAST_BUILD'
                 }
@@ -58,6 +64,9 @@ pipeline {
 
         stage('Archive') {
             steps {
+                script {
+                    FAILED_STAGE=env.STAGE_NAME
+                }
                 // Archive the built artifacts
                 archiveArtifacts artifacts: 'backend/**/build/libs/*.jar', fingerprint: true
             }
@@ -72,6 +81,24 @@ pipeline {
             echo 'Build failed'
         }
         always {
+            script {
+                try {
+                    def testSummary = junit(testResults: 'backend/**/build/test-results/test/*.xml', allowEmptyResults: true)
+                    env.TEST_RUN = testSummary.totalCount > 0 ? 'true' : 'false'
+                    env.TEST_TOTAL_COUNT = testSummary.totalCount
+                    env.TEST_PASS_COUNT = testSummary.passCount
+                    env.TEST_FAIL_COUNT = testSummary.failCount
+                    env.TEST_SKIP_COUNT = testSummary.skipCount
+                } catch (Exception e) {
+                    echo "Failed to publish test results: ${e.message}"
+                    env.TEST_RUN = 'false'
+                    env.TEST_TOTAL_COUNT = '0'
+                    env.TEST_PASS_COUNT = '0'
+                    env.TEST_FAIL_COUNT = '0'
+                    env.TEST_SKIP_COUNT = '0'
+                }
+            }
+
             withCredentials([string(credentialsId: 'CODEBERG_TOKEN', variable: 'CODEBERG_TOKEN')]) {
                 script {
                     try {
@@ -103,29 +130,36 @@ pipeline {
 
                         if (prNo != null) {
 
-                            def testSummary = junit 'backend/**/build/test-results/test/*.xml'
-
                             def header = currentBuild.result == 'SUCCESS'
                                 ? "# ✔ Build succeeded!\n\n"
                                 : "# ⚠ Build failed!\n\n"
 
-                            def body = """\
+                            def testBody = env.TEST_RUN == 'true' ? """\
+                            **Test summary** for commit `${currentBranchHash}` on branch `${GIT_BRANCH}`:
 
+                            - **Total Tests**: ${env.TEST_TOTAL_COUNT}
+                            - **Passed Tests**: ${env.TEST_PASS_COUNT}
+                            - **Failed Tests**: ${env.TEST_FAIL_COUNT}
+                            - **Skipped Tests**: ${env.TEST_SKIP_COUNT}
+
+                            [See all test results](${env.BUILD_URL}testReport/)
+                            """.stripIndent()
+                            : """\
+                            > [!WARNING]
+                            > No tests were run. The pipeline failed at stage **${FAILED_STAGE}**.
+                            """.stripIndent()
+
+                            def body = """\
                             ```text
                             {{msg}}
                             ```
 
-                            **Test summary** for commit `${currentBranchHash}` on branch `${GIT_BRANCH}`:
-
-                            - **Total Tests**: ${testSummary.totalCount}
-                            - **Passed Tests**: ${testSummary.passCount}
-                            - **Failed Tests**: ${testSummary.failCount}
-                            - **Skipped Tests**: ${testSummary.skipCount}
-
-                            [See all test results](${env.BUILD_URL}testReport/)
+                            {{tests}}
 
                             ---
-                            """.stripIndent().replace("{{msg}}", env.COMMIT_MSG)
+                            """.stripIndent()
+                                .replace("{{msg}}", env.COMMIT_MSG)
+                                .replace("{{tests}}", testBody)
 
                             def footer = "\n\n> This action was performed automatically by a Jenkins pipeline (not AI :D)."
 
@@ -158,8 +192,7 @@ pipeline {
             script {
                 try {
                     // Send pipeline and test results to n8n webhook (for notifications)
-                    def testSummary = junit 'backend/**/build/test-results/test/*.xml'
-                    echo "Total: ${testSummary.totalCount}, Passed: ${testSummary.passCount}, Failed: ${testSummary.failCount}, Skipped: ${testSummary.skipCount}"
+                    echo "Total: ${env.TEST_TOTAL_COUNT}, Passed: ${env.TEST_PASS_COUNT}, Failed: ${env.TEST_FAIL_COUNT}, Skipped: ${env.TEST_SKIP_COUNT}"
 
                     httpRequest(
                         httpMode: 'POST',
@@ -172,10 +205,10 @@ pipeline {
                           "url": "${env.BUILD_URL}",
                           "status": "${currentBuild.currentResult}",
                           "tests": {
-                            "total": ${testSummary.totalCount},
-                            "passed": ${testSummary.passCount},
-                            "failed": ${testSummary.failCount},
-                            "skipped": ${testSummary.skipCount}
+                            "total": ${env.TEST_TOTAL_COUNT},
+                            "passed": ${env.TEST_PASS_COUNT},
+                            "failed": ${env.TEST_FAIL_COUNT},
+                            "skipped": ${env.TEST_SKIP_COUNT}
                           }
                         }
                         """
