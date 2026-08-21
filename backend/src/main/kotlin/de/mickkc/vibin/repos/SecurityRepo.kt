@@ -120,12 +120,17 @@ object SecurityRepo {
     }
 
     /**
-     * Invalidates the session that the message was sent for.
+     * Invalidates all session on non-trusted devices for a user.
      *
      * @param notificationEntity The message that has been sent to the user via Email.
      */
-    @Deprecated("Invalidate all sessions with non-trusted device IDs after https://codeberg.org/mickkc/vibin/issues/73 was implemented.", level = DeprecationLevel.WARNING)
-    fun invalidateSessionFromNotification(notificationEntity: LoginNotificationEntity) = transaction {
-        SessionRepo.invalidateSessionById(notificationEntity.session.id.value)
+    fun invalidateSessionsFromNotification(notificationEntity: LoginNotificationEntity) = transaction {
+        SessionEntity.find {
+            (SessionTable.userId eq notificationEntity.session.user.id) and
+            (SessionTable.deviceIdhash notInSubQuery TrustedDeviceIdTable.select(TrustedDeviceIdTable.deviceIdHash).where {
+                TrustedDeviceIdTable.userId eq notificationEntity.session.user.id
+            })
+        }
+        .forEach { it.delete() }
     }
 }

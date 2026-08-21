@@ -171,7 +171,7 @@ object LoginNotificationManager {
             throw NotFoundException("Could not reset password for user ${user.username} because they were not found in the database.")
         }
 
-        SecurityRepo.invalidateSessionFromNotification(notification)
+        SecurityRepo.invalidateSessionsFromNotification(notification)
         SecurityRepo.deleteLoginNotificationsWithDeviceId(notification.deviceIdHash, user)
     }
 
