@@ -82,7 +82,6 @@ pipeline {
         }
         always {
             script {
-                FAILED_STAGE=env.STAGE_NAME
                 try {
                     def testSummary = junit(testResults: 'backend/**/build/test-results/test/*.xml', allowEmptyResults: true)
                     env.TEST_RUN = testSummary.totalCount > 0 ? 'true' : 'false'
