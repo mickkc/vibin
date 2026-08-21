@@ -1,3 +1,5 @@
+def FAILED_STAGE
+
 pipeline {
     agent any
 
@@ -13,6 +15,9 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
+                script {
+                    FAILED_STAGE=env.STAGE_NAME
+                }
                 checkout scm
             }
         }
@@ -20,6 +25,7 @@ pipeline {
         stage('Get commit info') {
             steps {
                 script {
+                    FAILED_STAGE=env.STAGE_NAME
                     env.COMMIT_MSG = sh(script: 'git log -1 --pretty=%B', returnStdout: true).trim()
                     env.COMMIT_SUBJECT = sh(script: 'git log -1 --pretty=%s', returnStdout: true).trim()
                 }
@@ -29,6 +35,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
+                    FAILED_STAGE=env.STAGE_NAME
                     dir("backend") {
                         sh './gradlew clean build -x test'
                     }
@@ -39,6 +46,7 @@ pipeline {
         stage('Test') {
             steps {
                 script {
+                    FAILED_STAGE=env.STAGE_NAME
                     dir("backend") {
                         sh './gradlew test'
                     }
@@ -56,6 +64,9 @@ pipeline {
 
         stage('Archive') {
             steps {
+                script {
+                    FAILED_STAGE=env.STAGE_NAME
+                }
                 // Archive the built artifacts
                 archiveArtifacts artifacts: 'backend/**/build/libs/*.jar', fingerprint: true
             }
@@ -71,7 +82,7 @@ pipeline {
         }
         always {
             script {
-                env.FAILED_STAGE = env.STAGE_NAME ?: 'unknown'
+                FAILED_STAGE=env.STAGE_NAME
                 try {
                     def testSummary = junit(testResults: 'backend/**/build/test-results/test/*.xml', allowEmptyResults: true)
                     env.TEST_RUN = testSummary.totalCount > 0 ? 'true' : 'false'
@@ -136,7 +147,7 @@ pipeline {
                             """.stripIndent()
                             : """\
                             > [!WARNING]
-                            > No tests were run. The pipeline failed at stage **${env.FAILED_STAGE}**.
+                            > No tests were run. The pipeline failed at stage **${FAILED_STAGE}**.
                             """.stripIndent()
 
                             def body = """\
