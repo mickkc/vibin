@@ -1,0 +1,1 @@
+alter table session add column device_id_hash bytea default null;
