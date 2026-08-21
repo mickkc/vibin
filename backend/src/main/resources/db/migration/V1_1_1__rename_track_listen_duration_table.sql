@@ -1,0 +1,1 @@
+alter table tracklistenduration rename to track_listen_duration;

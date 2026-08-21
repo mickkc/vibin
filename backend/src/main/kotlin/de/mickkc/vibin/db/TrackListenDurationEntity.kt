@@ -7,7 +7,7 @@ import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
 
-object TrackListenDurationTable : LongIdTable() {
+object TrackListenDurationTable : LongIdTable("track_listen_duration") {
     val trackId = reference("track_id", TrackTable).nullable()
     val userId = reference("user_id", UserTable)
     val listenedDurationSeconds = long("listened_duration_seconds")
