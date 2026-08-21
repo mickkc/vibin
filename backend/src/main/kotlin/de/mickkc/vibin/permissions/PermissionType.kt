@@ -53,6 +53,6 @@ enum class PermissionType(val id: String, val grantedByDefault: Boolean) {
 
     companion object {
         private val map = entries.associateBy(PermissionType::id)
-        fun valueOfId(id: String): PermissionType? = map[id]
+        fun valueOfId(id: String): PermissionType? = map[id.lowercase()]
     }
 }

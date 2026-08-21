@@ -9,8 +9,12 @@ info:
     email: "contact@mickkc.dev"
   license:
     name: Licensed under GPL v3
-    url: "https://codeberg.org/mickkc/vibin/src/branch/main/LICENSE"
+    url: "https://codeberg.org/mickkc/vibin/src/branch/main/LICENSE.md"
 servers:
+  - url: '/'
+    description: 'The server you are currently on.'
+  - url: 'https://demo.vibin.mickkc.dev'
+    description: 'A demo instance. Username: Demo, Password: DemoDemo'
   - url: 'http://localhost:8080'
 paths:
 

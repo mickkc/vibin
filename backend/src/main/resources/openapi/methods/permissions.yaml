@@ -71,10 +71,11 @@ ForUser:
           format: int64
       - name: permissionId
         in: query
-        description: ID of the permission to update
+        description: ID of the permission to update. Check out [the wiki](https://vibin.rip/docs/permissions) for a list of all permissions.
         required: true
         schema:
           type: string
+          example: MANAGE_ALBUMS
     responses:
       200:
         description: Permissions updated successfully

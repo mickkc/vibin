@@ -9,7 +9,7 @@
 ![Build Status](https://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain&subject=Build)
 ![Lines of Code](https://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain&subject=Lines%20of%20Code&status=${lineOfCode}&color=blue)
 ![Code Coverage](https://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain&subject=Coverage&status=${instructionCoverage}&color=${colorInstructionCoverage})
-[![License](https://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain&subject=License&status=GPLv3&color=teal)](LICENSE)
+[![License](https://jks.ndu.wtf/buildStatus/icon?job=vibin-server%2Fmain&subject=License&status=GPLv3&color=teal)](LICENSE.md)
 [![Docker Pulls](https://img.shields.io/docker/pulls/mickkc/vibin)](https://hub.docker.com/r/mickkc/vibin)
 ![Docker Image Version](https://img.shields.io/docker/v/mickkc/vibin)
 
@@ -86,16 +86,24 @@ To learn more about Vibin', you can check out the [Wiki](https://vibin.rip/docs/
 
 ## License
 
-This project is licensed under the **[GNU General Public License v3.0](LICENSE)** (GPLv3).
+This project is licensed under the **[GNU General Public License v3.0](LICENSE.md)** (GPLv3).
 
 ```
-Vibin - Self-hosted music streaming server
-Copyright (C) 2025 mickkc
+Vibin' - Self-hosted music streaming server
+Copyright (C) 2026 mickkc
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
 ```
 
 **Mascot:** The project mascot was commissioned from a freelance artist. All rights have been exclusively assigned to
