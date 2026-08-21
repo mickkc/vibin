@@ -57,7 +57,6 @@ fun configureDatabase() {
 
     logger.info("Connected to database, creating tables if not existing")
 
-    createTables()
     createDefaultAdminUser()
 }
 
