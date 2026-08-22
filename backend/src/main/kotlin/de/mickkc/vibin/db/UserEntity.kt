@@ -63,7 +63,6 @@ class UserEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, UserTable) {
 
         // Remove sessions and media tokens associated with this user
         SessionRepo.invalidateAllSessionsForUser(userId)
-        SessionRepo.invalidateAllMediaTokensForUser(userId)
 
         // Remove all trusted devices for this user
         TrustedDeviceIdTable.deleteWhere { TrustedDeviceIdTable.userId eq userId }

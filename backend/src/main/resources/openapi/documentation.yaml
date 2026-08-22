@@ -151,15 +151,6 @@ paths:
   /api/tracks/{id}/lyrics/check:
     $ref: 'methods/lyrics.yaml#/Check'
 
-  # █▀▄▀█ █▀▀ █▀▄ █ ▄▀█ ▀█▀ █▀█ █▄▀ █▀▀ █▄░█
-  # █░▀░█ ██▄ █▄▀ █ █▀█ ░█░ █▄█ █░█ ██▄ █░▀█
-
-  /api/auth/media/token:
-    $ref: 'methods/mediaTokens.yaml#/MediaToken'
-
-  /api/auth/media:
-    $ref: 'methods/mediaTokens.yaml#/Validate'
-
   # █▀▄▀█ █▀▀ ▀█▀ ▄▀█ █▀▄ ▄▀█ ▀█▀ ▄▀█
   # █░▀░█ ██▄ ░█░ █▀█ █▄▀ █▀█ ░█░ █▀█
 
