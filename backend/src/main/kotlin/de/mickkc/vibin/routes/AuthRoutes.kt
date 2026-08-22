@@ -78,37 +78,6 @@ fun Application.configureAuthRoutes() = routing {
             call.success()
         }
 
-        // Create new media token
-        postP("/api/auth/media/token") {
-            val user = call.getUser() ?: return@postP call.unauthorized()
-            val deviceId = call.getStringParameter("deviceId") ?: return@postP
-
-            val mediaToken = SessionRepo.createMediaToken(user, deviceId)
-
-            call.respond(mapOf("mediaToken" to mediaToken.token))
-        }
-
-        // Validate media token
-        getP("/api/auth/media") {
-            val mediaToken = call.getStringParameter("mediaToken") ?: return@getP
-            val userId = call.getUserId()
-
-            val user = SessionRepo.getUserFromMediaToken(mediaToken)?.takeIf { it.isActive }
-                ?: return@getP call.success(false)
-
-            call.success(user.id.value == userId)
-        }
-
-        // Delete media token
-        deleteP("/api/auth/media/token") {
-            val userId = call.getUserId() ?: return@deleteP call.unauthorized()
-            val deviceId = call.getStringParameter("deviceId") ?: return@deleteP
-
-            SessionRepo.deleteMediaToken(userId, deviceId)
-
-            call.success()
-        }
-
         getP("/api/auth/sessions", PermissionType.MANAGE_SESSIONS) {
 
             val userId = call.getUserId() ?: return@getP call.unauthorized()
@@ -143,15 +112,12 @@ fun Application.configureAuthRoutes() = routing {
 
         deleteP("/api/auth/sessions/all", PermissionType.MANAGE_SESSIONS) {
 
-            val deviceId = call.getStringParameter("excludeDeviceId") ?: return@deleteP
-
             val userId = call.getUserId()
                 ?: return@deleteP call.unauthorized()
 
             val token = call.getToken() ?: return@deleteP call.unauthorized()
 
             SessionRepo.invalidateAllOtherSessionsForUser(userId, token)
-            SessionRepo.invalidateAllOtherMediaTokensForUser(userId, deviceId)
 
             call.success()
         }
