@@ -7,19 +7,33 @@ import io.ktor.server.routing.*
 import org.slf4j.LoggerFactory
 import de.mickkc.vibin.auth.CryptoUtil
 import de.mickkc.vibin.auth.UserPrincipal
+import de.mickkc.vibin.config.EnvUtil
+import de.mickkc.vibin.config.EnvUtil.LOGIN_RATE_LIMIT_ATTEMPTS
+import de.mickkc.vibin.config.EnvUtil.LOGIN_RATE_LIMIT_TIMEOUT
 import de.mickkc.vibin.dto.LoginResultDto
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.PermissionRepo
 import de.mickkc.vibin.repos.SessionRepo
 import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.security.LoginNotificationManager
+import de.mickkc.vibin.utils.RateLimiter
 
 fun Application.configureAuthRoutes() = routing {
 
     val logger = LoggerFactory.getLogger("Authentication API Routes")
+    val loginRateLimiter = RateLimiter(
+        maxRequests = EnvUtil.getOrError(LOGIN_RATE_LIMIT_ATTEMPTS),
+        windowMinutes = EnvUtil.getOrError(LOGIN_RATE_LIMIT_TIMEOUT)
+    )
 
     // User login
     postP("/api/auth/login") {
+
+        val clientId = call.getClientId()
+
+        if (!loginRateLimiter.check(clientId)) {
+            return@postP call.rateLimitExceeded()
+        }
 
         val username = call.getStringParameter("username") ?: return@postP
         val password = call.getStringParameter("password") ?: return@postP
@@ -35,6 +49,7 @@ fun Application.configureAuthRoutes() = routing {
         val hashedPassword = CryptoUtil.hashPassword(password, user.salt)
         if (!hashedPassword.contentEquals(user.passwordHash)) {
             logger.warn("Failed login attempt for user: $username")
+            loginRateLimiter.checkAndIncrement(clientId)
             return@postP call.unauthorized("Invalid username or password")
         }
 
