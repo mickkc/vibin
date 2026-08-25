@@ -27,8 +27,8 @@ fun Application.configureMetadataRoutes() = routing {
         }
 
         get("/api/metadata/{type}") {
-            val query = call.getStringParameter("q") ?: return@get
-            val provider = call.getStringParameter("provider") ?: return@get
+            val query = call.getStringParameter("q")
+            val provider = call.getStringParameter("provider")
 
             if (query.isBlank()) {
                 return@get call.respond(emptyList<Any>())
@@ -39,7 +39,7 @@ fun Application.configureMetadataRoutes() = routing {
                 "artist" -> Parser.searchArtist(query, provider)
                 "album" -> Parser.searchAlbum(query, provider)
                 "lyrics" -> Parser.searchLyrics(query, provider)
-                else -> return@get call.invalidParameter("type", "track", "artist", "album", "lyrics")
+                else -> invalidParameter("type", "track", "artist", "album", "lyrics")
             } ?: return@get call.respond(emptyList<Any>())
             call.respond(results)
         }

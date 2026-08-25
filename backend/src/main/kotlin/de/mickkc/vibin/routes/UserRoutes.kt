@@ -16,7 +16,7 @@ fun Application.configureUserRoutes() = routing {
 
         getP("/api/users", PermissionType.VIEW_USERS) {
 
-            val params = call.getPaginatedSearchParams() ?: return@getP
+            val params = call.getPaginatedSearchParams()
 
             val (users, count) = UserRepo.getAllUsers(params)
             call.respond(
@@ -30,108 +30,108 @@ fun Application.configureUserRoutes() = routing {
         }
 
         getP("/api/users/me") {
-            val user = call.getUser() ?: return@getP call.notFound()
+            val user = call.getUser() ?: notFound()
             call.respond(UserRepo.toDto(user))
         }
 
         getP("/api/users/{userId}") {
-            val userId = call.getLongParameter("userId") ?: return@getP
+            val userId = call.getLongParameter("userId")
             val requestingUserId = call.getUserId()
             if (requestingUserId != userId && !call.hasPermissions(PermissionType.VIEW_USERS)) {
-                return@getP call.forbidden(PermissionType.VIEW_USERS)
+                forbidden(PermissionType.VIEW_USERS)
             }
 
-            val user = UserRepo.getById(userId) ?: return@getP call.notFound()
+            val user = UserRepo.getById(userId) ?: notFound()
             call.respond(UserRepo.toDto(user))
         }
 
         getP("/api/users/username/{username}/exists") {
-            val username = call.getStringParameter("username") ?: return@getP
+            val username = call.getStringParameter("username")
             val exists = UserRepo.checkUsernameExists(username)
             call.success(exists)
         }
 
         postP("/api/users", PermissionType.CREATE_USERS) {
             val userEditDto = call.receive<UserEditDto>()
-            val currentUser = call.getUser() ?: return@postP call.unauthorized()
+            val currentUser = call.getUser() ?: unauthorized()
 
             if (userEditDto.isAdmin != null && userEditDto.isAdmin && !currentUser.isAdmin)
-                return@postP call.forbidden()
+                forbidden()
             if (userEditDto.username == null)
-                return@postP call.missingParameter("username")
+                missingParameter("username")
             else if (UserRepo.checkUsernameExists(userEditDto.username))
-                return@postP call.invalidParameter("username")
+                invalidParameter("username")
 
             val created = UserRepo.updateOrCreateUser(null, userEditDto)!!
             call.respond(UserRepo.toDto(created))
         }
 
         putP("/api/users/{userId}") {
-            val userId = call.getLongParameter("userId") ?: return@putP
-            val currentUser = call.getUser() ?: return@putP call.unauthorized()
-            val user = UserRepo.getById(userId) ?: return@putP call.notFound()
+            val userId = call.getLongParameter("userId")
+            val currentUser = call.getUser() ?: unauthorized()
+            val user = UserRepo.getById(userId) ?: notFound()
 
             val userEditDto = call.receive<UserEditDto>()
 
             if (userEditDto.isAdmin != null && userEditDto.isAdmin != user.isAdmin && !currentUser.isAdmin)
-                return@putP call.forbidden()
+                forbidden()
             if (userId == currentUser.id.value) {
                 if (!call.hasPermissions(PermissionType.MANAGE_OWN_USER))
-                    return@putP call.forbidden(PermissionType.MANAGE_OWN_USER)
+                    forbidden(PermissionType.MANAGE_OWN_USER)
             } else {
                 if (!call.hasPermissions(PermissionType.MANAGE_USERS))
-                    return@putP call.forbidden(PermissionType.MANAGE_USERS)
+                    forbidden(PermissionType.MANAGE_USERS)
             }
 
 
             if (userEditDto.username != null && userEditDto.username != user.username) {
                 if (UserRepo.checkUsernameExists(userEditDto.username))
-                    return@putP call.invalidParameter("username")
+                    invalidParameter("username")
             }
 
             if (userEditDto.password != null) {
                 val oldHashedPassword = userEditDto.oldPassword?.let { CryptoUtil.hashPassword(it, user.salt) }
                 if (!oldHashedPassword.contentEquals(user.passwordHash) && !currentUser.isAdmin) {
-                    return@putP call.forbidden()
+                    forbidden()
                 }
             }
 
-            val updated = UserRepo.updateOrCreateUser(user.id.value, userEditDto) ?: return@putP call.notFound()
+            val updated = UserRepo.updateOrCreateUser(user.id.value, userEditDto) ?: notFound()
 
             call.respond(UserRepo.toDto(updated))
         }
 
         deleteP("/api/users/{userId}") {
-            val userId = call.getLongParameter("userId") ?: return@deleteP
+            val userId = call.getLongParameter("userId")
             val deleteData = call.parameters["deleteData"]?.toBoolean() ?: false
 
             if (userId == call.getUserId()) {
                 if (!call.hasPermissions(PermissionType.DELETE_OWN_USER))
-                    return@deleteP call.forbidden(PermissionType.DELETE_OWN_USER)
+                    forbidden(PermissionType.DELETE_OWN_USER)
             }
             else {
                 if (!call.hasPermissions(PermissionType.DELETE_USERS))
-                    return@deleteP call.forbidden(PermissionType.DELETE_USERS)
+                    forbidden(PermissionType.DELETE_USERS)
             }
 
             val deleted = UserRepo.deleteUser(userId, deleteData)
 
             if (!deleted) {
-                return@deleteP call.notFound()
+                notFound()
             }
 
             call.success()
         }
 
         getP("/api/users/{userId}/pfp") {
-            val requestinguserId = call.getUserId() ?: return@getP call.unauthorized()
-            val userId = call.getLongParameter("userId") ?: return@getP
+            val requestinguserId = call.getUserId() ?: unauthorized()
+            val userId = call.getLongParameter("userId")
 
             if (requestinguserId != userId && !call.hasPermissions(PermissionType.VIEW_USERS)) {
-                return@getP call.forbidden(PermissionType.VIEW_USERS)
+                forbidden(PermissionType.VIEW_USERS)
             }
 
-            val quality = call.getIntOrDefault("quality", 0) ?: return@getP
+            val quality = call.getIntOrDefault("quality", 0)
             val imageId = UserRepo.getProfilePictureId(userId)
 
             call.respondRedirect("/api/images/${if (imageId != null) "by-id/${imageId}" else "default" }?type=user&quality=$quality")

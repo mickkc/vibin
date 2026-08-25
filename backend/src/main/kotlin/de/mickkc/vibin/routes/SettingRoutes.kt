@@ -20,42 +20,41 @@ fun Application.configureSettingRoutes() = routing {
         }
 
         getP("/api/settings/user", PermissionType.CHANGE_OWN_USER_SETTINGS) {
-            val userId = call.getUserId() ?: return@getP call.unauthorized()
+            val userId = call.getUserId() ?: unauthorized()
             val settings = SettingsRepo.getAllValues(userId, userSettings)
             call.respond(settings)
         }
 
         putP("/api/settings/{settingKey}") {
 
-            val settingKey = call.getStringParameter("settingKey") ?: return@putP
+            val settingKey = call.getStringParameter("settingKey")
             val setting = SettingsRepo.getServerSetting(settingKey)
 
             if (setting == null) {
-                val userSetting = SettingsRepo.getUserSetting(settingKey) ?: return@putP call.notFound()
+                val userSetting = SettingsRepo.getUserSetting(settingKey) ?: notFound()
 
                 if (!call.hasPermissions(PermissionType.CHANGE_OWN_USER_SETTINGS))
-                    return@putP call.forbidden()
+                    forbidden()
 
-                val userId = call.getUserId() ?: return@putP call.unauthorized()
+                val userId = call.getUserId() ?: unauthorized()
                 val settingValue = call.receive<String>()
                 val parsedValue = userSetting.parser(settingValue)
-                    ?: return@putP call.invalidParameter("body")
+                    ?: invalidParameter("body",)
 
                 SettingsRepo.updateUserSetting(userSetting, userId, settingValue)
                 return@putP call.respond(KeyValueDto(userSetting.key, parsedValue))
             }
             else {
                 if (!call.hasPermissions(PermissionType.CHANGE_SERVER_SETTINGS))
-                    return@putP call.forbidden()
+                    forbidden()
 
                 val settingValue = call.receive<String>()
                 val parsedValue = setting.parser(settingValue)
-                    ?: return@putP call.invalidParameter("body")
+                    ?: invalidParameter("body")
 
                 SettingsRepo.updateServerSetting(setting, settingValue)
                 call.respond(KeyValueDto(setting.key, parsedValue))
             }
-
         }
     }
 }

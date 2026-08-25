@@ -15,14 +15,22 @@ fun Application.configureStatusPages() {
 
     install(StatusPages) {
         exception<Throwable> { call, cause ->
-            logger.error("Unhandled exception occurred", cause)
-            call.respond(
-                status = HttpStatusCode.InternalServerError,
-                message = ErrorDto.fromType(
-                    type = ErrorDtoType.INTERNAL_ERROR,
-                    "errorMessage" to (cause.message ?: "No message")
+            if (cause is ApiException) {
+                call.respond(
+                    status = cause.errorType.code,
+                    message = ErrorDto.fromType(cause.errorType, *cause.data)
                 )
-            )
+            }
+            else {
+                logger.error("Unhandled exception occurred", cause)
+                call.respond(
+                    status = HttpStatusCode.InternalServerError,
+                    message = ErrorDto.fromType(
+                        type = ErrorDtoType.INTERNAL_ERROR,
+                        "errorMessage" to (cause.message ?: "No message")
+                    )
+                )
+            }
         }
 
         status(HttpStatusCode.Unauthorized) {

@@ -12,25 +12,25 @@ fun Application.configurePermissionRoutes() = routing {
     authenticate("tokenAuth") {
 
         get("/api/permissions") {
-            val user = call.getUser() ?: return@get call.unauthorized()
+            val user = call.getUser() ?: unauthorized()
             val permissions = if (user.isAdmin) PermissionType.entries else PermissionRepo.getPermissions(user.id.value)
             call.respond(permissions.map { it.id })
         }
 
         getP("/api/permissions/{userId}", PermissionType.MANAGE_PERMISSIONS) {
-            val userId = call.getLongParameter("userId") ?: return@getP
-            val user = UserRepo.getById(userId) ?: return@getP call.notFound()
+            val userId = call.getLongParameter("userId")
+            val user = UserRepo.getById(userId) ?: notFound()
             val permissions = PermissionRepo.getPermissions(user.id.value)
             call.respond(permissions.map { it.id })
         }
 
         putP("/api/permissions/{userId}", PermissionType.MANAGE_PERMISSIONS) {
-            val userId = call.getLongParameter("userId") ?: return@putP
-            val permissionId = call.getStringParameter("permissionId") ?: return@putP
+            val userId = call.getLongParameter("userId")
+            val permissionId = call.getStringParameter("permissionId")
 
-            val user = UserRepo.getById(userId) ?: return@putP call.notFound()
+            val user = UserRepo.getById(userId) ?: notFound()
 
-            val permissionType = PermissionType.valueOfId(permissionId) ?: return@putP call.notFound()
+            val permissionType = PermissionType.valueOfId(permissionId) ?: notFound()
             val hasPermission = PermissionRepo.hasPermissions(user.id.value, listOf(permissionType))
 
             if (hasPermission) {

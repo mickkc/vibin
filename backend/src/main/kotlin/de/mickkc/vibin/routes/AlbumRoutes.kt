@@ -18,9 +18,9 @@ fun Application.configureAlbumRoutes() = routing {
 
         getP("/api/albums", PermissionType.VIEW_ALBUMS) {
 
-            val params = call.getPaginatedSearchParams() ?: return@getP
-            val showSingles = call.getBooleanOrDefault("showSingles", true) ?: return@getP
-            val userId = call.getUserId() ?: return@getP call.unauthorized()
+            val params = call.getPaginatedSearchParams()
+            val showSingles = call.getBooleanOrDefault("showSingles", true)
+            val userId = call.getUserId() ?: unauthorized()
 
             val (albums, total) = AlbumRepo.getAll(params, showSingles = showSingles, userId)
 
@@ -41,8 +41,8 @@ fun Application.configureAlbumRoutes() = routing {
 
         getP("/api/albums/autocomplete", PermissionType.VIEW_ALBUMS) {
 
-            val query = call.getStringParameter("query") ?: return@getP
-            val limit = call.getIntOrDefault("limit", 10) ?: return@getP
+            val query = call.getStringParameter("query")
+            val limit = call.getIntOrDefault("limit", 10)
 
             val albumNames = AlbumRepo.autocomplete(query, limit)
 
@@ -51,19 +51,19 @@ fun Application.configureAlbumRoutes() = routing {
 
         getP("/api/albums/{albumId}", PermissionType.VIEW_ALBUMS) {
 
-            val albumId = call.getLongParameter("albumId") ?: return@getP
-            val album = AlbumRepo.getById(albumId) ?: return@getP call.notFound()
-            val userId = call.getUserId() ?: return@getP call.unauthorized()
+            val albumId = call.getLongParameter("albumId")
+            val album = AlbumRepo.getById(albumId) ?: notFound()
+            val userId = call.getUserId() ?: unauthorized()
 
             call.respond(AlbumRepo.toDataDto(album, userId))
         }
 
         deleteP("/api/albums/{albumId}", PermissionType.DELETE_ALBUMS) {
-            val albumId = call.getLongParameter("albumId") ?: return@deleteP
+            val albumId = call.getLongParameter("albumId")
             val deleted = AlbumRepo.delete(albumId)
 
             if (!deleted) {
-                return@deleteP call.notFound()
+                notFound()
             }
 
             call.success()
@@ -71,7 +71,7 @@ fun Application.configureAlbumRoutes() = routing {
 
         getP("/api/albums/artists/{artistId}", PermissionType.VIEW_ALBUMS, PermissionType.VIEW_TRACKS) {
 
-            val artistId = call.getLongParameter("artistId") ?: return@getP
+            val artistId = call.getLongParameter("artistId")
             val albums = AlbumRepo.getByArtistId(artistId)
 
             val dtos = albums.map { (album, tracks) ->
@@ -86,17 +86,17 @@ fun Application.configureAlbumRoutes() = routing {
 
         putP("/api/albums/{albumId}", PermissionType.MANAGE_ALBUMS) {
 
-            val albumId = call.getLongParameter("albumId") ?: return@putP
+            val albumId = call.getLongParameter("albumId")
             val editDto = call.receive<AlbumEditDto>()
 
-            val updated = AlbumRepo.update(albumId, editDto) ?: return@putP call.notFound()
+            val updated = AlbumRepo.update(albumId, editDto) ?: notFound()
             call.respond(AlbumRepo.toDto(updated))
         }
 
         getP("/api/albums/{albumId}/cover", PermissionType.VIEW_ALBUMS) {
-            val albumId = call.getLongParameter("albumId") ?: return@getP
-            val album = AlbumRepo.getById(albumId) ?: return@getP call.notFound()
-            val quality = call.getIntOrDefault("quality", 0) ?: return@getP
+            val albumId = call.getLongParameter("albumId")
+            val album = AlbumRepo.getById(albumId) ?: notFound()
+            val quality = call.getIntOrDefault("quality", 0)
             val imageId = AlbumRepo.getAlbumCover(album)?.id?.value
 
             call.respondRedirect("/api/images/${if (imageId != null) "by-id/${imageId}" else "default" }?type=album&quality=$quality")
