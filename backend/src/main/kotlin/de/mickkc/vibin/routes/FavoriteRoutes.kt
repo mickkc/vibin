@@ -12,25 +12,23 @@ import de.mickkc.vibin.repos.FavoriteRepo
 fun Application.configureFavoriteRoutes() = routing {
     authenticate("tokenAuth") {
 
-        suspend fun RoutingCall.getFavoriteType(): FavoriteType? {
-            val entityTypeParam = this.parameters["entityType"] ?: return null
+        fun RoutingCall.getFavoriteType(): FavoriteType {
+            val entityTypeParam = getStringParameter("entityType")
 
             return when (entityTypeParam.lowercase()) {
                 "track" -> FavoriteType.TRACK
                 "album" -> FavoriteType.ALBUM
                 "artist" -> FavoriteType.ARTIST
-                else -> null.also {
-                    this.invalidParameter("entityType", "track", "album", "artist")
-                }
+                else -> invalidParameter("entityType", "track", "album", "artist")
             }
         }
 
         getP("/api/favorites/{userId}") {
             val requestingUserId = call.getUserId()
-            val userId = call.getLongParameter("userId") ?: return@getP
+            val userId = call.getLongParameter("userId")
 
             if (requestingUserId != userId && !call.hasPermissions(PermissionType.VIEW_USERS)) {
-                return@getP call.forbidden(PermissionType.VIEW_USERS)
+                forbidden(PermissionType.VIEW_USERS)
             }
 
             val favorites = FavoriteRepo.getFavoriteDtoForUser(userId)
@@ -40,14 +38,14 @@ fun Application.configureFavoriteRoutes() = routing {
 
         putP("/api/favorites/{entityType}/{place}", PermissionType.MANAGE_OWN_USER) {
 
-            val userId = call.getUserId() ?: return@putP call.unauthorized()
-            val entityId = call.getLongParameter("entityId") ?: return@putP
-            val place = call.getIntParameter("place") ?: return@putP
+            val userId = call.getUserId() ?: unauthorized()
+            val entityId = call.getLongParameter("entityId")
+            val place = call.getIntParameter("place")
 
             if (place !in 1..3)
-                return@putP call.invalidParameter("place", "1", "2", "3")
+                invalidParameter("place", "1", "2", "3")
 
-            val entityType = call.getFavoriteType() ?: return@putP
+            val entityType = call.getFavoriteType()
 
             FavoriteRepo.addFavorite(userId, entityType, entityId, place)
 
@@ -56,13 +54,13 @@ fun Application.configureFavoriteRoutes() = routing {
 
         deleteP("/api/favorites/{entityType}/{place}", PermissionType.MANAGE_OWN_USER) {
 
-            val userId = call.getUserId() ?: return@deleteP call.unauthorized()
-            val place = call.getIntParameter("place") ?: return@deleteP
+            val userId = call.getUserId() ?: unauthorized()
+            val place = call.getIntParameter("place")
 
             if (place !in 1..3)
-                return@deleteP call.invalidParameter("place", "1", "2", "3")
+                invalidParameter("place", "3")
 
-            val entityType = call.getFavoriteType() ?: return@deleteP
+            val entityType = call.getFavoriteType()
 
             FavoriteRepo.deleteFavoriteAtPlace(userId, entityType, place)
 
@@ -71,11 +69,11 @@ fun Application.configureFavoriteRoutes() = routing {
 
         getP("/api/favorites/{entityType}/check/{entityId}") {
 
-            val userId = call.getUserId() ?: return@getP call.unauthorized()
+            val userId = call.getUserId() ?: unauthorized()
 
-            val entityId = call.getLongParameter("entityId") ?: return@getP
+            val entityId = call.getLongParameter("entityId")
 
-            val entityType = call.getFavoriteType() ?: return@getP
+            val entityType = call.getFavoriteType()
 
             val place = FavoriteRepo.getPlace(userId, entityType, entityId)
 

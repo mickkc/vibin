@@ -32,25 +32,25 @@ fun Application.configureAuthRoutes() = routing {
         val clientId = call.getClientId()
 
         if (!loginRateLimiter.check(clientId)) {
-            return@postP call.rateLimitExceeded()
+            rateLimitExceeded()
         }
 
-        val username = call.getStringParameter("username") ?: return@postP
-        val password = call.getStringParameter("password") ?: return@postP
-        val deviceId = call.getStringParameter("deviceId") ?: return@postP
+        val username = call.getStringParameter("username")
+        val password = call.getStringParameter("password")
+        val deviceId = call.getStringParameter("deviceId")
 
         if (deviceId.length > 32) {
-            return@postP call.invalidParameter("deviceId", "deviceId.length <= 32")
+            invalidParameter("deviceId", "deviceId.length <= 32")
         }
 
         val user = UserRepo.getByUsername(username)?.takeIf { it.isActive }
-            ?: return@postP call.unauthorized("Invalid username or password")
+            ?: unauthorized("Invalid username or password")
 
         val hashedPassword = CryptoUtil.hashPassword(password, user.salt)
         if (!hashedPassword.contentEquals(user.passwordHash)) {
             logger.warn("Failed login attempt for user: $username")
             loginRateLimiter.checkAndIncrement(clientId)
-            return@postP call.unauthorized("Invalid username or password")
+            unauthorized("Invalid username or password")
         }
 
         val token = CryptoUtil.createToken()
@@ -72,7 +72,7 @@ fun Application.configureAuthRoutes() = routing {
         // Session validation
         postP("/api/auth/validate") {
             val user = call.getUser()?.takeIf { it.isActive }
-                ?: return@postP call.unauthorized("Invalid or expired token")
+                ?: unauthorized("Invalid or expired token")
 
             call.respond(LoginResultDto(
                 success = true,
@@ -85,7 +85,7 @@ fun Application.configureAuthRoutes() = routing {
         // User logout
         postP("/api/auth/logout") {
 
-            val principal = call.principal<UserPrincipal>() ?: return@postP call.unauthorized()
+            val principal = call.principal<UserPrincipal>() ?: unauthorized()
             SessionRepo.removeSession(principal.token)
 
             logger.info("User ID ${principal.userId} logged out")
@@ -95,8 +95,8 @@ fun Application.configureAuthRoutes() = routing {
 
         getP("/api/auth/sessions", PermissionType.MANAGE_SESSIONS) {
 
-            val userId = call.getUserId() ?: return@getP call.unauthorized()
-            val token = call.getToken() ?: return@getP call.unauthorized()
+            val userId = call.getUserId() ?: unauthorized()
+            val token = call.getToken() ?: unauthorized()
 
             val sessions = SessionRepo.getAllSessionsForUser(userId)
 
@@ -109,15 +109,15 @@ fun Application.configureAuthRoutes() = routing {
 
         deleteP("/api/auth/sessions/{id}", PermissionType.MANAGE_SESSIONS) {
 
-            val sessionId = call.getLongParameter("id") ?: return@deleteP
+            val sessionId = call.getLongParameter("id")
 
             val userId = call.getUserId()
-                ?: return@deleteP call.unauthorized()
+                ?: unauthorized()
 
-            val sessionUserId = SessionRepo.getUserFromSessionId(sessionId)?.id?.value ?: return@deleteP call.notFound()
+            val sessionUserId = SessionRepo.getUserFromSessionId(sessionId)?.id?.value ?: notFound()
 
             if (sessionUserId != userId) {
-                return@deleteP call.forbidden()
+                forbidden()
             }
 
             SessionRepo.invalidateSessionById(sessionId)
@@ -128,9 +128,9 @@ fun Application.configureAuthRoutes() = routing {
         deleteP("/api/auth/sessions/all", PermissionType.MANAGE_SESSIONS) {
 
             val userId = call.getUserId()
-                ?: return@deleteP call.unauthorized()
+                ?: unauthorized()
 
-            val token = call.getToken() ?: return@deleteP call.unauthorized()
+            val token = call.getToken() ?: unauthorized()
 
             SessionRepo.invalidateAllOtherSessionsForUser(userId, token)
 

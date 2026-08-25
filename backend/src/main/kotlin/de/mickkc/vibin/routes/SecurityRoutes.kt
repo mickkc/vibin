@@ -37,7 +37,7 @@ fun Application.configureSecurityRoutes() = routing {
     }
 
     get("/api/mail/reset-password") {
-        val token = call.getStringParameter("tk") ?: return@get
+        val token = call.getStringParameter("tk")
 
         if (!LoginNotificationManager.isLoginNotificationTokenValid(token)) {
             return@get call.invalidNotificationToken()
@@ -51,7 +51,7 @@ fun Application.configureSecurityRoutes() = routing {
     }
 
     get("/api/mail/trust-device") {
-        val token = call.getStringParameter("tk") ?: return@get
+        val token = call.getStringParameter("tk")
 
         if (!LoginNotificationManager.isLoginNotificationTokenValid(token)) {
             return@get call.invalidNotificationToken()

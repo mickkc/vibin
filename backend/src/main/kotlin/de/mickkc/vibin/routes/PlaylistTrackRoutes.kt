@@ -13,18 +13,18 @@ import de.mickkc.vibin.repos.TrackRepo
 
 fun Application.configurePlaylistTrackRoutes() = routing {
 
-    suspend fun RoutingCall.getPlaylistAndTrack(): Pair<PlaylistEntity, TrackEntity>? {
+    fun RoutingCall.getPlaylistAndTrack(): Pair<PlaylistEntity, TrackEntity> {
 
-        val userId = getUserId() ?: return null
+        val userId = getUserId() ?: unauthorized()
 
         val playlistId = parameters["playlistId"]?.toLongOrNull()
-            ?: return missingParameter("playlistId").let { null }
+            ?: missingParameter("playlistId")
         val playlist = PlaylistRepo.getByIdIfAllowed(playlistId, userId, PermissionType.MANAGE_PLAYLIST_TRACKS)
-            ?: return notFound().let { null }
+            ?: notFound()
 
         val trackId = request.queryParameters["trackId"]?.toLongOrNull()
-            ?: return missingParameter("trackId").let { null }
-        val track = TrackRepo.getById(trackId) ?: return notFound().let { null }
+            ?: missingParameter("trackId")
+        val track = TrackRepo.getById(trackId) ?: notFound()
 
         return playlist to track
     }
@@ -33,8 +33,8 @@ fun Application.configurePlaylistTrackRoutes() = routing {
 
         postP("/api/playlists/{playlistId}/tracks", PermissionType.MANAGE_PLAYLIST_TRACKS) {
 
-            val user = call.getUser() ?: return@postP call.unauthorized()
-            val (playlist, track) = call.getPlaylistAndTrack() ?: return@postP
+            val user = call.getUser() ?: unauthorized()
+            val (playlist, track) = call.getPlaylistAndTrack()
 
             PlaylistTrackRepo.addTrackToPlaylist(playlist, track, user)
             call.success()
@@ -42,7 +42,7 @@ fun Application.configurePlaylistTrackRoutes() = routing {
 
         deleteP("/api/playlists/{playlistId}/tracks", PermissionType.MANAGE_PLAYLIST_TRACKS) {
 
-            val (playlist, track) = call.getPlaylistAndTrack() ?: return@deleteP
+            val (playlist, track) = call.getPlaylistAndTrack()
 
             PlaylistTrackRepo.removeTrackFromPlaylist(playlist, track)
             call.success()
@@ -52,12 +52,12 @@ fun Application.configurePlaylistTrackRoutes() = routing {
 
             val afterTrackId: Long? = call.request.queryParameters["afterTrackId"]?.toLongOrNull()
 
-            val (playlist, track) = call.getPlaylistAndTrack() ?: return@putP
-            val afterTrack = afterTrackId?.let { TrackRepo.getById(afterTrackId) ?: return@putP call.notFound() }
+            val (playlist, track) = call.getPlaylistAndTrack()
+            val afterTrack = afterTrackId?.let { TrackRepo.getById(afterTrackId) ?: notFound() }
 
             val success = PlaylistTrackRepo.setPosition(playlist, track, afterTrack)
             if (!success) {
-                return@putP call.invalidParameter("newPosition")
+                invalidParameter("newPosition")
             }
 
             val playlistTracks = PlaylistTrackRepo.getTracksAsDtos(playlist)
@@ -65,9 +65,9 @@ fun Application.configurePlaylistTrackRoutes() = routing {
         }
 
         getP("/api/playlists/containing/{trackId}", PermissionType.VIEW_PLAYLISTS) {
-            val trackId = call.getLongParameter("trackId") ?: return@getP
-            val track = TrackRepo.getById(trackId) ?: return@getP call.notFound()
-            val userId = call.getUserId() ?: return@getP call.unauthorized()
+            val trackId = call.getLongParameter("trackId")
+            val track = TrackRepo.getById(trackId) ?: notFound()
+            val userId = call.getUserId() ?: unauthorized()
 
             val playlists = PlaylistTrackRepo.getPlaylistsWithTrack(track, userId)
             call.respond(PlaylistRepo.toDto(playlists))

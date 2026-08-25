@@ -16,8 +16,8 @@ fun Application.configureArtistRoutes() = routing {
     authenticate("tokenAuth") {
         getP("/api/artists", PermissionType.VIEW_ARTISTS) {
 
-            val params = call.getPaginatedSearchParams() ?: return@getP
-            val userId = call.getUserId() ?: return@getP call.unauthorized()
+            val params = call.getPaginatedSearchParams()
+            val userId = call.getUserId() ?: unauthorized()
 
             val (artists, total) = ArtistRepo.getAll(params, userId)
 
@@ -30,13 +30,13 @@ fun Application.configureArtistRoutes() = routing {
         }
 
         getP("/api/artists/{id}", PermissionType.VIEW_ARTISTS) {
-            val id = call.getLongParameter("id") ?: return@getP
-            val artist = ArtistRepo.getById(id) ?: return@getP call.notFound()
+            val id = call.getLongParameter("id")
+            val artist = ArtistRepo.getById(id) ?: notFound()
             call.respond(ArtistRepo.toDto(artist))
         }
 
         getP("/api/artists/ids", PermissionType.VIEW_ARTISTS) {
-            val idsParam = call.request.queryParameters["ids"] ?: return@getP call.missingParameter("ids")
+            val idsParam = call.getStringParameter("ids")
             val ids = idsParam.split(",").mapNotNull { it.toLongOrNull() }
             val artists = ArtistRepo.getByIds(ids)
             call.respond(ArtistRepo.toDto(artists))
@@ -49,47 +49,47 @@ fun Application.configureArtistRoutes() = routing {
                 call.respond(ArtistRepo.toDto(updatedArtist))
             }
             catch (e400: IllegalStateException) {
-                call.missingParameter(e400.message!!)
+                missingParameter(e400.message!!)
             }
             catch (_: NotFoundException) {
-                call.notFound()
+                notFound()
             }
         }
 
         putP("/api/artists/{id}", PermissionType.MANAGE_ARTISTS) {
-            val id = call.getLongParameter("id") ?: return@putP
+            val id = call.getLongParameter("id")
             val data = call.receive<ArtistEditData>()
             try {
                 val updatedArtist = ArtistRepo.updateOrCreateArtist(id, data)
                 call.respond(ArtistRepo.toDto(updatedArtist))
             }
             catch (_: NotFoundException) {
-                call.notFound()
+                notFound()
             }
         }
 
         deleteP("/api/artists/{id}", PermissionType.DELETE_ARTISTS) {
-            val id = call.getLongParameter("id") ?: return@deleteP
+            val id = call.getLongParameter("id")
             val success = ArtistRepo.deleteArtist(id)
 
             if (!success) {
-                return@deleteP call.notFound()
+                notFound()
             }
 
             call.success()
         }
 
         getP("/api/artists/{artistId}/image", PermissionType.VIEW_ARTISTS) {
-            val artistId = call.getLongParameter("artistId") ?: return@getP
-            val quality = call.getIntOrDefault("quality", 0) ?: return@getP
+            val artistId = call.getLongParameter("artistId")
+            val quality = call.getIntOrDefault("quality", 0)
             val imageId = ArtistRepo.getImageId(artistId)
 
             call.respondRedirect("/api/images/${if (imageId != null) "by-id/${imageId}" else "default" }?type=artist&quality=$quality")
         }
 
         getP("/api/artists/autocomplete", PermissionType.VIEW_ARTISTS) {
-            val query = call.getStringParameter("query") ?: return@getP
-            val limit = call.getIntOrDefault("limit", 10) ?: return@getP
+            val query = call.getStringParameter("query")
+            val limit = call.getIntOrDefault("limit", 10)
 
             val artistNames = ArtistRepo.autocomplete(query, limit)
             call.respond(artistNames)

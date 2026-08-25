@@ -18,12 +18,12 @@ fun Application.configureStreamRoutes() = routing {
 
     authenticate("tokenAuth") {
         getP("/api/streams", PermissionType.STREAM_TRACKS) {
-            val ids = call.getStringParameter("ids") ?: return@getP
+            val ids = call.getStringParameter("ids")
             val idList = ids.split(",")
             val trackList = idList.mapNotNull { it.toLongOrNull()?.let { id -> TrackRepo.getById(id) } }
 
             if (idList.isEmpty() || trackList.size != idList.size) {
-                return@getP call.invalidParameter("ids")
+                invalidParameter("ids")
             }
 
             val streams = trackList.map { track -> StreamBuilder.build(track) }
@@ -32,22 +32,22 @@ fun Application.configureStreamRoutes() = routing {
     }
 
     get("/api/streams/{trackId}") {
-        val trackId = call.getLongParameter("trackId") ?: return@get
-        val trackSig = call.getStringParameter("sig") ?: return@get
-        val trackExp = call.getLongParameter("exp") ?: return@get
+        val trackId = call.getLongParameter("trackId")
+        val trackSig = call.getStringParameter("sig")
+        val trackExp = call.getLongParameter("exp")
 
-        val track = TrackRepo.getById(trackId) ?: return@get call.notFound()
+        val track = TrackRepo.getById(trackId) ?: notFound()
         if (!AccessCryptoUtil.validateSignature(track.checksum, trackExp, trackSig)) {
-            return@get call.unauthorized("Invalid or expired track signature")
+            unauthorized("Invalid or expired track signature")
         }
 
         val format = call.getStringOrDefault("format", "mp3").trim().lowercase()
-        val bitrate = call.getIntOrDefault("bitrate", 128) ?: return@get
-        val start = call.getLongOrDefault("start", 0L) ?: return@get
+        val bitrate = call.getIntOrDefault("bitrate", 128)
+        val start = call.getLongOrDefault("start", 0L)
 
         val file = PathUtils.getTrackFileFromPath(track.path)
         if (!file.exists()) {
-            return@get call.notFound()
+            notFound()
         }
 
         if (format == "original") {
@@ -59,7 +59,7 @@ fun Application.configureStreamRoutes() = routing {
             "mp3" -> listOf("-hide_banner", "-loglevel", "error", "-ss", start.toString(), "-i", file.absolutePath, "-vn", "-c:a", "libmp3lame", "-b:a", "${bitrate}k", "-f", "mp3", "-")
             "opus" -> listOf("-hide_banner", "-loglevel", "error", "-ss", start.toString(), "-i", file.absolutePath, "-vn", "-c:a", "libopus", "-b:a", "${bitrate}k", "-f", "webm", "-")
             "aac" -> listOf("-hide_banner", "-loglevel", "error", "-ss", start.toString(), "-i", file.absolutePath, "-vn", "-c:a", "aac", "-b:a", "${bitrate}k", "-f", "adts", "-")
-            else -> return@get call.invalidParameter("format", "mp3", "opus", "aac")
+            else -> invalidParameter("format", "mp3", "opus", "aac")
         }
 
         val contentType = when(format) {

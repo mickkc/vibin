@@ -26,11 +26,11 @@ fun Application.configureTaskRoutes() = routing {
         }
 
         putP("/api/tasks/{taskId}/enable", PermissionType.MANAGE_TASKS) {
-            val taskId = call.getStringParameter("taskId") ?: return@putP
-            val enable = call.getBooleanParameter("enable") ?: return@putP
+            val taskId = call.getStringParameter("taskId")
+            val enable = call.getBooleanParameter("enable")
 
             if (TaskManager.getById(taskId) == null) {
-                return@putP call.notFound()
+                notFound()
             }
 
             TaskManager.setTaskEnabled(taskId, enable)
@@ -38,7 +38,7 @@ fun Application.configureTaskRoutes() = routing {
         }
 
         postP("/api/tasks/{taskId}/run", PermissionType.MANAGE_TASKS) {
-            val taskId = call.getStringParameter("taskId") ?: return@postP
+            val taskId = call.getStringParameter("taskId")
 
             TaskScheduler.forceRunTask(taskId)
 
@@ -46,7 +46,7 @@ fun Application.configureTaskRoutes() = routing {
         }
 
         deleteP("/api/tasks/{taskId}/run", PermissionType.MANAGE_TASKS) {
-            val taskId = call.getStringParameter("taskId") ?: return@deleteP
+            val taskId = call.getStringParameter("taskId")
 
             TaskManager.cancelTask(taskId)
 
@@ -57,11 +57,11 @@ fun Application.configureTaskRoutes() = routing {
 
     webSocket("/api/tasks/progress") {
 
-        val token = call.getStringParameter("token") ?: return@webSocket
-        val userId = SessionRepo.validateAndUpdateToken(token) ?: return@webSocket call.unauthorized()
+        val token = call.getStringParameter("token")
+        val userId = SessionRepo.validateAndUpdateToken(token) ?: unauthorized()
 
         if (!PermissionRepo.hasPermission(userId, PermissionType.MANAGE_TASKS)) {
-            return@webSocket call.forbidden(PermissionType.MANAGE_TASKS)
+            forbidden(PermissionType.MANAGE_TASKS)
         }
 
         val json = Gson().newBuilder().serializeNulls().create()

@@ -4,6 +4,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import de.mickkc.vibin.auth.UserPrincipal
+import de.mickkc.vibin.config.ApiException
 import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.dto.errors.ErrorDto
@@ -22,36 +23,26 @@ suspend fun ApplicationCall.respond(error: ErrorDto) {
     respond(error.type.code, error)
 }
 
-suspend fun ApplicationCall.missingParameter(param: String) {
-    respond(ErrorDto.fromType(ErrorDtoType.MISSING_PARAMETER, "parameterName" to param))
-}
+fun missingParameter(param: String): Nothing =
+    throw ApiException(ErrorDtoType.MISSING_PARAMETER, "parameterName" to param)
 
-suspend fun ApplicationCall.invalidParameter(param: String, vararg allowedParameters: String) {
-    respond(ErrorDto.fromType(ErrorDtoType.INVALID_PARAMETER, "parameterName" to param, "reason" to allowedParameters.joinToString(", ")))
-}
+fun invalidParameter(param: String, vararg allowedParameters: String): Nothing =
+    throw ApiException(ErrorDtoType.INVALID_PARAMETER, "parameterName" to param, "reason" to allowedParameters.joinToString(", "))
 
-suspend fun ApplicationCall.unauthorized(reason: String = "Unauthorized") {
-    respond(ErrorDto.fromType(ErrorDtoType.UNAUTHORIZED, "reason" to reason))
-}
+fun unauthorized(reason: String = "Unauthorized"): Nothing =
+    throw ApiException(ErrorDtoType.UNAUTHORIZED, "reason" to reason)
 
-suspend fun ApplicationCall.conflict() {
-    respond(ErrorDto.fromType(ErrorDtoType.CONFLICT))
-}
+fun conflict(): Nothing =
+    throw ApiException(ErrorDtoType.CONFLICT)
 
-suspend fun ApplicationCall.forbidden(vararg requiredPermissions: PermissionType) {
-    respond(ErrorDto.fromType(
-        ErrorDtoType.NO_PERMISSION,
-        "requiredPermissions" to requiredPermissions.joinToString(",") { it.id }
-    ))
-}
+fun forbidden(vararg requiredPermissions: PermissionType): Nothing =
+    throw ApiException(ErrorDtoType.NO_PERMISSION, "requiredPermissions" to requiredPermissions.joinToString(",") { it.id })
 
-suspend fun ApplicationCall.notFound() {
-    respond(ErrorDto.fromType(ErrorDtoType.NOT_FOUND))
-}
+fun notFound(): Nothing =
+    throw ApiException(ErrorDtoType.NOT_FOUND)
 
-suspend fun ApplicationCall.rateLimitExceeded() {
-    respond(ErrorDto.fromType(ErrorDtoType.RATE_LIMIT_EXCEEDED))
-}
+fun rateLimitExceeded(): Nothing =
+    throw ApiException(ErrorDtoType.RATE_LIMIT_EXCEEDED)
 
 fun ApplicationCall.getToken(): String? {
     val principal = principal<UserPrincipal>()
@@ -107,7 +98,7 @@ fun ApplicationCall.getClientId(): String {
 fun Route.getP(path: String, vararg permissions: PermissionType, body: suspend RoutingContext.() -> Unit) {
     get(path) {
         if (permissions.isNotEmpty() && !call.hasPermissions(*permissions)) {
-            return@get call.forbidden(*permissions)
+            forbidden(*permissions)
         }
         body()
     }
@@ -116,7 +107,7 @@ fun Route.getP(path: String, vararg permissions: PermissionType, body: suspend R
 fun Route.postP(path: String, vararg permissions: PermissionType, body: suspend RoutingContext.() -> Unit) {
     post(path) {
         if (permissions.isNotEmpty() && !call.hasPermissions(*permissions)) {
-            return@post call.forbidden(*permissions)
+            forbidden(*permissions)
         }
         body()
     }
@@ -125,7 +116,7 @@ fun Route.postP(path: String, vararg permissions: PermissionType, body: suspend 
 fun Route.putP(path: String, vararg permissions: PermissionType, body: suspend RoutingContext.() -> Unit) {
     put(path) {
         if (permissions.isNotEmpty() && !call.hasPermissions(*permissions)) {
-            return@put call.forbidden(*permissions)
+            forbidden(*permissions)
         }
         body()
     }
@@ -134,7 +125,7 @@ fun Route.putP(path: String, vararg permissions: PermissionType, body: suspend R
 fun Route.deleteP(path: String, vararg permissions: PermissionType, body: suspend RoutingContext.() -> Unit) {
     delete(path) {
         if (permissions.isNotEmpty() && !call.hasPermissions(*permissions)) {
-            return@delete call.forbidden(*permissions)
+            forbidden(*permissions)
         }
         body()
     }
@@ -149,19 +140,17 @@ data class PaginatedSearchParams(
         get() = ((page - 1) * pageSize).toLong()
 }
 
-suspend fun ApplicationCall.getPaginatedSearchParams(): PaginatedSearchParams? {
+fun ApplicationCall.getPaginatedSearchParams(): PaginatedSearchParams {
     val query = request.queryParameters["query"] ?: ""
     val page = request.queryParameters["page"]?.toIntOrNull() ?: 1
     val pageSize = request.queryParameters["pageSize"]?.toIntOrNull() ?: 50
 
     if (page <= 0) {
         invalidParameter("page", "page > 0")
-        return null
     }
 
     if (pageSize !in 1..100) {
         invalidParameter("pageSize", "0 < pageSize <= 100")
-        return null
     }
 
     return PaginatedSearchParams(
@@ -171,152 +160,105 @@ suspend fun ApplicationCall.getPaginatedSearchParams(): PaginatedSearchParams? {
     )
 }
 
-suspend fun ApplicationCall.getBooleanOrDefault(paramName: String, default: Boolean): Boolean? {
-    val paramValue = this.parameters[paramName]
-
-    if (paramValue == null) {
-        return default
-    }
+fun ApplicationCall.getBooleanOrDefault(paramName: String, default: Boolean): Boolean {
+    val paramValue = this.parameters[paramName] ?: return default
 
     return when (paramValue.lowercase()) {
         "true", "1", "yes" -> true
         "false", "0", "no" -> false
         else -> {
-            invalidParameter(paramName, "true", "false")
-            null
+            invalidParameter(paramName, "false")
         }
     }
 }
 
-suspend fun ApplicationCall.getBooleanParameter(paramName: String): Boolean? {
+fun ApplicationCall.getBooleanParameter(paramName: String): Boolean {
     val paramValue = this.parameters[paramName]
-
-    if (paramValue == null) {
-        missingParameter(paramName)
-        return null
-    }
+        ?: missingParameter(paramName)
 
     return when (paramValue.lowercase()) {
         "true", "1", "yes" -> true
         "false", "0", "no" -> false
         else -> {
-            invalidParameter(paramName, "true", "false")
-            null
+            invalidParameter(paramName, "false")
         }
     }
 }
 
-suspend fun ApplicationCall.getStringOrDefault(paramName: String, default: String): String {
+fun ApplicationCall.getStringOrDefault(paramName: String, default: String): String {
     return this.parameters[paramName] ?: default
 }
 
-suspend fun ApplicationCall.getStringParameter(paramName: String): String? {
+fun ApplicationCall.getStringParameter(paramName: String): String {
     val paramValue = this.parameters[paramName]
-
-    if (paramValue == null) {
-        missingParameter(paramName)
-        return null
-    }
+        ?: missingParameter(paramName)
 
     return paramValue
 }
 
-suspend fun ApplicationCall.getLongOrDefault(paramName: String, default: Long): Long? {
+fun ApplicationCall.getLongOrDefault(paramName: String, default: Long): Long {
     val paramValue = this.parameters[paramName] ?: return default
 
     val longValue = paramValue.toLongOrNull()
-    if (longValue == null) {
-        invalidParameter(paramName)
-        return null
-    }
+        ?: invalidParameter(paramName)
 
     return longValue
 }
 
-suspend fun ApplicationCall.getLongParameter(paramName: String): Long? {
+fun ApplicationCall.getLongParameter(paramName: String): Long {
     val paramValue = this.parameters[paramName]
-
-    if (paramValue == null) {
-        missingParameter(paramName)
-        return null
-    }
+        ?: missingParameter(paramName)
 
     val longValue = paramValue.toLongOrNull()
-    if (longValue == null) {
-        invalidParameter(paramName)
-        return null
-    }
+        ?: invalidParameter(paramName)
 
     return longValue
 }
 
-suspend fun ApplicationCall.getIntOrDefault(paramName: String, default: Int): Int? {
+fun ApplicationCall.getIntOrDefault(paramName: String, default: Int): Int {
     val paramValue = this.parameters[paramName] ?: return default
 
     val intValue = paramValue.toIntOrNull()
-    if (intValue == null) {
-        invalidParameter(paramName)
-        return null
-    }
+        ?: invalidParameter(paramName)
 
     return intValue
 }
 
-suspend fun ApplicationCall.getIntParameter(paramName: String): Int? {
+fun ApplicationCall.getIntParameter(paramName: String): Int {
     val paramValue = this.parameters[paramName]
-
-    if (paramValue == null) {
-        missingParameter(paramName)
-        return null
-    }
+        ?: missingParameter(paramName)
 
     val intValue = paramValue.toIntOrNull()
-    if (intValue == null) {
-        invalidParameter(paramName)
-        return null
-    }
+        ?: invalidParameter(paramName)
 
     return intValue
 }
 
-suspend fun ApplicationCall.getFloatOrDefault(paramName: String, default: Float): Float? {
+fun ApplicationCall.getFloatOrDefault(paramName: String, default: Float): Float {
     val paramValue = this.parameters[paramName] ?: return default
 
-    val intValue = paramValue.toFloatOrNull()
-    if (intValue == null) {
-        invalidParameter(paramName)
-        return null
-    }
+    val intValue = paramValue.toFloatOrNull() ?: invalidParameter(paramName)
 
     return intValue
 }
 
-suspend fun ApplicationCall.getFloatParameter(paramName: String): Float? {
+fun ApplicationCall.getFloatParameter(paramName: String): Float {
     val paramValue = this.parameters[paramName]
-
-    if (paramValue == null) {
-        missingParameter(paramName)
-        return null
-    }
+        ?: missingParameter(paramName)
 
     val intValue = paramValue.toFloatOrNull()
-    if (intValue == null) {
-        invalidParameter(paramName)
-        return null
-    }
+        ?: invalidParameter(paramName)
 
     return intValue
 }
 
-suspend inline fun<reified E : Enum<E>> ApplicationCall.getEnum(paramName: String, default: E?): E? {
+inline fun<reified E : Enum<E>> ApplicationCall.getEnum(paramName: String, default: E?): E {
     val strParam = if (default != null) getStringOrDefault(paramName, default.name) else getStringParameter(paramName)
-    if (strParam == null) return null
 
     try {
         return enumValueOf<E>(strParam)
     }
     catch (_: IllegalArgumentException) {
         invalidParameter(paramName, *enumEntries<E>().map { it.name }.toTypedArray())
-        return null
     }
 }

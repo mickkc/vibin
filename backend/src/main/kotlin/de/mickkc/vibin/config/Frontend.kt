@@ -21,7 +21,7 @@ fun Application.configureFrontendRoutes() = routing {
             val filePath = frontendPath.resolve(relativePath).normalize()
 
             if (!filePath.startsWith(frontendPath)) {
-                return@get call.forbidden()
+                forbidden()
             }
 
             val file = filePath.toFile()

@@ -15,7 +15,7 @@ fun Application.configureRelatedTrackRoutes() = routing {
 
         getP("/api/tracks/{trackId}/related", PermissionType.VIEW_TRACKS) {
 
-            val trackId = call.getLongParameter("trackId") ?: return@getP
+            val trackId = call.getLongParameter("trackId")
             val relatedTracks = TrackRelationRepo.getRelatedTracks(trackId)
 
             call.respond(relatedTracks.map {
@@ -25,22 +25,22 @@ fun Application.configureRelatedTrackRoutes() = routing {
 
         postP("/api/tracks/{trackId}/related", PermissionType.CREATE_TRACK_RELATIONS) {
 
-            val trackId = call.getLongParameter("trackId") ?: return@postP
-            val relatedTrackId = call.getLongParameter("relatedTrackId") ?: return@postP
-            val relationDescription = call.getStringParameter("description") ?: return@postP
-            val mutual = call.getBooleanOrDefault("mutual", false) ?: return@postP
+            val trackId = call.getLongParameter("trackId")
+            val relatedTrackId = call.getLongParameter("relatedTrackId")
+            val relationDescription = call.getStringParameter("description")
+            val mutual = call.getBooleanOrDefault("mutual", false)
             val reverseDescription = call.parameters["reverseDescription"]
 
             if (trackId == relatedTrackId) {
-                return@postP call.invalidParameter("relatedTrackId", "relatedTrackId != trackId")
+                invalidParameter("relatedTrackId", "relatedTrackId != trackId")
             }
 
             if (TrackRelationRepo.doesRelationExist(trackId, relatedTrackId)) {
-                return@postP call.conflict()
+                conflict()
             }
 
-            val track = TrackRepo.getById(trackId) ?: return@postP call.notFound()
-            val relatedTrack = TrackRepo.getById(relatedTrackId) ?: return@postP call.notFound()
+            val track = TrackRepo.getById(trackId) ?: notFound()
+            val relatedTrack = TrackRepo.getById(relatedTrackId) ?: notFound()
 
             TrackRelationRepo.createRelation(
                 track = track,
@@ -55,8 +55,8 @@ fun Application.configureRelatedTrackRoutes() = routing {
 
         deleteP("/api/tracks/{trackId}/related", PermissionType.DELETE_TRACK_RELATIONS) {
 
-            val trackId = call.getLongParameter("trackId") ?: return@deleteP
-            val relatedTrackId = call.getLongParameter("relatedTrackId") ?: return@deleteP
+            val trackId = call.getLongParameter("trackId")
+            val relatedTrackId = call.getLongParameter("relatedTrackId")
 
             TrackRelationRepo.removeRelationBetweenTracks(trackId, relatedTrackId)
 

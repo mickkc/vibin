@@ -25,31 +25,31 @@ fun Application.configureStatisticRoutes() = routing {
     authenticate("tokenAuth") {
 
         get("/api/stats/recent") {
-            val userId = call.getUserId() ?: return@get call.unauthorized()
-            val limit = call.getIntOrDefault("limit", 5) ?: return@get
+            val userId = call.getUserId() ?: unauthorized()
+            val limit = call.getIntOrDefault("limit", 5)
 
             val recentTracks = ListenRepo.getRecentTracks(userId, 0, limit)
             call.respond(TrackRepo.toMinimalDto(recentTracks))
         }
 
         get("/api/stats/recent/nontracks") {
-            val userId = call.getUserId() ?: return@get call.unauthorized()
-            val limit = call.getIntOrDefault("limit", 5) ?: return@get
+            val userId = call.getUserId() ?: unauthorized()
+            val limit = call.getIntOrDefault("limit", 5)
 
             val recent = ListenRepo.getRecentNonTrackDtos(userId, limit)
             call.respond(recent)
         }
 
         get("/api/stats/{type}/top{num}") {
-            val type = call.getStringParameter("type") ?: return@get
-            val num = call.getIntParameter("num") ?: return@get
-            val since = call.getLongOrDefault("since", DateTimeUtils.startOfMonth()) ?: return@get
+            val type = call.getStringParameter("type")
+            val num = call.getIntParameter("num")
+            val since = call.getLongOrDefault("since", DateTimeUtils.startOfMonth())
 
             if (num <= 0) {
-                return@get call.invalidParameter("num", "num > 0")
+                invalidParameter("num", "num > 0")
             }
 
-            val userId = call.getUserId() ?: return@get call.unauthorized()
+            val userId = call.getUserId() ?: unauthorized()
 
 
             fun <T>sortAndLimit(map: Map<T, Int>): List<T> {
@@ -87,43 +87,40 @@ fun Application.configureStatisticRoutes() = routing {
                     sortAndLimit(top)
                 }
                 else -> {
-                    call.invalidParameter("type", "tracks", "artists", "albums", "tags", "nontracks")
-                    null
+                    invalidParameter("type", "nontracks")
                 }
             }
 
-            if (response != null) {
-                call.respond(response)
-            }
+            call.respond(response)
         }
 
         post("/api/stats/listen/{type}/{entityId}") {
-            val userId = call.getUserId() ?: return@post call.unauthorized()
+            val userId = call.getUserId() ?: unauthorized()
             val type = call.parameters["type"]?.let {
                 try { ListenType.valueOf(it) } catch (_: IllegalArgumentException) { null }
-            } ?: return@post call.missingParameter("type")
-            val entityId = call.getLongParameter("entityId") ?: return@post
+            } ?: missingParameter("type")
+            val entityId = call.getLongParameter("entityId")
 
             val success = ListenRepo.listenedTo(userId, entityId, type)
             call.success(success)
         }
 
         get("/api/stats/users/{userId}/activity") {
-            val userId = call.getLongParameter("userId") ?: return@get
+            val userId = call.getLongParameter("userId")
 
             if (!Settings.get(ShowActivitiesToOthers, userId)) {
-                val callerId = call.getUserId() ?: return@get call.unauthorized()
+                val callerId = call.getUserId() ?: unauthorized()
                 if (callerId != userId) {
-                    // User has diasabled showing activities to others
-                    return@get call.forbidden()
+                    // User has disabled showing activities to others
+                    forbidden()
                 }
             }
 
-            val since = call.getLongOrDefault("since", DateTimeUtils.startOfMonth()) ?: return@get
-            val limit = call.getIntOrDefault("limit", 10) ?: return@get
+            val since = call.getLongOrDefault("since", DateTimeUtils.startOfMonth())
+            val limit = call.getIntOrDefault("limit", 10)
 
             if (limit <= 0) {
-                return@get call.invalidParameter("limit", "limit > 0")
+                invalidParameter("limit", "limit > 0")
             }
 
             val activity = ListenRepo.getActivityForUser(userId, since, limit)
@@ -149,8 +146,8 @@ fun Application.configureStatisticRoutes() = routing {
         }
 
         getP("/api/stats/tracks/{id}/duration", PermissionType.VIEW_TRACKS) {
-            val userId = call.getUserId() ?: return@getP call.forbidden()
-            val trackId = call.pathParameters["id"]?.toLongOrNull() ?: return@getP call.missingParameter("id")
+            val userId = call.getUserId() ?: forbidden()
+            val trackId = call.pathParameters["id"]?.toLongOrNull() ?: missingParameter("id")
 
             val duration = ListenTrackingRepo.getUserListenDurationForTrack(trackId, userId)
 

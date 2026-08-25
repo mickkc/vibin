@@ -56,12 +56,11 @@ private fun RoutingCall.parseLanguage(): String {
     return language
 }
 
-private suspend fun RoutingCall.getValidatedWidgetTypes(widget: SharedWidgetEntity): List<WidgetType>? {
+private fun getValidatedWidgetTypes(widget: SharedWidgetEntity): List<WidgetType> {
     val widgetTypes = WidgetRepo.getTypes(widget)
 
     if (widgetTypes.isEmpty()) {
         invalidParameter("types")
-        return null
     }
 
     return widgetTypes
@@ -93,64 +92,64 @@ fun Application.configureWidgetRoutes() = routing {
      * This avoids brute-forcing checksums and accessing images that where valid at some point.
      */
     get("/api/widgets/images/{checksum}") {
-        val checksum = call.getStringParameter("checksum") ?: return@get
-        val quality = call.getIntOrDefault("quality", 192) ?: return@get
+        val checksum = call.getStringParameter("checksum")
+        val quality = call.getIntOrDefault("quality", 192)
 
-        val expirationTimestamp = call.getLongParameter("exp") ?: return@get
-        val signature = call.getStringParameter("sig") ?: return@get
+        val expirationTimestamp = call.getLongParameter("exp")
+        val signature = call.getStringParameter("sig")
 
         if (!AccessCryptoUtil.validateSignature(checksum, expirationTimestamp, signature)) {
-            return@get call.forbidden()
+            forbidden()
         }
 
         if (checksum.startsWith("default-")) {
             val type = checksum.removePrefix("default-")
-            val file = PathUtils.getDefaultImage(type, quality) ?: return@get call.notFound()
+            val file = PathUtils.getDefaultImage(type, quality) ?: notFound()
             return@get call.respondFile(file)
         }
 
-        val image = ImageRepo.getBySourceChecksum(checksum) ?: return@get call.notFound()
+        val image = ImageRepo.getBySourceChecksum(checksum) ?: notFound()
 
         val file = ImageCache.getImageFile(image, quality)
             ?: PathUtils.getThumbnailFileFromPath(image.sourcePath)
 
         if (!file.exists()) {
-            return@get call.notFound()
+            notFound()
         }
 
         call.respondFile(file)
     }
 
     getP("/api/widgets/{id}") {
-        val id = call.getStringParameter("id") ?: return@getP
-        val widget = WidgetRepo.getWidget(id) ?: return@getP call.notFound()
+        val id = call.getStringParameter("id")
+        val widget = WidgetRepo.getWidget(id) ?: notFound()
 
         val colors = call.parseWidgetColors(widget)
         val language = call.parseLanguage()
-        val widgetTypes = call.getValidatedWidgetTypes(widget) ?: return@getP
+        val widgetTypes = getValidatedWidgetTypes(widget)
         val ctx = createWidgetContext(widget, colors, language)
 
         call.respondText(WidgetBuilder.build(widgetTypes, ctx), contentType = ContentType.Text.Html)
     }
 
     getP("/api/widgets/{id}/image") {
-        val id = call.getStringParameter("id") ?: return@getP
-        val widget = WidgetRepo.getWidget(id) ?: return@getP call.notFound()
+        val id = call.getStringParameter("id")
+        val widget = WidgetRepo.getWidget(id) ?: notFound()
 
         val clientId = call.getClientId()
         if (!WidgetImageCache.rateLimiter.checkAndIncrement(clientId)) {
-            return@getP call.rateLimitExceeded()
+            rateLimitExceeded()
         }
 
-        val width = call.getIntOrDefault("width", 1080)?.coerceIn(1, 1920) ?: return@getP
+        val width = call.getIntOrDefault("width", 1080).coerceIn(1, 1920)
         // height is optional, if not provided, it gets calculated based on the widget size.
         val height = call.parameters["height"]?.let {
-            it.toIntOrNull()?.coerceIn(1, 1920) ?: return@getP call.invalidParameter("height")
+            it.toIntOrNull()?.coerceIn(1, 1920) ?: invalidParameter("height")
         }
 
         val colors = call.parseWidgetColors(widget)
         val language = call.parseLanguage()
-        val widgetTypes = call.getValidatedWidgetTypes(widget) ?: return@getP
+        val widgetTypes = getValidatedWidgetTypes(widget)
         val ctx = createWidgetContext(widget, colors, language)
 
         val imageBytes = WidgetImageCache.getOrCreateImage(widget, widgetTypes, ctx, width, height)
@@ -164,7 +163,7 @@ fun Application.configureWidgetRoutes() = routing {
     authenticate("tokenAuth") {
 
         getP("/api/widgets", PermissionType.MANAGE_WIDGETS) {
-            val user = call.getUser() ?: return@getP call.unauthorized()
+            val user = call.getUser() ?: unauthorized()
 
             val widgets = WidgetRepo.getAllForUser(user)
             val widgetDtos = WidgetRepo.toDto(widgets)
@@ -174,37 +173,37 @@ fun Application.configureWidgetRoutes() = routing {
 
         postP("/api/widgets", PermissionType.MANAGE_WIDGETS) {
 
-            val user = call.getUser() ?: return@postP call.unauthorized()
+            val user = call.getUser() ?: unauthorized()
             val dto = call.receive<CreateWidgetDto>()
 
             val parsedTypes = dto.types.map { typeName ->
                 try {
                     WidgetType.valueOf(typeName.uppercase())
                 } catch (_: IllegalArgumentException) {
-                    return@postP call.invalidParameter("types")
+                    invalidParameter("types")
                 }
             }
 
             if (parsedTypes.isEmpty()) {
-                return@postP call.invalidParameter("types")
+                invalidParameter("types")
             }
 
             val bgColor = dto.bgColor?.let {
-                WidgetUtils.colorFromHex(it) ?: return@postP call.invalidParameter("bgColor")
+                WidgetUtils.colorFromHex(it) ?: invalidParameter("bgColor")
             }
 
             val fgColor = dto.fgColor?.let {
-                WidgetUtils.colorFromHex(it) ?: return@postP call.invalidParameter("fgColor")
+                WidgetUtils.colorFromHex(it) ?: invalidParameter("fgColor")
             }
 
             val accentColor = dto.accentColor?.let {
-                WidgetUtils.colorFromHex(it) ?: return@postP call.invalidParameter("accentColor")
+                WidgetUtils.colorFromHex(it) ?: invalidParameter("accentColor")
             }
 
             // Check that either all or none of the colors are provided
             val colorList = listOfNotNull(bgColor, fgColor, accentColor)
             if (colorList.size != 3 && colorList.isNotEmpty()) {
-                return@postP call.invalidParameter("colors")
+                invalidParameter("colors")
             }
 
             val widget = WidgetRepo.shareWidget(user, parsedTypes, bgColor, fgColor, accentColor)
@@ -212,14 +211,14 @@ fun Application.configureWidgetRoutes() = routing {
         }
 
         deleteP("/api/widgets/{id}", PermissionType.MANAGE_WIDGETS) {
-            val id = call.getStringParameter("id") ?: return@deleteP
-            val userId = call.getUserId() ?: return@deleteP call.unauthorized()
+            val id = call.getStringParameter("id")
+            val userId = call.getUserId() ?: unauthorized()
 
-            val widget = WidgetRepo.getWidget(id) ?: return@deleteP call.notFound()
+            val widget = WidgetRepo.getWidget(id) ?: notFound()
 
             val success = WidgetRepo.deleteWidget(widget, userId)
             if (!success) {
-                return@deleteP call.forbidden()
+                forbidden()
             }
 
             // Evict cached images for this widget
@@ -232,7 +231,7 @@ fun Application.configureWidgetRoutes() = routing {
     staticResources("/api/js", "js")
 
     webSocket("/api/widgets/{id}/listeningto/ws") {
-        val id = call.getStringParameter("id")
+        val id = call.parameters["id"]
             ?: return@webSocket close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "No Widget ID provided"))
         val widget = WidgetRepo.getWidget(id)
             ?: return@webSocket close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "Invalid widget ID"))

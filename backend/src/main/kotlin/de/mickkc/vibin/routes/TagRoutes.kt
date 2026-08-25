@@ -22,7 +22,7 @@ fun Application.configureTagRoutes() = routing {
         }
 
         getP("/api/tags/ids", PermissionType.VIEW_TAGS) {
-            val idsParam = call.request.queryParameters["ids"] ?: return@getP call.missingParameter("ids")
+            val idsParam = call.request.queryParameters["ids"] ?: missingParameter("ids")
             val ids = idsParam.split(",").mapNotNull { it.toLongOrNull() }
             val tags = TagRepo.getByIds(ids)
             call.respond(TagRepo.toDto(tags))
@@ -33,7 +33,7 @@ fun Application.configureTagRoutes() = routing {
             val editDto = call.receive<TagEditDto>()
 
             if (TagRepo.doesTagExist(editDto.name)) {
-                return@postP call.invalidParameter("name")
+                invalidParameter("name")
             }
 
             val createdTag = TagRepo.create(editDto)
@@ -41,13 +41,13 @@ fun Application.configureTagRoutes() = routing {
         }
 
         putP("/api/tags/{id}", PermissionType.MANAGE_TAGS) {
-            val tagId = call.getLongParameter("id") ?: return@putP
+            val tagId = call.getLongParameter("id")
             val editDto = call.receive<TagEditDto>()
 
-            val existingTag = TagRepo.getById(tagId) ?: return@putP call.notFound()
+            val existingTag = TagRepo.getById(tagId) ?: notFound()
 
             if (existingTag.name != editDto.name && TagRepo.doesTagExist(editDto.name)) {
-                return@putP call.invalidParameter("name")
+                invalidParameter("name")
             }
 
             val updatedTag = TagRepo.update(existingTag, editDto)
@@ -55,28 +55,28 @@ fun Application.configureTagRoutes() = routing {
         }
 
         deleteP("/api/tags/{id}", PermissionType.DELETE_TAGS) {
-            val tagId = call.getLongParameter("id") ?: return@deleteP
-            val existingTag = TagRepo.getById(tagId) ?: return@deleteP call.notFound()
+            val tagId = call.getLongParameter("id")
+            val existingTag = TagRepo.getById(tagId) ?: notFound()
             TagRepo.delete(existingTag)
             call.success()
         }
 
         getP("/api/tags/autocomplete", PermissionType.VIEW_TAGS) {
-            val query = call.getStringParameter("query") ?: return@getP
-            val limit = call.getIntOrDefault("limit", 10) ?: return@getP
+            val query = call.getStringParameter("query")
+            val limit = call.getIntOrDefault("limit", 10)
 
             val tagNames = TagRepo.autocomplete(query, limit)
             call.respond(tagNames)
         }
 
         getP("/api/tags/named/{name}", PermissionType.VIEW_TAGS) {
-            val name = call.getStringParameter("name")?.trim() ?: return@getP
-            val tag = TagRepo.getByName(name) ?: return@getP call.notFound()
+            val name = call.getStringParameter("name").trim()
+            val tag = TagRepo.getByName(name) ?: notFound()
             call.respond(TagRepo.toDto(tag))
         }
 
         getP("/api/tags/check/{name}", PermissionType.VIEW_TAGS) {
-            val name = call.getStringParameter("name")?.trim() ?: return@getP
+            val name = call.getStringParameter("name").trim()
             val exists = TagRepo.doesTagExist(name)
             call.success(exists)
         }

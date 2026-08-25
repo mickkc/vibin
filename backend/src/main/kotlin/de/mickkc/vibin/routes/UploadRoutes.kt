@@ -21,26 +21,15 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 @OptIn(ExperimentalEncodingApi::class)
 fun Application.configureUploadRoutes() = routing {
 
-    suspend fun RoutingCall.getValidatedUpload(): PendingUpload? {
-        val uploadId = getStringParameter("uploadId") ?: return null
+    fun RoutingCall.getValidatedUpload(): PendingUpload {
+        val uploadId = getStringParameter("uploadId")
 
-        val upload = UploadManager.getById(uploadId)
+        val upload = UploadManager.getById(uploadId) ?: notFound()
 
-        if (upload == null) {
-            notFound()
-            return null
-        }
-
-        val userId = getUserId()
-
-        if (userId == null) {
-            unauthorized()
-            return null
-        }
+        val userId = getUserId() ?: unauthorized()
 
         if (upload.uploaderId != userId) {
             forbidden()
-            return null
         }
 
         return upload
@@ -50,7 +39,7 @@ fun Application.configureUploadRoutes() = routing {
 
         getP("/api/uploads", PermissionType.UPLOAD_TRACKS) {
 
-            val userId = call.getUserId() ?: return@getP call.unauthorized()
+            val userId = call.getUserId() ?: unauthorized()
 
             val uploads = UploadManager.getUploadsByUser(userId)
 
@@ -59,28 +48,28 @@ fun Application.configureUploadRoutes() = routing {
 
         postP("/api/uploads", PermissionType.UPLOAD_TRACKS) {
 
-            val userId = call.getUserId() ?: return@postP call.unauthorized()
-            val filename = call.getStringParameter("filename") ?: return@postP
+            val userId = call.getUserId() ?: unauthorized()
+            val filename = call.getStringParameter("filename")
             val base64data = call.receiveText()
 
             try {
                 val data = Base64.decode(base64data)
 
-                val upload = UploadManager.addUpload(data, filename, userId) ?: return@postP call.unauthorized()
+                val upload = UploadManager.addUpload(data, filename, userId) ?: unauthorized()
 
                 call.respond(UploadManager.toDto(upload))
             }
             catch (_: FileAlreadyExistsException) {
-                call.conflict()
+                conflict()
             }
             catch (_: PreParseException) {
-                call.invalidParameter("file")
+                invalidParameter("file")
             }
         }
 
         putP("/api/uploads/{uploadId}/metadata", PermissionType.UPLOAD_TRACKS) {
 
-            val upload = call.getValidatedUpload() ?: return@putP
+            val upload = call.getValidatedUpload()
 
             val metadata = call.receive<TrackEditDto>()
 
@@ -89,27 +78,27 @@ fun Application.configureUploadRoutes() = routing {
                 call.respond(UploadManager.toDto(updatedUpload))
             }
             catch (_: NotFoundException) {
-                call.notFound()
+                notFound()
             }
         }
 
         deleteP("/api/uploads/{uploadId}", PermissionType.UPLOAD_TRACKS) {
 
-            val upload = call.getValidatedUpload() ?: return@deleteP
+            val upload = call.getValidatedUpload()
 
             try {
                 UploadManager.delete(upload.id)
                 call.success()
             }
             catch (_: NotFoundException) {
-                call.notFound()
+                notFound()
             }
 
         }
 
         postP("/api/uploads/{uploadId}/apply", PermissionType.UPLOAD_TRACKS) {
 
-            val upload = call.getValidatedUpload() ?: return@postP
+            val upload = call.getValidatedUpload()
 
             try {
                 val track = UploadManager.apply(upload.id)
@@ -119,15 +108,15 @@ fun Application.configureUploadRoutes() = routing {
                 call.respond(UploadResultDto(success = false, didFileAlreadyExist = true))
             }
             catch (_: NotFoundException) {
-                call.notFound()
+                notFound()
             }
         }
 
         getP("/api/uploads/tracks/{userId}", PermissionType.VIEW_TRACKS) {
-            val userId = call.getLongParameter("userId") ?: return@getP
-            val user = UserRepo.getById(userId) ?: return@getP call.notFound()
+            val userId = call.getLongParameter("userId")
+            val user = UserRepo.getById(userId) ?: notFound()
 
-            val requestingUserId = call.getUserId() ?: return@getP call.unauthorized()
+            val requestingUserId = call.getUserId() ?: unauthorized()
 
             val uploadedTracks = TrackRepo.getUploadedByUser(user.id.value, requestingUserId)
 
@@ -136,7 +125,7 @@ fun Application.configureUploadRoutes() = routing {
 
         getP("/api/uploads/{uploadId}/cover", PermissionType.UPLOAD_TRACKS) {
 
-            val upload = call.getValidatedUpload() ?: return@getP
+            val upload = call.getValidatedUpload()
 
             val coverData = UploadManager.getCoverFile(upload)
 
@@ -144,7 +133,7 @@ fun Application.configureUploadRoutes() = routing {
                 PathUtils.getDefaultImage("track", 512)?.let {
                     return@getP call.respondFile(it)
                 }
-                return@getP call.notFound()
+                notFound()
             }
 
             call.respondFile(coverData)
