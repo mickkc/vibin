@@ -384,7 +384,7 @@ SetSpeed:
 SetQueue:
   post:
     summary: Update the entire queue and play a specific track
-    operationId: setSpeed
+    operationId: setQueue
     tags:
       - Control
     security:
