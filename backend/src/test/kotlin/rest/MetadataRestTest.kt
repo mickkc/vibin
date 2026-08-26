@@ -19,8 +19,12 @@ import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.AlbumRepo
 import de.mickkc.vibin.repos.ArtistRepo
 import de.mickkc.vibin.repos.TagRepo
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpStatusCode
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -280,6 +284,63 @@ class MetadataRestTest {
         assertEquals(1, ArtistRepo.count())
         assertEquals(1, TagRepo.count())
         assertEquals(1, AlbumRepo.count())
+    }
+
+    @Test
+    fun testCreateMetadata_ArtistNameTooLong() = testApp { client ->
+        val request = CreateMetadataDto(
+            artistNames = listOf("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "Another Artist"),
+            tagNames = listOf("A tag", "Another tag"),
+            albumName = "An album"
+        )
+
+        val response = client.post("/api/metadata/create") {
+            setBody(request)
+        }
+
+        assertFalse(response.status.isSuccess())
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val bodyText = response.bodyAsText()
+        assertContains(bodyText, "\"parameterName\":\"artistNames\"")
+    }
+
+    @Test
+    fun testCreateMetadata_TagNameTooLong() = testApp { client ->
+        val request = CreateMetadataDto(
+            artistNames = listOf("An artist", "Another Artist"),
+            tagNames = listOf("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "Another tag"),
+            albumName = "An album"
+        )
+
+        val response = client.post("/api/metadata/create") {
+            setBody(request)
+        }
+
+        assertFalse(response.status.isSuccess())
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val bodyText = response.bodyAsText()
+        assertContains(bodyText, "\"parameterName\":\"tagNames\"")
+    }
+
+    @Test
+    fun testCreateMetadata_AlbumNameTooLong() = testApp { client ->
+        val request = CreateMetadataDto(
+            artistNames = listOf("An artist", "Another Artist"),
+            tagNames = listOf("A tag", "Another tag"),
+            albumName = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        )
+
+        val response = client.post("/api/metadata/create") {
+            setBody(request)
+        }
+
+        assertFalse(response.status.isSuccess())
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val bodyText = response.bodyAsText()
+        assertContains(bodyText, "\"parameterName\":\"albumName\"")
     }
 
     @Test

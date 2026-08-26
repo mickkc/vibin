@@ -34,6 +34,11 @@ fun Application.configureAlbumRoutes() = routing {
 
         postP("/api/albums", PermissionType.MANAGE_ALBUMS) {
             val createDto = call.receive<AlbumEditDto>()
+            createDto.validate()
+
+            if (createDto.title == null) {
+                missingParameter("title")
+            }
 
             val newAlbum = AlbumRepo.create(createDto)
             call.respond(AlbumRepo.toDto(newAlbum))
@@ -88,6 +93,8 @@ fun Application.configureAlbumRoutes() = routing {
 
             val albumId = call.getLongParameter("albumId")
             val editDto = call.receive<AlbumEditDto>()
+
+            editDto.validate()
 
             val updated = AlbumRepo.update(albumId, editDto) ?: notFound()
             call.respond(AlbumRepo.toDto(updated))

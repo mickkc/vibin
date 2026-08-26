@@ -64,6 +64,7 @@ fun Application.configurePlaylistRoutes() = routing {
 
         suspend fun getValidatedEditDto(call: RoutingCall): PlaylistEditDto {
             val editDto = call.receive<PlaylistEditDto>()
+            editDto.validate()
 
             if (editDto.name.isBlank()) {
                 missingParameter("name")

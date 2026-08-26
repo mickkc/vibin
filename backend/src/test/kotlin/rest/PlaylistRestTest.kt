@@ -19,7 +19,9 @@ import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.PermissionRepo
 import de.mickkc.vibin.repos.PlaylistRepo
 import de.mickkc.vibin.repos.SessionRepo
+import io.ktor.client.statement.bodyAsText
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -166,6 +168,26 @@ class PlaylistRestTest {
     }
 
     @Test
+    fun testCreatePlaylist_NameTooLong() = testApp { client ->
+
+        val result = client.post("/api/playlists") {
+            setBody(PlaylistEditDto(
+                name = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                description = "A cool playlist",
+                isPublic = true,
+                collaboratorIds = emptyList()
+            ))
+        }
+
+        assertFalse(result.status.isSuccess())
+        assertEquals(400, result.status.value)
+        assertEquals(0, PlaylistRepo.count(1))
+
+        val bodyText = result.bodyAsText()
+        assertContains(bodyText, "\"parameterName\":\"name\"")
+    }
+
+    @Test
     fun testCreatePlaylist_NoPermission() = testApp(false) { client ->
         val (user, token) = UserTestUtils.createUserAndSessionWithPermissions(
             "noperms3", "password",
@@ -239,6 +261,27 @@ class PlaylistRestTest {
         assertEquals("Updated Description", dbPlaylist.description)
         assertEquals(true, dbPlaylist.public)
         assertTrue(PlaylistRepo.checkOwnership(dbPlaylist, 1))
+    }
+
+    @Test
+    fun testUpdatePlaylist_NameTooLong() = testApp { client ->
+        val playlist = PlaylistTestUtils.createPlaylist("Old Name", false, 1)
+        assertEquals(1, PlaylistRepo.count(1))
+
+        val result = client.put("/api/playlists/${playlist.id.value}") {
+            setBody(PlaylistEditDto(
+                name = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                description = "A cool playlist",
+                isPublic = true,
+                collaboratorIds = emptyList()
+            ))
+        }
+
+        assertFalse(result.status.isSuccess())
+        assertEquals(400, result.status.value)
+
+        val bodyText = result.bodyAsText()
+        assertContains(bodyText, "\"parameterName\":\"name\"")
     }
 
     @Test

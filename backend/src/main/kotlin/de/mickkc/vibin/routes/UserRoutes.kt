@@ -53,6 +53,8 @@ fun Application.configureUserRoutes() = routing {
 
         postP("/api/users", PermissionType.CREATE_USERS) {
             val userEditDto = call.receive<UserEditDto>()
+            userEditDto.validate()
+
             val currentUser = call.getUser() ?: unauthorized()
 
             if (userEditDto.isAdmin != null && userEditDto.isAdmin && !currentUser.isAdmin)
@@ -72,6 +74,7 @@ fun Application.configureUserRoutes() = routing {
             val user = UserRepo.getById(userId) ?: notFound()
 
             val userEditDto = call.receive<UserEditDto>()
+            userEditDto.validate()
 
             if (userEditDto.isAdmin != null && userEditDto.isAdmin != user.isAdmin && !currentUser.isAdmin)
                 forbidden()
@@ -124,10 +127,10 @@ fun Application.configureUserRoutes() = routing {
         }
 
         getP("/api/users/{userId}/pfp") {
-            val requestinguserId = call.getUserId() ?: unauthorized()
+            val requestingUserId = call.getUserId() ?: unauthorized()
             val userId = call.getLongParameter("userId")
 
-            if (requestinguserId != userId && !call.hasPermissions(PermissionType.VIEW_USERS)) {
+            if (requestingUserId != userId && !call.hasPermissions(PermissionType.VIEW_USERS)) {
                 forbidden(PermissionType.VIEW_USERS)
             }
 

@@ -16,9 +16,12 @@ import de.mickkc.vibin.dto.albums.AlbumDataDto
 import de.mickkc.vibin.dto.albums.AlbumDto
 import de.mickkc.vibin.dto.albums.AlbumEditDto
 import de.mickkc.vibin.permissions.PermissionType
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpStatusCode
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class AlbumRestTest {
@@ -135,8 +138,8 @@ class AlbumRestTest {
         assertEquals(2, track2.trackNumber)
         assertEquals(1, track2.discNumber)
         assertEquals(2, track2.artists.size)
-        assertEquals(track2.artists[0].name, "Artist 1")
-        assertEquals(track2.artists[1].name, "Artist 3")
+        assertEquals("Artist 1", track2.artists[0].name)
+        assertEquals("Artist 3", track2.artists[1].name)
 
         val track3 = albumData.tracks[2]
         assertEquals("Track 3", track3.title)
@@ -240,6 +243,30 @@ class AlbumRestTest {
         assertEquals("New Description", updatedAlbum.description)
         assertEquals(2021, updatedAlbum.year)
         assertEquals(true, updatedAlbum.single)
+    }
+
+    @Test
+    fun testUpdateAlbum_TitleTooLong() = testApp { client ->
+        val album = AlbumTestUtils.createAlbum("Old Title", "Old Description", 2000, false)
+
+        val updateData = AlbumEditDto(
+            // 260 Characters is longer than the maximum allowed 255 characters
+            title = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            description = "New Description",
+            year = 2021,
+            coverUrl = null,
+            isSingle = true
+        )
+
+        val response = client.put("/api/albums/${album.id.value}") {
+            setBody(updateData)
+        }
+
+        assertFalse(response.status.isSuccess())
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val bodyText = response.bodyAsText()
+        assertContains(bodyText, "\"parameterName\":\"title\"")
     }
 
     @Test

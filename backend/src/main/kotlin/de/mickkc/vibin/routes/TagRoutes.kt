@@ -31,6 +31,7 @@ fun Application.configureTagRoutes() = routing {
         postP("/api/tags", PermissionType.CREATE_TAGS) {
 
             val editDto = call.receive<TagEditDto>()
+            editDto.validate()
 
             if (TagRepo.doesTagExist(editDto.name)) {
                 invalidParameter("name")
@@ -43,6 +44,7 @@ fun Application.configureTagRoutes() = routing {
         putP("/api/tags/{id}", PermissionType.MANAGE_TAGS) {
             val tagId = call.getLongParameter("id")
             val editDto = call.receive<TagEditDto>()
+            editDto.validate()
 
             val existingTag = TagRepo.getById(tagId) ?: notFound()
 

@@ -8,8 +8,10 @@ import utils.testApp
 import de.mickkc.vibin.dto.LoginResultDto
 import de.mickkc.vibin.repos.SessionRepo
 import de.mickkc.vibin.utils.DateTimeUtils
+import io.ktor.client.statement.bodyAsText
 import org.jetbrains.exposed.sql.transactions.transaction
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -42,6 +44,20 @@ class AuthRestTest {
         }
         assertFalse(response.status.isSuccess())
         assertEquals(HttpStatusCode.Unauthorized, response.status)
+    }
+
+    @Test
+    fun testLogin_DeviceIdTooLong_Failure() = testApp { client ->
+        val response = client.post("/api/auth/login") {
+            parameter("username", "Admin")
+            parameter("password", "admin")
+            parameter("deviceId", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+        }
+        assertFalse(response.status.isSuccess())
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val bodyText = response.bodyAsText()
+        assertContains(bodyText, "\"parameterName\":\"deviceId\"")
     }
 
     @Test
