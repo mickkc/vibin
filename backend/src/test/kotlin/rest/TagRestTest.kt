@@ -9,8 +9,11 @@ import utils.testApp
 import de.mickkc.vibin.dto.tags.TagDto
 import de.mickkc.vibin.dto.tags.TagEditDto
 import de.mickkc.vibin.permissions.PermissionType
+import io.ktor.client.statement.bodyAsText
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class TagRestTest {
@@ -260,6 +263,26 @@ class TagRestTest {
     }
 
     @Test
+    fun testCreateTag_NameTooLong() = testApp { client ->
+
+        val createDto = TagEditDto(
+            name = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            description = "Some description",
+            importance = 5
+        )
+
+        val response = client.post("/api/tags") {
+            setBody(createDto)
+        }
+
+        assertFalse(response.status.isSuccess())
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val bodyText = response.bodyAsText()
+        assertContains(bodyText, "\"parameterName\":\"name\"")
+    }
+
+    @Test
     fun testCreateTag_DuplicateNameCaseInsensitive() = testApp { client ->
         TagTestUtils.createTag("Rock", "Rock music genre")
 
@@ -377,6 +400,28 @@ class TagRestTest {
         }
 
         assertEquals(400, response.status.value)
+    }
+
+    @Test
+    fun testupdateTag_NameTooLong() = testApp { client ->
+
+        val tag = TagTestUtils.createTag("Some tag", "Some description")
+
+        val createDto = TagEditDto(
+            name = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            description = "Some description",
+            importance = 5
+        )
+
+        val response = client.put("/api/tags/${tag.id.value}") {
+            setBody(createDto)
+        }
+
+        assertFalse(response.status.isSuccess())
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val bodyText = response.bodyAsText()
+        assertContains(bodyText, "\"parameterName\":\"name\"")
     }
 
     @Test

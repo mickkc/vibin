@@ -11,7 +11,9 @@ import de.mickkc.vibin.dto.PaginatedDto
 import de.mickkc.vibin.dto.artists.ArtistEditData
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.ArtistRepo
+import io.ktor.client.statement.bodyAsText
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -104,6 +106,24 @@ class ArtistRestTest {
     }
 
     @Test
+    fun testCreateArtist_NameTooLong() = testApp { client ->
+        val data = ArtistEditData(
+            name = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            description = "An awesome new artist",
+            imageUrl = null
+        )
+
+        val response = client.post("/api/artists") {
+            setBody(data)
+        }
+        assertFalse(response.status.isSuccess())
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val bodyText = response.bodyAsText()
+        assertContains(bodyText, "\"parameterName\":\"name\"")
+    }
+
+    @Test
     fun testCreateArtist_NoPermission() = testApp(false) { client ->
         val (_, token) = UserTestUtils.createUserAndSessionWithPermissions(
             "noperms2", "password",
@@ -147,6 +167,26 @@ class ArtistRestTest {
         assertEquals(artist.id.value, updatedArtist.id)
         assertEquals("Updated Name", updatedArtist.name)
         assertEquals("An updated description", updatedArtist.description)
+    }
+
+    @Test
+    fun testUpdateArtist_NameTooLong() = testApp { client ->
+        val artist = ArtistTestUtils.createArtist("Old Name", "An old description")
+
+        val data = ArtistEditData(
+            name = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            description = "An awesome new artist",
+            imageUrl = null
+        )
+
+        val response = client.put("/api/artists/${artist.id.value}") {
+            setBody(data)
+        }
+        assertFalse(response.status.isSuccess())
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val bodyText = response.bodyAsText()
+        assertContains(bodyText, "\"parameterName\":\"name\"")
     }
 
     @Test

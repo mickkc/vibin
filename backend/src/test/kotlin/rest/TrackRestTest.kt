@@ -17,6 +17,7 @@ import de.mickkc.vibin.repos.LyricsRepo
 import de.mickkc.vibin.repos.TrackRepo
 import de.mickkc.vibin.utils.AccessCryptoUtil
 import de.mickkc.vibin.utils.PathUtils
+import io.ktor.client.statement.bodyAsText
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.createTempDirectory
 import kotlin.test.*
@@ -348,6 +349,47 @@ class TrackRestTest {
         assertNull(updatedTrack.discCount)
         assertNull(updatedTrack.year)
         assertEquals("Original comment", updatedTrack.comment)
+    }
+
+    @Test
+    fun testUpdateTrack_NameTooLong() = testApp { client ->
+        val track = TrackTestUtils.createTrack(
+            title = "Original Title",
+            album = "Original Album",
+            artists = "Original Artist",
+            trackNumber = 1,
+            trackCount = 5,
+            discNumber = 1,
+            discCount = 1,
+            year = 2020,
+            comment = "Original comment",
+        )
+
+        val editDto = TrackEditDto(
+            title = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            explicit = null,
+            trackNumber = null,
+            trackCount = null,
+            discNumber = null,
+            discCount = null,
+            year = null,
+            comment = null,
+            imageUrl = null,
+            album = null,
+            artists = null,
+            tags = null,
+            lyrics = null
+        )
+
+        val response = client.put("/api/tracks/${track.id.value}") {
+            setBody(editDto)
+        }
+
+        assertFalse(response.status.isSuccess())
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val bodyText = response.bodyAsText()
+        assertContains(bodyText, "\"parameterName\":\"title\"")
     }
 
     @Test

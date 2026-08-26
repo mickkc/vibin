@@ -1,17 +1,18 @@
 package rest
 
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.http.*
-import org.jetbrains.exposed.sql.transactions.transaction
-import utils.UserTestUtils
-import utils.testApp
 import de.mickkc.vibin.auth.CryptoUtil
 import de.mickkc.vibin.dto.PaginatedDto
 import de.mickkc.vibin.dto.users.UserDto
 import de.mickkc.vibin.dto.users.UserEditDto
 import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.routes.PaginatedSearchParams
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import org.jetbrains.exposed.sql.transactions.transaction
+import utils.UserTestUtils
+import utils.testApp
 import kotlin.test.*
 
 class UserRestTest {
@@ -109,6 +110,72 @@ class UserRestTest {
             assertNull(user.profilePicture)
             assertContentEquals(CryptoUtil.hashPassword("password123", user.salt), user.passwordHash)
         }
+    }
+
+    @Test
+    fun testCreateUser_UsernameTooLong() = testApp { client ->
+        val response = client.post("/api/users") {
+            setBody(UserEditDto(
+                username = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                displayName = "Test User",
+                description = "A test user",
+                email = null,
+                isAdmin = false,
+                isActive = null,
+                profilePictureUrl = null,
+                oldPassword = null,
+                password = "password123"
+            ))
+        }
+        assertFalse(response.status.isSuccess())
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val bodyText = response.bodyAsText()
+        assertContains(bodyText, "\"parameterName\":\"username\"")
+    }
+
+    @Test
+    fun testCreateUser_DisplayNameTooLong() = testApp { client ->
+        val response = client.post("/api/users") {
+            setBody(UserEditDto(
+                username = "test-user",
+                displayName = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                description = "A test user",
+                email = null,
+                isAdmin = false,
+                isActive = null,
+                profilePictureUrl = null,
+                oldPassword = null,
+                password = "password123"
+            ))
+        }
+        assertFalse(response.status.isSuccess())
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val bodyText = response.bodyAsText()
+        assertContains(bodyText, "\"parameterName\":\"displayName\"")
+    }
+
+    @Test
+    fun testCreateUser_EmailTooLong() = testApp { client ->
+        val response = client.post("/api/users") {
+            setBody(UserEditDto(
+                username = "test-user",
+                displayName = "Test user",
+                description = "A test user",
+                email = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA@AAA.com",
+                isAdmin = false,
+                isActive = null,
+                profilePictureUrl = null,
+                oldPassword = null,
+                password = "password123"
+            ))
+        }
+        assertFalse(response.status.isSuccess())
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val bodyText = response.bodyAsText()
+        assertContains(bodyText, "\"parameterName\":\"email\"")
     }
 
     @Test
@@ -253,6 +320,75 @@ class UserRestTest {
             assertContentEquals(testUser.salt, user.salt) // unchanged
             assertContentEquals(testUser.passwordHash, user.passwordHash) // unchanged
         }
+    }
+
+    @Test
+    fun testEditUser_UsernameTooLong() = testApp { client ->
+        val testUser = UserTestUtils.createTestUser("user", "password123")
+        val response = client.put("/api/users/${testUser.id.value}") {
+            setBody(UserEditDto(
+                username = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                displayName = "Test User",
+                description = "A test user",
+                email = null,
+                isAdmin = false,
+                isActive = null,
+                profilePictureUrl = null,
+                oldPassword = null,
+                password = "password123"
+            ))
+        }
+        assertFalse(response.status.isSuccess())
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val bodyText = response.bodyAsText()
+        assertContains(bodyText, "\"parameterName\":\"username\"")
+    }
+
+    @Test
+    fun testEditUser_DisplayNameTooLong() = testApp { client ->
+        val testUser = UserTestUtils.createTestUser("user", "password123")
+        val response = client.put("/api/users/${testUser.id.value}") {
+            setBody(UserEditDto(
+                username = "test-user",
+                displayName = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                description = "A test user",
+                email = null,
+                isAdmin = false,
+                isActive = null,
+                profilePictureUrl = null,
+                oldPassword = null,
+                password = "password123"
+            ))
+        }
+        assertFalse(response.status.isSuccess())
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val bodyText = response.bodyAsText()
+        assertContains(bodyText, "\"parameterName\":\"displayName\"")
+    }
+
+    @Test
+    fun testEditUser_EmailTooLong() = testApp { client ->
+        val testUser = UserTestUtils.createTestUser("user", "password123")
+        val response = client.put("/api/users/${testUser.id.value}") {
+            setBody(UserEditDto(
+                username = "test-user",
+                displayName = "Test User",
+                description = "A test user",
+                email = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA@AAA.com",
+                isAdmin = false,
+                isActive = null,
+                profilePictureUrl = null,
+                oldPassword = null,
+                password = "password123"
+            ))
+        }
+        assertFalse(response.status.isSuccess())
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val bodyText = response.bodyAsText()
+        assertContains(bodyText, "\"parameterName\":\"email\"")
     }
 
     @Test
