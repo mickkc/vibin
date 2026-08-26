@@ -46,6 +46,7 @@ fun Application.configureMetadataRoutes() = routing {
 
         postP("/api/metadata/create", PermissionType.MANAGE_TRACKS) {
             val request = call.receive<CreateMetadataDto>()
+            request.validate()
 
             val artists = request.artistNames.map { ArtistRepo.getOrCreateArtist(it) }
             val tags = request.tagNames.map { TagRepo.getOrCreateTag(it) }

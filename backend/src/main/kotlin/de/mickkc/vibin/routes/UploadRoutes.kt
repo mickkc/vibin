@@ -72,6 +72,7 @@ fun Application.configureUploadRoutes() = routing {
             val upload = call.getValidatedUpload()
 
             val metadata = call.receive<TrackEditDto>()
+            metadata.validate()
 
             try {
                 val updatedUpload = UploadManager.setMetadata(upload.id, metadata)

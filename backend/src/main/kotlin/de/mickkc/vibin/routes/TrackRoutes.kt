@@ -60,6 +60,7 @@ fun Application.configureTrackRoutes() = routing {
         putP("/api/tracks/{trackId}", PermissionType.MANAGE_TRACKS) {
             val trackId = call.getLongParameter("trackId")
             val editDto = call.receive<TrackEditDto>()
+            editDto.validate()
 
             val updated = TrackRepo.update(trackId, editDto) ?: notFound()
             call.respond(TrackRepo.toDto(updated))

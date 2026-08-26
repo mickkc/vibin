@@ -39,7 +39,7 @@ fun Application.configureSettingRoutes() = routing {
                 val userId = call.getUserId() ?: unauthorized()
                 val settingValue = call.receive<String>()
                 val parsedValue = userSetting.parser(settingValue)
-                    ?: invalidParameter("body",)
+                    ?: invalidParameter("body")
 
                 SettingsRepo.updateUserSetting(userSetting, userId, settingValue)
                 return@putP call.respond(KeyValueDto(userSetting.key, parsedValue))

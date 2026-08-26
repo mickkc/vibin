@@ -44,6 +44,8 @@ fun Application.configureArtistRoutes() = routing {
 
         postP("/api/artists", PermissionType.MANAGE_ARTISTS) {
             val data = call.receive<ArtistEditData>()
+            data.validate()
+
             try {
                 val updatedArtist = ArtistRepo.updateOrCreateArtist(null, data)
                 call.respond(ArtistRepo.toDto(updatedArtist))
@@ -59,6 +61,9 @@ fun Application.configureArtistRoutes() = routing {
         putP("/api/artists/{id}", PermissionType.MANAGE_ARTISTS) {
             val id = call.getLongParameter("id")
             val data = call.receive<ArtistEditData>()
+
+            data.validate()
+
             try {
                 val updatedArtist = ArtistRepo.updateOrCreateArtist(id, data)
                 call.respond(ArtistRepo.toDto(updatedArtist))
