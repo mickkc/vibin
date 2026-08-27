@@ -72,6 +72,7 @@
 4. You can now access the application at `http://localhost:8080`. (Or the port you specified in the docker-compose.yml file.)
 5. Login with the default credentials (username `Admin`, password `admin`)
 6. CHANGE THE PASSWORD OF THE ADMIN USER IMMEDIATELY!
+7. Configure the [metadata settings](https://vibin.rip/docs/config#metadata-settings) and run the [first scan](https://vibin.rip/docs/first-scan) to add your library.
 
 > [!NOTE]
 > For other installation methods, check out the [installation wiki page](https://vibin.rip/docs/installation).
