@@ -26,6 +26,7 @@ val supportedAppVersions: List<String>
     get() = listOf("0.0.1-beta.12", "0.0.1-beta.13", "0.0.1-beta.14")
 
 fun Application.mainModule() {
+    configureLogging()
     configureDatabase()
     module()
 }
