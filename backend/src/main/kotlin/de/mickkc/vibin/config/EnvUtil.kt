@@ -98,4 +98,5 @@ object EnvUtil {
     val SERVER_PORT = EnvKey("SERVER_PORT", 8080, String::toIntOrNull)
     val EXTERNAL_URL = EnvKey("EXTERNAL_URL", null, String::trim)
     val SERVER_LANGUAGE = EnvKey("SERVER_LANGUAGE", "en", String::trim)
+    val LOG_LEVEL = EnvKey("LOG_LEVEL", "info", String::trim)
 }
