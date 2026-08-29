@@ -99,9 +99,9 @@ object SecurityRepo {
      * @param deviceIdHash The device ID hash to invalidate all messages for
      * @param user The user to invalidate messages for
      */
-    fun deleteLoginNotificationsWithDeviceId(deviceIdHash: ByteArray, user: UserEntity) = transaction {
+    fun deleteLoginNotificationsWithDeviceId(deviceIdHash: ByteArray, deviceName: String, user: UserEntity) = transaction {
         LoginNotificationEntity
-            .find { (LoginNotificationTable.deviceIdHash eq deviceIdHash) and (LoginNotificationTable.sessionId inSubQuery SessionTable
+            .find { (LoginNotificationTable.deviceIdHash eq deviceIdHash) and (LoginNotificationTable.deviceName eq deviceName) and (LoginNotificationTable.sessionId inSubQuery SessionTable
                 .select(SessionTable.id)
                 .where { SessionTable.userId eq user.id.value })
             }
@@ -128,12 +128,14 @@ object SecurityRepo {
      * @param notificationEntity The message that has been sent to the user via Email.
      */
     fun invalidateSessionsFromNotification(notificationEntity: LoginNotificationEntity) = transaction {
-        SessionEntity.find {
-            (SessionTable.userId eq notificationEntity.session.user.id) and
-            (SessionTable.deviceIdhash notInSubQuery TrustedDeviceIdTable.select(TrustedDeviceIdTable.deviceIdHash).where {
-                TrustedDeviceIdTable.userId eq notificationEntity.session.user.id
-            })
-        }
-        .forEach { it.delete() }
+        val trustedPairs = TrustedDeviceIdTable
+            .select(TrustedDeviceIdTable.deviceIdHash, TrustedDeviceIdTable.deviceName)
+            .where { TrustedDeviceIdTable.userId eq notificationEntity.session.user.id }
+            .map { it[TrustedDeviceIdTable.deviceIdHash].toList() to it[TrustedDeviceIdTable.deviceName] } // .toList() is needed since kotlin does not support .equals() for ByteArrays.
+            .toSet()
+
+        SessionEntity.find { SessionTable.userId eq notificationEntity.session.user.id }
+            .filter { (it.deviceIdHash?.toList() to it.deviceName) !in trustedPairs }
+            .forEach { it.delete() }
     }
 }

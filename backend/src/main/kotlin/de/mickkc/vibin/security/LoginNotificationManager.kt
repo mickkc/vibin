@@ -148,7 +148,7 @@ object LoginNotificationManager {
         val user = SecurityRepo.getUserFromNotification(notification)
 
         SecurityRepo.trustDeviceId(notification.deviceIdHash, notification.deviceName, user)
-        SecurityRepo.deleteLoginNotificationsWithDeviceId(notification.deviceIdHash, user)
+        SecurityRepo.deleteLoginNotificationsWithDeviceId(notification.deviceIdHash, notification.deviceName, user)
     }
 
     /**
@@ -180,7 +180,7 @@ object LoginNotificationManager {
         }
 
         SecurityRepo.invalidateSessionsFromNotification(notification)
-        SecurityRepo.deleteLoginNotificationsWithDeviceId(notification.deviceIdHash, user)
+        SecurityRepo.deleteLoginNotificationsWithDeviceId(notification.deviceIdHash, notification.deviceName, user)
     }
 
     fun isLoginNotificationTokenValid(token: String): Boolean = withLock(token) {
