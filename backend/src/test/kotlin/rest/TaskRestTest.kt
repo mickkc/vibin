@@ -401,11 +401,11 @@ class TaskRestTest {
         transaction {
             // 1 session for the current user (not expired),
             // 2 expired sessions (last used before now minus 1 week),
-            SessionRepo.addSession(user, "token1", "deviceId").lastUsed = DateTimeUtils.now() - 14.days.inWholeSeconds
-            SessionRepo.addSession(user, "token2", "deviceId").lastUsed = DateTimeUtils.now() - 8.days.inWholeSeconds
+            SessionRepo.addSession(user, "token1", "deviceId", "Test Device").lastUsed = DateTimeUtils.now() - 14.days.inWholeSeconds
+            SessionRepo.addSession(user, "token2", "deviceId", "Test Device").lastUsed = DateTimeUtils.now() - 8.days.inWholeSeconds
 
             // 1 used before, but still valid
-            SessionRepo.addSession(user, "token3", "deviceId").lastUsed = DateTimeUtils.now() - 4.days.inWholeSeconds
+            SessionRepo.addSession(user, "token3", "deviceId", "Test Device").lastUsed = DateTimeUtils.now() - 4.days.inWholeSeconds
         }
 
         assertEquals(4L, SessionRepo.count())
