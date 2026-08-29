@@ -12,6 +12,7 @@ object SessionTable : LongIdTable("session") {
     val userId = reference("user_id", UserTable)
     val token = varchar("token", 64).uniqueIndex()
     var deviceIdhash = binary("device_id_hash", 256).nullable()
+    var deviceName = varchar("device_name", 255)
     val createdAt = long("created_at").clientDefault { DateTimeUtils.now() }
     val lastUsed = long("last_used").clientDefault { DateTimeUtils.now() }
 }
@@ -29,6 +30,7 @@ class SessionEntity(id: EntityID<Long>) : LongEntity(id) {
     var user by UserEntity referencedOn SessionTable.userId
     var token by SessionTable.token
     var deviceIdHash by SessionTable.deviceIdhash
+    var deviceName by SessionTable.deviceName
     var createdAt by SessionTable.createdAt
     var lastUsed by SessionTable.lastUsed
 

@@ -29,12 +29,13 @@ object SessionRepo {
      * @param token The token for the new session.
      * @return The newly created [SessionEntity].
      */
-    fun addSession(user: UserEntity, token: String, deviceId: String): SessionEntity = transaction {
+    fun addSession(user: UserEntity, token: String, deviceId: String, deviceName: String): SessionEntity = transaction {
         val hashedDeviceId = CryptoUtil.hashPassword(deviceId, user.salt)
         SessionEntity.new {
             this.user = user
             this.token = token
             this.deviceIdHash = hashedDeviceId
+            this.deviceName = deviceName
         }
     }
 

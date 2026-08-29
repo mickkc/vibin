@@ -21,10 +21,10 @@ object SecurityRepo {
      * @param deviceId The device ID to check
      * @return true if the device ID is in the list of trusted IDs, false if not
      */
-    fun isDeviceIdTrusted(deviceId: String, user: UserEntity): Boolean = transaction {
+    fun isDeviceIdTrusted(deviceId: String, deviceName: String, user: UserEntity): Boolean = transaction {
         val hashed = CryptoUtil.hashPassword(deviceId, user.salt)
         TrustedDeviceIdTable.select(TrustedDeviceIdTable.id)
-            .where { (TrustedDeviceIdTable.deviceIdHash eq hashed) and (TrustedDeviceIdTable.userId eq user.id.value) }
+            .where { (TrustedDeviceIdTable.deviceIdHash eq hashed) and (TrustedDeviceIdTable.userId eq user.id.value) and (TrustedDeviceIdTable.deviceName eq deviceName) }
             .any()
     }
 
@@ -53,7 +53,7 @@ object SecurityRepo {
      * @param session The session created by the login (used to invalidate later)
      * @param user The user the mail has been sent to
      */
-    fun sentLoginNotificationEmail(deviceId: String, token: String, session: SessionEntity, user: UserEntity): LoginNotificationEntity = transaction {
+    fun sentLoginNotificationEmail(deviceId: String, deviceName: String, token: String, session: SessionEntity, user: UserEntity): LoginNotificationEntity = transaction {
 
         val hashedDeviceId = CryptoUtil.hashPassword(deviceId, user.salt)
         val hashedToken = CryptoUtil.hashPassword(token, user.salt)
@@ -62,6 +62,7 @@ object SecurityRepo {
             this.tokenHash = hashedToken
             this.session = session
             this.deviceIdHash = hashedDeviceId
+            this.deviceName = deviceName
         }
     }
 

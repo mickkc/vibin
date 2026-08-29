@@ -9,7 +9,7 @@ import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.security.LoginNotificationEntity
 import de.mickkc.vibin.mail.MailLayout
 import de.mickkc.vibin.mail.MailSender
-import de.mickkc.vibin.mail.SingleParagraphMailContent
+import de.mickkc.vibin.mail.NewLoginMailContent
 import de.mickkc.vibin.repos.SecurityRepo
 import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.security.exception.LoginNotificationAlreadyHandledException
@@ -57,8 +57,8 @@ object LoginNotificationManager {
      * @param session The session the Email should be sent for.
      * @param user The user to send the Email to, if they have an Email address.
      */
-    fun sendIfNotTrusted(deviceId: String, session: SessionEntity, user: UserEntity) {
-        if (SecurityRepo.isDeviceIdTrusted(deviceId, user)) {
+    fun sendIfNotTrusted(deviceId: String, deviceName: String, session: SessionEntity, user: UserEntity) {
+        if (SecurityRepo.isDeviceIdTrusted(deviceId, deviceName, user)) {
             return
         }
 
@@ -100,14 +100,14 @@ object LoginNotificationManager {
                             url = "$externalUrl/api/mail/trust-device?tk=$invalidationToken"
                         )
                         content {
-                            insert(SingleParagraphMailContent("mails.new_sign_in.body")) {}
+                            insert(NewLoginMailContent(deviceName)) {}
                         }
                     }
                 }
             }
         )
 
-        SecurityRepo.sentLoginNotificationEmail(deviceId, invalidationToken, session, user)
+        SecurityRepo.sentLoginNotificationEmail(deviceId, deviceName, invalidationToken, session, user)
         logger.info("Sent login notification Email for user ${user.username}.")
     }
 
