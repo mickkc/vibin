@@ -15,6 +15,8 @@ import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.security.exception.LoginNotificationAlreadyHandledException
 import de.mickkc.vibin.security.exception.LoginNotificationExpiredException
 import de.mickkc.vibin.settings.Settings
+import de.mickkc.vibin.settings.server.IncludeIpInLoginNotification
+import de.mickkc.vibin.settings.server.IncludeLocationInLoginNotification
 import de.mickkc.vibin.settings.server.LoginNotificationTokenValidity
 import de.mickkc.vibin.settings.user.SendMailOnNewLogin
 import de.mickkc.vibin.templates.TemplateTranslator
@@ -57,7 +59,7 @@ object LoginNotificationManager {
      * @param session The session the Email should be sent for.
      * @param user The user to send the Email to, if they have an Email address.
      */
-    fun sendIfNotTrusted(deviceId: String, deviceName: String, session: SessionEntity, user: UserEntity) {
+    suspend fun sendIfNotTrusted(deviceId: String, deviceName: String, ipFromHeader: String, session: SessionEntity, user: UserEntity) {
         if (SecurityRepo.isDeviceIdTrusted(deviceId, deviceName, user)) {
             return
         }
@@ -83,6 +85,8 @@ object LoginNotificationManager {
         }
 
         val invalidationToken = CryptoUtil.createToken(64)
+        val ip = IpLookupManager.findIp(ipFromHeader)
+        val location = if (ip != null && Settings.get(IncludeLocationInLoginNotification)) IpLookupManager.lookupIpAddress(ip) else null
 
         MailSender.sendMail(
             to = user.email!!,
@@ -100,7 +104,11 @@ object LoginNotificationManager {
                             url = "$externalUrl/api/mail/trust-device?tk=$invalidationToken"
                         )
                         content {
-                            insert(NewLoginMailContent(deviceName)) {}
+                            insert(NewLoginMailContent(
+                                deviceName = deviceName,
+                                ip = if (Settings.get(IncludeIpInLoginNotification)) ip else null,
+                                ipLocation = location
+                            )) {}
                         }
                     }
                 }

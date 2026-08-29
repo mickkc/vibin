@@ -182,6 +182,20 @@ object LoginNotificationTokenValidity : ServerSetting<Long>(
     defaultValue = 3.hours.inWholeSeconds
 )
 
+object IncludeIpInLoginNotification : ServerSetting<Boolean>(
+    key = "include_ip_in_login_notification",
+    parser = { value -> value.toBoolean() },
+    serializer = { value -> value.toString() },
+    defaultValue = false
+)
+
+object IncludeLocationInLoginNotification : ServerSetting<Boolean>(
+    key = "include_location_in_login_notification",
+    parser = { value -> value.toBoolean() },
+    serializer = { value -> value.toString() },
+    defaultValue = false
+)
+
 object SessionExpirationDuration : ServerSetting<Long>(
     key = "session_expiration_validity",
     parser = { value -> value.toLong() },

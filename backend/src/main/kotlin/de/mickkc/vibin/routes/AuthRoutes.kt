@@ -58,7 +58,7 @@ fun Application.configureAuthRoutes() = routing {
         val session = SessionRepo.addSession(user, token, deviceId, deviceName)
 
         logger.info("Successful login for user: $username")
-        LoginNotificationManager.sendIfNotTrusted(deviceId, deviceName, session, user)
+        LoginNotificationManager.sendIfNotTrusted(deviceId, deviceName, call.getClientId(), session, user)
 
         call.respond(LoginResultDto(
             success = true,
