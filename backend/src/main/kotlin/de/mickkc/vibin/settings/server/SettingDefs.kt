@@ -26,6 +26,8 @@ val serverSettings = listOf(
     AlbumMetadataSource,
     LyricsMetadataSource,
     LoginNotificationTokenValidity,
+    IncludeIpInLoginNotification,
+    IncludeLocationInLoginNotification,
     SessionExpirationDuration
 )
 
