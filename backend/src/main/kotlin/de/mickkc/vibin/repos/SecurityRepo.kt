@@ -10,7 +10,7 @@ import de.mickkc.vibin.db.security.TrustedDeviceIdTable
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insertIgnore
+import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object SecurityRepo {
@@ -38,7 +38,17 @@ object SecurityRepo {
      * @param user The user to trust this device ID for
      */
     fun trustDeviceId(hashedDeviceId: ByteArray, deviceNameStr: String, user: UserEntity) = transaction {
-        TrustedDeviceIdTable.insertIgnore {
+        val alreadyTrusted = TrustedDeviceIdTable.select(TrustedDeviceIdTable.id)
+            .where {
+                (TrustedDeviceIdTable.deviceIdHash eq hashedDeviceId) and
+                (TrustedDeviceIdTable.userId eq user.id.value) and
+                (TrustedDeviceIdTable.deviceName eq deviceNameStr)
+            }
+            .any()
+
+        if (alreadyTrusted) return@transaction
+
+        TrustedDeviceIdTable.insert {
             it[deviceIdHash] = hashedDeviceId
             it[userId] = user.id.value
             it[deviceName] = deviceNameStr
