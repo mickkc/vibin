@@ -34,12 +34,14 @@ object SecurityRepo {
      * Trusted device IDs will not cause a notification to be sent when logging in with them.
      *
      * @param hashedDeviceId The hashed device ID (wit the user's salt) to trust
+     * @param deviceNameStr The name of the device
      * @param user The user to trust this device ID for
      */
-    fun trustDeviceId(hashedDeviceId: ByteArray, user: UserEntity) = transaction {
+    fun trustDeviceId(hashedDeviceId: ByteArray, deviceNameStr: String, user: UserEntity) = transaction {
         TrustedDeviceIdTable.insertIgnore {
             it[deviceIdHash] = hashedDeviceId
             it[userId] = user.id.value
+            it[deviceName] = deviceNameStr
         }
     }
 

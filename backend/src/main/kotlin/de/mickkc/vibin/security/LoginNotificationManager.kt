@@ -139,7 +139,7 @@ object LoginNotificationManager {
 
         val user = SecurityRepo.getUserFromNotification(notification)
 
-        SecurityRepo.trustDeviceId(notification.deviceIdHash, user)
+        SecurityRepo.trustDeviceId(notification.deviceIdHash, notification.deviceName, user)
         SecurityRepo.deleteLoginNotificationsWithDeviceId(notification.deviceIdHash, user)
     }
 
