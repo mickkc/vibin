@@ -38,6 +38,7 @@ fun Application.configureAuthRoutes() = routing {
         val username = call.getStringParameter("username")
         val password = call.getStringParameter("password")
         val deviceId = call.getStringParameter("deviceId")
+        val deviceName = call.getStringParameter("deviceName").take(255)
 
         if (deviceId.length > 32) {
             invalidParameter("deviceId", "deviceId.length <= 32")
@@ -54,10 +55,10 @@ fun Application.configureAuthRoutes() = routing {
         }
 
         val token = CryptoUtil.createToken()
-        val session = SessionRepo.addSession(user, token, deviceId)
+        val session = SessionRepo.addSession(user, token, deviceId, deviceName)
 
         logger.info("Successful login for user: $username")
-        LoginNotificationManager.sendIfNotTrusted(deviceId, session, user)
+        LoginNotificationManager.sendIfNotTrusted(deviceId, deviceName, call.getClientId(), session, user)
 
         call.respond(LoginResultDto(
             success = true,

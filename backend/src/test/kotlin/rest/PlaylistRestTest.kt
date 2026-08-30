@@ -291,7 +291,7 @@ class PlaylistRestTest {
         val playlist = PlaylistTestUtils.createPlaylist("Old Name", false, 1, collaborator.id.value)
         assertEquals(1, PlaylistRepo.count(1))
 
-        SessionRepo.addSession(collaborator, "collab3-session-token", "deviceId")
+        SessionRepo.addSession(collaborator, "collab3-session-token", "deviceId", "Test Device")
 
         val result = client.put("/api/playlists/${playlist.id.value}") {
             bearerAuth("collab3-session-token")
@@ -322,7 +322,7 @@ class PlaylistRestTest {
         assertEquals(1, PlaylistRepo.count(1))
 
         PermissionRepo.addPermission(collaborator.id.value, PermissionType.EDIT_COLLABORATIVE_PLAYLISTS)
-        SessionRepo.addSession(collaborator, "collab4-session-token", "deviceId")
+        SessionRepo.addSession(collaborator, "collab4-session-token", "deviceId", "Test Device")
 
         val result = client.put("/api/playlists/${playlist.id.value}") {
             bearerAuth("collab4-session-token")
@@ -466,7 +466,7 @@ class PlaylistRestTest {
         val playlist = PlaylistTestUtils.createPlaylist("Not My Playlist", false, 1)
         assertEquals(1, PlaylistRepo.count(1))
 
-        SessionRepo.addSession(nonOwner, "nonowner-session-token", "deviceId")
+        SessionRepo.addSession(nonOwner, "nonowner-session-token", "deviceId", "Test Device")
         val result = client.delete("/api/playlists/${playlist.id.value}") {
             bearerAuth("nonowner-session-token")
         }
@@ -481,7 +481,7 @@ class PlaylistRestTest {
         val playlist = PlaylistTestUtils.createPlaylist("Collab Playlist", false, 1, collaborator.id.value)
         assertEquals(1, PlaylistRepo.count(1))
 
-        SessionRepo.addSession(collaborator, "collab5-session-token", "deviceId")
+        SessionRepo.addSession(collaborator, "collab5-session-token", "deviceId", "Test Device")
         val result = client.delete("/api/playlists/${playlist.id.value}") {
             bearerAuth("collab5-session-token")
         }
@@ -497,7 +497,7 @@ class PlaylistRestTest {
         assertEquals(1, PlaylistRepo.count(1))
 
         PermissionRepo.addPermission(collaborator.id.value, PermissionType.DELETE_COLLABORATIVE_PLAYLISTS)
-        SessionRepo.addSession(collaborator, "collab6-session-token", "deviceId")
+        SessionRepo.addSession(collaborator, "collab6-session-token", "deviceId", "Test Device")
         val result = client.delete("/api/playlists/${playlist.id.value}") {
             bearerAuth("collab6-session-token")
         }

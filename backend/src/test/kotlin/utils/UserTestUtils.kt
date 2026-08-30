@@ -30,7 +30,7 @@ object UserTestUtils {
     suspend fun createUserWithSession(username: String, password: String): Pair<UserEntity, String> {
         val user = createTestUser(username, password)
         val sessionToken = CryptoUtil.createToken()
-        SessionRepo.addSession(user, sessionToken, "deviceId")
+        SessionRepo.addSession(user, sessionToken, "deviceId", "Test Device")
         return user to sessionToken
     }
 

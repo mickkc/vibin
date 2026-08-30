@@ -12,6 +12,7 @@ object LoginNotificationTable : LongIdTable("login_notification") {
     val tokenHash = binary("token_hash", 256)
     val sessionId = reference("session_id", SessionTable)
     val deviceIdHash = binary("device_id_hash", 256)
+    val deviceName = varchar("device_name", 255)
     val createdAt = long("created_at").clientDefault { DateTimeUtils.now() }
 }
 
@@ -21,5 +22,6 @@ class LoginNotificationEntity (id: EntityID<Long>) : LongEntity(id) {
     var tokenHash by LoginNotificationTable.tokenHash
     var session by SessionEntity.Companion referencedOn LoginNotificationTable.sessionId
     var deviceIdHash by LoginNotificationTable.deviceIdHash
+    var deviceName by LoginNotificationTable.deviceName
     var createdAt by LoginNotificationTable.createdAt
 }

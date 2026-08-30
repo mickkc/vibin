@@ -26,6 +26,8 @@ val serverSettings = listOf(
     AlbumMetadataSource,
     LyricsMetadataSource,
     LoginNotificationTokenValidity,
+    IncludeIpInLoginNotification,
+    IncludeLocationInLoginNotification,
     SessionExpirationDuration
 )
 
@@ -180,6 +182,20 @@ object LoginNotificationTokenValidity : ServerSetting<Long>(
     parser = { value -> value.toLong() },
     serializer = { value -> value.toString() },
     defaultValue = 3.hours.inWholeSeconds
+)
+
+object IncludeIpInLoginNotification : ServerSetting<Boolean>(
+    key = "include_ip_in_login_notification",
+    parser = { value -> value.toBoolean() },
+    serializer = { value -> value.toString() },
+    defaultValue = false
+)
+
+object IncludeLocationInLoginNotification : ServerSetting<Boolean>(
+    key = "include_location_in_login_notification",
+    parser = { value -> value.toBoolean() },
+    serializer = { value -> value.toString() },
+    defaultValue = false
 )
 
 object SessionExpirationDuration : ServerSetting<Long>(

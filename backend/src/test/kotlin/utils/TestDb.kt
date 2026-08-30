@@ -25,7 +25,7 @@ fun initTestDb() {
     createDefaultAdminUser()
 
     val user = UserRepo.getById(1)!!
-    SessionRepo.addSession(user, testToken, "defaultDeviceId")
+    SessionRepo.addSession(user, testToken, "defaultDeviceId", "Test Device")
 
     SettingsRepo.updateServerSetting(AlbumMetadataFetchType, MetadataFetchingType.NONE.name)
     SettingsRepo.updateServerSetting(ArtistMetadataFetchType, MetadataFetchingType.NONE.name)

@@ -10,7 +10,7 @@ import de.mickkc.vibin.db.security.TrustedDeviceIdTable
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insertIgnore
+import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object SecurityRepo {
@@ -21,10 +21,10 @@ object SecurityRepo {
      * @param deviceId The device ID to check
      * @return true if the device ID is in the list of trusted IDs, false if not
      */
-    fun isDeviceIdTrusted(deviceId: String, user: UserEntity): Boolean = transaction {
+    fun isDeviceIdTrusted(deviceId: String, deviceName: String, user: UserEntity): Boolean = transaction {
         val hashed = CryptoUtil.hashPassword(deviceId, user.salt)
         TrustedDeviceIdTable.select(TrustedDeviceIdTable.id)
-            .where { (TrustedDeviceIdTable.deviceIdHash eq hashed) and (TrustedDeviceIdTable.userId eq user.id.value) }
+            .where { (TrustedDeviceIdTable.deviceIdHash eq hashed) and (TrustedDeviceIdTable.userId eq user.id.value) and (TrustedDeviceIdTable.deviceName eq deviceName) }
             .any()
     }
 
@@ -34,12 +34,24 @@ object SecurityRepo {
      * Trusted device IDs will not cause a notification to be sent when logging in with them.
      *
      * @param hashedDeviceId The hashed device ID (wit the user's salt) to trust
+     * @param deviceNameStr The name of the device
      * @param user The user to trust this device ID for
      */
-    fun trustDeviceId(hashedDeviceId: ByteArray, user: UserEntity) = transaction {
-        TrustedDeviceIdTable.insertIgnore {
+    fun trustDeviceId(hashedDeviceId: ByteArray, deviceNameStr: String, user: UserEntity) = transaction {
+        val alreadyTrusted = TrustedDeviceIdTable.select(TrustedDeviceIdTable.id)
+            .where {
+                (TrustedDeviceIdTable.deviceIdHash eq hashedDeviceId) and
+                (TrustedDeviceIdTable.userId eq user.id.value) and
+                (TrustedDeviceIdTable.deviceName eq deviceNameStr)
+            }
+            .any()
+
+        if (alreadyTrusted) return@transaction
+
+        TrustedDeviceIdTable.insert {
             it[deviceIdHash] = hashedDeviceId
             it[userId] = user.id.value
+            it[deviceName] = deviceNameStr
         }
     }
 
@@ -53,7 +65,7 @@ object SecurityRepo {
      * @param session The session created by the login (used to invalidate later)
      * @param user The user the mail has been sent to
      */
-    fun sentLoginNotificationEmail(deviceId: String, token: String, session: SessionEntity, user: UserEntity): LoginNotificationEntity = transaction {
+    fun sentLoginNotificationEmail(deviceId: String, deviceName: String, token: String, session: SessionEntity, user: UserEntity): LoginNotificationEntity = transaction {
 
         val hashedDeviceId = CryptoUtil.hashPassword(deviceId, user.salt)
         val hashedToken = CryptoUtil.hashPassword(token, user.salt)
@@ -62,6 +74,7 @@ object SecurityRepo {
             this.tokenHash = hashedToken
             this.session = session
             this.deviceIdHash = hashedDeviceId
+            this.deviceName = deviceName
         }
     }
 
@@ -96,9 +109,9 @@ object SecurityRepo {
      * @param deviceIdHash The device ID hash to invalidate all messages for
      * @param user The user to invalidate messages for
      */
-    fun deleteLoginNotificationsWithDeviceId(deviceIdHash: ByteArray, user: UserEntity) = transaction {
+    fun deleteLoginNotificationsWithDeviceId(deviceIdHash: ByteArray, deviceName: String, user: UserEntity) = transaction {
         LoginNotificationEntity
-            .find { (LoginNotificationTable.deviceIdHash eq deviceIdHash) and (LoginNotificationTable.sessionId inSubQuery SessionTable
+            .find { (LoginNotificationTable.deviceIdHash eq deviceIdHash) and (LoginNotificationTable.deviceName eq deviceName) and (LoginNotificationTable.sessionId inSubQuery SessionTable
                 .select(SessionTable.id)
                 .where { SessionTable.userId eq user.id.value })
             }
@@ -125,12 +138,14 @@ object SecurityRepo {
      * @param notificationEntity The message that has been sent to the user via Email.
      */
     fun invalidateSessionsFromNotification(notificationEntity: LoginNotificationEntity) = transaction {
-        SessionEntity.find {
-            (SessionTable.userId eq notificationEntity.session.user.id) and
-            (SessionTable.deviceIdhash notInSubQuery TrustedDeviceIdTable.select(TrustedDeviceIdTable.deviceIdHash).where {
-                TrustedDeviceIdTable.userId eq notificationEntity.session.user.id
-            })
-        }
-        .forEach { it.delete() }
+        val trustedPairs = TrustedDeviceIdTable
+            .select(TrustedDeviceIdTable.deviceIdHash, TrustedDeviceIdTable.deviceName)
+            .where { TrustedDeviceIdTable.userId eq notificationEntity.session.user.id }
+            .map { it[TrustedDeviceIdTable.deviceIdHash].toList() to it[TrustedDeviceIdTable.deviceName] } // .toList() is needed since kotlin does not support .equals() for ByteArrays.
+            .toSet()
+
+        SessionEntity.find { SessionTable.userId eq notificationEntity.session.user.id }
+            .filter { (it.deviceIdHash?.toList() to it.deviceName) !in trustedPairs }
+            .forEach { it.delete() }
     }
 }

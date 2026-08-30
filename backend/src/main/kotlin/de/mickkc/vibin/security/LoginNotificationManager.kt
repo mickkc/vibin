@@ -9,12 +9,14 @@ import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.security.LoginNotificationEntity
 import de.mickkc.vibin.mail.MailLayout
 import de.mickkc.vibin.mail.MailSender
-import de.mickkc.vibin.mail.SingleParagraphMailContent
+import de.mickkc.vibin.mail.NewLoginMailContent
 import de.mickkc.vibin.repos.SecurityRepo
 import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.security.exception.LoginNotificationAlreadyHandledException
 import de.mickkc.vibin.security.exception.LoginNotificationExpiredException
 import de.mickkc.vibin.settings.Settings
+import de.mickkc.vibin.settings.server.IncludeIpInLoginNotification
+import de.mickkc.vibin.settings.server.IncludeLocationInLoginNotification
 import de.mickkc.vibin.settings.server.LoginNotificationTokenValidity
 import de.mickkc.vibin.settings.user.SendMailOnNewLogin
 import de.mickkc.vibin.templates.TemplateTranslator
@@ -49,6 +51,14 @@ object LoginNotificationManager {
         }
     }
 
+    enum class LoginNotificationResult {
+        AlreadyTrusted,
+        Disabled,
+        InvalidEmail,
+        NotConfigured,
+        Sent
+    }
+
     /**
      * Sends a login notification to the specified user, if SMTP-support is enabled, and the user has an email address
      * associated with the account and enabled this feature.
@@ -57,32 +67,34 @@ object LoginNotificationManager {
      * @param session The session the Email should be sent for.
      * @param user The user to send the Email to, if they have an Email address.
      */
-    fun sendIfNotTrusted(deviceId: String, session: SessionEntity, user: UserEntity) {
-        if (SecurityRepo.isDeviceIdTrusted(deviceId, user)) {
-            return
+    suspend fun sendIfNotTrusted(deviceId: String, deviceName: String, ipFromHeader: String, session: SessionEntity, user: UserEntity): LoginNotificationResult {
+        if (SecurityRepo.isDeviceIdTrusted(deviceId, deviceName, user)) {
+            return LoginNotificationResult.AlreadyTrusted
         }
 
         if (!Settings.get(SendMailOnNewLogin, user.id.value)) {
-            return
+            return LoginNotificationResult.Disabled
         }
 
         if (user.email.isNullOrBlank()) {
             logger.warn("Can't send login notification email because user ${user.username} has no Email address configured.")
-            return
+            return LoginNotificationResult.InvalidEmail
         }
 
         if (!MailSender.configured) {
             logger.warn("Can't send login notification email because SMTP is not configured.")
-            return
+            return LoginNotificationResult.NotConfigured
         }
 
         val externalUrl = EnvUtil.getOrNull(EXTERNAL_URL)?.trim()?.removeSuffix("/")
         if (externalUrl == null) {
             logger.error("Can't send login notification because the external URL is not set. Please set the ${EXTERNAL_URL.name} environment variable.")
-            return
+            return LoginNotificationResult.NotConfigured
         }
 
         val invalidationToken = CryptoUtil.createToken(64)
+        val ip = IpLookupManager.findIp(ipFromHeader)
+        val location = if (ip != null && Settings.get(IncludeLocationInLoginNotification)) IpLookupManager.lookupIpAddress(ip) else null
 
         MailSender.sendMail(
             to = user.email!!,
@@ -100,15 +112,20 @@ object LoginNotificationManager {
                             url = "$externalUrl/api/mail/trust-device?tk=$invalidationToken"
                         )
                         content {
-                            insert(SingleParagraphMailContent("mails.new_sign_in.body")) {}
+                            insert(NewLoginMailContent(
+                                deviceName = deviceName,
+                                ip = if (Settings.get(IncludeIpInLoginNotification)) ip else null,
+                                ipLocation = location
+                            )) {}
                         }
                     }
                 }
             }
         )
 
-        SecurityRepo.sentLoginNotificationEmail(deviceId, invalidationToken, session, user)
+        SecurityRepo.sentLoginNotificationEmail(deviceId, deviceName, invalidationToken, session, user)
         logger.info("Sent login notification Email for user ${user.username}.")
+        return LoginNotificationResult.Sent
     }
 
     fun validateNotificationAge(notificationEntity: LoginNotificationEntity): Boolean {
@@ -139,8 +156,8 @@ object LoginNotificationManager {
 
         val user = SecurityRepo.getUserFromNotification(notification)
 
-        SecurityRepo.trustDeviceId(notification.deviceIdHash, user)
-        SecurityRepo.deleteLoginNotificationsWithDeviceId(notification.deviceIdHash, user)
+        SecurityRepo.trustDeviceId(notification.deviceIdHash, notification.deviceName, user)
+        SecurityRepo.deleteLoginNotificationsWithDeviceId(notification.deviceIdHash, notification.deviceName, user)
     }
 
     /**
@@ -172,7 +189,7 @@ object LoginNotificationManager {
         }
 
         SecurityRepo.invalidateSessionsFromNotification(notification)
-        SecurityRepo.deleteLoginNotificationsWithDeviceId(notification.deviceIdHash, user)
+        SecurityRepo.deleteLoginNotificationsWithDeviceId(notification.deviceIdHash, notification.deviceName, user)
     }
 
     fun isLoginNotificationTokenValid(token: String): Boolean = withLock(token) {

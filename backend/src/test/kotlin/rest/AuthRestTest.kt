@@ -25,6 +25,7 @@ class AuthRestTest {
             parameter("username", "Admin")
             parameter("password", "admin")
             parameter("deviceId", "test")
+            parameter("deviceName", "Test Device")
         }
         assertTrue(response.status.isSuccess())
 
@@ -41,6 +42,7 @@ class AuthRestTest {
             parameter("username", "Admin")
             parameter("password", "wrongpassword")
             parameter("deviceId", "test")
+            parameter("deviceName", "Test Device")
         }
         assertFalse(response.status.isSuccess())
         assertEquals(HttpStatusCode.Unauthorized, response.status)
@@ -52,6 +54,7 @@ class AuthRestTest {
             parameter("username", "Admin")
             parameter("password", "admin")
             parameter("deviceId", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+            parameter("deviceName", "Test Device")
         }
         assertFalse(response.status.isSuccess())
         assertEquals(HttpStatusCode.BadRequest, response.status)
@@ -65,9 +68,24 @@ class AuthRestTest {
         val response = client.post("/api/auth/login") {
             parameter("username", "Admin")
             parameter("password", "admin")
+            parameter("deviceName", "Test Device")
         }
         assertFalse(response.status.isSuccess())
         assertEquals(HttpStatusCode.BadRequest, response.status)
+    }
+
+    @Test
+    fun testLogin_NoDeviceName_Failure() = testApp { client ->
+        val response = client.post("/api/auth/login") {
+            parameter("username", "Admin")
+            parameter("password", "admin")
+            parameter("deviceId", "test")
+        }
+        assertFalse(response.status.isSuccess())
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val bodyText = response.bodyAsText()
+        assertContains(bodyText, "\"parameterName\":\"deviceName\"")
     }
 
     @Test
