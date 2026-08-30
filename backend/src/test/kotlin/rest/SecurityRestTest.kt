@@ -474,7 +474,7 @@ class SecurityRestTest {
     // region isDeviceIdTrusted semantics
 
     @Test
-    fun testIsDeviceIdTrusted_RequiresExactDeviceNameMatch() {
+    fun testIsDeviceIdTrusted_RequiresExactDeviceNameMatch() = testApp(false) { client ->
         val user = adminUser()
         trustDevice(user, "someDevice", "Name A")
 
