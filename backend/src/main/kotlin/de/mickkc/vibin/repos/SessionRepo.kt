@@ -118,6 +118,7 @@ object SessionRepo {
     internal fun toSessionDtoInternal(entity: SessionEntity): SessionDto {
         return SessionDto(
             id = entity.id.value,
+            deviceName = entity.deviceName,
             createdAt = entity.createdAt,
             lastUsed = entity.lastUsed
         )
