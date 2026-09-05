@@ -10,6 +10,7 @@ import de.mickkc.vibin.db.playlists.PlaylistCollaborator
 import de.mickkc.vibin.db.playlists.PlaylistTable
 import de.mickkc.vibin.db.playlists.PlaylistTrackTable
 import de.mickkc.vibin.db.security.LoginNotificationTable
+import de.mickkc.vibin.db.security.TotpMailTable
 import de.mickkc.vibin.db.security.TrustedDeviceIdTable
 import de.mickkc.vibin.db.tags.TagTable
 import de.mickkc.vibin.db.tags.TrackTagConnection
@@ -75,7 +76,8 @@ val allTables = arrayOf(
     FavoriteTable,
     SharedWidgetTable, WidgetTypeTable,
     TrackRelationTable,
-    LoginNotificationTable, TrustedDeviceIdTable
+    LoginNotificationTable, TrustedDeviceIdTable,
+    TotpMailTable
 )
 
 fun createTables() = transaction {
