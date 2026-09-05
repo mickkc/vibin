@@ -1,5 +1,8 @@
 package de.mickkc.vibin.routes
 
+import de.mickkc.vibin.config.EnvUtil
+import de.mickkc.vibin.config.EnvUtil.LOGIN_RATE_LIMIT_ATTEMPTS
+import de.mickkc.vibin.config.EnvUtil.LOGIN_RATE_LIMIT_TIMEOUT
 import de.mickkc.vibin.db.TotpType
 import de.mickkc.vibin.repos.SecurityRepo
 import de.mickkc.vibin.repos.SessionRepo
@@ -10,6 +13,7 @@ import de.mickkc.vibin.security.exception.LoginNotificationExpiredException
 import de.mickkc.vibin.templates.BaseTemplate
 import de.mickkc.vibin.templates.TemplateTranslator
 import de.mickkc.vibin.templates.security.*
+import de.mickkc.vibin.utils.RateLimiter
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -25,6 +29,11 @@ import org.slf4j.LoggerFactory
 fun Application.configureSecurityRoutes() = routing {
 
     val logger: Logger = LoggerFactory.getLogger("Security API Routes")
+
+    val totpRateLimiter = RateLimiter(
+        maxRequests = EnvUtil.getOrError(LOGIN_RATE_LIMIT_ATTEMPTS),
+        windowMinutes = EnvUtil.getOrError(LOGIN_RATE_LIMIT_TIMEOUT)
+    )
 
     staticResources("/api/web", "web.static")
 
@@ -169,25 +178,34 @@ fun Application.configureSecurityRoutes() = routing {
 
         val session = SessionRepo.getFromSessionToken(token) ?: unauthorized()
         val user = SessionRepo.getUser(session)
+        if (!totpRateLimiter.check(call.getClientId())) {
+            rateLimitExceeded()
+        }
 
         when (user.totpType) {
             TotpType.Totp -> {
                 if (!TotpManager.validateTotp(user, code)) {
+                    totpRateLimiter.checkAndIncrement(call.getClientId())
                     invalidParameter("code")
                 }
                 else {
                     if (SessionRepo.setValidTotp(token)) {
                         LoginNotificationManager.sendIfNotTrusted(session, call.getClientId())
-                        call.success()
+                        return@post call.success()
                     }
                 }
             }
             TotpType.Mail -> {
-                val session = SecurityRepo.getSessionFromTotpMailCode(token, code) ?: notFound()
+                val session = SecurityRepo.getSessionFromTotpMailCode(token, code)
+                if (session == null) {
+                    totpRateLimiter.checkAndIncrement(call.getClientId())
+                    invalidParameter("code")
+                }
+
                 if (SessionRepo.setValidTotp(session.token)) {
                     LoginNotificationManager.sendIfNotTrusted(session, call.getClientId())
                     SecurityRepo.removeTotpMailCode(session.id.value)
-                    call.success()
+                    return@post call.success()
                 }
             }
             TotpType.None -> notFound()
