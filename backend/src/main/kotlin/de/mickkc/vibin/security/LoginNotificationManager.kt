@@ -11,6 +11,7 @@ import de.mickkc.vibin.mail.MailLayout
 import de.mickkc.vibin.mail.MailSender
 import de.mickkc.vibin.mail.NewLoginMailContent
 import de.mickkc.vibin.repos.SecurityRepo
+import de.mickkc.vibin.repos.SessionRepo
 import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.security.exception.LoginNotificationAlreadyHandledException
 import de.mickkc.vibin.security.exception.LoginNotificationExpiredException
@@ -59,16 +60,21 @@ object LoginNotificationManager {
         Sent
     }
 
+    suspend fun sendIfNotTrusted(session: SessionEntity, ipFromHeader: String) {
+        if (session.deviceIdHash == null) return
+        sendIfNotTrusted(session.deviceIdHash!!, session.deviceName, ipFromHeader, session, SessionRepo.getUser(session))
+    }
+
     /**
      * Sends a login notification to the specified user, if SMTP-support is enabled, and the user has an email address
      * associated with the account and enabled this feature.
      *
-     * @param deviceId The device ID. A mail will only be sent if it is not already trusted.
+     * @param hashedDeviceId The device ID, hashed with the user's salt. A mail will only be sent if it is not already trusted.
      * @param session The session the Email should be sent for.
      * @param user The user to send the Email to, if they have an Email address.
      */
-    suspend fun sendIfNotTrusted(deviceId: String, deviceName: String, ipFromHeader: String, session: SessionEntity, user: UserEntity): LoginNotificationResult {
-        if (SecurityRepo.isDeviceIdTrusted(deviceId, deviceName, user)) {
+    suspend fun sendIfNotTrusted(hashedDeviceId: ByteArray, deviceName: String, ipFromHeader: String, session: SessionEntity, user: UserEntity): LoginNotificationResult {
+        if (SecurityRepo.isDeviceIdTrusted(hashedDeviceId, deviceName, user)) {
             return LoginNotificationResult.AlreadyTrusted
         }
 
@@ -123,7 +129,7 @@ object LoginNotificationManager {
             }
         )
 
-        SecurityRepo.sentLoginNotificationEmail(deviceId, deviceName, invalidationToken, session, user)
+        SecurityRepo.sentLoginNotificationEmail(hashedDeviceId, deviceName, invalidationToken, session, user)
         logger.info("Sent login notification Email for user ${user.username}.")
         return LoginNotificationResult.Sent
     }

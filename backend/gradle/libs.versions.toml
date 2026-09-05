@@ -38,6 +38,7 @@ kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version
 jaudiotagger = { module = "com.github.RouHim:jaudiotagger", version.ref = "jaudiotagger" }
 directory-watcher = { module = "io.methvin:directory-watcher", version = "0.19.1" }
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.2.4" }
+java-totp = { module = "dev.samstevens.totp:totp", version = "1.7.1" }
 
 ktor-server-html-builder = { module = "io.ktor:ktor-server-html-builder-jvm", version.ref = "ktor" }
 kotlinx-html-jvm = { module = "org.jetbrains.kotlinx:kotlinx-html-jvm", version = "0.12.0" }

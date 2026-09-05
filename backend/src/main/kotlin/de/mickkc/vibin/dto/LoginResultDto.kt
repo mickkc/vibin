@@ -8,5 +8,6 @@ data class LoginResultDto (
     val success: Boolean,
     val token: String,
     val user: UserDto,
-    val permissions: List<String>
+    val permissions: List<String>,
+    val totpRequired: Boolean
 )

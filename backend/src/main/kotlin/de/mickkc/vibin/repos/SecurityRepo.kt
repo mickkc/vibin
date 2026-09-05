@@ -15,16 +15,20 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 object SecurityRepo {
 
+    fun isDeviceIdTrusted(deviceId: String, deviceName: String, user: UserEntity): Boolean {
+        val hashed = CryptoUtil.hashPassword(deviceId, user.salt)
+        return isDeviceIdTrusted(hashed, deviceName, user)
+    }
+
     /**
      * Checks if a device ID is already marked as trusted for the specified user.
      *
-     * @param deviceId The device ID to check
+     * @param hashedDeviceId The device ID to check
      * @return true if the device ID is in the list of trusted IDs, false if not
      */
-    fun isDeviceIdTrusted(deviceId: String, deviceName: String, user: UserEntity): Boolean = transaction {
-        val hashed = CryptoUtil.hashPassword(deviceId, user.salt)
+    fun isDeviceIdTrusted(hashedDeviceId: ByteArray, deviceName: String, user: UserEntity): Boolean = transaction {
         TrustedDeviceIdTable.select(TrustedDeviceIdTable.id)
-            .where { (TrustedDeviceIdTable.deviceIdHash eq hashed) and (TrustedDeviceIdTable.userId eq user.id.value) and (TrustedDeviceIdTable.deviceName eq deviceName) }
+            .where { (TrustedDeviceIdTable.deviceIdHash eq hashedDeviceId) and (TrustedDeviceIdTable.userId eq user.id.value) and (TrustedDeviceIdTable.deviceName eq deviceName) }
             .any()
     }
 
@@ -60,14 +64,13 @@ object SecurityRepo {
      *
      * Called after an Email has been sent to a user.
      *
-     * @param deviceId The device ID used to log in
+     * @param hashedDeviceId The device ID used to log in, hashed with the user's salt
      * @param token The token generated for this notification (not the session!)
      * @param session The session created by the login (used to invalidate later)
      * @param user The user the mail has been sent to
      */
-    fun sentLoginNotificationEmail(deviceId: String, deviceName: String, token: String, session: SessionEntity, user: UserEntity): LoginNotificationEntity = transaction {
+    fun sentLoginNotificationEmail(hashedDeviceId: ByteArray, deviceName: String, token: String, session: SessionEntity, user: UserEntity): LoginNotificationEntity = transaction {
 
-        val hashedDeviceId = CryptoUtil.hashPassword(deviceId, user.salt)
         val hashedToken = CryptoUtil.hashPassword(token, user.salt)
 
         LoginNotificationEntity.new {

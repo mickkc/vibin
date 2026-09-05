@@ -10,6 +10,8 @@ import de.mickkc.vibin.auth.UserPrincipal
 import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.config.EnvUtil.LOGIN_RATE_LIMIT_ATTEMPTS
 import de.mickkc.vibin.config.EnvUtil.LOGIN_RATE_LIMIT_TIMEOUT
+import de.mickkc.vibin.db.SessionState
+import de.mickkc.vibin.db.TotpType
 import de.mickkc.vibin.dto.LoginResultDto
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.PermissionRepo
@@ -55,16 +57,22 @@ fun Application.configureAuthRoutes() = routing {
         }
 
         val token = CryptoUtil.createToken()
-        val session = SessionRepo.addSession(user, token, deviceId, deviceName)
 
-        logger.info("Successful login for user: $username")
-        LoginNotificationManager.sendIfNotTrusted(deviceId, deviceName, call.getClientId(), session, user)
+        val state = if (user.totpType == TotpType.None) SessionState.Valid else SessionState.TotpPending
+        val session = SessionRepo.addSession(user, token, deviceId, deviceName, state)
+
+        if (state == SessionState.Valid) {
+            logger.info("Successful login for user: $username")
+            val hashedDeviceId = CryptoUtil.hashPassword(deviceId, user.salt)
+            LoginNotificationManager.sendIfNotTrusted(hashedDeviceId, deviceName, call.getClientId(), session, user)
+        }
 
         call.respond(LoginResultDto(
             success = true,
             token = session.token,
             user = UserRepo.toDto(user),
-            permissions = PermissionRepo.getPermissions(user.id.value).map { it.id }
+            permissions = PermissionRepo.getPermissions(user.id.value).map { it.id },
+            totpRequired = state == SessionState.TotpPending
         ))
     }
 
@@ -79,7 +87,8 @@ fun Application.configureAuthRoutes() = routing {
                 success = true,
                 token = call.getToken()!!,
                 user = UserRepo.toDto(user),
-                permissions = PermissionRepo.getPermissions(user.id.value).map { it.id }
+                permissions = PermissionRepo.getPermissions(user.id.value).map { it.id },
+                totpRequired = false
             ))
         }
 
@@ -99,7 +108,7 @@ fun Application.configureAuthRoutes() = routing {
             val userId = call.getUserId() ?: unauthorized()
             val token = call.getToken() ?: unauthorized()
 
-            val sessions = SessionRepo.getAllSessionsForUser(userId)
+            val sessions = SessionRepo.getAllValidSessionsForUser(userId)
 
 
             call.respond(mapOf(
