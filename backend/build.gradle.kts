@@ -65,6 +65,7 @@ dependencies {
     implementation(libs.jaudiotagger)
     implementation(libs.directory.watcher)
     implementation(libs.caffeine)
+    implementation(libs.java.totp)
 
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)

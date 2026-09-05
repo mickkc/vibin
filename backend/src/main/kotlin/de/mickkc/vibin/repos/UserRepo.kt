@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.transactions.transaction
 import de.mickkc.vibin.auth.CryptoUtil
+import de.mickkc.vibin.db.TotpType
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.UserTable
 import de.mickkc.vibin.db.images.ImageEntity
@@ -162,6 +163,11 @@ object UserRepo {
 
     fun checkUsernameExists(username: String): Boolean = transaction {
         return@transaction UserEntity.find { UserTable.username.lowerCase() eq username.lowercase() }.count() > 0
+    }
+
+    fun setTotp(user: UserEntity, totpType: TotpType? = null, totpSecret: String? = null) = transaction {
+        totpType?.let { user.totpType = it }
+        totpSecret?.let { user.totpSecret = it.takeIf { it.isNotEmpty() } }
     }
 
     /**

@@ -1,0 +1,96 @@
+TOTP:
+  put:
+    summary: Update the 2fa type for a user
+    operationId: updateTotpType
+    tags:
+      - Security
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: type
+        in: query
+        required: true
+        description: The new 2fa type
+        schema:
+          type: string
+          enum:
+            - None
+            - Mail
+            - Totp
+      - name: code
+        in: query
+        required: false
+        description: The current 2fa code, if type is `Totp`.
+        schema:
+          type: string
+    responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+  post:
+    summary: Authenticate with a TOTP code
+    operationId: authenticateTotp
+    tags:
+      - Security
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: token
+        in: query
+        required: true
+        description: The token of the session to authenticate
+        schema:
+          type: string
+      - name: code
+        in: query
+        required: true
+        description: The 2fa code received either via an authenticator app or via email.
+        schema:
+          type: string
+          example: 123456
+    responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+QR:
+  get:
+    summary: Get the TOTP QR code for authenticator apps
+    operationId: getTotpQrCode
+    description: Will throw an error if TOTP is already configured for the user. Disable 2fa and enable it to register a new app.
+    tags:
+      - Security
+    security:
+      - tokenAuth: []
+    responses:
+      200:
+        description: The QR code PNG image
+        content:
+          image/png:
+            type: string
+            format: binary
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

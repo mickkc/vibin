@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 import de.mickkc.vibin.auth.CryptoUtil
 import de.mickkc.vibin.db.SessionEntity
+import de.mickkc.vibin.db.SessionState
 import de.mickkc.vibin.db.SessionTable
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.dto.SessionDto
@@ -29,13 +30,14 @@ object SessionRepo {
      * @param token The token for the new session.
      * @return The newly created [SessionEntity].
      */
-    fun addSession(user: UserEntity, token: String, deviceId: String, deviceName: String): SessionEntity = transaction {
+    fun addSession(user: UserEntity, token: String, deviceId: String, deviceName: String, state: SessionState): SessionEntity = transaction {
         val hashedDeviceId = CryptoUtil.hashPassword(deviceId, user.salt)
         SessionEntity.new {
             this.user = user
             this.token = token
             this.deviceIdHash = hashedDeviceId
             this.deviceName = deviceName
+            this.state = state
         }
     }
 
@@ -71,7 +73,7 @@ object SessionRepo {
      */
     fun validateAndUpdateToken(token: String): Long? = transaction {
         SessionEntity
-            .find { SessionTable.token eq token }
+            .find { (SessionTable.token eq token) and (SessionTable.state eq SessionState.Valid) }
             .firstOrNull()
             ?.run { deleteIfExpired(this) }
             ?.also { it.lastUsed = DateTimeUtils.now() }
@@ -95,16 +97,43 @@ object SessionRepo {
         }
     }
 
-    fun getAllSessionsForUser(userId: Long): List<SessionEntity> = transaction {
-        SessionEntity.find { SessionTable.userId eq userId }.mapNotNull { deleteIfExpired(it) }.toList()
+    fun getAllValidSessionsForUser(userId: Long): List<SessionEntity> = transaction {
+        SessionEntity
+            .find { (SessionTable.userId eq userId) and (SessionTable.state eq SessionState.Valid) }
+            .mapNotNull { deleteIfExpired(it) }
+            .toList()
     }
 
     fun getUserFromSessionId(sessionId: Long): UserEntity? = transaction {
         SessionEntity.findById(sessionId)?.run { deleteIfExpired(this) }?.user
     }
 
+    fun getFromSessionToken(token: String): SessionEntity? = transaction {
+        SessionEntity.find { SessionTable.token eq token }.singleOrNull()?.run { deleteIfExpired(this) }
+    }
+
+    fun getUser(session: SessionEntity): UserEntity = transaction {
+        session.user
+    }
+
     fun invalidateSessionById(sessionId: Long) = transaction {
         SessionEntity.findById(sessionId)?.delete()
+    }
+
+    /**
+     * Sets the session state from [SessionState.TotpPending] to [SessionState.Valid].
+     *
+     * @param token The session token to validate.
+     * @return true if the session was made valid, false if the session was not found or totp was not pending.
+     */
+    fun setValidTotp(token: String): Boolean = transaction {
+        val session = SessionEntity.find { SessionTable.token eq token }.singleOrNull()
+            ?: return@transaction false
+
+        if (session.state != SessionState.TotpPending) return@transaction false
+
+        session.state = SessionState.Valid
+        return@transaction true
     }
 
     fun toSessionDto(entity: SessionEntity): SessionDto {

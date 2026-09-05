@@ -1,22 +1,39 @@
 package de.mickkc.vibin.routes
 
+import de.mickkc.vibin.config.EnvUtil
+import de.mickkc.vibin.config.EnvUtil.LOGIN_RATE_LIMIT_ATTEMPTS
+import de.mickkc.vibin.config.EnvUtil.LOGIN_RATE_LIMIT_TIMEOUT
+import de.mickkc.vibin.db.TotpType
+import de.mickkc.vibin.repos.SecurityRepo
+import de.mickkc.vibin.repos.SessionRepo
 import de.mickkc.vibin.security.LoginNotificationManager
+import de.mickkc.vibin.security.TotpManager
 import de.mickkc.vibin.security.exception.LoginNotificationAlreadyHandledException
 import de.mickkc.vibin.security.exception.LoginNotificationExpiredException
 import de.mickkc.vibin.templates.BaseTemplate
 import de.mickkc.vibin.templates.TemplateTranslator
 import de.mickkc.vibin.templates.security.*
+import de.mickkc.vibin.utils.RateLimiter
+import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.html.*
 import io.ktor.server.http.content.*
 import io.ktor.server.request.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.util.logging.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 fun Application.configureSecurityRoutes() = routing {
 
     val logger: Logger = LoggerFactory.getLogger("Security API Routes")
+
+    val totpRateLimiter = RateLimiter(
+        maxRequests = EnvUtil.getOrError(LOGIN_RATE_LIMIT_ATTEMPTS),
+        windowMinutes = EnvUtil.getOrError(LOGIN_RATE_LIMIT_TIMEOUT)
+    )
 
     staticResources("/api/web", "web.static")
 
@@ -122,5 +139,78 @@ fun Application.configureSecurityRoutes() = routing {
         }
 
         call.processDone()
+    }
+
+    authenticate("tokenAuth") {
+        get("/api/auth/totp/qr") {
+            try {
+                val user = call.getUser() ?: unauthorized()
+                call.respondBytes(TotpManager.getQrCodeForUser(user), ContentType.Image.PNG)
+            }
+            catch (e: IllegalStateException) {
+                logger.error(e)
+                forbidden()
+            }
+        }
+
+        put("/api/auth/totp") {
+            val user = call.getUser() ?: unauthorized()
+            val type = call.getEnum<TotpType>("type", null)
+            when (type) {
+                TotpType.None -> TotpManager.disableTotp(user)
+                TotpType.Mail -> TotpManager.enableEmailTotp(user)
+                TotpType.Totp -> {
+                    val code = call.getStringParameter("code")
+                    if (!TotpManager.enableTotp(user, code)) {
+                        invalidParameter("code")
+                    }
+                }
+            }
+
+            call.success()
+        }
+
+    }
+
+    post("/api/auth/totp") {
+        val token = call.getStringParameter("token")
+        val code = call.getStringParameter("code")
+
+        val session = SessionRepo.getFromSessionToken(token) ?: unauthorized()
+        val user = SessionRepo.getUser(session)
+        if (!totpRateLimiter.check(call.getClientId())) {
+            rateLimitExceeded()
+        }
+
+        when (user.totpType) {
+            TotpType.Totp -> {
+                if (!TotpManager.validateTotp(user, code)) {
+                    totpRateLimiter.checkAndIncrement(call.getClientId())
+                    invalidParameter("code")
+                }
+                else {
+                    if (SessionRepo.setValidTotp(token)) {
+                        LoginNotificationManager.sendIfNotTrusted(session, call.getClientId())
+                        return@post call.success()
+                    }
+                }
+            }
+            TotpType.Mail -> {
+                val session = SecurityRepo.getSessionFromTotpMailCode(token, code)
+                if (session == null) {
+                    totpRateLimiter.checkAndIncrement(call.getClientId())
+                    invalidParameter("code")
+                }
+
+                if (SessionRepo.setValidTotp(session.token)) {
+                    LoginNotificationManager.sendIfNotTrusted(session, call.getClientId())
+                    SecurityRepo.removeTotpMailCode(session.id.value)
+                    return@post call.success()
+                }
+            }
+            TotpType.None -> notFound()
+        }
+
+        notFound()
     }
 }

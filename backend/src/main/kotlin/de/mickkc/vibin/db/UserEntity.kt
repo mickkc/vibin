@@ -10,6 +10,12 @@ import de.mickkc.vibin.db.security.TrustedDeviceIdTable
 import de.mickkc.vibin.repos.PlaylistRepo
 import de.mickkc.vibin.repos.SessionRepo
 
+enum class TotpType {
+    None,
+    Totp,
+    Mail
+}
+
 object UserTable : ModifiableLongIdTable("user") {
     val username = varchar("username", 255).uniqueIndex()
     val displayName = varchar("display_name", 255).nullable()
@@ -21,6 +27,9 @@ object UserTable : ModifiableLongIdTable("user") {
     val isAdmin = bool("is_admin").default(false)
     val lastLogin = long("last_login").nullable()
     val profilePictureId = reference("profile_picture_id", ImageTable).nullable()
+
+    val totpSecret = varchar("totp_secret", 32).nullable().default(null)
+    val totpType = enumeration<TotpType>("totp_type").default(TotpType.None)
 }
 
 /**
@@ -50,6 +59,9 @@ class UserEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, UserTable) {
     var isAdmin by UserTable.isAdmin
     var lastLogin by UserTable.lastLogin
     var profilePicture by ImageEntity optionalReferencedOn UserTable.profilePictureId
+
+    var totpSecret by UserTable.totpSecret
+    var totpType by UserTable.totpType
 
     override fun delete() {
 

@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import de.mickkc.vibin.config.allTables
 import de.mickkc.vibin.config.createDefaultAdminUser
 import de.mickkc.vibin.config.createTables
+import de.mickkc.vibin.db.SessionState
 import de.mickkc.vibin.module
 import de.mickkc.vibin.parsing.MetadataFetchingType
 import de.mickkc.vibin.repos.SessionRepo
@@ -25,7 +26,7 @@ fun initTestDb() {
     createDefaultAdminUser()
 
     val user = UserRepo.getById(1)!!
-    SessionRepo.addSession(user, testToken, "defaultDeviceId", "Test Device")
+    SessionRepo.addSession(user, testToken, "defaultDeviceId", "Test Device", SessionState.Valid)
 
     SettingsRepo.updateServerSetting(AlbumMetadataFetchType, MetadataFetchingType.NONE.name)
     SettingsRepo.updateServerSetting(ArtistMetadataFetchType, MetadataFetchingType.NONE.name)

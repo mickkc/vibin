@@ -11,6 +11,9 @@ LoginResult:
       type: array
       items:
         type: string
+    totpRequired:
+      type: boolean
+      description: If true, the session must be validated before usage using `POST /api/auth/totp`
 
 Session:
   type: object

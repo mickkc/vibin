@@ -1,12 +1,7 @@
 package de.mickkc.vibin.config
 
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.slf4j.LoggerFactory
 import de.mickkc.vibin.auth.CryptoUtil
 import de.mickkc.vibin.db.*
-import org.flywaydb.core.Flyway
 import de.mickkc.vibin.db.albums.AlbumTable
 import de.mickkc.vibin.db.artists.ArtistTable
 import de.mickkc.vibin.db.artists.TrackArtistConnection
@@ -15,6 +10,7 @@ import de.mickkc.vibin.db.playlists.PlaylistCollaborator
 import de.mickkc.vibin.db.playlists.PlaylistTable
 import de.mickkc.vibin.db.playlists.PlaylistTrackTable
 import de.mickkc.vibin.db.security.LoginNotificationTable
+import de.mickkc.vibin.db.security.TotpMailTable
 import de.mickkc.vibin.db.security.TrustedDeviceIdTable
 import de.mickkc.vibin.db.tags.TagTable
 import de.mickkc.vibin.db.tags.TrackTagConnection
@@ -22,6 +18,11 @@ import de.mickkc.vibin.db.tracks.TrackRelationTable
 import de.mickkc.vibin.db.tracks.TrackTable
 import de.mickkc.vibin.db.widgets.SharedWidgetTable
 import de.mickkc.vibin.db.widgets.WidgetTypeTable
+import org.flywaydb.core.Flyway
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.transaction
+import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger("Database initialization")
 
@@ -75,7 +76,8 @@ val allTables = arrayOf(
     FavoriteTable,
     SharedWidgetTable, WidgetTypeTable,
     TrackRelationTable,
-    LoginNotificationTable, TrustedDeviceIdTable
+    LoginNotificationTable, TrustedDeviceIdTable,
+    TotpMailTable
 )
 
 fun createTables() = transaction {
