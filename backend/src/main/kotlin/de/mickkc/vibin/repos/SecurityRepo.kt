@@ -4,9 +4,11 @@ import de.mickkc.vibin.auth.CryptoUtil
 import de.mickkc.vibin.db.SessionEntity
 import de.mickkc.vibin.db.SessionTable
 import de.mickkc.vibin.db.UserEntity
-import de.mickkc.vibin.db.security.LoginNotificationEntity
-import de.mickkc.vibin.db.security.LoginNotificationTable
-import de.mickkc.vibin.db.security.TrustedDeviceIdTable
+import de.mickkc.vibin.db.security.*
+import de.mickkc.vibin.settings.Settings
+import de.mickkc.vibin.settings.server.TotpMailExpirationDuration
+import de.mickkc.vibin.utils.DateTimeUtils
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
@@ -150,5 +152,27 @@ object SecurityRepo {
         SessionEntity.find { SessionTable.userId eq notificationEntity.session.user.id }
             .filter { (it.deviceIdHash?.toList() to it.deviceName) !in trustedPairs }
             .forEach { it.delete() }
+    }
+
+    fun createTotpForMail(session: SessionEntity): TotpMailEntity = transaction {
+        val code = CryptoUtil.createToken(6)
+        TotpMailEntity.new {
+            this.code = code
+            this.session = session
+        }
+    }
+
+    fun getSessionFromTotpMailCode(token: String, code: String): SessionEntity? = transaction {
+        val start = DateTimeUtils.now() - Settings.get(TotpMailExpirationDuration)
+        val totpMail = TotpMailEntity.find {
+            (TotpMailTable.code eq code) and
+            (TotpMailTable.sent greater start) and
+            (TotpMailTable.sessionId inSubQuery SessionTable.select(SessionTable.id).where { SessionTable.token eq token })
+        }.singleOrNull()
+        return@transaction totpMail?.session
+    }
+
+    fun removeTotpMailCode(sessionId: Long) = transaction {
+        TotpMailTable.deleteWhere { TotpMailTable.sessionId eq sessionId }
     }
 }

@@ -2,11 +2,14 @@ package de.mickkc.vibin.db
 
 import de.mickkc.vibin.db.security.LoginNotificationEntity
 import de.mickkc.vibin.db.security.LoginNotificationTable
+import de.mickkc.vibin.db.security.TotpMailTable
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
 import de.mickkc.vibin.utils.DateTimeUtils
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
 
 enum class SessionState {
     Valid,
@@ -47,6 +50,8 @@ class SessionEntity(id: EntityID<Long>) : LongEntity(id) {
 
         LoginNotificationEntity.find { LoginNotificationTable.sessionId eq sessionId }
             .forEach { it.delete() }
+
+        TotpMailTable.deleteWhere { TotpMailTable.sessionId eq sessionId }
 
         super.delete()
     }

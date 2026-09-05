@@ -1,6 +1,7 @@
 package de.mickkc.vibin.routes
 
 import de.mickkc.vibin.db.TotpType
+import de.mickkc.vibin.repos.SecurityRepo
 import de.mickkc.vibin.repos.SessionRepo
 import de.mickkc.vibin.security.LoginNotificationManager
 import de.mickkc.vibin.security.TotpManager
@@ -168,14 +169,28 @@ fun Application.configureSecurityRoutes() = routing {
 
         val session = SessionRepo.getFromSessionToken(token) ?: unauthorized()
         val user = SessionRepo.getUser(session)
-        if (!TotpManager.validateTotp(user, code)) {
-            invalidParameter("code")
-        }
-        else {
-            if (SessionRepo.setValidTotp(token)) {
-                LoginNotificationManager.sendIfNotTrusted(session, call.getClientId())
-                call.success()
+
+        when (user.totpType) {
+            TotpType.Totp -> {
+                if (!TotpManager.validateTotp(user, code)) {
+                    invalidParameter("code")
+                }
+                else {
+                    if (SessionRepo.setValidTotp(token)) {
+                        LoginNotificationManager.sendIfNotTrusted(session, call.getClientId())
+                        call.success()
+                    }
+                }
             }
+            TotpType.Mail -> {
+                val session = SecurityRepo.getSessionFromTotpMailCode(token, code) ?: notFound()
+                if (SessionRepo.setValidTotp(session.token)) {
+                    LoginNotificationManager.sendIfNotTrusted(session, call.getClientId())
+                    SecurityRepo.removeTotpMailCode(session.id.value)
+                    call.success()
+                }
+            }
+            TotpType.None -> notFound()
         }
 
         notFound()

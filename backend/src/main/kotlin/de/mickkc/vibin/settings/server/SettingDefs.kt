@@ -4,6 +4,7 @@ import de.mickkc.vibin.parsing.MetadataFetchingType
 import kotlinx.serialization.json.Json
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 
 val serverSettings = listOf(
     ArtistNameDelimiters,
@@ -28,7 +29,8 @@ val serverSettings = listOf(
     LoginNotificationTokenValidity,
     IncludeIpInLoginNotification,
     IncludeLocationInLoginNotification,
-    SessionExpirationDuration
+    SessionExpirationDuration,
+    TotpMailExpirationDuration
 )
 
 object WelcomeTexts : ServerSetting<List<String>>(
@@ -203,4 +205,11 @@ object SessionExpirationDuration : ServerSetting<Long>(
     parser = { value -> value.toLong() },
     serializer = { value -> value.toString() },
     defaultValue = 7.days.inWholeSeconds
+)
+
+object TotpMailExpirationDuration : ServerSetting<Long>(
+    key = "totp_mail_expiration_validity",
+    parser = { value -> value.toLong() },
+    serializer = { value -> value.toString() },
+    defaultValue = 5.minutes.inWholeSeconds
 )

@@ -18,6 +18,7 @@ import de.mickkc.vibin.repos.PermissionRepo
 import de.mickkc.vibin.repos.SessionRepo
 import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.security.LoginNotificationManager
+import de.mickkc.vibin.security.TotpManager
 import de.mickkc.vibin.utils.RateLimiter
 
 fun Application.configureAuthRoutes() = routing {
@@ -65,6 +66,11 @@ fun Application.configureAuthRoutes() = routing {
             logger.info("Successful login for user: $username")
             val hashedDeviceId = CryptoUtil.hashPassword(deviceId, user.salt)
             LoginNotificationManager.sendIfNotTrusted(hashedDeviceId, deviceName, call.getClientId(), session, user)
+        }
+
+        // Send TOTP code via email if user enabled it
+        if (user.totpType == TotpType.Mail) {
+            TotpManager.sendTotpEmail(user, session)
         }
 
         call.respond(LoginResultDto(

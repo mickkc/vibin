@@ -1,8 +1,14 @@
 package de.mickkc.vibin.security
 
+import de.mickkc.vibin.db.SessionEntity
 import de.mickkc.vibin.db.TotpType
 import de.mickkc.vibin.db.UserEntity
+import de.mickkc.vibin.mail.MailLayout
+import de.mickkc.vibin.mail.MailSender
+import de.mickkc.vibin.mail.TotpMailContent
+import de.mickkc.vibin.repos.SecurityRepo
 import de.mickkc.vibin.repos.UserRepo
+import de.mickkc.vibin.templates.TemplateTranslator
 import dev.samstevens.totp.code.DefaultCodeGenerator
 import dev.samstevens.totp.code.DefaultCodeVerifier
 import dev.samstevens.totp.code.HashingAlgorithm
@@ -10,10 +16,17 @@ import dev.samstevens.totp.qr.QrData
 import dev.samstevens.totp.qr.ZxingPngQrGenerator
 import dev.samstevens.totp.secret.DefaultSecretGenerator
 import dev.samstevens.totp.time.SystemTimeProvider
+import io.ktor.server.html.*
+import kotlinx.html.html
+import kotlinx.html.stream.appendHTML
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 object TotpManager {
 
     const val RESET_TOTP_SECRET = ""
+
+    private val logger: Logger = LoggerFactory.getLogger(TotpManager::class.java)
 
     val secretGenerator = DefaultSecretGenerator()
     val timeProvider = SystemTimeProvider()
@@ -96,5 +109,47 @@ object TotpManager {
      */
     fun disableTotp(user: UserEntity) {
         UserRepo.setTotp(user, totpType = TotpType.None, totpSecret = RESET_TOTP_SECRET)
+    }
+
+    enum class TotpEmailResult {
+        Disabled,
+        InvalidEmail,
+        NotConfigured,
+        Sent
+    }
+
+    fun sendTotpEmail(user: UserEntity, session: SessionEntity): TotpEmailResult {
+        if (user.totpType != TotpType.Mail) {
+            return TotpEmailResult.Disabled
+        }
+
+        if (user.email.isNullOrBlank()) {
+            logger.warn("Can't send TOTP email because user ${user.username} has no Email address configured.")
+            return TotpEmailResult.InvalidEmail
+        }
+
+        if (!MailSender.configured) {
+            LoginNotificationManager.logger.warn("Can't send TOTP email because SMTP is not configured.")
+            return TotpEmailResult.NotConfigured
+        }
+
+        val totp = SecurityRepo.createTotpForMail(session)
+
+        MailSender.sendMail(
+            to = user.email!!,
+            subject = TemplateTranslator.getTranslation("mails.totp.title"),
+            body = buildString {
+                appendHTML().html {
+                    insert(MailLayout("mails.totp.title")) {
+                        headerTextKey = "mails.totp.title"
+                        content {
+                            insert(TotpMailContent(totp.code)) {}
+                        }
+                    }
+                }
+            }
+        )
+
+        return TotpEmailResult.Sent
     }
 }
