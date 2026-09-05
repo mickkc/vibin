@@ -208,6 +208,15 @@ paths:
   /api/tracks/{id}/related:
     $ref: 'methods/relatedTracks.yaml#/Base'
 
+  # █▀ █▀▀ █▀▀ █░█ █▀█ █ ▀█▀ █▄█
+  # ▄█ ██▄ █▄▄ █▄█ █▀▄ █ ░█░ ░█░
+
+  /api/auth/totp:
+    $ref: 'methods/security.yaml#/TOTP'
+
+  /api/auth/totp/qr:
+    $ref: 'methods/security.yaml#/QR'
+
   # █▀ █▀▀ █▀ █▀ █ █▀█ █▄░█ █▀
   # ▄█ ██▄ ▄█ ▄█ █ █▄█ █░▀█ ▄█
 
