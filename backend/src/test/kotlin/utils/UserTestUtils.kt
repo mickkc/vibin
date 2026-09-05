@@ -2,6 +2,7 @@ package utils
 
 import org.junit.jupiter.api.assertNotNull
 import de.mickkc.vibin.auth.CryptoUtil
+import de.mickkc.vibin.db.SessionState
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.dto.users.UserEditDto
 import de.mickkc.vibin.permissions.PermissionType
@@ -30,7 +31,7 @@ object UserTestUtils {
     suspend fun createUserWithSession(username: String, password: String): Pair<UserEntity, String> {
         val user = createTestUser(username, password)
         val sessionToken = CryptoUtil.createToken()
-        SessionRepo.addSession(user, sessionToken, "deviceId", "Test Device")
+        SessionRepo.addSession(user, sessionToken, "deviceId", "Test Device", SessionState.Valid)
         return user to sessionToken
     }
 

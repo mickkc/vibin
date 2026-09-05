@@ -2,6 +2,7 @@ package rest
 
 import de.mickkc.vibin.auth.CryptoUtil
 import de.mickkc.vibin.db.SessionEntity
+import de.mickkc.vibin.db.SessionState
 import de.mickkc.vibin.db.SessionTable
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.security.LoginNotificationEntity
@@ -41,8 +42,9 @@ class SecurityRestTest {
         deviceName: String,
         notificationToken: String
     ): LoginNotificationEntity {
-        val session = SessionRepo.addSession(user, sessionToken, deviceId, deviceName)
-        return SecurityRepo.sentLoginNotificationEmail(deviceId, deviceName, notificationToken, session, user)
+        val session = SessionRepo.addSession(user, sessionToken, deviceId, deviceName, SessionState.Valid)
+        val hashedDeviceId = CryptoUtil.hashPassword(deviceId, user.salt)
+        return SecurityRepo.sentLoginNotificationEmail(hashedDeviceId, deviceName, notificationToken, session, user)
     }
 
     private fun trustDevice(user: UserEntity, deviceId: String, deviceName: String) {
@@ -267,7 +269,7 @@ class SecurityRestTest {
 
         // A previously trusted device/session, must survive the password reset.
         trustDevice(user, "trustedDevice", "My Laptop")
-        SessionRepo.addSession(user, "trusted-session-token", "trustedDevice", "My Laptop")
+        SessionRepo.addSession(user, "trusted-session-token", "trustedDevice", "My Laptop", SessionState.Valid)
 
         createNotification(user, "sus-token-9", "attackerDevice", "Attacker's Phone", "reset-tk-9")
 
@@ -311,8 +313,8 @@ class SecurityRestTest {
         val user = adminUser()
 
         // Two independent untrusted sessions unrelated to the notification being resolved.
-        SessionRepo.addSession(user, "other-untrusted-1", "otherDevice1", "Other Device 1")
-        SessionRepo.addSession(user, "other-untrusted-2", "otherDevice2", "Other Device 2")
+        SessionRepo.addSession(user, "other-untrusted-1", "otherDevice1", "Other Device 1", SessionState.Valid)
+        SessionRepo.addSession(user, "other-untrusted-2", "otherDevice2", "Other Device 2", SessionState.Valid)
 
         createNotification(user, "sus-token-11", "attackerDevice", "Attacker's Phone", "reset-tk-11")
 
@@ -490,11 +492,11 @@ class SecurityRestTest {
     @Test
     fun testSendIfNotTrusted_SkipsWhenSettingDisabled() = testApp(false) { client ->
         val user = adminUser()
-        val session = SessionRepo.addSession(user, "gating-session-1", "newDevice", "New Device")
+        val session = SessionRepo.addSession(user, "gating-session-1", "newDevice", "New Device", SessionState.Valid)
 
         assertEquals(
             LoginNotificationManager.LoginNotificationResult.Disabled,
-            LoginNotificationManager.sendIfNotTrusted("newDevice", "New Device", "127.0.0.1", session, user)
+            LoginNotificationManager.sendIfNotTrusted(CryptoUtil.hashPassword("newDevice", user.salt), "New Device", "127.0.0.1", session, user)
         )
 
         assertEquals(0, notificationCount())
@@ -507,11 +509,11 @@ class SecurityRestTest {
         transaction { user.email = null }
         SettingsRepo.updateUserSetting(SendMailOnNewLogin, user.id.value, "true")
 
-        val session = SessionRepo.addSession(user, "gating-session-2", "newDevice", "New Device")
+        val session = SessionRepo.addSession(user, "gating-session-2", "newDevice", "New Device", SessionState.Valid)
 
         assertEquals(
             LoginNotificationManager.LoginNotificationResult.InvalidEmail,
-            LoginNotificationManager.sendIfNotTrusted("newDevice", "New Device", "127.0.0.1", session, user)
+            LoginNotificationManager.sendIfNotTrusted(CryptoUtil.hashPassword("newDevice", user.salt), "New Device", "127.0.0.1", session, user)
         )
 
         assertEquals(0, notificationCount())
@@ -525,11 +527,11 @@ class SecurityRestTest {
         SettingsRepo.updateUserSetting(SendMailOnNewLogin, user.id.value, "true")
 
         trustDevice(user, "trustedDevice", "My Laptop")
-        val session = SessionRepo.addSession(user, "gating-session-3", "trustedDevice", "My Laptop")
+        val session = SessionRepo.addSession(user, "gating-session-3", "trustedDevice", "My Laptop", SessionState.Valid)
 
         assertEquals(
             LoginNotificationManager.LoginNotificationResult.AlreadyTrusted,
-            LoginNotificationManager.sendIfNotTrusted("trustedDevice", "My Laptop", "127.0.0.1", session, user)
+            LoginNotificationManager.sendIfNotTrusted(CryptoUtil.hashPassword("trustedDevice", user.salt), "My Laptop", "127.0.0.1", session, user)
         )
 
         assertEquals(0, notificationCount())
@@ -542,12 +544,12 @@ class SecurityRestTest {
         transaction { user.email = "admin@example.com" }
         SettingsRepo.updateUserSetting(SendMailOnNewLogin, user.id.value, "true")
 
-        val session = SessionRepo.addSession(user, "gating-session-4", "newDevice", "New Device")
+        val session = SessionRepo.addSession(user, "gating-session-4", "newDevice", "New Device", SessionState.Valid)
 
         // MailSender is not configured with SMTP credentials in the test environment.
         assertEquals(
             LoginNotificationManager.LoginNotificationResult.NotConfigured,
-            LoginNotificationManager.sendIfNotTrusted("newDevice", "New Device", "127.0.0.1", session, user)
+            LoginNotificationManager.sendIfNotTrusted(CryptoUtil.hashPassword("newDevice", user.salt), "New Device", "127.0.0.1", session, user)
         )
 
         assertEquals(0, notificationCount())
