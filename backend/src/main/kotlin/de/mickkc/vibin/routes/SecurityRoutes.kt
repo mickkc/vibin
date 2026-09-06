@@ -156,7 +156,14 @@ fun Application.configureSecurityRoutes() = routing {
             }
         }
 
-        put("/api/auth/totp") {
+        getP("/api/auth/totp", PermissionType.MANAGE_OWN_2FA) {
+            val user = call.getUser() ?: unauthorized()
+            call.respond(TotpStatusDto(
+                status = user.totpType.name,
+                secret = if (user.totpType != TotpType.Totp) user.totpSecret else null
+            ))
+        }
+
         putP("/api/auth/totp", PermissionType.MANAGE_OWN_2FA) {
             val user = call.getUser() ?: unauthorized()
             val type = call.getEnum<TotpType>("type", null)

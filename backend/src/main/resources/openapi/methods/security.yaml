@@ -1,4 +1,39 @@
 TOTP:
+  get:
+    summary: Get the current TOTP configuration for a user
+    operationId: getTotpConfig
+    tags:
+      - Security
+    security:
+      - tokenAuth: []
+    responses:
+      200:
+        description: The TOTP config for the logged in user
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum:
+                    - None
+                    - Mail
+                    - Totp
+                  nullable: false
+                  example: "Totp"
+                secret:
+                  type: string
+                  description: The secret for authenticator apps. Null if TOTP is already configured in such an app.
+                  nullable: true
+                  example: null
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
   put:
     summary: Update the 2fa type for a user
     operationId: updateTotpType
