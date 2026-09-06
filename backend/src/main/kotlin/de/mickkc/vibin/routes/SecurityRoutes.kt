@@ -158,6 +158,11 @@ fun Application.configureSecurityRoutes() = routing {
 
         getP("/api/auth/totp", PermissionType.MANAGE_OWN_2FA) {
             val user = call.getUser() ?: unauthorized()
+
+            if (user.totpSecret == null) {
+                TotpManager.generateTotpSecret(user)
+            }
+
             call.respond(TotpStatusDto(
                 status = user.totpType.name,
                 secret = if (user.totpType != TotpType.Totp) user.totpSecret else null
