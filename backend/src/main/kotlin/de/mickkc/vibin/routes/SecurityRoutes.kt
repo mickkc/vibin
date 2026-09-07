@@ -4,6 +4,9 @@ import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.config.EnvUtil.LOGIN_RATE_LIMIT_ATTEMPTS
 import de.mickkc.vibin.config.EnvUtil.LOGIN_RATE_LIMIT_TIMEOUT
 import de.mickkc.vibin.db.TotpType
+import de.mickkc.vibin.dto.TotpStatusDto
+import de.mickkc.vibin.permissions.PermissionType
+import de.mickkc.vibin.repos.PermissionRepo
 import de.mickkc.vibin.repos.SecurityRepo
 import de.mickkc.vibin.repos.SessionRepo
 import de.mickkc.vibin.security.LoginNotificationManager
@@ -142,7 +145,7 @@ fun Application.configureSecurityRoutes() = routing {
     }
 
     authenticate("tokenAuth") {
-        get("/api/auth/totp/qr") {
+        getP("/api/auth/totp/qr", PermissionType.MANAGE_OWN_2FA) {
             try {
                 val user = call.getUser() ?: unauthorized()
                 call.respondBytes(TotpManager.getQrCodeForUser(user), ContentType.Image.PNG)
@@ -153,7 +156,20 @@ fun Application.configureSecurityRoutes() = routing {
             }
         }
 
-        put("/api/auth/totp") {
+        getP("/api/auth/totp", PermissionType.MANAGE_OWN_2FA) {
+            val user = call.getUser() ?: unauthorized()
+
+            if (user.totpSecret == null) {
+                TotpManager.generateTotpSecret(user)
+            }
+
+            call.respond(TotpStatusDto(
+                status = user.totpType.name,
+                secret = if (user.totpType != TotpType.Totp) user.totpSecret else null
+            ))
+        }
+
+        putP("/api/auth/totp", PermissionType.MANAGE_OWN_2FA) {
             val user = call.getUser() ?: unauthorized()
             val type = call.getEnum<TotpType>("type", null)
             when (type) {
@@ -178,6 +194,11 @@ fun Application.configureSecurityRoutes() = routing {
 
         val session = SessionRepo.getFromSessionToken(token) ?: unauthorized()
         val user = SessionRepo.getUser(session)
+
+        if (!PermissionRepo.hasPermission(user.id.value, PermissionType.MANAGE_OWN_2FA)) {
+            forbidden(PermissionType.MANAGE_OWN_2FA)
+        }
+
         if (!totpRateLimiter.check(call.getClientId())) {
             rateLimitExceeded()
         }

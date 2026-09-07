@@ -49,7 +49,9 @@ enum class PermissionType(val id: String, val grantedByDefault: Boolean) {
     MANAGE_WIDGETS("manage_widgets", true),
 
     CREATE_TRACK_RELATIONS("create_track_relations", false),
-    DELETE_TRACK_RELATIONS("delete_track_relations", false);
+    DELETE_TRACK_RELATIONS("delete_track_relations", false),
+
+    MANAGE_OWN_2FA("manage_own_2fa", true);
 
     companion object {
         private val map = entries.associateBy(PermissionType::id)
