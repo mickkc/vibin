@@ -29,9 +29,11 @@
   * [Features](#features)
   * [Quickstart](#quickstart)
   * [Usage](#usage)
+  * [Credits](#credits)
   * [License](#license)
 <!-- TOC -->
 
+---
 
 ## Features
 
@@ -59,6 +61,8 @@
 </tr>
 </table>
 
+---
+
 ## Quickstart
 
 1. Make sure you have [Docker](https://docs.docker.com/engine/install) and [Docker Compose](https://docs.docker.com/compose/install/)
@@ -82,6 +86,15 @@
 ## Usage
 
 To learn more about Vibin', you can check out the [Wiki](https://vibin.rip/docs/category/usage) (work in progress).
+
+---
+
+## Credits
+
+Thank you to everyone who contributed to Vibin'! ❤️
+
+- @Vistaus - Dutch translation
+- @WreckingBANG, @blorg - Testing, Issue reporting
 
 ---
 
