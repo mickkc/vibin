@@ -71,6 +71,7 @@ object EnvUtil {
 
     val IMAGE_CACHE_DIR = EnvKey("IMAGE_CACHE_DIR", File("/opt/vibin/image_cache"), ::fileParser)
     val WIDGET_IMAGE_CACHE_DIR = EnvKey("WIDGET_IMAGE_CACHE_DIR", File("/opt/vibin/widget_image_cache"), ::fileParser)
+    val TRANSCODE_CACHE_DIR = EnvKey("TRANSCODE_CACHE_DIR", File("/opt/vibin/transcode_cache"), ::fileParser)
 
     val WIDGET_CACHE_EXPIRATION_MINUTES = EnvKey("WIDGET_CACHE_EXPIRATION_MINUTES", 20, String::toIntOrNull)
 
