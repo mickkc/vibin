@@ -1,9 +1,5 @@
 package de.mickkc.vibin.db.tracks
 
-import org.jetbrains.exposed.dao.LongEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.deleteWhere
 import de.mickkc.vibin.db.ModifiableLongIdEntity
 import de.mickkc.vibin.db.ModifiableLongIdTable
 import de.mickkc.vibin.db.UserEntity
@@ -22,7 +18,10 @@ import de.mickkc.vibin.repos.PlaylistTrackRepo
 import de.mickkc.vibin.repos.TrackRelationRepo
 import de.mickkc.vibin.streaming.TranscodeCache
 import de.mickkc.vibin.utils.PathUtils
-import kotlinx.css.tr
+import org.jetbrains.exposed.dao.LongEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
 
 object TrackTable : ModifiableLongIdTable("track") {
     val title = varchar("title", 255).index()
