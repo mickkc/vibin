@@ -8,8 +8,12 @@ import kotlinx.coroutines.sync.withLock
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Caches fully transcoded copies of tracks on disk, keyed by track checksum, format and bitrate.
@@ -44,14 +48,14 @@ object TranscodeCache {
     // Detached from any single request's lifetime so a client disconnecting mid-stream doesn't stop transcoding
     private val backgroundScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    private val cacheDir = EnvUtil.getOrError(EnvUtil.TRANSCODE_CACHE_DIR)
+    private val timeoutSeconds = EnvUtil.getOrError(EnvUtil.TRANSCODE_TIMEOUT_SECONDS)
+
     init {
-        val cacheDir = getCacheDir()
         if (!cacheDir.exists()) {
             cacheDir.mkdirs()
         }
     }
-
-    fun getCacheDir(): File = EnvUtil.getOrError(EnvUtil.TRANSCODE_CACHE_DIR)
 
     private fun extensionFor(format: String) = when (format) {
         "mp3" -> "mp3"
@@ -76,7 +80,7 @@ object TranscodeCache {
 
     private fun cacheKey(checksum: String, format: String, bitrate: Int) = "${checksum}_${format}_$bitrate"
 
-    private fun cacheFileFor(key: String, format: String) = File(getCacheDir(), "$key.${extensionFor(format)}")
+    private fun cacheFileFor(key: String, format: String) = File(cacheDir, "$key.${extensionFor(format)}")
 
     /**
      * Gets the cached audio file for a track with a specific format and bitrate.
@@ -112,7 +116,7 @@ object TranscodeCache {
         mutex.withLock {
             if (cacheFile.exists()) return cacheFile
 
-            val tempFile = File(getCacheDir(), "$key.tmp")
+            val tempFile = File(cacheDir, "$key.tmp")
             transcodeToFile(sourceFile, tempFile, format, bitrate)
             finishCacheFile(tempFile, cacheFile)
             return cacheFile
@@ -146,7 +150,7 @@ object TranscodeCache {
                         streamFileTo(cacheFile, session.queue)
                     }
                     else {
-                        val tempFile = File(getCacheDir(), "$key.tmp")
+                        val tempFile = File(cacheDir, "$key.tmp")
                         transcodeAndTee(sourceFile, tempFile, format, bitrate, session.queue)
                         finishCacheFile(tempFile, cacheFile)
                     }
@@ -189,6 +193,7 @@ object TranscodeCache {
      * @param format The target format (mp3, opus, aac)
      * @param bitrate The bitrate in kbps
      * @param queue The queue the transcoded data gets tee'd (?) to
+     * @throws RuntimeException ffmpeg failed or timed out
      */
     private suspend fun transcodeAndTee(sourceFile: File, tempFile: File, format: String, bitrate: Int, queue: LinkedBlockingQueue<ByteArray>) = coroutineScope {
         val args = listOf(
@@ -202,21 +207,46 @@ object TranscodeCache {
             process.errorStream.bufferedReader().use { it.readText() }
         }
 
-        // Stream transcoding result into temporary file and tee to the session's queue
-        tempFile.outputStream().use { fileOut ->
-            process.inputStream.use { procOut ->
-                val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-                while (true) {
-                    // Read from process
-                    val read = procOut.read(buffer)
-                    // Check if finished
-                    if (read < 0) break
-                    // Write to file
-                    fileOut.write(buffer, 0, read)
-                    // Write to queue
-                    queue.put(buffer.copyOf(read))
+        // Reading from the process blocks the coroutine, so a new coroutine is required to check for the timeout
+        val timedOut = AtomicBoolean(false)
+        val timeoutJob = launch {
+            delay(timeoutSeconds.seconds)
+            if (process.isAlive) {
+                timedOut.set(true)
+                logger.warn("ffmpeg transcoding of ${sourceFile.name} exceeded ${timeoutSeconds}s, forcibly terminating")
+                process.destroyForcibly()
+            }
+        }
+
+        try {
+            // Stream transcoding result into temporary file and tee to the session's queue
+            tempFile.outputStream().use { fileOut ->
+                process.inputStream.use { procOut ->
+                    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                    while (true) {
+                        // Read from process
+                        val read = procOut.read(buffer)
+                        // Check if finished
+                        if (read < 0) break
+                        // Write to file
+                        fileOut.write(buffer, 0, read)
+                        // Write to queue
+                        queue.put(buffer.copyOf(read))
+                    }
                 }
             }
+        }
+        catch (e: IOException) {
+            // Expected when the coroutine times out
+            if (!timedOut.get()) throw e
+        }
+        finally {
+            timeoutJob.cancel()
+        }
+
+        if (timedOut.get()) {
+            tempFile.delete()
+            throw RuntimeException("ffmpeg transcoding timed out after ${timeoutSeconds}s and was forcibly terminated")
         }
 
         val exitCode = process.waitFor()
@@ -235,7 +265,7 @@ object TranscodeCache {
      * @param outputFile The target file to transcode to
      * @param format The target format (mp3, opus, aac)
      * @param bitrate The target bitrate in kbps
-     * @throws RuntimeException ffmpeg transcoding failed
+     * @throws RuntimeException ffmpeg transcoding failed or timed out
      */
     private fun transcodeToFile(sourceFile: File, outputFile: File, format: String, bitrate: Int) {
         val args = listOf(
@@ -247,7 +277,13 @@ object TranscodeCache {
             .redirectErrorStream(true)
             .start()
 
-        val exitCode = process.waitFor()
+        if (!process.waitFor(timeoutSeconds.toLong(), TimeUnit.SECONDS)) {
+            process.destroyForcibly()
+            outputFile.delete()
+            throw RuntimeException("ffmpeg transcoding timed out after ${timeoutSeconds}s and was forcibly terminated")
+        }
+
+        val exitCode = process.exitValue()
         if (exitCode != 0 || !outputFile.exists()) {
             outputFile.delete()
             throw RuntimeException("ffmpeg transcoding failed with exit code $exitCode")
@@ -278,7 +314,7 @@ object TranscodeCache {
      * @param checksum The checksum of the track to delete the cache for
      */
     fun evictCacheForTrack(checksum: String) {
-        val cachedFiles = getCacheDir().listFiles { file -> file.name.startsWith("${checksum}_") } ?: return
+        val cachedFiles = cacheDir.listFiles { file -> file.name.startsWith("${checksum}_") } ?: return
         for (file in cachedFiles) {
             try {
                 file.delete()
