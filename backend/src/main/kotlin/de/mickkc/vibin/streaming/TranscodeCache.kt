@@ -57,18 +57,14 @@ object TranscodeCache {
 
     private val cacheDir = EnvUtil.getOrError(EnvUtil.TRANSCODE_CACHE_DIR)
     private val timeoutSeconds = EnvUtil.getOrError(EnvUtil.TRANSCODE_TIMEOUT_SECONDS)
+    private val maxCacheSizeBytes = EnvUtil.getOrError(EnvUtil.TRANSCODE_MAX_CACHE_SIZE)
+
+    private val evictionMutex = Mutex()
 
     init {
         if (!cacheDir.exists()) {
             cacheDir.mkdirs()
         }
-    }
-
-    private fun extensionFor(format: Format) = when (format) {
-        Format.mp3 -> "mp3"
-        Format.opus -> "webm"
-        Format.aac -> "aac"
-        else -> throw IllegalArgumentException("Unsupported format: $format")
     }
 
     private fun codecFor(format: Format) = when (format) {
@@ -87,7 +83,7 @@ object TranscodeCache {
 
     private fun cacheKey(checksum: String, format: Format, bitrate: Int) = "${checksum}_${format.name}_$bitrate"
 
-    private fun cacheFileFor(key: String, format: Format) = File(cacheDir, "$key.${extensionFor(format)}")
+    private fun cacheFileFor(key: String) = File(cacheDir, "$key.bin")
 
     /**
      * Gets the cached audio file for a track with a specific format and bitrate.
@@ -98,8 +94,8 @@ object TranscodeCache {
      * @return The cached file for that track, format and bitrate (null if not found)
      */
     fun getCachedFile(track: TrackEntity, format: Format, bitrate: Int): File? {
-        val cacheFile = cacheFileFor(cacheKey(track.checksum, format, bitrate), format)
-        return cacheFile.takeIf { it.exists() }
+        val cacheFile = cacheFileFor(cacheKey(track.checksum, format, bitrate))
+        return cacheFile.takeIf { it.exists() }?.also { updateLastModified(it) }
     }
 
     /**
@@ -114,20 +110,21 @@ object TranscodeCache {
      */
     suspend fun getOrCreate(track: TrackEntity, sourceFile: File, format: Format, bitrate: Int): File {
         val key = cacheKey(track.checksum, format, bitrate)
-        val cacheFile = cacheFileFor(key, format)
+        val cacheFile = cacheFileFor(key)
 
-        if (cacheFile.exists()) return cacheFile
+        if (cacheFile.exists()) return cacheFile.also { updateLastModified(it) }
 
         val mutex = mutexes.computeIfAbsent(key) { Mutex() }
 
         mutex.withLock {
-            if (cacheFile.exists()) return cacheFile
+            if (cacheFile.exists()) return cacheFile.also { updateLastModified(it) }
 
             val realBitrate = if (bitrate <= 0) track.bitrate ?: 320 else bitrate
 
             val tempFile = File(cacheDir, "$key.tmp")
             transcodeToFile(sourceFile, tempFile, format, realBitrate)
             finishCacheFile(tempFile, cacheFile)
+            enforceMaxCacheSize()
             return cacheFile
         }
     }
@@ -148,7 +145,7 @@ object TranscodeCache {
      */
     fun streamAndCache(track: TrackEntity, sourceFile: File, format: Format, bitrate: Int): TeeSession {
         val key = cacheKey(track.checksum, format, bitrate)
-        val cacheFile = cacheFileFor(key, format)
+        val cacheFile = cacheFileFor(key)
         val session = TeeSession()
         val realBitrate = if (bitrate <= 0) track.bitrate ?: 320 else bitrate
 
@@ -157,12 +154,14 @@ object TranscodeCache {
                 val mutex = mutexes.computeIfAbsent(key) { Mutex() }
                 mutex.withLock {
                     if (cacheFile.exists()) {
+                        updateLastModified(cacheFile)
                         streamFileTo(cacheFile, session.queue)
                     }
                     else {
                         val tempFile = File(cacheDir, "$key.tmp")
                         transcodeAndTee(sourceFile, tempFile, format, realBitrate, session.queue)
                         finishCacheFile(tempFile, cacheFile)
+                        enforceMaxCacheSize()
                     }
                 }
             }
@@ -316,6 +315,39 @@ object TranscodeCache {
             throw RuntimeException("Failed to move transcoded file into cache: ${cacheFile.absolutePath}")
         }
         logger.info("Cached transcoded track at: ${cacheFile.absolutePath}")
+    }
+
+    /**
+     * Marks a cache file as just accessed, so it is treated as recently used for eviction purposes.
+     *
+     * @param file The cache file that was just read
+     */
+    private fun updateLastModified(file: File) {
+        file.setLastModified(System.currentTimeMillis())
+    }
+
+    /**
+     * Evicts the least recently used cache files until the total cache size is back under [EnvUtil.TRANSCODE_MAX_CACHE_SIZE].
+     */
+    private suspend fun enforceMaxCacheSize() {
+        if (maxCacheSizeBytes <= 0) return
+
+        evictionMutex.withLock {
+            val cachedFiles = cacheDir.listFiles { file -> file.isFile && file.name.endsWith(".bin") } ?: return
+
+            var totalSize = cachedFiles.sumOf { it.length() }
+            if (totalSize <= maxCacheSizeBytes) return
+
+            for (file in cachedFiles.sortedBy { it.lastModified() }) {
+                if (totalSize <= maxCacheSizeBytes) break
+
+                val size = file.length()
+                if (file.delete()) {
+                    totalSize -= size
+                    logger.info("Evicted cached transcode file to stay under max cache size: ${file.name}")
+                }
+            }
+        }
     }
 
     /**
