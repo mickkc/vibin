@@ -1,5 +1,6 @@
 package de.mickkc.vibin.config
 
+import de.mickkc.vibin.utils.FileSizeParser
 import java.io.File
 
 data class EnvKey<T>(
@@ -71,8 +72,11 @@ object EnvUtil {
 
     val IMAGE_CACHE_DIR = EnvKey("IMAGE_CACHE_DIR", File("/opt/vibin/image_cache"), ::fileParser)
     val WIDGET_IMAGE_CACHE_DIR = EnvKey("WIDGET_IMAGE_CACHE_DIR", File("/opt/vibin/widget_image_cache"), ::fileParser)
+    val TRANSCODE_CACHE_DIR = EnvKey("TRANSCODE_CACHE_DIR", File("/opt/vibin/transcode_cache"), ::fileParser)
+    val TRANSCODE_MAX_CACHE_SIZE = EnvKey("TRANSCODE_MAX_CACHE_SIZE", 5L * 1024 * 1024 * 1024, FileSizeParser::parseFileSizeToBytes)
 
     val WIDGET_CACHE_EXPIRATION_MINUTES = EnvKey("WIDGET_CACHE_EXPIRATION_MINUTES", 20, String::toIntOrNull)
+    val TRANSCODE_TIMEOUT_SECONDS = EnvKey("TRANSCODE_TIMEOUT_SECONDS", 60, String::toIntOrNull)
 
     val WIDGET_IMAGE_CACHE_RATE_LIMIT_REQUESTS = EnvKey("WIDGET_IMAGE_CACHE_RATE_LIMIT_REQUESTS", 5, String::toIntOrNull)
     val LOGIN_RATE_LIMIT_ATTEMPTS = EnvKey("LOGIN_RATE_LIMIT_ATTEMPTS", 5, String::toIntOrNull)
