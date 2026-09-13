@@ -15,6 +15,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.slf4j.LoggerFactory
 
 /**
  * True for a request with no Range header, or a range request from 0 to end (`bytes=0-`) which is sent when playback
@@ -30,6 +31,10 @@ private fun isPlainStartRequest(rangeHeader: String?): Boolean {
 
     return parts[0].trim() == "0" && parts[1].trim().isEmpty()
 }
+
+val allowedBitrates = arrayOf(128, 192, 256, 320, 0)
+
+private val logger = LoggerFactory.getLogger("StreamRoutes")
 
 fun Application.configureStreamRoutes() = routing {
 
@@ -58,8 +63,8 @@ fun Application.configureStreamRoutes() = routing {
             unauthorized("Invalid or expired track signature")
         }
 
-        val format = call.getStringOrDefault("format", "mp3").trim().lowercase()
-        val bitrate = call.getIntOrDefault("bitrate", 128)
+        val format = call.getEnum("format", TranscodeCache.Format.mp3)
+        val bitrate = call.getIntOrDefault("bitrate", 0)
 
         val file = PathUtils.getTrackFileFromPath(track.path)
         if (!file.exists()) {
@@ -69,18 +74,18 @@ fun Application.configureStreamRoutes() = routing {
         call.response.header(HttpHeaders.CacheControl, "no-cache, no-store, must-revalidate")
 
         // Respond with the original file. (Ranges are handled by Ktor)
-        if (format == "original") {
+        if (format == TranscodeCache.Format.original) {
             return@get call.respondFile(file)
         }
 
-        if (format !in listOf("mp3", "opus", "aac")) {
-            invalidParameter("format", "mp3", "opus", "aac")
+        if (bitrate !in allowedBitrates) {
+            invalidParameter("bitrate", "128", "192", "256", "512", "0")
         }
 
         val contentType = when (format) {
-            "mp3" -> ContentType.parse("audio/mpeg")
-            "opus" -> ContentType.parse("audio/webm")
-            "aac" -> ContentType.parse("audio/aac")
+            TranscodeCache.Format.mp3 -> ContentType.parse("audio/mpeg")
+            TranscodeCache.Format.opus -> ContentType.parse("audio/webm")
+            TranscodeCache.Format.aac -> ContentType.parse("audio/aac")
             else -> ContentType.Audio.Any
         }
 
@@ -94,7 +99,7 @@ fun Application.configureStreamRoutes() = routing {
         if (!isPlainStartRequest(rangeHeader)) {
             // Client is trying to seek, which can't be responded to while transcoding.
             // So, the file must be transcoded first before the correct range can be read from the cached file.
-            log.info("Serving track ID $trackId in format $format at bitrate ${bitrate}kbps (blocking transcode for range request)")
+            logger.info("Serving track ID $trackId in format $format at bitrate ${bitrate}kbps (blocking transcode for range request)")
             val fullFile = withContext(Dispatchers.IO) {
                 TranscodeCache.getOrCreate(track, file, format, bitrate)
             }
@@ -105,7 +110,7 @@ fun Application.configureStreamRoutes() = routing {
 
         // No cache exists, but the client is playing from the start. This means that the output from ffmpeg can be sent
         // back directly while also writing to the cached file.
-        log.info("Serving track ID $trackId in format $format at bitrate ${bitrate}kbps (streaming while transcoding)")
+        logger.info("Serving track ID $trackId in format $format at bitrate ${bitrate}kbps (streaming while transcoding)")
 
         // Start transcoding to the cached file
         val session = TranscodeCache.streamAndCache(track, file, format, bitrate)

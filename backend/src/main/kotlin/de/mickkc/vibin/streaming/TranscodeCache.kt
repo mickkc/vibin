@@ -42,6 +42,13 @@ import kotlin.time.Duration.Companion.seconds
  */
 object TranscodeCache {
 
+    enum class Format {
+        mp3,
+        aac,
+        opus,
+        original
+    }
+
     private val logger: Logger = LoggerFactory.getLogger(TranscodeCache::class.java)
     private val mutexes = ConcurrentHashMap<String, Mutex>()
 
@@ -57,30 +64,30 @@ object TranscodeCache {
         }
     }
 
-    private fun extensionFor(format: String) = when (format) {
-        "mp3" -> "mp3"
-        "opus" -> "webm"
-        "aac" -> "aac"
-        else -> format
-    }
-
-    private fun codecFor(format: String) = when (format) {
-        "mp3" -> "libmp3lame"
-        "opus" -> "libopus"
-        "aac" -> "aac"
+    private fun extensionFor(format: Format) = when (format) {
+        Format.mp3 -> "mp3"
+        Format.opus -> "webm"
+        Format.aac -> "aac"
         else -> throw IllegalArgumentException("Unsupported format: $format")
     }
 
-    private fun containerFor(format: String) = when (format) {
-        "mp3" -> "mp3"
-        "opus" -> "webm"
-        "aac" -> "adts"
+    private fun codecFor(format: Format) = when (format) {
+        Format.mp3 -> "libmp3lame"
+        Format.opus -> "libopus"
+        Format.aac -> "aac"
         else -> throw IllegalArgumentException("Unsupported format: $format")
     }
 
-    private fun cacheKey(checksum: String, format: String, bitrate: Int) = "${checksum}_${format}_$bitrate"
+    private fun containerFor(format: Format) = when (format) {
+        Format.mp3 -> "mp3"
+        Format.opus -> "webm"
+        Format.aac -> "adts"
+        else -> throw IllegalArgumentException("Unsupported format: $format")
+    }
 
-    private fun cacheFileFor(key: String, format: String) = File(cacheDir, "$key.${extensionFor(format)}")
+    private fun cacheKey(checksum: String, format: Format, bitrate: Int) = "${checksum}_${format.name}_$bitrate"
+
+    private fun cacheFileFor(key: String, format: Format) = File(cacheDir, "$key.${extensionFor(format)}")
 
     /**
      * Gets the cached audio file for a track with a specific format and bitrate.
@@ -90,7 +97,7 @@ object TranscodeCache {
      * @param bitrate The bitrate in kbps
      * @return The cached file for that track, format and bitrate (null if not found)
      */
-    fun getCachedFile(track: TrackEntity, format: String, bitrate: Int): File? {
+    fun getCachedFile(track: TrackEntity, format: Format, bitrate: Int): File? {
         val cacheFile = cacheFileFor(cacheKey(track.checksum, format, bitrate), format)
         return cacheFile.takeIf { it.exists() }
     }
@@ -102,10 +109,10 @@ object TranscodeCache {
      * @param track The track to get/create the cached file for
      * @param sourceFile The track's original file
      * @param format The target format (mp3, opus, aac)
-     * @param bitrate The bitrate in kbps
+     * @param bitrate The bitrate in kbps. A bitrate of 0 means using the original bitrate (or 320 if not detected)
      * @return The transcoded, cached file
      */
-    suspend fun getOrCreate(track: TrackEntity, sourceFile: File, format: String, bitrate: Int): File {
+    suspend fun getOrCreate(track: TrackEntity, sourceFile: File, format: Format, bitrate: Int): File {
         val key = cacheKey(track.checksum, format, bitrate)
         val cacheFile = cacheFileFor(key, format)
 
@@ -116,8 +123,10 @@ object TranscodeCache {
         mutex.withLock {
             if (cacheFile.exists()) return cacheFile
 
+            val realBitrate = if (bitrate <= 0) track.bitrate ?: 320 else bitrate
+
             val tempFile = File(cacheDir, "$key.tmp")
-            transcodeToFile(sourceFile, tempFile, format, bitrate)
+            transcodeToFile(sourceFile, tempFile, format, realBitrate)
             finishCacheFile(tempFile, cacheFile)
             return cacheFile
         }
@@ -134,13 +143,14 @@ object TranscodeCache {
      * @param track The track to get/create the cached file for
      * @param sourceFile The track's original file
      * @param format The target format (mp3, opus, aac)
-     * @param bitrate The bitrate in kbps
+     * @param bitrate The bitrate in kbps. A bitrate of 0 means using the original bitrate (or 320 if not detected)
      * @return A [TeeSession] that can be drained to get the transcoding output
      */
-    fun streamAndCache(track: TrackEntity, sourceFile: File, format: String, bitrate: Int): TeeSession {
+    fun streamAndCache(track: TrackEntity, sourceFile: File, format: Format, bitrate: Int): TeeSession {
         val key = cacheKey(track.checksum, format, bitrate)
         val cacheFile = cacheFileFor(key, format)
         val session = TeeSession()
+        val realBitrate = if (bitrate <= 0) track.bitrate ?: 320 else bitrate
 
         backgroundScope.launch {
             try {
@@ -151,7 +161,7 @@ object TranscodeCache {
                     }
                     else {
                         val tempFile = File(cacheDir, "$key.tmp")
-                        transcodeAndTee(sourceFile, tempFile, format, bitrate, session.queue)
+                        transcodeAndTee(sourceFile, tempFile, format, realBitrate, session.queue)
                         finishCacheFile(tempFile, cacheFile)
                     }
                 }
@@ -195,7 +205,7 @@ object TranscodeCache {
      * @param queue The queue the transcoded data gets tee'd (?) to
      * @throws RuntimeException ffmpeg failed or timed out
      */
-    private suspend fun transcodeAndTee(sourceFile: File, tempFile: File, format: String, bitrate: Int, queue: LinkedBlockingQueue<ByteArray>) = coroutineScope {
+    private suspend fun transcodeAndTee(sourceFile: File, tempFile: File, format: Format, bitrate: Int, queue: LinkedBlockingQueue<ByteArray>) = coroutineScope {
         val args = listOf(
             "-hide_banner", "-loglevel", "error", "-i", sourceFile.absolutePath,
             "-vn", "-c:a", codecFor(format), "-b:a", "${bitrate}k", "-f", containerFor(format), "-"
@@ -267,7 +277,7 @@ object TranscodeCache {
      * @param bitrate The target bitrate in kbps
      * @throws RuntimeException ffmpeg transcoding failed or timed out
      */
-    private fun transcodeToFile(sourceFile: File, outputFile: File, format: String, bitrate: Int) {
+    private fun transcodeToFile(sourceFile: File, outputFile: File, format: Format, bitrate: Int) {
         val args = listOf(
             "-hide_banner", "-loglevel", "error", "-y", "-i", sourceFile.absolutePath,
             "-vn", "-c:a", codecFor(format), "-b:a", "${bitrate}k", "-f", containerFor(format), outputFile.absolutePath
