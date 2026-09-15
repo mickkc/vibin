@@ -20,7 +20,6 @@ import de.mickkc.vibin.repos.ListenTrackingRepo
 import de.mickkc.vibin.repos.LyricsRepo
 import de.mickkc.vibin.repos.PlaylistTrackRepo
 import de.mickkc.vibin.repos.TrackRelationRepo
-import de.mickkc.vibin.streaming.TranscodeCache
 import de.mickkc.vibin.utils.PathUtils
 import kotlinx.css.tr
 
@@ -93,7 +92,6 @@ class TrackEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, TrackTable) {
     override fun delete() {
 
         val trackId = this.id.value
-        val trackChecksum = this.checksum
 
         // Remove associations to artists
         TrackArtistConnection.deleteWhere { TrackArtistConnection.track eq trackId }
@@ -120,7 +118,5 @@ class TrackEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, TrackTable) {
         // Delete the track file from the filesystem after it has been deleted ffrom the database
         // In case the database deletion fails, this will not delete the file
         PathUtils.getTrackFileFromPath(trackPath).delete()
-
-        TranscodeCache.evictCacheForTrack(trackChecksum)
     }
 }
