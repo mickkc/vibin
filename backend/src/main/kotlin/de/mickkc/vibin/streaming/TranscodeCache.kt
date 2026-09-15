@@ -1,6 +1,5 @@
 package de.mickkc.vibin.streaming
 
-import com.github.benmanes.caffeine.cache.Caffeine
 import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.db.tracks.TrackEntity
 import kotlinx.coroutines.*
@@ -10,6 +9,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.IOException
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -50,11 +50,7 @@ object TranscodeCache {
     }
 
     private val logger: Logger = LoggerFactory.getLogger(TranscodeCache::class.java)
-
-    private val mutexes = Caffeine.newBuilder()
-        .maximumSize(10_000)
-        .expireAfterAccess(1, TimeUnit.HOURS)
-        .build<String, Mutex> { Mutex() }
+    private val mutexes = ConcurrentHashMap<String, Mutex>()
 
     // Detached from any single request's lifetime so a client disconnecting mid-stream doesn't stop transcoding
     private val backgroundScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -118,7 +114,7 @@ object TranscodeCache {
 
         if (cacheFile.exists()) return cacheFile.also { updateLastModified(it) }
 
-        val mutex = mutexes.get(key)
+        val mutex = mutexes.computeIfAbsent(key) { Mutex() }
 
         mutex.withLock {
             if (cacheFile.exists()) return cacheFile.also { updateLastModified(it) }
@@ -155,7 +151,7 @@ object TranscodeCache {
 
         backgroundScope.launch {
             try {
-                val mutex = mutexes.get(key)
+                val mutex = mutexes.computeIfAbsent(key) { Mutex() }
                 mutex.withLock {
                     if (cacheFile.exists()) {
                         updateLastModified(cacheFile)
