@@ -79,7 +79,7 @@ fun Application.configureStreamRoutes() = routing {
         }
 
         if (bitrate !in allowedBitrates) {
-            invalidParameter("bitrate", "128", "192", "256", "320", "0")
+            invalidParameter("bitrate", "128", "192", "256", "512", "0")
         }
 
         val contentType = when (format) {
