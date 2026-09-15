@@ -74,7 +74,6 @@ object EnvUtil {
     val TRANSCODE_CACHE_DIR = EnvKey("TRANSCODE_CACHE_DIR", File("/opt/vibin/transcode_cache"), ::fileParser)
 
     val WIDGET_CACHE_EXPIRATION_MINUTES = EnvKey("WIDGET_CACHE_EXPIRATION_MINUTES", 20, String::toIntOrNull)
-    val TRANSCODE_TIMEOUT_SECONDS = EnvKey("TRANSCODE_TIMEOUT_SECONDS", 60, String::toIntOrNull)
 
     val WIDGET_IMAGE_CACHE_RATE_LIMIT_REQUESTS = EnvKey("WIDGET_IMAGE_CACHE_RATE_LIMIT_REQUESTS", 5, String::toIntOrNull)
     val LOGIN_RATE_LIMIT_ATTEMPTS = EnvKey("LOGIN_RATE_LIMIT_ATTEMPTS", 5, String::toIntOrNull)
