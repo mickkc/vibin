@@ -2,14 +2,18 @@ package de.mickkc.vibin.streaming
 
 import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.db.tracks.TrackEntity
-import kotlinx.coroutines.*
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.locks.ReentrantLock
 
 /**
  * Caches fully transcoded copies of tracks on disk, keyed by track checksum, format and bitrate.
@@ -39,7 +43,7 @@ import java.util.concurrent.LinkedBlockingQueue
 object TranscodeCache {
 
     private val logger: Logger = LoggerFactory.getLogger(TranscodeCache::class.java)
-    private val mutexes = ConcurrentHashMap<String, Mutex>()
+    private val locks = ConcurrentHashMap<String, ReentrantLock>()
 
     // Detached from any single request's lifetime so a client disconnecting mid-stream doesn't stop transcoding
     private val backgroundScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -101,21 +105,24 @@ object TranscodeCache {
      * @param bitrate The bitrate in kbps
      * @return The transcoded, cached file
      */
-    suspend fun getOrCreate(track: TrackEntity, sourceFile: File, format: String, bitrate: Int): File {
+    fun getOrCreate(track: TrackEntity, sourceFile: File, format: String, bitrate: Int): File {
         val key = cacheKey(track.checksum, format, bitrate)
         val cacheFile = cacheFileFor(key, format)
 
         if (cacheFile.exists()) return cacheFile
 
-        val mutex = mutexes.computeIfAbsent(key) { Mutex() }
-
-        mutex.withLock {
+        val lock = locks.computeIfAbsent(key) { ReentrantLock() }
+        lock.lock()
+        try {
             if (cacheFile.exists()) return cacheFile
 
             val tempFile = File(getCacheDir(), "$key.tmp")
             transcodeToFile(sourceFile, tempFile, format, bitrate)
             finishCacheFile(tempFile, cacheFile)
             return cacheFile
+        }
+        finally {
+            lock.unlock()
         }
     }
 
@@ -140,8 +147,9 @@ object TranscodeCache {
 
         backgroundScope.launch {
             try {
-                val mutex = mutexes.computeIfAbsent(key) { Mutex() }
-                mutex.withLock {
+                val lock = locks.computeIfAbsent(key) { ReentrantLock() }
+                lock.lock()
+                try {
                     if (cacheFile.exists()) {
                         streamFileTo(cacheFile, session.queue)
                     }
@@ -150,6 +158,9 @@ object TranscodeCache {
                         transcodeAndTee(sourceFile, tempFile, format, bitrate, session.queue)
                         finishCacheFile(tempFile, cacheFile)
                     }
+                }
+                finally {
+                    lock.unlock()
                 }
             }
             catch (e: Exception) {
