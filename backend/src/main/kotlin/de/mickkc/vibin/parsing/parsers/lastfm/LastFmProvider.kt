@@ -1,5 +1,6 @@
 package de.mickkc.vibin.parsing.parsers.lastfm
 
+import de.mickkc.vibin.db.UserEntity
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -15,26 +16,28 @@ import de.mickkc.vibin.parsing.parsers.*
 import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.settings.server.ExtendedMetadata
 import de.mickkc.vibin.settings.server.LastFmApiKey
+import de.mickkc.vibin.settings.user.LastFmUserApiKey
 
 class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearchProvider, AlbumSearchProvider, FileParser {
 
     private val logger: Logger = LoggerFactory.getLogger(LastFmProvider::class.java)
 
-    private fun getApiKey(): String {
-        val apiKey = Settings.get(LastFmApiKey)
+    private fun getApiKey(user: UserEntity?): String {
+        val apiKey = Settings.getUserOrServer(LastFmUserApiKey, LastFmApiKey, user?.id?.value)
+
         if (apiKey.isEmpty()) {
             throw IllegalStateException("Last.fm API key is not set in settings")
         }
         return apiKey
     }
 
-    private suspend fun getExtendedTrackMetadata(artist: String, track: String): TrackInfoMetadata? {
+    private suspend fun getExtendedTrackMetadata(artist: String, track: String, user: UserEntity?): TrackInfoMetadata? {
 
         val response = client.get("https://ws.audioscrobbler.com/2.0") {
             parameter("method", "track.getinfo")
             parameter("artist", artist)
             parameter("track", track)
-            parameter("api_key", getApiKey())
+            parameter("api_key", getApiKey(user))
             parameter("format", "json")
         }
 
@@ -56,12 +59,12 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
         )
     }
 
-    override suspend fun searchTrack(query: String): List<TrackInfoMetadata>? {
+    override suspend fun searchTrack(query: String, user: UserEntity?): List<TrackInfoMetadata>? {
 
         val response = client.get("https://ws.audioscrobbler.com/2.0") {
             parameter("method", "track.search")
             parameter("track", query)
-            parameter("api_key", getApiKey())
+            parameter("api_key", getApiKey(user))
             parameter("format", "json")
             ParsingUtils.limit?.let {parameter("limit", it) }
         }
@@ -82,7 +85,7 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
             var mapped: TrackInfoMetadata? = null
 
             if (extended) {
-                mapped = getExtendedTrackMetadata(track.artist, track.name)
+                mapped = getExtendedTrackMetadata(track.artist, track.name, user)
             }
             mapped ?: TrackInfoMetadata(
                 title = track.name,
@@ -93,11 +96,11 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
         }
     }
 
-    private suspend fun getExtendedArtistMetadata(artist: String): ArtistMetadata? {
+    private suspend fun getExtendedArtistMetadata(artist: String, user: UserEntity?): ArtistMetadata? {
         val response = client.get("https://ws.audioscrobbler.com/2.0") {
             parameter("method", "artist.getinfo")
             parameter("artist", artist)
-            parameter("api_key", getApiKey())
+            parameter("api_key", getApiKey(user))
             parameter("format", "json")
         }
 
@@ -116,11 +119,11 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
         )
     }
 
-    override suspend fun searchArtist(query: String): List<ArtistMetadata>? {
+    override suspend fun searchArtist(query: String, user: UserEntity?): List<ArtistMetadata>? {
         val response = client.get("https://ws.audioscrobbler.com/2.0") {
             parameter("method", "artist.search")
             parameter("artist", query)
-            parameter("api_key", getApiKey())
+            parameter("api_key", getApiKey(user))
             parameter("format", "json")
             ParsingUtils.limit?.let {parameter("limit", it) }
         }
@@ -140,7 +143,7 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
         return result.results.artistmatches.artist.map { artist ->
 
             val mapped: ArtistMetadata? = if (extended) {
-                getExtendedArtistMetadata(artist.name)
+                getExtendedArtistMetadata(artist.name, user)
             } else null
 
             mapped ?: ArtistMetadata(
@@ -155,13 +158,13 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
         return images.find { it.size == "extralarge" }?.`#text`?.replace("/300x300/", "/1024x1024/")
     }
 
-    private suspend fun getExtendedAlbumMetadata(artist: String, album: String): AlbumMetadata? {
+    private suspend fun getExtendedAlbumMetadata(artist: String, album: String, user: UserEntity?): AlbumMetadata? {
 
         val response = client.get("https://ws.audioscrobbler.com/2.0") {
             parameter("method", "album.getinfo")
             parameter("artist", artist)
             parameter("album", album)
-            parameter("api_key", getApiKey())
+            parameter("api_key", getApiKey(user))
             parameter("format", "json")
         }
 
@@ -181,12 +184,12 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
         )
     }
 
-    override suspend fun searchAlbum(query: String): List<AlbumMetadata>? {
+    override suspend fun searchAlbum(query: String, user: UserEntity?): List<AlbumMetadata>? {
 
         val response = client.get("https://ws.audioscrobbler.com/2.0") {
             parameter("method", "album.search")
             parameter("album", query)
-            parameter("api_key", getApiKey())
+            parameter("api_key", getApiKey(user))
             parameter("format", "json")
             ParsingUtils.limit?.let { parameter("limit", it) }
         }
@@ -206,7 +209,7 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
         return result.results.albummatches.album.map { album ->
 
             val mapped: AlbumMetadata? = if (extended) {
-                getExtendedAlbumMetadata(album.artist, album.name)
+                getExtendedAlbumMetadata(album.artist, album.name, user)
             } else null
 
             mapped ?: AlbumMetadata(
@@ -218,8 +221,8 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
         }
     }
 
-    override suspend fun parse(data: PreparseData): TrackInfoMetadata? {
-        return searchTrack(data.audioFile.file.nameWithoutExtension)?.firstOrNull()
+    override suspend fun parse(data: PreparseData, user: UserEntity?): TrackInfoMetadata? {
+        return searchTrack(data.audioFile.file.nameWithoutExtension, user)?.firstOrNull()
     }
 
     override fun isAvailable(): Boolean {

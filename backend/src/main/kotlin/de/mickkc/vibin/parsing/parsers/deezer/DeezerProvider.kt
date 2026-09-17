@@ -1,5 +1,6 @@
 package de.mickkc.vibin.parsing.parsers.deezer
 
+import de.mickkc.vibin.db.UserEntity
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -22,7 +23,7 @@ class DeezerProvider(val client: HttpClient) : FileParser, ArtistSearchProvider,
 
     private val logger = LoggerFactory.getLogger(DeezerProvider::class.java)
 
-    override suspend fun searchTrack(query: String): List<TrackInfoMetadata>? {
+    override suspend fun searchTrack(query: String, user: UserEntity?): List<TrackInfoMetadata>? {
 
         val deezerResponse = get<DeezerSearchResponse<DeezerTrackData>>("https://api.deezer.com/search/track", query) ?: return null
         logger.info("Deezer API response for track '$query': found ${deezerResponse.data.size} results")
@@ -60,7 +61,7 @@ class DeezerProvider(val client: HttpClient) : FileParser, ArtistSearchProvider,
         )
     }
 
-    override suspend fun searchArtist(query: String): List<ArtistMetadata>? {
+    override suspend fun searchArtist(query: String, user: UserEntity?): List<ArtistMetadata>? {
         val deezerResponse = get<DeezerSearchResponse<DeezerArtistMetadata>>("https://api.deezer.com/search/artist", query) ?: return null
         logger.info("Deezer API response for artist '$query': found ${deezerResponse.data.size} results")
 
@@ -72,7 +73,7 @@ class DeezerProvider(val client: HttpClient) : FileParser, ArtistSearchProvider,
         }
     }
 
-    override suspend fun searchAlbum(query: String): List<AlbumMetadata>? {
+    override suspend fun searchAlbum(query: String, user: UserEntity?): List<AlbumMetadata>? {
         val deezerResponse = get<DeezerSearchResponse<DeezerAlbumMetadata>>("https://api.deezer.com/search/album", query) ?: return null
         logger.info("Deezer API response for album '$query': found ${deezerResponse.data.size} results")
 
@@ -109,5 +110,6 @@ class DeezerProvider(val client: HttpClient) : FileParser, ArtistSearchProvider,
         }
     }
 
-    override suspend fun parse(data: PreparseData): TrackInfoMetadata? = searchTrack(data.audioFile.file.nameWithoutExtension)?.firstOrNull()
+    override suspend fun parse(data: PreparseData, user: UserEntity?): TrackInfoMetadata?
+        = searchTrack(data.audioFile.file.nameWithoutExtension, user)?.firstOrNull()
 }

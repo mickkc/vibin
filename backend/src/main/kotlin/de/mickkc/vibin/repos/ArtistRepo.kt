@@ -1,5 +1,6 @@
 package de.mickkc.vibin.repos
 
+import de.mickkc.vibin.db.UserEntity
 import io.ktor.server.plugins.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
@@ -48,9 +49,10 @@ object ArtistRepo {
      * Retrieves an existing artist by name or creates a new one if it doesn't exist.
      *
      * @param name The name of the artist to retrieve or create.
+     * @param user The user creating the artist, used for loading API credentials.
      * @return The existing or newly created ArtistEntity.
      */
-    suspend fun getOrCreateArtist(name: String): ArtistEntity {
+    suspend fun getOrCreateArtist(name: String, user: UserEntity?): ArtistEntity {
         val artist = transaction {
             ArtistEntity.find { ArtistTable.name.lowerCase() eq name.lowercase() }.firstOrNull()
         }
@@ -59,7 +61,7 @@ object ArtistRepo {
             return artist
         }
 
-        val searchResult = Parser.searchArtistAuto(name)
+        val searchResult = Parser.searchArtistAuto(name, user)
         val (_, cover) = ImageRepo.getUpdatedImage(searchResult?.pictureUrl)
 
         return transaction {

@@ -1,5 +1,6 @@
 package de.mickkc.vibin.parsing.parsers.theaudiodb
 
+import de.mickkc.vibin.db.UserEntity
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -17,7 +18,7 @@ class TheAudioDbProvider(val client: HttpClient) : ArtistSearchProvider {
 
     private val logger: Logger = LoggerFactory.getLogger(TheAudioDbProvider::class.java)
 
-    override suspend fun searchArtist(query: String): List<ArtistMetadata>? {
+    override suspend fun searchArtist(query: String, user: UserEntity?): List<ArtistMetadata>? {
         try {
             val response = client.get("https://www.theaudiodb.com/api/v1/json/123/search.php") {
                 parameter("s", query)

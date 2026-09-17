@@ -24,6 +24,13 @@ object Settings {
         return parsedValue ?: userSetting.defaultValue
     }
 
+    fun <T>getUserOrServer(userSetting: UserSetting<T>, serverSetting: ServerSetting<T>, userId: Long?): T {
+        return userId
+            ?.let { get(userSetting, it) }
+            ?.takeIf { !(it is String && it.isBlank()) }
+            ?: get(serverSetting)
+    }
+
     fun <T>set(setting: ServerSetting<T>, value: T) {
         val stringValue = setting.serializer(value)
         SettingsRepo.updateServerSetting(setting, stringValue)

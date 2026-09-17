@@ -1,5 +1,6 @@
 package de.mickkc.vibin.parsing.parsers.spotify
 
+import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.parsing.AlbumMetadata
 import de.mickkc.vibin.parsing.ArtistMetadata
 import de.mickkc.vibin.parsing.TrackInfoMetadata
@@ -17,14 +18,14 @@ class SpotifyScrapingProvider : FileParser, TrackSearchProvider, ArtistSearchPro
 
     private val scraper = SpotifyScraper()
 
-    override suspend fun searchTrack(query: String): List<TrackInfoMetadata>? {
+    override suspend fun searchTrack(query: String, user: UserEntity?): List<TrackInfoMetadata>? {
 
         val limit = Settings.get(MetadataLimit)
 
         return scraper.searchTracks(query, limit)
     }
 
-    override suspend fun searchArtist(query: String): List<ArtistMetadata>? {
+    override suspend fun searchArtist(query: String, user: UserEntity?): List<ArtistMetadata>? {
 
         val limit = Settings.get(MetadataLimit)
         val extended = Settings.get(ExtendedMetadata)
@@ -32,11 +33,11 @@ class SpotifyScrapingProvider : FileParser, TrackSearchProvider, ArtistSearchPro
         return scraper.searchArtists(query, limit, extended)
     }
 
-    override suspend fun parse(data: PreparseData): TrackInfoMetadata? {
-        return searchTrack(data.audioFile.file.nameWithoutExtension)?.firstOrNull()
+    override suspend fun parse(data: PreparseData, user: UserEntity?): TrackInfoMetadata? {
+        return searchTrack(data.audioFile.file.nameWithoutExtension, user)?.firstOrNull()
     }
 
-    override suspend fun searchAlbum(query: String): List<AlbumMetadata>? {
+    override suspend fun searchAlbum(query: String, user: UserEntity?): List<AlbumMetadata>? {
         val limit = Settings.get(MetadataLimit)
 
         return scraper.searchAlbums(query, limit)

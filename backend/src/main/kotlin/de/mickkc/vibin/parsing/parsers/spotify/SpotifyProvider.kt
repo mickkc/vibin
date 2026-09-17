@@ -1,5 +1,6 @@
 package de.mickkc.vibin.parsing.parsers.spotify
 
+import de.mickkc.vibin.db.UserEntity
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -15,6 +16,8 @@ import de.mickkc.vibin.parsing.parsers.*
 import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.settings.server.SpotifyClientId
 import de.mickkc.vibin.settings.server.SpotifyClientSecret
+import de.mickkc.vibin.settings.user.SpotifyUserClientId
+import de.mickkc.vibin.settings.user.SpotifyUserClientSecret
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -25,13 +28,13 @@ class SpotifyProvider(val client: HttpClient) : ArtistSearchProvider, TrackSearc
     private var tokenExpiry: Long = 0
 
     @OptIn(ExperimentalEncodingApi::class)
-    suspend fun updateAccessToken(): String {
+    suspend fun updateAccessToken(user: UserEntity?): String {
         if (token != null && System.currentTimeMillis() < tokenExpiry) {
             return token!!
         }
 
-        val clientId = Settings.get(SpotifyClientId)
-        val clientSecret = Settings.get(SpotifyClientSecret)
+        val clientId = Settings.getUserOrServer(SpotifyUserClientId, SpotifyClientId, user?.id?.value)
+        val clientSecret = Settings.getUserOrServer(SpotifyUserClientSecret, SpotifyClientSecret, user?.id?.value)
 
         if (clientId.isBlank() || clientSecret.isBlank()) {
             throw IllegalStateException("Spotify Client ID or Client Secret is not set in settings.")
@@ -56,10 +59,10 @@ class SpotifyProvider(val client: HttpClient) : ArtistSearchProvider, TrackSearc
         return token!!
     }
 
-    override suspend fun searchArtist(query: String): List<ArtistMetadata>? {
+    override suspend fun searchArtist(query: String, user: UserEntity?): List<ArtistMetadata>? {
 
         try {
-            val accessToken = updateAccessToken()
+            val accessToken = updateAccessToken(user)
 
             val response = client.get("https://api.spotify.com/v1/search") {
                 header("Authorization", "Bearer $accessToken")
@@ -91,9 +94,9 @@ class SpotifyProvider(val client: HttpClient) : ArtistSearchProvider, TrackSearc
         }
     }
 
-    override suspend fun searchTrack(query: String): List<TrackInfoMetadata>? {
+    override suspend fun searchTrack(query: String, user: UserEntity?): List<TrackInfoMetadata>? {
         try {
-            val accessToken = updateAccessToken()
+            val accessToken = updateAccessToken(user)
 
             val response = client.get("https://api.spotify.com/v1/search") {
                 header("Authorization", "Bearer $accessToken")
@@ -132,14 +135,14 @@ class SpotifyProvider(val client: HttpClient) : ArtistSearchProvider, TrackSearc
         }
     }
 
-    override suspend fun parse(data: PreparseData): TrackInfoMetadata? {
-        return searchTrack(data.audioFile.file.nameWithoutExtension)?.firstOrNull()
+    override suspend fun parse(data: PreparseData, user: UserEntity?): TrackInfoMetadata? {
+        return searchTrack(data.audioFile.file.nameWithoutExtension, user)?.firstOrNull()
     }
 
-    override suspend fun searchAlbum(query: String): List<AlbumMetadata>? {
+    override suspend fun searchAlbum(query: String, user: UserEntity?): List<AlbumMetadata>? {
 
         try {
-            val accessToken = updateAccessToken()
+            val accessToken = updateAccessToken(user)
 
             val response = client.get("https://api.spotify.com/v1/search") {
                 header("Authorization", "Bearer $accessToken")

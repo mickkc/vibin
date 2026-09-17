@@ -85,10 +85,10 @@ object TrackRepo {
     suspend fun createTrack(file: File, metadata: TrackMetadata, checksum: String? = null, uploader: UserEntity? = null, cover: ImageEntity? = null): TrackEntity {
 
         val album = metadata.trackInfo.album
-            ?.let { AlbumRepo.getOrCreateAlbum(it, metadata.trackInfo.artists?.firstOrNull()) }
+            ?.let { AlbumRepo.getOrCreateAlbum(it, metadata.trackInfo.artists?.firstOrNull(), uploader) }
             ?: AlbumRepo.getUnknownAlbum()
 
-        val artists = SizedCollection(metadata.trackInfo.artists?.map { ArtistRepo.getOrCreateArtist(it) } ?: emptyList())
+        val artists = SizedCollection(metadata.trackInfo.artists?.map { ArtistRepo.getOrCreateArtist(it, uploader) } ?: emptyList())
 
         val tags = SizedCollection(metadata.trackInfo.tags?.map { TagRepo.getOrCreateTag(it) } ?: emptyList())
 
@@ -116,7 +116,7 @@ object TrackRepo {
             }
         }
 
-        val lyrics = metadata.trackInfo.lyrics ?: Parser.searchLyricsAuto(metadata)
+        val lyrics = metadata.trackInfo.lyrics ?: Parser.searchLyricsAuto(metadata, uploader)
 
         if (lyrics != null) {
             LyricsRepo.setLyrics(track, lyrics)

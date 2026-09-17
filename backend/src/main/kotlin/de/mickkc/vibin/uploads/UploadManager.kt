@@ -65,7 +65,7 @@ object UploadManager {
             var coverFile: File? = null
 
             try {
-                val parsed = Parser.parse(file)
+                val parsed = Parser.parse(file, user)
 
                 if (parsed.trackInfo.coverImageUrl != null) {
                     val coverData = Parser.downloadCoverImage(parsed.trackInfo.coverImageUrl)
@@ -81,11 +81,11 @@ object UploadManager {
                     title = parsed.trackInfo.title,
                     album = (
                             if (parsed.trackInfo.album != null)
-                                AlbumRepo.getOrCreateAlbum(parsed.trackInfo.album, parsed.trackInfo.artists?.firstOrNull())
+                                AlbumRepo.getOrCreateAlbum(parsed.trackInfo.album, parsed.trackInfo.artists?.firstOrNull(), user)
                             else
                                 AlbumRepo.getUnknownAlbum()
                             ).id.value,
-                    artists = parsed.trackInfo.artists?.map { ArtistRepo.getOrCreateArtist(it).id.value } ?: emptyList(),
+                    artists = parsed.trackInfo.artists?.map { ArtistRepo.getOrCreateArtist(it, user).id.value } ?: emptyList(),
                     tags = parsed.trackInfo.tags?.map { TagRepo.getOrCreateTag(it).id.value } ?: mutableListOf(),
                     explicit = parsed.trackInfo.explicit ?: false,
                     trackNumber = parsed.trackInfo.trackNumber,
@@ -94,7 +94,7 @@ object UploadManager {
                     discCount = parsed.trackInfo.discCount,
                     year = parsed.trackInfo.year,
                     comment = parsed.trackInfo.comment ?: "",
-                    lyrics = parsed.trackInfo.lyrics ?: Parser.searchLyricsAuto(parsed),
+                    lyrics = parsed.trackInfo.lyrics ?: Parser.searchLyricsAuto(parsed, user),
                     uploaderId = user.id.value,
                     lastUpdated = DateTimeUtils.now()
                 )

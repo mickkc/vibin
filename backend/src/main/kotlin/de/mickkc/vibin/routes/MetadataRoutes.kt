@@ -29,16 +29,17 @@ fun Application.configureMetadataRoutes() = routing {
         get("/api/metadata/{type}") {
             val query = call.getStringParameter("q")
             val provider = call.getStringParameter("provider")
+            val user = call.getUser() ?: unauthorized()
 
             if (query.isBlank()) {
                 return@get call.respond(emptyList<Any>())
             }
 
             val results = when (call.parameters["type"]) {
-                "track" -> Parser.searchTrack(query, provider)
-                "artist" -> Parser.searchArtist(query, provider)
-                "album" -> Parser.searchAlbum(query, provider)
-                "lyrics" -> Parser.searchLyrics(query, provider)
+                "track" -> Parser.searchTrack(query, provider, user)
+                "artist" -> Parser.searchArtist(query, provider, user)
+                "album" -> Parser.searchAlbum(query, provider, user)
+                "lyrics" -> Parser.searchLyrics(query, provider, user)
                 else -> invalidParameter("type", "track", "artist", "album", "lyrics")
             } ?: return@get call.respond(emptyList<Any>())
             call.respond(results)
@@ -48,9 +49,11 @@ fun Application.configureMetadataRoutes() = routing {
             val request = call.receive<CreateMetadataDto>()
             request.validate()
 
-            val artists = request.artistNames.map { ArtistRepo.getOrCreateArtist(it) }
+            val user = call.getUser() ?: unauthorized()
+
+            val artists = request.artistNames.map { ArtistRepo.getOrCreateArtist(it, user) }
             val tags = request.tagNames.map { TagRepo.getOrCreateTag(it) }
-            val album = request.albumName?.let { AlbumRepo.getOrCreateAlbum(request.albumName, request.artistNames.firstOrNull()) }
+            val album = request.albumName?.let { AlbumRepo.getOrCreateAlbum(request.albumName, request.artistNames.firstOrNull(), user) }
 
             call.respond(mapOf(
                 "artists" to ArtistRepo.toDto(artists),
