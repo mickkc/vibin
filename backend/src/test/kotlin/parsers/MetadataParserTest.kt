@@ -26,7 +26,7 @@ class MetadataParserTest {
         assertTrue(file.exists())
 
         val parsed = runBlocking {
-            Parser.parse(file)
+            Parser.parse(file, null)
         }
 
         assertNotNull(parsed)
