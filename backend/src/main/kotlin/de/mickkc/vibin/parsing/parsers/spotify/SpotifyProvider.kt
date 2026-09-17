@@ -13,6 +13,7 @@ import de.mickkc.vibin.parsing.ArtistMetadata
 import de.mickkc.vibin.parsing.ParsingUtils
 import de.mickkc.vibin.parsing.TrackInfoMetadata
 import de.mickkc.vibin.parsing.parsers.*
+import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.settings.server.SpotifyClientId
 import de.mickkc.vibin.settings.server.SpotifyClientSecret
@@ -27,16 +28,32 @@ class SpotifyProvider(val client: HttpClient) : ArtistSearchProvider, TrackSearc
     private var token: String? = null
     private var tokenExpiry: Long = 0
 
+    fun getClientId(user: UserEntity?): String? = Settings.getUserOrServer(
+        userSetting = SpotifyUserClientId,
+        serverSetting = SpotifyClientId,
+        userId = user?.id?.value,
+        permissionType = PermissionType.USE_SERVER_API_CREDENTIALS,
+        isValid = String::isNotBlank
+    )
+
+    fun getClientSecret(user: UserEntity?): String? = Settings.getUserOrServer(
+        userSetting = SpotifyUserClientSecret,
+        serverSetting = SpotifyClientSecret,
+        userId = user?.id?.value,
+        permissionType = PermissionType.USE_SERVER_API_CREDENTIALS,
+        isValid = String::isNotBlank
+    )
+
     @OptIn(ExperimentalEncodingApi::class)
     suspend fun updateAccessToken(user: UserEntity?): String {
         if (token != null && System.currentTimeMillis() < tokenExpiry) {
             return token!!
         }
 
-        val clientId = Settings.getUserOrServer(SpotifyUserClientId, SpotifyClientId, user?.id?.value)
-        val clientSecret = Settings.getUserOrServer(SpotifyUserClientSecret, SpotifyClientSecret, user?.id?.value)
+        val clientId = getClientId(user)
+        val clientSecret = getClientSecret(user)
 
-        if (clientId.isBlank() || clientSecret.isBlank()) {
+        if (clientId.isNullOrBlank() || clientSecret.isNullOrBlank()) {
             throw IllegalStateException("Spotify Client ID or Client Secret is not set in settings.")
         }
 
@@ -179,7 +196,7 @@ class SpotifyProvider(val client: HttpClient) : ArtistSearchProvider, TrackSearc
         }
     }
 
-    override fun isAvailable(): Boolean {
-        return Settings.get(SpotifyClientId).isNotBlank() && Settings.get(SpotifyClientSecret).isNotBlank()
+    override fun isAvailable(user: UserEntity?): Boolean {
+        return !getClientId(user).isNullOrBlank() && !getClientSecret(user).isNullOrBlank()
     }
 }

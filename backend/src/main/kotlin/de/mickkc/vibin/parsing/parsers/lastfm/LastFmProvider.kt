@@ -13,6 +13,7 @@ import de.mickkc.vibin.parsing.ArtistMetadata
 import de.mickkc.vibin.parsing.ParsingUtils
 import de.mickkc.vibin.parsing.TrackInfoMetadata
 import de.mickkc.vibin.parsing.parsers.*
+import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.settings.server.ExtendedMetadata
 import de.mickkc.vibin.settings.server.LastFmApiKey
@@ -23,9 +24,15 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
     private val logger: Logger = LoggerFactory.getLogger(LastFmProvider::class.java)
 
     private fun getApiKey(user: UserEntity?): String {
-        val apiKey = Settings.getUserOrServer(LastFmUserApiKey, LastFmApiKey, user?.id?.value)
+        val apiKey = Settings.getUserOrServer(
+            userSetting = LastFmUserApiKey,
+            serverSetting = LastFmApiKey,
+            userId = user?.id?.value,
+            permissionType = PermissionType.USE_SERVER_API_CREDENTIALS,
+            isValid = String::isNotBlank
+        )
 
-        if (apiKey.isEmpty()) {
+        if (apiKey.isNullOrEmpty()) {
             throw IllegalStateException("Last.fm API key is not set in settings")
         }
         return apiKey
@@ -225,7 +232,13 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
         return searchTrack(data.audioFile.file.nameWithoutExtension, user)?.firstOrNull()
     }
 
-    override fun isAvailable(): Boolean {
-        return Settings.get(LastFmApiKey).isNotBlank()
+    override fun isAvailable(user: UserEntity?): Boolean {
+        return try {
+            val key = getApiKey(user)
+            key.isNotBlank()
+        }
+        catch (_: IllegalStateException) {
+            false
+        }
     }
 }

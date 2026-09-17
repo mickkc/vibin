@@ -17,12 +17,13 @@ fun Application.configureMetadataRoutes() = routing {
     authenticate("tokenAuth") {
 
         get("/api/metadata/providers") {
+            val user = call.getUser() ?: unauthorized()
             call.respond(mapOf(
-                "file" to Parser.getAvailableFileProviders(),
-                "track" to Parser.getAvailableTrackSearchProviders(),
-                "artist" to Parser.getAvailableArtistSearchProviders(),
-                "album" to Parser.getAvailableAlbumSearchProviders(),
-                "lyrics" to Parser.getAvailableLyricsSearchProviders()
+                "file" to Parser.getAvailableFileProviders(user),
+                "track" to Parser.getAvailableTrackSearchProviders(user),
+                "artist" to Parser.getAvailableArtistSearchProviders(user),
+                "album" to Parser.getAvailableAlbumSearchProviders(user),
+                "lyrics" to Parser.getAvailableLyricsSearchProviders(user)
             ))
         }
 

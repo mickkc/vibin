@@ -131,15 +131,15 @@ object Parser {
      * @param providers A map containing all providers
      * @return The keys of all available providers.
      */
-    private fun getAvailableProviderKeys(providers: Map<String, BaseMetadataProvider>): Set<String> {
-        return providers.mapNotNull { if (it.value.isAvailable()) it.key else null }.toSet()
+    private fun getAvailableProviderKeys(providers: Map<String, BaseMetadataProvider>, user: UserEntity?): Set<String> {
+        return providers.mapNotNull { if (it.value.isAvailable(user)) it.key else null }.toSet()
     }
 
-    fun getAvailableFileProviders() = getAvailableProviderKeys(fileParsers)
-    fun getAvailableTrackSearchProviders() =  getAvailableProviderKeys(trackSearchProviders)
-    fun getAvailableArtistSearchProviders() = getAvailableProviderKeys(artistSearchProviders)
-    fun getAvailableAlbumSearchProviders() = getAvailableProviderKeys(albumSearchProviders)
-    fun getAvailableLyricsSearchProviders() = getAvailableProviderKeys(lyricsSearchProviders)
+    fun getAvailableFileProviders(user: UserEntity?) = getAvailableProviderKeys(fileParsers, user)
+    fun getAvailableTrackSearchProviders(user: UserEntity?) =  getAvailableProviderKeys(trackSearchProviders, user)
+    fun getAvailableArtistSearchProviders(user: UserEntity?) = getAvailableProviderKeys(artistSearchProviders, user)
+    fun getAvailableAlbumSearchProviders(user: UserEntity?) = getAvailableProviderKeys(albumSearchProviders, user)
+    fun getAvailableLyricsSearchProviders(user: UserEntity?) = getAvailableProviderKeys(lyricsSearchProviders, user)
 
     /**
      * Searches a track provider for tracks using a search query
