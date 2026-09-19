@@ -28,21 +28,31 @@ class SpotifyProvider(val client: HttpClient) : ArtistSearchProvider, TrackSearc
     private var token: String? = null
     private var tokenExpiry: Long = 0
 
-    fun getClientId(user: UserEntity?): String? = Settings.getUserOrServer(
-        userSetting = SpotifyUserClientId,
-        serverSetting = SpotifyClientId,
-        userId = user?.id?.value,
-        permissionType = PermissionType.USE_SERVER_API_CREDENTIALS,
-        isValid = String::isNotBlank
-    )
+    fun getClientIdAndSecret(user: UserEntity?): Pair<String, String>? {
+        val (cidSource, clientId) = Settings.getUserOrServer(
+            userSetting = SpotifyUserClientId,
+            serverSetting = SpotifyClientId,
+            userId = user?.id?.value,
+            permissionType = PermissionType.USE_SERVER_API_CREDENTIALS,
+            isValid = String::isNotBlank
+        )
 
-    fun getClientSecret(user: UserEntity?): String? = Settings.getUserOrServer(
-        userSetting = SpotifyUserClientSecret,
-        serverSetting = SpotifyClientSecret,
-        userId = user?.id?.value,
-        permissionType = PermissionType.USE_SERVER_API_CREDENTIALS,
-        isValid = String::isNotBlank
-    )
+        val (csSource, clientSecret) = Settings.getUserOrServer(
+            userSetting = SpotifyUserClientSecret,
+            serverSetting = SpotifyClientSecret,
+            userId = user?.id?.value,
+            permissionType = PermissionType.USE_SERVER_API_CREDENTIALS,
+            isValid = String::isNotBlank
+        )
+
+        // Check that both client id and secret are set and from the same source
+        // If the user has set an id, but the secret is loaded from the server, it will not work.
+        if (clientId == null || clientSecret == null || cidSource != csSource) {
+            return null
+        }
+
+        return clientId to clientSecret
+    }
 
     @OptIn(ExperimentalEncodingApi::class)
     suspend fun updateAccessToken(user: UserEntity?): String {
@@ -50,14 +60,10 @@ class SpotifyProvider(val client: HttpClient) : ArtistSearchProvider, TrackSearc
             return token!!
         }
 
-        val clientId = getClientId(user)
-        val clientSecret = getClientSecret(user)
+        val loadedCredentials = getClientIdAndSecret(user)
+            ?: throw IllegalStateException("Spotify Client ID or Client Secret is not set in settings.")
 
-        if (clientId.isNullOrBlank() || clientSecret.isNullOrBlank()) {
-            throw IllegalStateException("Spotify Client ID or Client Secret is not set in settings.")
-        }
-
-        val credentials = Base64.encode("$clientId:$clientSecret".toByteArray())
+        val credentials = Base64.encode("${loadedCredentials.first}:${loadedCredentials.second}".toByteArray())
 
         val response = client.post("https://accounts.spotify.com/api/token") {
             header("Authorization", "Basic $credentials")
@@ -197,6 +203,6 @@ class SpotifyProvider(val client: HttpClient) : ArtistSearchProvider, TrackSearc
     }
 
     override fun isAvailable(user: UserEntity?): Boolean {
-        return !getClientId(user).isNullOrBlank() && !getClientSecret(user).isNullOrBlank()
+        return getClientIdAndSecret(user) != null
     }
 }

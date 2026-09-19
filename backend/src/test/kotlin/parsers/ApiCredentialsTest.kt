@@ -29,13 +29,14 @@ class ApiCredentialsTest {
         SettingsRepo.updateUserSetting(SpotifyUserClientSecret, user.id.value, "MyOwnKey")
         SettingsRepo.updateServerSetting(SpotifyClientSecret, "TheServerKey")
 
-        val value = Settings.getUserOrServer(
+        val (source, value) = Settings.getUserOrServer(
             SpotifyUserClientSecret,
             SpotifyClientSecret,
             user.id.value,
             PermissionType.USE_SERVER_API_CREDENTIALS,
             String::isNotBlank
         )
+        assertEquals(Settings.SettingSource.User, source)
         assertEquals("MyOwnKey", value)
     }
 
@@ -48,13 +49,14 @@ class ApiCredentialsTest {
         )
         SettingsRepo.updateServerSetting(SpotifyClientId, "TheServerKey")
 
-        val value = Settings.getUserOrServer(
+        val (source, value) = Settings.getUserOrServer(
             SpotifyUserClientId,
             SpotifyClientId,
             user.id.value,
             PermissionType.USE_SERVER_API_CREDENTIALS,
             String::isNotBlank
         )
+        assertEquals(Settings.SettingSource.Server, source)
         assertEquals("TheServerKey", value)
     }
 
@@ -68,13 +70,14 @@ class ApiCredentialsTest {
         SettingsRepo.updateUserSetting(LastFmUserApiKey, user.id.value, "MyOwnKey")
         SettingsRepo.updateServerSetting(LastFmApiKey, "TheServerKey")
 
-        val value = Settings.getUserOrServer(
+        val (source, value) = Settings.getUserOrServer(
             LastFmUserApiKey,
             LastFmApiKey,
             user.id.value,
             PermissionType.USE_SERVER_API_CREDENTIALS,
             String::isNotBlank
         )
+        assertEquals(Settings.SettingSource.User, source)
         assertEquals("MyOwnKey", value)
     }
 
@@ -87,13 +90,14 @@ class ApiCredentialsTest {
         )
         SettingsRepo.updateServerSetting(LastFmSharedSecret, "TheServerKey")
 
-        val value = Settings.getUserOrServer(
+        val (source, value) = Settings.getUserOrServer(
             LastFmUserSharedSecret,
             LastFmSharedSecret,
             user.id.value,
             PermissionType.USE_SERVER_API_CREDENTIALS,
             String::isNotBlank
         )
+        assertEquals(Settings.SettingSource.None, source)
         assertNull(value)
     }
 
@@ -105,13 +109,14 @@ class ApiCredentialsTest {
             PermissionType.USE_SERVER_API_CREDENTIALS to true
         )
 
-        val value = Settings.getUserOrServer(
+        val (source, value) = Settings.getUserOrServer(
             SpotifyUserClientSecret,
             SpotifyClientSecret,
             user.id.value,
             PermissionType.USE_SERVER_API_CREDENTIALS,
             String::isNotBlank
         )
+        assertEquals(Settings.SettingSource.None, source)
         assertNull(value)
     }
 
@@ -123,13 +128,14 @@ class ApiCredentialsTest {
             PermissionType.USE_SERVER_API_CREDENTIALS to false
         )
 
-        val value = Settings.getUserOrServer(
+        val (source, value) = Settings.getUserOrServer(
             SpotifyUserClientId,
             SpotifyClientId,
             user.id.value,
             PermissionType.USE_SERVER_API_CREDENTIALS,
             String::isNotBlank
         )
+        assertEquals(Settings.SettingSource.None, source)
         assertNull(value)
     }
 

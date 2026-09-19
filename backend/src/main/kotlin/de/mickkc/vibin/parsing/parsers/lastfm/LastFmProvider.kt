@@ -24,7 +24,7 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
     private val logger: Logger = LoggerFactory.getLogger(LastFmProvider::class.java)
 
     private fun getApiKey(user: UserEntity?): String {
-        val apiKey = Settings.getUserOrServer(
+        val (_, apiKey) = Settings.getUserOrServer(
             userSetting = LastFmUserApiKey,
             serverSetting = LastFmApiKey,
             userId = user?.id?.value,

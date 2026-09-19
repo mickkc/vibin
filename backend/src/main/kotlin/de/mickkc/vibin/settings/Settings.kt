@@ -38,6 +38,12 @@ object Settings {
         return parsedValue
     }
 
+    enum class SettingSource {
+        Server,
+        User,
+        None
+    }
+
     /**
      * Gets a setting either from a user (if specified) or the server (if the user has the optional [permissionType])
      * as a fallback.
@@ -50,14 +56,16 @@ object Settings {
      * @param isValid Used to check if the value is valid before returning/using fallback.
      * @return The loaded user setting, server setting, or null if none of the two are set and valid.
      */
-    fun <T>getUserOrServer(userSetting: UserSetting<T>, serverSetting: ServerSetting<T>, userId: Long?, permissionType: PermissionType? = null, isValid: (T) -> Boolean): T? {
+    fun <T>getUserOrServer(userSetting: UserSetting<T>, serverSetting: ServerSetting<T>, userId: Long?, permissionType: PermissionType? = null, isValid: (T) -> Boolean): Pair<SettingSource, T?> {
         return userId
             ?.let { uId -> getOrNull(userSetting, uId) }
             ?.takeIf { isValid(it) }
+            ?.let { SettingSource.User to it }
             ?: if (permissionType != null && userId != null && !PermissionRepo.hasPermission(userId, permissionType))
-                null
+                SettingSource.None to null
             else
-                getOrNull(serverSetting)?.takeIf { isValid(it) }
+                getOrNull(serverSetting)?.takeIf { isValid(it) }?.let { SettingSource.Server to it }
+                    ?: (SettingSource.None to null)
     }
 
     fun <T>set(setting: ServerSetting<T>, value: T) {
