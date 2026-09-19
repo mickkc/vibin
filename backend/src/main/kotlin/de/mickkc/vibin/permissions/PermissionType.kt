@@ -51,7 +51,9 @@ enum class PermissionType(val id: String, val grantedByDefault: Boolean) {
     CREATE_TRACK_RELATIONS("create_track_relations", false),
     DELETE_TRACK_RELATIONS("delete_track_relations", false),
 
-    MANAGE_OWN_2FA("manage_own_2fa", true);
+    MANAGE_OWN_2FA("manage_own_2fa", true),
+
+    USE_SERVER_API_CREDENTIALS("use_server_api_credentials", true);
 
     companion object {
         private val map = entries.associateBy(PermissionType::id)

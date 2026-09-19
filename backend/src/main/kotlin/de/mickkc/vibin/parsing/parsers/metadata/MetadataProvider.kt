@@ -1,5 +1,6 @@
 package de.mickkc.vibin.parsing.parsers.metadata
 
+import de.mickkc.vibin.db.UserEntity
 import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.Tag
 import org.slf4j.LoggerFactory
@@ -48,7 +49,7 @@ class MetadataProvider : FileParser {
     private val textTagRegex = Regex("^Text=\"(?<value>.*)\";$")
 
     @OptIn(ExperimentalEncodingApi::class)
-    override suspend fun parse(data: PreparseData): TrackInfoMetadata? {
+    override suspend fun parse(data: PreparseData, user: UserEntity?): TrackInfoMetadata? {
 
         try {
             val tag = data.audioFile.tag

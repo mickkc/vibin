@@ -1,5 +1,6 @@
 package de.mickkc.vibin.parsing.parsers.itunes
 
+import de.mickkc.vibin.db.UserEntity
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -22,7 +23,7 @@ class ItunesProvider(val client: HttpClient) : TrackSearchProvider, AlbumSearchP
         explicitNulls = false
     }
 
-    override suspend fun searchTrack(query: String): List<TrackInfoMetadata>? {
+    override suspend fun searchTrack(query: String, user: UserEntity?): List<TrackInfoMetadata>? {
 
         try {
             val response = client.get("https://itunes.apple.com/search") {
@@ -68,7 +69,7 @@ class ItunesProvider(val client: HttpClient) : TrackSearchProvider, AlbumSearchP
         }
     }
 
-    override suspend fun searchAlbum(query: String): List<AlbumMetadata>? {
+    override suspend fun searchAlbum(query: String, user: UserEntity?): List<AlbumMetadata>? {
         try {
             val response = client.get("https://itunes.apple.com/search") {
                 parameter("term", query)
@@ -108,5 +109,6 @@ class ItunesProvider(val client: HttpClient) : TrackSearchProvider, AlbumSearchP
         }
     }
 
-    override suspend fun parse(data: PreparseData): TrackInfoMetadata? = searchTrack(data.audioFile.file.nameWithoutExtension)?.firstOrNull()
+    override suspend fun parse(data: PreparseData, user: UserEntity?): TrackInfoMetadata?
+        = searchTrack(data.audioFile.file.nameWithoutExtension, user)?.firstOrNull()
 }

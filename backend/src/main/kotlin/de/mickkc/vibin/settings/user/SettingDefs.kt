@@ -10,7 +10,11 @@ val userSettings = listOf(
     RelatedAlbumScoreMultiplier,
     RelatedTagsScoreMultiplier,
     RelatedTagsNegativeScoreMultiplier,
-    SendMailOnNewLogin
+    SendMailOnNewLogin,
+    SpotifyUserClientId,
+    SpotifyUserClientSecret,
+    LastFmUserApiKey,
+    LastFmUserSharedSecret
 )
 
 object ShowActivitiesToOthers : UserSetting<Boolean>(
@@ -67,4 +71,32 @@ object SendMailOnNewLogin : UserSetting<Boolean>(
     parser = { value -> value.toBoolean() },
     serializer = { value -> value.toString() },
     defaultValue = false
+)
+
+object SpotifyUserClientId : UserSetting<String>(
+    key = "spotify_user_client_id",
+    parser = { value -> value },
+    serializer = { value -> value },
+    defaultValue = ""
+)
+
+object SpotifyUserClientSecret : UserSetting<String>(
+    key = "spotify_user_client_secret",
+    parser = { value -> value },
+    serializer = { value -> value },
+    defaultValue = ""
+)
+
+object LastFmUserApiKey : UserSetting<String>(
+    key = "lastfm_user_api_key",
+    parser = { value -> value },
+    serializer = { value -> value },
+    defaultValue = ""
+)
+
+object LastFmUserSharedSecret : UserSetting<String>(
+    key = "lastfm_user_shared_secret",
+    parser = { value -> value },
+    serializer = { value -> value },
+    defaultValue = ""
 )

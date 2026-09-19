@@ -1,5 +1,6 @@
 package de.mickkc.vibin.parsing
 
+import de.mickkc.vibin.db.UserEntity
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -100,15 +101,16 @@ object Parser {
      * Tries to parse the given file using the configured primary and fallback metadata sources.
      *
      * @param file The audio file to parse.
+     * @param user The user searching for tracks, used for loading API credentials
      * @return The parsed TrackMetadata, or null if parsing failed with both sources.
      */
-    suspend fun parse(file: File): TrackMetadata {
+    suspend fun parse(file: File, user: UserEntity?): TrackMetadata {
 
         val sources = listOf(Settings.get(PrimaryMetadataSource), Settings.get(FallbackMetadataSource))
         val preParsed = PreParser.preParse(file)
 
         for (source in sources) {
-            val metadata = fileParsers[source]?.parse(preParsed)
+            val metadata = fileParsers[source]?.parse(preParsed, user)
             if (metadata != null) {
                 return TrackMetadata(preParsed, metadata)
             }
@@ -129,21 +131,29 @@ object Parser {
      * @param providers A map containing all providers
      * @return The keys of all available providers.
      */
-    private fun getAvailableProviderKeys(providers: Map<String, BaseMetadataProvider>): Set<String> {
-        return providers.mapNotNull { if (it.value.isAvailable()) it.key else null }.toSet()
+    private fun getAvailableProviderKeys(providers: Map<String, BaseMetadataProvider>, user: UserEntity?): Set<String> {
+        return providers.mapNotNull { if (it.value.isAvailable(user)) it.key else null }.toSet()
     }
 
-    fun getAvailableFileProviders() = getAvailableProviderKeys(fileParsers)
-    fun getAvailableTrackSearchProviders() =  getAvailableProviderKeys(trackSearchProviders)
-    fun getAvailableArtistSearchProviders() = getAvailableProviderKeys(artistSearchProviders)
-    fun getAvailableAlbumSearchProviders() = getAvailableProviderKeys(albumSearchProviders)
-    fun getAvailableLyricsSearchProviders() = getAvailableProviderKeys(lyricsSearchProviders)
+    fun getAvailableFileProviders(user: UserEntity?) = getAvailableProviderKeys(fileParsers, user)
+    fun getAvailableTrackSearchProviders(user: UserEntity?) =  getAvailableProviderKeys(trackSearchProviders, user)
+    fun getAvailableArtistSearchProviders(user: UserEntity?) = getAvailableProviderKeys(artistSearchProviders, user)
+    fun getAvailableAlbumSearchProviders(user: UserEntity?) = getAvailableProviderKeys(albumSearchProviders, user)
+    fun getAvailableLyricsSearchProviders(user: UserEntity?) = getAvailableProviderKeys(lyricsSearchProviders, user)
 
-    suspend fun searchTrack(query: String, provider: String): List<TrackInfoMetadata>? {
+    /**
+     * Searches a track provider for tracks using a search query
+     *
+     * @see trackSearchProviders
+     * @param query The search query
+     * @param provider The name of the provider
+     * @param user The user searching for tracks, used for loading API credentials
+     */
+    suspend fun searchTrack(query: String, provider: String, user: UserEntity?): List<TrackInfoMetadata>? {
         val parser = trackSearchProviders[provider] ?: return null
 
         return try {
-            parser.searchTrack(query)
+            parser.searchTrack(query, user)
         }
         catch (e: Exception) {
             logger.error("Error searching track '$query' with provider '$provider': ${e.message}", e)
@@ -151,11 +161,19 @@ object Parser {
         }
     }
 
-    suspend fun searchArtist(query: String, provider: String): List<ArtistMetadata>? {
+    /**
+     * Searches an artist provider for artists using a search query
+     *
+     * @see artistSearchProviders
+     * @param query The search query
+     * @param provider The name of the provider
+     * @param user The user searching for artists, used for loading API credentials
+     */
+    suspend fun searchArtist(query: String, provider: String, user: UserEntity?): List<ArtistMetadata>? {
         val parser = artistSearchProviders[provider] ?: return null
 
         return try {
-            parser.searchArtist(query)
+            parser.searchArtist(query, user)
         }
         catch (e: Exception) {
             logger.error("Error searching artist '$query' with provider '$provider': ${e.message}", e)
@@ -163,7 +181,14 @@ object Parser {
         }
     }
 
-    suspend fun searchArtistAuto(query: String): ArtistMetadata? {
+    /**
+     * Searches [ArtistMetadataSource] for artists and selects the first result according to the [ArtistMetadataFetchType].
+     * When no artist is found or matches [ArtistMetadataFetchType], null is returned.
+     *
+     * @param query The search query
+     * @param user The user searching for artists, used for loading API credentials
+     */
+    suspend fun searchArtistAuto(query: String, user: UserEntity?): ArtistMetadata? {
         val type = Settings.get(ArtistMetadataFetchType)
         if (type == MetadataFetchingType.NONE) return null
 
@@ -171,7 +196,7 @@ object Parser {
         val parser = artistSearchProviders[provider] ?: return null
 
         return try {
-            val results = parser.searchArtist(query)
+            val results = parser.searchArtist(query, user)
             if (results == null || results.isEmpty()) {
                 null
             } else {
@@ -189,11 +214,19 @@ object Parser {
         }
     }
 
-    suspend fun searchAlbum(query: String, provider: String): List<AlbumMetadata>? {
+    /**
+     * Searches an album provider for albums using a search query
+     *
+     * @see albumSearchProviders
+     * @param query The search query
+     * @param provider The name of the provider
+     * @param user The user searching for albums, used for loading API credentials
+     */
+    suspend fun searchAlbum(query: String, provider: String, user: UserEntity?): List<AlbumMetadata>? {
         val parser = albumSearchProviders[provider] ?: return null
 
         return try {
-            parser.searchAlbum(query)
+            parser.searchAlbum(query, user)
         }
         catch (e: Exception) {
             logger.error("Error searching album '$query' with provider '$provider': ${e.message}", e)
@@ -201,7 +234,14 @@ object Parser {
         }
     }
 
-    suspend fun searchAlbumAuto(query: String): AlbumMetadata? {
+    /**
+     * Searches [ArtistMetadataSource] for albums and selects the first result according to the [AlbumMetadataFetchType].
+     * When no artist is found or matches [AlbumMetadataFetchType], null is returned.
+     *
+     * @param query The search query
+     * @param user The user searching for albums, used for loading API credentials
+     */
+    suspend fun searchAlbumAuto(query: String, user: UserEntity?): AlbumMetadata? {
         val type = Settings.get(AlbumMetadataFetchType)
         if (type == MetadataFetchingType.NONE) return null
 
@@ -209,7 +249,7 @@ object Parser {
         val parser = albumSearchProviders[provider] ?: return null
 
         return try {
-            val results = parser.searchAlbum(query)
+            val results = parser.searchAlbum(query, user)
             if (results == null || results.isEmpty()) {
                 null
             } else {
@@ -227,11 +267,19 @@ object Parser {
         }
     }
 
-    suspend fun searchLyrics(query: String, provider: String): List<LyricMetadata>? {
+    /**
+     * Searches a lyric provider for lyrics using a search query
+     *
+     * @see lyricsSearchProviders
+     * @param query The search query
+     * @param provider The name of the provider
+     * @param user The user searching for lyrics, used for loading API credentials
+     */
+    suspend fun searchLyrics(query: String, provider: String, user: UserEntity?): List<LyricMetadata>? {
         val parser = lyricsSearchProviders[provider] ?: return null
 
         return try {
-            parser.searchLyrics(query)
+            parser.searchLyrics(query, user)
         }
         catch (e: Exception) {
             logger.error("Error searching lyrics for '$query' with provider '$provider': ${e.message}", e)
@@ -239,7 +287,16 @@ object Parser {
         }
     }
 
-    suspend fun searchLyricsAuto(trackMetadata: TrackMetadata): String? {
+    /**
+     * Searches [LyricsMetadataSource] for lyrics for tracks with a specific title, artist, album and duration and returns
+     * the content as either plain text or .lrc formatted text.
+     * When no lyrics where found, null is returned.
+     *
+     * @see parse
+     * @param trackMetadata The metadata for the track containing `title`, `artists`, `album` and `duration`
+     * @param user The user searching for lyrics, used for loading API credentials
+     */
+    suspend fun searchLyricsAuto(trackMetadata: TrackMetadata, user: UserEntity?): String? {
 
         if (trackMetadata.trackInfo.artists.isNullOrEmpty() || trackMetadata.trackInfo.album == null || trackMetadata.fileInfo?.durationMs == null) {
             return null
@@ -253,7 +310,8 @@ object Parser {
                 trackName = trackMetadata.trackInfo.title,
                 artistName = trackMetadata.trackInfo.artists.first(),
                 albumName = trackMetadata.trackInfo.album,
-                duration = trackMetadata.fileInfo.durationMs
+                duration = trackMetadata.fileInfo.durationMs,
+                user = user
             )
         }
         catch (e: Exception) {

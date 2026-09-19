@@ -1,5 +1,6 @@
 package de.mickkc.vibin.parsing.parsers.lrclib
 
+import de.mickkc.vibin.db.UserEntity
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -15,7 +16,7 @@ class LrcLibProvider(val client: HttpClient) : LyricsSearchProvider {
 
     private val logger: Logger = LoggerFactory.getLogger(LrcLibProvider::class.java)
 
-    override suspend fun searchLyrics(searchQuery: String): List<LyricMetadata>? {
+    override suspend fun searchLyrics(searchQuery: String, user: UserEntity?): List<LyricMetadata>? {
 
         try {
             val response = client.get("https://lrclib.net/api/search") {
@@ -51,7 +52,7 @@ class LrcLibProvider(val client: HttpClient) : LyricsSearchProvider {
 
     }
 
-    override suspend fun searchLyrics(trackName: String, artistName: String, albumName: String, duration: Long): String? {
+    override suspend fun searchLyrics(trackName: String, artistName: String, albumName: String, duration: Long, user: UserEntity?): String? {
 
         try {
             val response = client.get("https://lrclib.net/api/get") {

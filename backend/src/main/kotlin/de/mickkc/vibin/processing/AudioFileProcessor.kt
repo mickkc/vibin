@@ -128,7 +128,7 @@ object AudioFileProcessor {
         var metadata: TrackMetadata
 
         try {
-            metadata = Parser.parse(file)
+            metadata = Parser.parse(file, null)
         }
         catch (e: PreParseException) {
             logger.error("Pre-parse failed for file: ${file.absolutePath}, skipping file. Error: ${e.message}", e)

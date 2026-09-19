@@ -1,5 +1,6 @@
 package de.mickkc.vibin.repos
 
+import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.albums.AlbumEntity
 import de.mickkc.vibin.db.albums.AlbumTable
 import de.mickkc.vibin.db.artists.ArtistEntity
@@ -34,9 +35,10 @@ object AlbumRepo {
      *
      * @param title The title of the album to retrieve or create.
      * @param artistName Optional name of the artist associated with the album for better search results.
+     * @param user The user creating the album, used for loading API credentials.
      * @return The existing or newly created AlbumEntity.
      */
-    suspend fun getOrCreateAlbum(title: String, artistName: String? = null): AlbumEntity {
+    suspend fun getOrCreateAlbum(title: String, artistName: String? = null, user: UserEntity?): AlbumEntity {
 
         if (title == UNKNOWN_ALBUM_NAME) {
             return getUnknownAlbum()
@@ -56,7 +58,7 @@ object AlbumRepo {
             title
         }
 
-        val searchResult = Parser.searchAlbumAuto(query)
+        val searchResult = Parser.searchAlbumAuto(query, user)
         val (_, cover) = ImageRepo.getUpdatedImage(searchResult?.coverImageUrl)
 
         return transaction {
