@@ -1,5 +1,6 @@
 package parsers
 
+import de.mickkc.vibin.parsing.Parser
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.SettingsRepo
 import de.mickkc.vibin.settings.Settings
@@ -15,7 +16,9 @@ import utils.UserTestUtils
 import utils.testApp
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class ApiCredentialsTest {
 
@@ -137,6 +140,76 @@ class ApiCredentialsTest {
         )
         assertEquals(Settings.SettingSource.None, source)
         assertNull(value)
+    }
+
+    @Test
+    fun testSpotifyCredentials_SetForUser() = testApp(false) {
+        val (user, _) = UserTestUtils.createUserAndSessionWithPermissions(
+            "MyUser",
+            "MyPassword",
+            PermissionType.USE_SERVER_API_CREDENTIALS to false
+        )
+
+        SettingsRepo.updateUserSetting(SpotifyUserClientId, user.id.value, "UserClientId")
+        SettingsRepo.updateUserSetting(SpotifyUserClientSecret, user.id.value, "UserClientSecret")
+
+        assertTrue(Parser.trackSearchProviders["Spotify"]!!.isAvailable(user))
+    }
+
+    @Test
+    fun testSpotifyCredentials_WithPermission_SetForServer() = testApp(false) {
+        val (user, _) = UserTestUtils.createUserAndSessionWithPermissions(
+            "MyUser",
+            "MyPassword",
+            PermissionType.USE_SERVER_API_CREDENTIALS to true
+        )
+
+        SettingsRepo.updateServerSetting(SpotifyClientId, "ServerClientId")
+        SettingsRepo.updateServerSetting(SpotifyClientSecret, "ServerClientSecret")
+
+        assertTrue(Parser.trackSearchProviders["Spotify"]!!.isAvailable(user))
+    }
+
+    @Test
+    fun testSpotifyCredentials_NoPermission_SetForServer() = testApp(false) {
+        val (user, _) = UserTestUtils.createUserAndSessionWithPermissions(
+            "MyUser",
+            "MyPassword",
+            PermissionType.USE_SERVER_API_CREDENTIALS to false
+        )
+
+        SettingsRepo.updateServerSetting(SpotifyClientId, "ServerClientId")
+        SettingsRepo.updateServerSetting(SpotifyClientSecret, "ServerClientSecret")
+
+        assertFalse(Parser.trackSearchProviders["Spotify"]!!.isAvailable(user))
+    }
+
+    @Test
+    fun testSpotifyCredentials_WithPermission_SourceMismatch() = testApp(false) {
+        val (user, _) = UserTestUtils.createUserAndSessionWithPermissions(
+            "MyUser",
+            "MyPassword",
+            PermissionType.USE_SERVER_API_CREDENTIALS to false
+        )
+
+        SettingsRepo.updateServerSetting(SpotifyClientId, "ServerClientId")
+        SettingsRepo.updateUserSetting(SpotifyUserClientSecret, user.id.value, "UserClientSecret")
+
+        assertFalse(Parser.trackSearchProviders["Spotify"]!!.isAvailable(user))
+    }
+
+
+    @Test
+    fun testSpotifyCredentials_WithPermission_PartiallySet() = testApp(false) {
+        val (user, _) = UserTestUtils.createUserAndSessionWithPermissions(
+            "MyUser",
+            "MyPassword",
+            PermissionType.USE_SERVER_API_CREDENTIALS to false
+        )
+
+        SettingsRepo.updateUserSetting(SpotifyUserClientSecret, user.id.value, "UserClientSecret")
+
+        assertFalse(Parser.trackSearchProviders["Spotify"]!!.isAvailable(user))
     }
 
 }

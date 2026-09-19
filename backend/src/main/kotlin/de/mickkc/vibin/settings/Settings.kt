@@ -54,7 +54,7 @@ object Settings {
      * @param permissionType An optional permission required for the user to be able to use the server settings, e.g.
      *                       [PermissionType.USE_SERVER_API_CREDENTIALS].
      * @param isValid Used to check if the value is valid before returning/using fallback.
-     * @return The loaded user setting, server setting, or null if none of the two are set and valid.
+     * @return The source where the setting was loaded from (server, user or none) and its value.
      */
     fun <T>getUserOrServer(userSetting: UserSetting<T>, serverSetting: ServerSetting<T>, userId: Long?, permissionType: PermissionType? = null, isValid: (T) -> Boolean): Pair<SettingSource, T?> {
         return userId
