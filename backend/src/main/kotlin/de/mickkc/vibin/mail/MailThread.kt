@@ -25,9 +25,9 @@ data class ScheduledMail(
 //  - Make delay between retries configurable and longer with each attempt
 //  - Fix race condition: If scheduleMail is called while the job finished (all mails sent) but is still running, it does
 //    does not restart it, so the mail is never sent.
-//  - Close the dispatcher (Runtime.getRuntime().addShutdownHook should work)
 //  - Persist pending mails in DB so they can get sent after a restart
 //  - (maybe?) Save failed mails to files so they are not completely lost
+@OptIn(ExperimentalCoroutinesApi::class)
 object MailThread {
 
     private val sendDelay = EnvUtil.getOrError(SMTP_DELAY_MS).milliseconds
@@ -36,15 +36,20 @@ object MailThread {
     private val mutex = Mutex()
     private val logger = LoggerFactory.getLogger(MailThread::class.java)
     private var job: Job? = null
-    @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
+    @OptIn(DelicateCoroutinesApi::class)
     private val mailDispatcher = newSingleThreadContext("MailThread")
-    @OptIn(ExperimentalCoroutinesApi::class)
     private val scope = CoroutineScope(SupervisorJob() + mailDispatcher)
 
 
     const val PRIORITY_2FA_CODES = 100
     const val PRIORITY_LOGIN_NOTIFICATIONS = 10
     const val PRIORITY_NORMAL = 0
+
+    init {
+        Runtime.getRuntime().addShutdownHook(Thread {
+            mailDispatcher.close()
+        })
+    }
 
     /**
      * Schedules sending a mail in the background thread. This will add the mail to the queue and start the job,
