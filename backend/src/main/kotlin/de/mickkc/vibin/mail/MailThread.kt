@@ -42,7 +42,7 @@ object MailThread {
 
     @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
     suspend fun startJobIfNotRunning() {
-        if (job == null || job?.isActive == true) return
+        if (job?.isActive == true) return
         job = withContext(newSingleThreadContext("MailSender")) {
             launch {
                 jobFunction()
