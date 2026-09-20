@@ -4,10 +4,14 @@ import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.config.EnvUtil.SMTP_DELAY_MS
 import de.mickkc.vibin.config.EnvUtil.SMTP_RETRIES
 import de.mickkc.vibin.mail.MailThread.jobFunction
+import jakarta.mail.IllegalWriteException
+import jakarta.mail.SendFailedException
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.eclipse.angus.mail.util.MailConnectException
 import org.slf4j.LoggerFactory
+import java.net.UnknownHostException
 import kotlin.time.Duration.Companion.milliseconds
 
 data class ScheduledMail(
@@ -67,27 +71,45 @@ object MailThread {
         var sentMails = 0
         var failedMails = 0
 
-        while (scheduledList.isNotEmpty()) {
-            mutex.withLock {
-                val mail = scheduledList.maxBy { it.priority }
-                var attempts = 0
-                while (attempts < maxRetries) {
-                    try {
-                        MailSender.sendMail(mail.to, mail.subject, mail.body)
-                        sentMails++
+        while (mutex.withLock { scheduledList.isNotEmpty() }) {
+            val mail = mutex.withLock {
+                scheduledList.maxByOrNull { it.priority }?.also { scheduledList.remove(it) }
+            }
+            if (mail == null) break
+
+            var attempts = 0
+            var failed = false
+            while (attempts < maxRetries) {
+                try {
+                    MailSender.sendMail(mail.to, mail.subject, mail.body)
+                    sentMails++
+                    break
+                }
+                catch (e: Exception) {
+                    val retry = when (e) {
+                        is SendFailedException -> {
+                            e.invalidAddresses.isNullOrEmpty()
+                        }
+                        is MailConnectException -> true // Could be a temporary timeout
+                        is IllegalWriteException, is IllegalStateException, is UnknownHostException -> false
+                        else -> true
+                    }
+
+                    if (!retry) {
+                        logger.error("Could not send mail with subject '${mail.subject}'. The error is marked as not retryable, so sending this mail will not be retried.", e)
+                        failed = true
                         break
                     }
-                    catch (e: Exception) {
-                        attempts++
-                        logger.error("Could not send mail with subject '${mail.subject}' (Attempt $attempts/$maxRetries)", e)
-                    }
+
+                    attempts++
+                    logger.error("Could not send mail with subject '${mail.subject}' (Attempt $attempts/$maxRetries)", e)
                 }
-                if (attempts == maxRetries) {
-                    logger.warn("$maxRetries attempts reached while trying to send mail with subject '${mail.subject}'!")
-                    failedMails++
-                }
-                scheduledList.remove(mail)
             }
+            if (attempts == maxRetries) {
+                logger.warn("$maxRetries attempts reached while trying to send mail with subject '${mail.subject}'!")
+                failed = true
+            }
+            if (failed) failedMails++
             delay(sendDelay)
         }
         logger.info("No mails left to send. Sent $sentMails mails, $failedMails failures.")
