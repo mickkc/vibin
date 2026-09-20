@@ -93,6 +93,7 @@ object EnvUtil {
     val SMTP_FROM = EnvKey("SMTP_FROM", null, String::trim)
     val SMTP_DELAY_MS = EnvKey("SMTP_DELAY_MS", 200, String::toIntOrNull)
     val SMTP_RETRIES = EnvKey("SMTP_RETRIES", 5, String::toIntOrNull)
+    val SMTP_RETRY_DELAY_MS = EnvKey("SMTP_RETRY_DELAY_MS", 2500, String::toIntOrNull)
 
     val REAL_IP_HEADER = EnvKey("REAL_IP_HEADER", "X-Forwarded-For", String::trim)
 

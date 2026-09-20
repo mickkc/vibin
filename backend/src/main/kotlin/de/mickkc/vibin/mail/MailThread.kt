@@ -3,6 +3,7 @@ package de.mickkc.vibin.mail
 import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.config.EnvUtil.SMTP_DELAY_MS
 import de.mickkc.vibin.config.EnvUtil.SMTP_RETRIES
+import de.mickkc.vibin.config.EnvUtil.SMTP_RETRY_DELAY_MS
 import de.mickkc.vibin.mail.MailThread.jobFunction
 import jakarta.mail.IllegalWriteException
 import jakarta.mail.SendFailedException
@@ -22,7 +23,6 @@ data class ScheduledMail(
 )
 
 // TODO:
-//  - Make delay between retries configurable and longer with each attempt
 //  - Fix race condition: If scheduleMail is called while the job finished (all mails sent) but is still running, it does
 //    does not restart it, so the mail is never sent.
 //  - Persist pending mails in DB so they can get sent after a restart
@@ -31,6 +31,7 @@ data class ScheduledMail(
 object MailThread {
 
     private val sendDelay = EnvUtil.getOrError(SMTP_DELAY_MS).milliseconds
+    private val retryDelay = EnvUtil.getOrError(SMTP_RETRY_DELAY_MS).milliseconds
     private val maxRetries = EnvUtil.getOrError(SMTP_RETRIES).coerceAtLeast(1)
     private val scheduledList = mutableListOf<ScheduledMail>()
     private val mutex = Mutex()
@@ -118,7 +119,8 @@ object MailThread {
                     }
 
                     attempts++
-                    logger.error("Could not send mail with subject '${mail.subject}' (Attempt $attempts/$maxRetries)", e)
+                    logger.error("Could not send mail with subject '${mail.subject}' (Attempt $attempts/$maxRetries, waiting ${retryDelay * attempts}ms)", e)
+                    delay(retryDelay * attempts)
                 }
             }
             if (attempts == maxRetries) {
