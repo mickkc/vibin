@@ -23,8 +23,6 @@ data class ScheduledMail(
 )
 
 // TODO:
-//  - Fix race condition: If scheduleMail is called while the job finished (all mails sent) but is still running, it does
-//    does not restart it, so the mail is never sent.
 //  - Persist pending mails in DB so they can get sent after a restart
 //  - (maybe?) Save failed mails to files so they are not completely lost
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -76,7 +74,7 @@ object MailThread {
     /**
      * Starts the [jobFunction] in the `MailSender` thread context if it is not already running.
      */
-    fun startJobIfNotRunning() {
+    suspend fun startJobIfNotRunning() = mutex.withLock {
         if (job?.isActive == true) return
         job = scope.launch {
             jobFunction()
@@ -88,7 +86,7 @@ object MailThread {
         var sentMails = 0
         var failedMails = 0
 
-        while (mutex.withLock { scheduledList.isNotEmpty() }) {
+        while (mutex.withLock { scheduledList.isNotEmpty().also { if (!it) job = null } }) {
             val mail = mutex.withLock {
                 scheduledList.maxByOrNull { it.priority }?.also { scheduledList.remove(it) }
             }
