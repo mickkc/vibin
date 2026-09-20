@@ -91,6 +91,8 @@ object EnvUtil {
     val SMTP_USERNAME = EnvKey("SMTP_USERNAME", null, String::trim)
     val SMTP_PASSWORD = EnvKey("SMTP_PASSWORD", null, String::trim)
     val SMTP_FROM = EnvKey("SMTP_FROM", null, String::trim)
+    val SMTP_DELAY_MS = EnvKey("SMTP_DELAY_MS", 200, String::toIntOrNull)
+    val SMTP_RETRIES = EnvKey("SMTP_RETRIES", 5, String::toIntOrNull)
 
     val REAL_IP_HEADER = EnvKey("REAL_IP_HEADER", "X-Forwarded-For", String::trim)
 

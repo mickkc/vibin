@@ -1,11 +1,8 @@
 package de.mickkc.vibin.mail
 
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.newSingleThreadContext
+import de.mickkc.vibin.config.EnvUtil
+import de.mickkc.vibin.config.EnvUtil.SMTP_DELAY_MS
+import de.mickkc.vibin.config.EnvUtil.SMTP_RETRIES
 import de.mickkc.vibin.mail.MailThread.jobFunction
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
@@ -22,7 +19,8 @@ data class ScheduledMail(
 
 object MailThread {
 
-    private val sendDelay = 200.milliseconds
+    private val sendDelay = EnvUtil.getOrError(SMTP_DELAY_MS).milliseconds
+    private val maxRetries = EnvUtil.getOrError(SMTP_RETRIES)
     private val scheduledList = mutableListOf<ScheduledMail>()
     private val mutex = Mutex()
     private val logger = LoggerFactory.getLogger(MailThread::class.java)
@@ -32,7 +30,6 @@ object MailThread {
     @OptIn(ExperimentalCoroutinesApi::class)
     private val scope = CoroutineScope(SupervisorJob() + mailDispatcher)
 
-    const val MAX_MAIL_ATTEMPTS = 5
 
     const val PRIORITY_2FA_CODES = 100
     const val PRIORITY_LOGIN_NOTIFICATIONS = 10
@@ -65,7 +62,7 @@ object MailThread {
         }
     }
 
-    suspend fun jobFunction() {
+    private suspend fun jobFunction() {
         logger.info("Starting mail sender...")
         var sentMails = 0
         var failedMails = 0
@@ -74,7 +71,7 @@ object MailThread {
             mutex.withLock {
                 val mail = scheduledList.maxBy { it.priority }
                 var attempts = 0
-                while (attempts < MAX_MAIL_ATTEMPTS) {
+                while (attempts < maxRetries) {
                     try {
                         MailSender.sendMail(mail.to, mail.subject, mail.body)
                         sentMails++
@@ -82,11 +79,11 @@ object MailThread {
                     }
                     catch (e: Exception) {
                         attempts++
-                        logger.error("Could not send mail with subject '${mail.subject}' (Attempt $attempts/$MAX_MAIL_ATTEMPTS)", e)
+                        logger.error("Could not send mail with subject '${mail.subject}' (Attempt $attempts/$maxRetries)", e)
                     }
                 }
-                if (attempts == MAX_MAIL_ATTEMPTS) {
-                    logger.warn("$MAX_MAIL_ATTEMPTS attempts reached while trying to send mail with subject '${mail.subject}'!")
+                if (attempts == maxRetries) {
+                    logger.warn("$maxRetries attempts reached while trying to send mail with subject '${mail.subject}'!")
                     failedMails++
                 }
                 scheduledList.remove(mail)
