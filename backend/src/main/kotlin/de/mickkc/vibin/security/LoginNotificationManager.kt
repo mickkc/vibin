@@ -9,6 +9,7 @@ import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.security.LoginNotificationEntity
 import de.mickkc.vibin.mail.MailLayout
 import de.mickkc.vibin.mail.MailSender
+import de.mickkc.vibin.mail.MailThread
 import de.mickkc.vibin.mail.NewLoginMailContent
 import de.mickkc.vibin.repos.SecurityRepo
 import de.mickkc.vibin.repos.SessionRepo
@@ -102,9 +103,10 @@ object LoginNotificationManager {
         val ip = IpLookupManager.findIp(ipFromHeader)
         val location = if (ip != null && Settings.get(IncludeLocationInLoginNotification)) IpLookupManager.lookupIpAddress(ip) else null
 
-        MailSender.sendMail(
+        MailThread.scheduleMail(
             to = user.email!!,
             subject = TemplateTranslator.getTranslation("mails.new_sign_in.subject"),
+            priority = MailThread.PRIORITY_LOGIN_NOTIFICATIONS,
             body = buildString {
                 appendHTML().html {
                     insert(MailLayout("mails.new_sign_in.subject")) {
