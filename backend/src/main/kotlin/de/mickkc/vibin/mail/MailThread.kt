@@ -21,10 +21,17 @@ data class ScheduledMail(
     val body: String
 )
 
+// TODO:
+//  - Make delay between retries configurable and longer with each attempt
+//  - Fix race condition: If scheduleMail is called while the job finished (all mails sent) but is still running, it does
+//    does not restart it, so the mail is never sent.
+//  - Close the dispatcher (Runtime.getRuntime().addShutdownHook should work)
+//  - Persist pending mails in DB so they can get sent after a restart
+//  - (maybe?) Save failed mails to files so they are not completely lost
 object MailThread {
 
     private val sendDelay = EnvUtil.getOrError(SMTP_DELAY_MS).milliseconds
-    private val maxRetries = EnvUtil.getOrError(SMTP_RETRIES)
+    private val maxRetries = EnvUtil.getOrError(SMTP_RETRIES).coerceAtLeast(1)
     private val scheduledList = mutableListOf<ScheduledMail>()
     private val mutex = Mutex()
     private val logger = LoggerFactory.getLogger(MailThread::class.java)
@@ -50,6 +57,10 @@ object MailThread {
      *                 [PRIORITY_LOGIN_NOTIFICATIONS], etc.
      */
     suspend fun scheduleMail(to: String, subject: String, body: String, priority: Int = PRIORITY_NORMAL) {
+        if (!MailSender.configured) {
+            logger.warn("Not adding mail with subject '$subject' to the queue because SMTP is not configured.")
+            return
+        }
         mutex.withLock {
             scheduledList.add(ScheduledMail(priority, to, subject, body))
         }
