@@ -1,10 +1,13 @@
 package de.mickkc.vibin.mail
 
+import de.mickkc.vibin.auth.CryptoUtil
 import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.config.EnvUtil.SMTP_DELAY_MS
+import de.mickkc.vibin.config.EnvUtil.SMTP_FAILED_MAILS_DIR
 import de.mickkc.vibin.config.EnvUtil.SMTP_RETRIES
 import de.mickkc.vibin.config.EnvUtil.SMTP_RETRY_DELAY_MS
 import de.mickkc.vibin.mail.MailThread.jobFunction
+import de.mickkc.vibin.utils.DateTimeUtils
 import jakarta.mail.IllegalWriteException
 import jakarta.mail.SendFailedException
 import kotlinx.coroutines.*
@@ -24,12 +27,12 @@ data class ScheduledMail(
 
 // TODO:
 //  - Persist pending mails in DB so they can get sent after a restart
-//  - (maybe?) Save failed mails to files so they are not completely lost
 @OptIn(ExperimentalCoroutinesApi::class)
 object MailThread {
 
     private val sendDelay = EnvUtil.getOrError(SMTP_DELAY_MS).milliseconds
     private val retryDelay = EnvUtil.getOrError(SMTP_RETRY_DELAY_MS).milliseconds
+    private val failedMailsDir = EnvUtil.getOrNull(SMTP_FAILED_MAILS_DIR)
     private val maxRetries = EnvUtil.getOrError(SMTP_RETRIES).coerceAtLeast(1)
     private val scheduledList = mutableListOf<ScheduledMail>()
     private val mutex = Mutex()
@@ -45,6 +48,7 @@ object MailThread {
     const val PRIORITY_NORMAL = 0
 
     init {
+        failedMailsDir?.mkdirs()
         Runtime.getRuntime().addShutdownHook(Thread {
             mailDispatcher.close()
         })
@@ -105,7 +109,12 @@ object MailThread {
                         is SendFailedException -> {
                             e.invalidAddresses.isNullOrEmpty()
                         }
-                        is MailConnectException -> true // Could be a temporary timeout
+                        is MailConnectException -> {
+                            when(e.nextException) {
+                                is UnknownHostException -> false
+                                else -> true // Could be a temporary timeout
+                            }
+                        }
                         is IllegalWriteException, is IllegalStateException, is UnknownHostException -> false
                         else -> true
                     }
@@ -125,9 +134,24 @@ object MailThread {
                 logger.warn("$maxRetries attempts reached while trying to send mail with subject '${mail.subject}'!")
                 failed = true
             }
-            if (failed) failedMails++
+            if (failed) {
+                failedMails++
+                writeFailedMailToDisk(mail)
+            }
             delay(sendDelay)
         }
         logger.info("No mails left to send. Sent $sentMails mails, $failedMails failures.")
+    }
+
+    fun writeFailedMailToDisk(mail: ScheduledMail) {
+        if (failedMailsDir == null) return
+        val file = failedMailsDir.resolve("mail-${mail.to.replace('@', '_')}-${DateTimeUtils.now()}-${CryptoUtil.createToken(8)}.html")
+
+        file.writeText(buildString {
+            appendLine("<!-- Recipient: ${mail.to} -->")
+            appendLine("<!-- Subject: ${mail.subject} -->")
+            appendLine()
+            appendLine(mail.body)
+        })
     }
 }
