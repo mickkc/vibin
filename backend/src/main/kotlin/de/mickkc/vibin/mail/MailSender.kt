@@ -102,24 +102,19 @@ object MailSender {
             return
         }
 
-        try {
-            val message = MimeMessage(session)
-            message.setFrom(fromAddress)
-            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to))
-            message.subject = subject
+        val message = MimeMessage(session)
+        message.setFrom(fromAddress)
+        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to))
+        message.subject = subject
 
-            message.setContent(
-                MimeMultipart().apply {
-                    addBodyPart(MimeBodyPart().apply {
-                        setContent(body, "text/html; charset=utf-8")
-                    })
-                }
-            )
+        message.setContent(
+            MimeMultipart().apply {
+                addBodyPart(MimeBodyPart().apply {
+                    setContent(body, "text/html; charset=utf-8")
+                })
+            }
+        )
 
-            Transport.send(message)
-        }
-        catch (e: Exception) {
-            logger.error("Error sending mail with subject '$subject': ${e.localizedMessage}", e)
-        }
+        Transport.send(message)
     }
 }
