@@ -77,7 +77,7 @@ val allTables = arrayOf(
     SharedWidgetTable, WidgetTypeTable,
     TrackRelationTable,
     LoginNotificationTable, TrustedDeviceIdTable,
-    TotpMailTable
+    TotpMailTable, PendingMailTable
 )
 
 fun createTables() = transaction {

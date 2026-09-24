@@ -5,6 +5,7 @@ import de.mickkc.vibin.db.TotpType
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.mail.MailLayout
 import de.mickkc.vibin.mail.MailSender
+import de.mickkc.vibin.mail.MailThread
 import de.mickkc.vibin.mail.TotpMailContent
 import de.mickkc.vibin.repos.SecurityRepo
 import de.mickkc.vibin.repos.UserRepo
@@ -118,7 +119,7 @@ object TotpManager {
         Sent
     }
 
-    fun sendTotpEmail(user: UserEntity, session: SessionEntity): TotpEmailResult {
+    suspend fun sendTotpEmail(user: UserEntity, session: SessionEntity): TotpEmailResult {
         if (user.totpType != TotpType.Mail) {
             return TotpEmailResult.Disabled
         }
@@ -135,9 +136,10 @@ object TotpManager {
 
         val totp = SecurityRepo.createTotpForMail(session)
 
-        MailSender.sendMail(
+        MailThread.scheduleMail(
             to = user.email!!,
             subject = TemplateTranslator.getTranslation("mails.totp.title"),
+            priority = MailThread.PRIORITY_2FA_CODES,
             body = buildString {
                 appendHTML().html {
                     insert(MailLayout("mails.totp.title")) {
