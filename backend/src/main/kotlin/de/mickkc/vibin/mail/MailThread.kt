@@ -6,6 +6,8 @@ import de.mickkc.vibin.config.EnvUtil.SMTP_DELAY_MS
 import de.mickkc.vibin.config.EnvUtil.SMTP_FAILED_MAILS_DIR
 import de.mickkc.vibin.config.EnvUtil.SMTP_RETRIES
 import de.mickkc.vibin.config.EnvUtil.SMTP_RETRY_DELAY_MS
+import de.mickkc.vibin.db.PendingMailEntity
+import de.mickkc.vibin.db.PendingMailTable
 import de.mickkc.vibin.mail.MailThread.jobFunction
 import de.mickkc.vibin.utils.DateTimeUtils
 import jakarta.mail.IllegalWriteException
@@ -14,19 +16,12 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.eclipse.angus.mail.util.MailConnectException
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import java.net.UnknownHostException
 import kotlin.time.Duration.Companion.milliseconds
 
-data class ScheduledMail(
-    val priority: Int,
-    val to: String,
-    val subject: String,
-    val body: String
-)
-
-// TODO:
-//  - Persist pending mails in DB so they can get sent after a restart
 @OptIn(ExperimentalCoroutinesApi::class)
 object MailThread {
 
@@ -34,7 +29,6 @@ object MailThread {
     private val retryDelay = EnvUtil.getOrError(SMTP_RETRY_DELAY_MS).milliseconds
     private val failedMailsDir = EnvUtil.getOrNull(SMTP_FAILED_MAILS_DIR)
     private val maxRetries = EnvUtil.getOrError(SMTP_RETRIES).coerceAtLeast(1)
-    private val scheduledList = mutableListOf<ScheduledMail>()
     private val mutex = Mutex()
     private val logger = LoggerFactory.getLogger(MailThread::class.java)
     private var job: Job? = null
@@ -50,8 +44,43 @@ object MailThread {
     init {
         failedMailsDir?.mkdirs()
         Runtime.getRuntime().addShutdownHook(Thread {
+            logger.info("Closing mail dispatcher...")
             mailDispatcher.close()
         })
+    }
+
+    /**
+     * Adds a mail to the queue in the database
+     *
+     * @param init The initialization block setting subject, priority, etc.
+     * @return The created [PendingMailEntity]
+     */
+    private fun addPendingMailToDb(init: (PendingMailEntity) -> Unit): PendingMailEntity = transaction {
+        PendingMailEntity.new(init)
+    }
+
+    /**
+     * Checks if there are any pending mails in the database
+     *
+     * @return True if there are mails that need to be sent, false otherwise
+     */
+    private fun hasPendingMails(): Boolean = transaction {
+        PendingMailEntity.all().any()
+    }
+
+    /**
+     * Gets the next mail to send, deletes it from the database and returns it.
+     * Mails are ordered by priority; the one with the highest priority gets sent first.
+     *
+     * @return The next mail to sent or null if there is none.
+     */
+    private fun getNextMail(): PendingMailEntity? = transaction {
+        PendingMailEntity
+            .all()
+            .orderBy(PendingMailTable.priority to SortOrder.DESC)
+            .limit(1).
+            singleOrNull()
+            ?.apply { delete() }
     }
 
     /**
@@ -70,7 +99,12 @@ object MailThread {
             return
         }
         mutex.withLock {
-            scheduledList.add(ScheduledMail(priority, to, subject, body))
+            addPendingMailToDb {
+                it.priority = priority
+                it.to = to
+                it.subject = subject
+                it.body = body
+            }
         }
         startJobIfNotRunning()
     }
@@ -90,10 +124,8 @@ object MailThread {
         var sentMails = 0
         var failedMails = 0
 
-        while (mutex.withLock { scheduledList.isNotEmpty().also { if (!it) job = null } }) {
-            val mail = mutex.withLock {
-                scheduledList.maxByOrNull { it.priority }?.also { scheduledList.remove(it) }
-            }
+        while (mutex.withLock { hasPendingMails().also { if (!it) job = null } }) {
+            val mail = mutex.withLock { getNextMail() }
             if (mail == null) break
 
             var attempts = 0
@@ -143,7 +175,7 @@ object MailThread {
         logger.info("No mails left to send. Sent $sentMails mails, $failedMails failures.")
     }
 
-    fun writeFailedMailToDisk(mail: ScheduledMail) {
+    fun writeFailedMailToDisk(mail: PendingMailEntity) {
         if (failedMailsDir == null) return
         val file = failedMailsDir.resolve("mail-${mail.to.replace('@', '_')}-${DateTimeUtils.now()}-${CryptoUtil.createToken(8)}.html")
 
