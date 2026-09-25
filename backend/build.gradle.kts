@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "de.mickkc"
-version = "0.0.14"
+version = "0.0.15"
 
 application {
     mainClass = "de.mickkc.vibin.ApplicationKt"
