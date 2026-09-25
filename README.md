@@ -22,6 +22,9 @@
 
 ---
 
+> [!NOTE]
+> This is the server repository. The client can be found [here](https://codeberg.org/mickkc/vibin-app).
+
 > [!CAUTION]
 > **Development Status**: This project is actively being developed. Breaking changes may occur without prior notice. Use at your own risk.
 

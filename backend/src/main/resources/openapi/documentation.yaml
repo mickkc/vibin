@@ -2,7 +2,7 @@ openapi: '3.0.3'
 info:
   title: Vibin' API
   description: API for the Vibin' music server
-  version: 0.0.14
+  version: 0.0.15
   contact:
     name: "Vibin' Project"
     url: "https://codeberg.org/mickkc/vibin"
