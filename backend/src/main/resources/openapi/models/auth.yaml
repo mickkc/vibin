@@ -22,6 +22,10 @@ Session:
       type: integer
       format: int64
       nullable: false
+    deviceName:
+      type: string
+      nullable: false
+      description: The name of the device this session was started on
     createdAt:
       type: integer
       format: int64
