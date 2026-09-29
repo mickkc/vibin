@@ -17,6 +17,20 @@ Login:
         required: true
         schema:
           type: string
+      - name: deviceId
+        in: query
+        description: An id unique to the device the user is logging in on
+        required: true
+        schema:
+          type: string
+          maxLength: 32
+      - name: deviceName
+        in: query
+        description: A human-readable name of the device the user is logging in on
+        required: true
+        schema:
+          type: string
+          maxLength: 255
     responses:
       200:
         description: Login result
