@@ -22,6 +22,14 @@ object WidgetBuilder {
                 WidgetType.JOINED_FAVORITES -> JoinedFavoritesWidget(ctx)
                 WidgetType.SERVER_STATS -> ServerStatsWidget(ctx)
                 WidgetType.LISTENING_TO -> ListeningToWidget(ctx)
+                WidgetType.RECENT_TRACKS -> RecentTracksWidget(ctx)
+                WidgetType.RECENT_ALBUMS -> RecentAlbumsWidget(ctx)
+                WidgetType.RECENT_ARTISTS -> RecentArtistsWidget(ctx)
+                WidgetType.RECENTLY_LISTENED -> RecentlyListenedWidget(ctx)
+                WidgetType.MOST_LISTENED_TRACKS -> MostListenedTracksWidget(ctx)
+                WidgetType.MOST_LISTENED_ALBUM -> MostListenedAlbumsWidget(ctx)
+                WidgetType.MOST_LISTENED_ARTISTS -> MostListenedArtistsWidget(ctx)
+                WidgetType.MOST_LISTENED_TO -> MostListenedWidget(ctx)
             }.also { it.interactive = interactive }
         }
 

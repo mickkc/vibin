@@ -147,14 +147,14 @@ object WidgetStyles {
             flexDirection = FlexDirection.column
         }
 
-        rule(".favorite-items") {
+        rule(".items") {
             display = Display.flex
             flexDirection = FlexDirection.row
             gap = 1.rem
             overflowX = Overflow.scroll
         }
 
-        rule(".favorite-item") {
+        rule(".item") {
             display = Display.flex
             flexDirection = FlexDirection.column
             gap = 0.25.rem
@@ -163,7 +163,7 @@ object WidgetStyles {
             position = Position.relative
         }
 
-        rule(".favorite-place") {
+        rule(".item-place") {
             position = Position.absolute
             top = 0.5.rem
             right = 1.rem
@@ -218,7 +218,7 @@ object WidgetStyles {
                 width = 100.vw - 2.rem
                 gap = 1.rem
             }
-            rule(".joined-favorites .favorite-items") {
+            rule(".joined-favorites .items") {
                 width = 100.vw - 4.rem
             }
         }

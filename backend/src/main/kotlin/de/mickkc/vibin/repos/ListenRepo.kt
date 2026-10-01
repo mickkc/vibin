@@ -111,11 +111,20 @@ object ListenRepo {
             .mapKeys { it.key!! }
     }
 
-    fun getMostListenedToAsDtos(userId: Long, since: Long, global: Boolean = false): Map<KeyValueDto, Int> = transaction {
-
-        val allowedTypes = PermissionRepo.getPermittedListenTypes(userId) - ListenType.TRACK
+    fun getMostListenedToAsDtos(
+        userId: Long,
+        since: Long,
+        global: Boolean = false,
+        allowedTypes: List<ListenType> = PermissionRepo.getPermittedListenTypes(userId) - ListenType.TRACK
+    ): Map<KeyValueDto, Int> = transaction {
 
         val dtos = mutableMapOf<KeyValueDto, Int>()
+
+        if (allowedTypes.contains(ListenType.TRACK)) {
+            dtos += getMostListenedTracks(userId.takeIf { !global }, since).mapKeys {
+                KeyValueDto(ListenType.TRACK.name, TrackRepo.toDto(it.key))
+            }
+        }
 
         if (allowedTypes.contains(ListenType.ALBUM)) {
             dtos += getMostListenedAlbums(userId.takeIf { !global }, since).mapKeys {
@@ -159,9 +168,34 @@ object ListenRepo {
             .mapNotNull { TrackRepo.getById(it) }
     }
 
-    fun getRecentNonTrackDtos(userId: Long, limit: Int): List<KeyValueDto> = transaction {
+    fun getRecentAlbums(userId: Long, since: Long, limit: Int): List<AlbumEntity> = transaction {
+        return@transaction ListenEntity
+            .find { (ListenTable.listenedAt greaterEq since) and (ListenTable.user eq userId) and (ListenTable.type eq ListenType.ALBUM) }
+            .orderBy(ListenTable.listenedAt to SortOrder.DESC)
+            .map { it.entityId }
+            .distinct()
+            .take(limit)
+            .mapNotNull { AlbumRepo.getById(it) }
+    }
 
-        val allowedTypes = PermissionRepo.getPermittedListenTypes(userId) - ListenType.TRACK
+    fun getRecentArtistsFromTracks(userId: Long, since: Long, limit: Int): List<ArtistEntity> = transaction {
+        return@transaction ListenEntity
+            .find { (ListenTable.listenedAt greaterEq since) and (ListenTable.user eq userId) and (ListenTable.type eq ListenType.TRACK) }
+            .orderBy(ListenTable.listenedAt to SortOrder.DESC)
+            .asSequence()
+            .map { it.entityId }
+            .distinct()
+            .take(limit)
+            .flatMap { TrackRepo.getById(it)?.let { TrackRepo.getArtists(it) } ?: emptyList() }
+            .distinct()
+            .toList()
+    }
+
+    fun getRecentNonTrackDtos(
+        userId: Long,
+        limit: Int,
+        allowedTypes: List<ListenType> = PermissionRepo.getPermittedListenTypes(userId) - ListenType.TRACK
+    ): List<KeyValueDto> = transaction {
 
         return@transaction ListenEntity
             .find { (ListenTable.user eq userId) and (ListenTable.type inList allowedTypes) }
@@ -170,6 +204,7 @@ object ListenRepo {
                 ListenType.ALBUM -> AlbumRepo.toDtoInternal(AlbumRepo.getById(it.entityId) ?: return@mapNotNull null)
                 ListenType.ARTIST -> ArtistRepo.toDtoInternal(ArtistRepo.getById(it.entityId) ?: return@mapNotNull null)
                 ListenType.PLAYLIST -> PlaylistRepo.toDtoInternal(PlaylistRepo.getById(it.entityId, userId) ?: return@mapNotNull null)
+                ListenType.TRACK -> TrackRepo.toDtoInternal(TrackRepo.getById(it.entityId) ?: return@mapNotNull null)
                 else -> null
             } ?: return@mapNotNull null) }
             .distinct()

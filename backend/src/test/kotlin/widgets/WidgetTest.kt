@@ -358,7 +358,7 @@ class WidgetTest {
         val doc = parseHtml(html)
 
         // Should contain favorite section
-        val items = doc.select(".favorite-items").single()
+        val items = doc.select(".items").single()
         assertEquals(3, items.childrenSize())
 
         FavoriteTesters.testFavoriteTracks(items)
@@ -373,15 +373,15 @@ class WidgetTest {
 
         val doc = parseHtml(html)
 
-        val items = doc.select(".favorite-items").single()
+        val items = doc.select(".items").single()
         assertEquals(3, items.childrenSize())
 
         items.children().withIndex().forEach { (index, element) ->
-            assertTrue(element.hasClass("favorite-item"))
+            assertTrue(element.hasClass("item"))
             assertEquals("background-color: #FF000033;", element.select("div.item-cover").single().attr("style"))
             assertEquals("", element.select(".item-info h3").text())
             assertEquals("", element.select(".item-subtitle").text())
-            assertEquals(listOf("🥇", "🥈", "🥉")[index], element.select(".favorite-place").text())
+            assertEquals(listOf("🥇", "🥈", "🥉")[index], element.select(".item-place").text())
         }
     }
 
@@ -400,7 +400,7 @@ class WidgetTest {
 
         val doc = parseHtml(html)
 
-        val items = doc.select(".favorite-items").single()
+        val items = doc.select(".items").single()
         assertEquals(3, items.childrenSize())
 
         FavoriteTesters.testFavoriteAlbums(items)
@@ -421,7 +421,7 @@ class WidgetTest {
 
         val doc = parseHtml(html)
 
-        val items = doc.select(".favorite-items").single()
+        val items = doc.select(".items").single()
         assertEquals(3, items.childrenSize())
 
         FavoriteTesters.testFavoriteArtists(items)
@@ -576,17 +576,17 @@ class WidgetTest {
         assertEquals(3, sections.size)
 
         val tracksSection = sections[0]
-        val trackItems = tracksSection.select(".favorite-items").single()
+        val trackItems = tracksSection.select(".items").single()
         assertEquals(3, trackItems.childrenSize())
         FavoriteTesters.testFavoriteTracks(trackItems)
 
         val albumsSection = sections[1]
-        val albumItems = albumsSection.select(".favorite-items").single()
+        val albumItems = albumsSection.select(".items").single()
         assertEquals(3, albumItems.childrenSize())
         FavoriteTesters.testFavoriteAlbums(albumItems)
 
         val artistsSection = sections[2]
-        val artistItems = artistsSection.select(".favorite-items").single()
+        val artistItems = artistsSection.select(".items").single()
         assertEquals(3, artistItems.childrenSize())
         FavoriteTesters.testFavoriteArtists(artistItems)
     }
