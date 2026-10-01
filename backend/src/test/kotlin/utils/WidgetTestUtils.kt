@@ -2,6 +2,12 @@ package utils
 
 import de.mickkc.vibin.db.FavoriteType
 import de.mickkc.vibin.repos.FavoriteRepo
+import de.mickkc.vibin.widgets.WidgetContext
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 object WidgetTestUtils {
 
@@ -26,5 +32,60 @@ object WidgetTestUtils {
         ArtistTestUtils.addCoverToArtist(artist2, "abc123")
         FavoriteRepo.addFavorite(userId, FavoriteType.ARTIST, artist1.id.value, 1)
         FavoriteRepo.addFavorite(userId, FavoriteType.ARTIST, artist2.id.value, 2)
+    }
+
+    fun createContext(
+        userId: Long = 1,
+        fgColor: Int = 0xFFFFFF,
+        bgColor: Int = 0x000000,
+        accentColor: Int = 0xFF0000,
+        language: String = "en"
+    ) = WidgetContext(
+        userId = userId,
+        foregroundColor = fgColor,
+        backgroundColor = bgColor,
+        accentColor = accentColor,
+        language = language
+    )
+
+    fun parseHtml(html: String): Document {
+        return Jsoup.parse(html)
+    }
+
+    data class TestItemCheck(
+        val title: String? = null,
+        val subtitle: String? = null,
+        val place: String? = null
+    )
+
+    fun testItems(
+        html: String,
+        vararg checks: TestItemCheck
+    ) {
+        val doc = parseHtml(html)
+        val list = doc.selectFirst(".items")
+
+        assertNotNull(list)
+        assertEquals(checks.size, list.childNodeSize())
+
+        checks.forEachIndexed { idx, check ->
+            val item = list.child(idx)
+
+            if (check.title != null) {
+                assertEquals(check.title, item.selectFirst(".item-info > h3")!!.text())
+            }
+            if (check.subtitle != null) {
+                assertEquals(check.subtitle, item.selectFirst(".item-subtitle")!!.text())
+            }
+
+            val placeElement = item.selectFirst(".item-place")
+            if (check.place != null) {
+                assertNotNull(placeElement)
+                assertEquals(check.place, placeElement.text())
+            }
+            else {
+                assertNull(placeElement)
+            }
+        }
     }
 }
