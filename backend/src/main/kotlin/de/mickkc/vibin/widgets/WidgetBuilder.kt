@@ -59,19 +59,8 @@ object WidgetBuilder {
                             }
                         }
                     }
-
-                    div {
-                        style = "position: fixed; bottom: 5px; right: 5px; font-size: 10px; color: ${fgColor}66;"
-                        +"Powered by "
-                        a(href = "https://github.com/mickkc/vibin", target = "_blank") {
-                            rel = "noopener noreferrer"
-                            style = "color: ${fgColor}66;"
-                            +"Vibin'"
-                        }
-                    }
                 }
             }
         }
-
     }
 }
