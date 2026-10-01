@@ -18,7 +18,8 @@ import kotlinx.html.FlowContent
 abstract class ItemsWidget<T>(
     ctx: WidgetContext,
     val titleKey: String,
-    val getter: () -> List<T>
+    val getter: () -> List<T>,
+    val showPlace: Boolean = false
 ) : BaseWidget(ctx) {
 
     val items = getter()
@@ -78,7 +79,8 @@ abstract class ItemsWidget<T>(
             getType = ::getType,
             getCover = ::getCover,
             getTitle = ::getTitle,
-            getSubtitle = ::getSubtitle
+            getSubtitle = ::getSubtitle,
+            showPlace = showPlace
         )
     }
 
@@ -123,7 +125,8 @@ class MostListenedTracksWidget(ctx: WidgetContext) : ItemsWidget<TrackEntity>(
             .toList()
             .sortedByDescending { it.second }
             .map { it.first }
-    }
+    },
+    showPlace = true
 )
 
 class MostListenedAlbumsWidget(ctx: WidgetContext) : ItemsWidget<AlbumEntity>(
@@ -135,7 +138,8 @@ class MostListenedAlbumsWidget(ctx: WidgetContext) : ItemsWidget<AlbumEntity>(
             .toList()
             .sortedByDescending { it.second }
             .map { it.first }
-    }
+    },
+    showPlace = true
 )
 
 class MostListenedArtistsWidget(ctx: WidgetContext) : ItemsWidget<ArtistEntity>(
@@ -147,7 +151,8 @@ class MostListenedArtistsWidget(ctx: WidgetContext) : ItemsWidget<ArtistEntity>(
             .toList()
             .sortedByDescending { it.second }
             .map { it.first }
-    }
+    },
+    showPlace = true
 )
 
 class MostListenedWidget(ctx: WidgetContext) : ItemsWidget<Any>(
@@ -163,5 +168,6 @@ class MostListenedWidget(ctx: WidgetContext) : ItemsWidget<Any>(
         .toList()
         .sortedByDescending { it.second }
         .map { it.first.value }
-    }
+    },
+    showPlace = true
 )

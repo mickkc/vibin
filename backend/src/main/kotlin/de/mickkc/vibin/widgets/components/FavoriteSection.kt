@@ -56,7 +56,7 @@ fun<T> FlowContent.itemSection(
                         }
                     }
 
-                    if (showPlace) {
+                    if (showPlace && index < 3) {
                         p("item-place") {
                             style = "background-color: ${widget.backgroundColor}aa; color: ${widget.accentColor};"
 
