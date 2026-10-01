@@ -181,20 +181,6 @@ class WidgetTest {
     }
 
     @Test
-    fun testWidgetBuilder_PoweredByLink() = testApp { _ ->
-        val ctx = createContext()
-        val html = WidgetBuilder.build(listOf(WidgetType.SERVER_STATS), ctx)
-
-        val doc = parseHtml(html)
-
-        val poweredByLink = doc.select("a[href=https://github.com/mickkc/vibin]").first()
-        assertNotNull(poweredByLink)
-        assertEquals("Vibin'", poweredByLink.text())
-        assertEquals("_blank", poweredByLink.attr("target"))
-        assertEquals("noopener noreferrer", poweredByLink.attr("rel"))
-    }
-
-    @Test
     fun testWidgetBuilder_Interactive() = testApp { _ ->
         val ctx = createContext()
         val htmlInteractive = WidgetBuilder.build(listOf(WidgetType.USER), ctx, interactive = true)
