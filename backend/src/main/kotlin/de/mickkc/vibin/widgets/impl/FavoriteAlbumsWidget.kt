@@ -4,7 +4,7 @@ import de.mickkc.vibin.repos.AlbumRepo
 import de.mickkc.vibin.repos.FavoriteRepo
 import de.mickkc.vibin.widgets.BaseWidget
 import de.mickkc.vibin.widgets.WidgetContext
-import de.mickkc.vibin.widgets.components.favoritesSection
+import de.mickkc.vibin.widgets.components.itemSection
 import kotlinx.html.FlowContent
 import kotlinx.html.div
 
@@ -15,11 +15,11 @@ class FavoriteAlbumsWidget(ctx: WidgetContext) : BaseWidget(ctx) {
 
             val favorites = FavoriteRepo.getFavoriteAlbumsForUser(ctx.userId)
 
-            favoritesSection(
+            itemSection(
                 this@FavoriteAlbumsWidget,
                 title = t("widgets.favorites.albums.title"),
-                favorites = favorites,
-                type = "album",
+                items = favorites,
+                getType = {"album"},
                 getCover = { AlbumRepo.getAlbumCover(it) },
                 getTitle = { it.title },
                 getSubtitle = {
@@ -27,7 +27,8 @@ class FavoriteAlbumsWidget(ctx: WidgetContext) : BaseWidget(ctx) {
                         it.releaseYear?.toString()
                             ?: t("widgets.favorites.albums.subtitle_placeholder")
                     }
-                }
+                },
+                showPlace = true
             )
         }
     }

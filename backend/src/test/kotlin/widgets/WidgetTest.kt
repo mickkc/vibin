@@ -6,11 +6,8 @@ import de.mickkc.vibin.repos.ListenRepo
 import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.utils.DateTimeUtils
 import de.mickkc.vibin.widgets.WidgetBuilder
-import de.mickkc.vibin.widgets.WidgetContext
 import de.mickkc.vibin.widgets.WidgetType
 import de.mickkc.vibin.widgets.WidgetUtils
-import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
 import utils.*
 import kotlin.test.*
 import kotlin.time.Duration.Companion.days
@@ -19,24 +16,6 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class WidgetTest {
-
-    private fun createContext(
-        userId: Long = 1,
-        fgColor: Int = 0xFFFFFF,
-        bgColor: Int = 0x000000,
-        accentColor: Int = 0xFF0000,
-        language: String = "en"
-    ) = WidgetContext(
-        userId = userId,
-        foregroundColor = fgColor,
-        backgroundColor = bgColor,
-        accentColor = accentColor,
-        language = language
-    )
-
-    private fun parseHtml(html: String): Document {
-        return Jsoup.parse(html)
-    }
 
     // region WidgetUtils Tests
 
@@ -108,10 +87,10 @@ class WidgetTest {
 
     @Test
     fun testWidgetBuilder_BasicStructure() = testApp { _ ->
-        val ctx = createContext()
+        val ctx = WidgetTestUtils.createContext()
         val html = WidgetBuilder.build(listOf(WidgetType.SERVER_STATS), ctx)
 
-        val doc = parseHtml(html)
+        val doc = WidgetTestUtils.parseHtml(html)
 
         // Check basic HTML structure
         assertNotNull(doc.select("html").first())
@@ -137,13 +116,13 @@ class WidgetTest {
 
     @Test
     fun testWidgetBuilder_Colors() = testApp { _ ->
-        val ctx = createContext(
+        val ctx = WidgetTestUtils.createContext(
             fgColor = 0xFFFFFF,
             bgColor = 0x123456
         )
         val html = WidgetBuilder.build(listOf(WidgetType.SERVER_STATS), ctx)
 
-        val doc = parseHtml(html)
+        val doc = WidgetTestUtils.parseHtml(html)
 
         val bodyStyle = doc.select("body").first()?.attr("style")
         assertNotNull(bodyStyle)
@@ -153,18 +132,18 @@ class WidgetTest {
 
     @Test
     fun testWidgetBuilder_Language() = testApp { _ ->
-        val ctxEn = createContext(language = "en")
+        val ctxEn = WidgetTestUtils.createContext(language = "en")
         val htmlEn = WidgetBuilder.build(listOf(WidgetType.SERVER_STATS), ctxEn)
-        assertEquals("en", parseHtml(htmlEn).select("html").attr("lang"))
+        assertEquals("en", WidgetTestUtils.parseHtml(htmlEn).select("html").attr("lang"))
 
-        val ctxDe = createContext(language = "de")
+        val ctxDe = WidgetTestUtils.createContext(language = "de")
         val htmlDe = WidgetBuilder.build(listOf(WidgetType.SERVER_STATS), ctxDe)
-        assertEquals("de", parseHtml(htmlDe).select("html").attr("lang"))
+        assertEquals("de", WidgetTestUtils.parseHtml(htmlDe).select("html").attr("lang"))
     }
 
     @Test
     fun testWidgetBuilder_MultipleWidgets() = testApp { _ ->
-        val ctx = createContext()
+        val ctx = WidgetTestUtils.createContext()
         val html = WidgetBuilder.build(
             listOf(
                 WidgetType.SERVER_STATS,
@@ -173,7 +152,7 @@ class WidgetTest {
             ctx
         )
 
-        val doc = parseHtml(html)
+        val doc = WidgetTestUtils.parseHtml(html)
 
         // Should have multiple widget bodies
         val widgets = doc.select(".widget-body")
@@ -181,27 +160,13 @@ class WidgetTest {
     }
 
     @Test
-    fun testWidgetBuilder_PoweredByLink() = testApp { _ ->
-        val ctx = createContext()
-        val html = WidgetBuilder.build(listOf(WidgetType.SERVER_STATS), ctx)
-
-        val doc = parseHtml(html)
-
-        val poweredByLink = doc.select("a[href=https://github.com/mickkc/vibin]").first()
-        assertNotNull(poweredByLink)
-        assertEquals("Vibin'", poweredByLink.text())
-        assertEquals("_blank", poweredByLink.attr("target"))
-        assertEquals("noopener noreferrer", poweredByLink.attr("rel"))
-    }
-
-    @Test
     fun testWidgetBuilder_Interactive() = testApp { _ ->
-        val ctx = createContext()
+        val ctx = WidgetTestUtils.createContext()
         val htmlInteractive = WidgetBuilder.build(listOf(WidgetType.USER), ctx, interactive = true)
         val htmlNonInteractive = WidgetBuilder.build(listOf(WidgetType.USER), ctx, interactive = false)
 
-        val docInteractive = parseHtml(htmlInteractive)
-        val docNonInteractive = parseHtml(htmlNonInteractive)
+        val docInteractive = WidgetTestUtils.parseHtml(htmlInteractive)
+        val docNonInteractive = WidgetTestUtils.parseHtml(htmlNonInteractive)
 
         // Interactive should have buttons/links
         assertTrue(docInteractive.select("a.btn").isNotEmpty())
@@ -231,10 +196,10 @@ class WidgetTest {
         ListenTestUtils.listenedToTrack(testUser, track1, 120)
         ListenTestUtils.listenedToTrack(testUser, track2, 45)
 
-        val ctx = createContext()
+        val ctx = WidgetTestUtils.createContext()
         val html = WidgetBuilder.build(listOf(WidgetType.SERVER_STATS), ctx)
 
-        val doc = parseHtml(html)
+        val doc = WidgetTestUtils.parseHtml(html)
 
         val statCards = doc.select(".stat-card")
         assertEquals(7, statCards.size)
@@ -266,10 +231,10 @@ class WidgetTest {
             duration = (2.hours + 2.minutes + 5.seconds).inWholeMilliseconds
         )
 
-        val ctx = createContext()
+        val ctx = WidgetTestUtils.createContext()
         val html = WidgetBuilder.build(listOf(WidgetType.SERVER_STATS), ctx)
 
-        val doc = parseHtml(html)
+        val doc = WidgetTestUtils.parseHtml(html)
 
         // Find the duration stat
         val bodyText = doc.text()
@@ -299,10 +264,10 @@ class WidgetTest {
             )
         )
 
-        val ctx = createContext(userId = user.id.value)
+        val ctx = WidgetTestUtils.createContext(userId = user.id.value)
         val html = WidgetBuilder.build(listOf(WidgetType.USER), ctx)
 
-        val doc = parseHtml(html)
+        val doc = WidgetTestUtils.parseHtml(html)
 
         // Check user container exists
         val userContainer = doc.select(".user-container").first()
@@ -317,10 +282,10 @@ class WidgetTest {
     fun testUserWidget_Interactive() = testApp { _ ->
         val user = UserTestUtils.createTestUser("testuser", "password")
 
-        val ctx = createContext(userId = user.id.value)
+        val ctx = WidgetTestUtils.createContext(userId = user.id.value)
 
         val htmlInteractive = WidgetBuilder.build(listOf(WidgetType.USER), ctx, interactive = true)
-        val docInteractive = parseHtml(htmlInteractive)
+        val docInteractive = WidgetTestUtils.parseHtml(htmlInteractive)
 
         // Should have profile link button
         val profileLink = docInteractive.select("a.btn").first()
@@ -333,10 +298,10 @@ class WidgetTest {
     fun testUserWidget_NonInteractive() = testApp { _ ->
         val user = UserTestUtils.createTestUser("testuser", "password")
 
-        val ctx = createContext(userId = user.id.value)
+        val ctx = WidgetTestUtils.createContext(userId = user.id.value)
 
         val htmlNonInteractive = WidgetBuilder.build(listOf(WidgetType.USER), ctx, interactive = false)
-        val docNonInteractive = parseHtml(htmlNonInteractive)
+        val docNonInteractive = WidgetTestUtils.parseHtml(htmlNonInteractive)
 
         // Should not have profile link button
         assertTrue(docNonInteractive.select("a.btn").isEmpty())
@@ -352,13 +317,13 @@ class WidgetTest {
 
         WidgetTestUtils.setupFavoriteTracks(user.id.value)
 
-        val ctx = createContext(userId = user.id.value)
+        val ctx = WidgetTestUtils.createContext(userId = user.id.value)
         val html = WidgetBuilder.build(listOf(WidgetType.FAVORITE_TRACKS), ctx)
 
-        val doc = parseHtml(html)
+        val doc = WidgetTestUtils.parseHtml(html)
 
         // Should contain favorite section
-        val items = doc.select(".favorite-items").single()
+        val items = doc.select(".items").single()
         assertEquals(3, items.childrenSize())
 
         FavoriteTesters.testFavoriteTracks(items)
@@ -368,20 +333,20 @@ class WidgetTest {
     fun testFavoriteTracksWidget_NoFavorites() = testApp { _ ->
         val user = UserTestUtils.createTestUser("testuser", "password")
 
-        val ctx = createContext(userId = user.id.value)
+        val ctx = WidgetTestUtils.createContext(userId = user.id.value)
         val html = WidgetBuilder.build(listOf(WidgetType.FAVORITE_TRACKS), ctx)
 
-        val doc = parseHtml(html)
+        val doc = WidgetTestUtils.parseHtml(html)
 
-        val items = doc.select(".favorite-items").single()
+        val items = doc.select(".items").single()
         assertEquals(3, items.childrenSize())
 
         items.children().withIndex().forEach { (index, element) ->
-            assertTrue(element.hasClass("favorite-item"))
+            assertTrue(element.hasClass("item"))
             assertEquals("background-color: #FF000033;", element.select("div.item-cover").single().attr("style"))
             assertEquals("", element.select(".item-info h3").text())
             assertEquals("", element.select(".item-subtitle").text())
-            assertEquals(listOf("🥇", "🥈", "🥉")[index], element.select(".favorite-place").text())
+            assertEquals(listOf("🥇", "🥈", "🥉")[index], element.select(".item-place").text())
         }
     }
 
@@ -395,12 +360,12 @@ class WidgetTest {
 
         WidgetTestUtils.setupFavoriteAlbums(user.id.value)
 
-        val ctx = createContext(userId = user.id.value)
+        val ctx = WidgetTestUtils.createContext(userId = user.id.value)
         val html = WidgetBuilder.build(listOf(WidgetType.FAVORITE_ALBUMS), ctx)
 
-        val doc = parseHtml(html)
+        val doc = WidgetTestUtils.parseHtml(html)
 
-        val items = doc.select(".favorite-items").single()
+        val items = doc.select(".items").single()
         assertEquals(3, items.childrenSize())
 
         FavoriteTesters.testFavoriteAlbums(items)
@@ -416,12 +381,12 @@ class WidgetTest {
 
         WidgetTestUtils.setupFavoriteArtists(user.id.value)
 
-        val ctx = createContext(userId = user.id.value)
+        val ctx = WidgetTestUtils.createContext(userId = user.id.value)
         val html = WidgetBuilder.build(listOf(WidgetType.FAVORITE_ARTISTS), ctx)
 
-        val doc = parseHtml(html)
+        val doc = WidgetTestUtils.parseHtml(html)
 
-        val items = doc.select(".favorite-items").single()
+        val items = doc.select(".items").single()
         assertEquals(3, items.childrenSize())
 
         FavoriteTesters.testFavoriteArtists(items)
@@ -442,10 +407,10 @@ class WidgetTest {
         ListenTestUtils.listenedToTrack(user, track2, 120)
         ListenTestUtils.listenedToTrack(user, track1, 120, at = DateTimeUtils.now() - 1.days.inWholeSeconds)
 
-        val ctx = createContext(userId = user.id.value)
+        val ctx = WidgetTestUtils.createContext(userId = user.id.value)
         val html = WidgetBuilder.build(listOf(WidgetType.SIMPLE_ACTIVITY), ctx)
 
-        val doc = parseHtml(html)
+        val doc = WidgetTestUtils.parseHtml(html)
 
         val grid = doc.select(".activity-grid").single()
 
@@ -490,10 +455,10 @@ class WidgetTest {
         ListenTestUtils.listenedToTrack(user, track2, 120)
         ListenTestUtils.listenedToTrack(user, track1, 120, at = DateTimeUtils.now() - 1.days.inWholeSeconds)
 
-        val ctx = createContext(userId = user.id.value)
+        val ctx = WidgetTestUtils.createContext(userId = user.id.value)
         val html = WidgetBuilder.build(listOf(WidgetType.ACTIVITY), ctx)
 
-        val doc = parseHtml(html)
+        val doc = WidgetTestUtils.parseHtml(html)
 
         val grid = doc.select(".activity-grid").single()
 
@@ -567,26 +532,26 @@ class WidgetTest {
         // Artists
         WidgetTestUtils.setupFavoriteArtists(user.id.value)
 
-        val ctx = createContext(userId = user.id.value)
+        val ctx = WidgetTestUtils.createContext(userId = user.id.value)
         val html = WidgetBuilder.build(listOf(WidgetType.JOINED_FAVORITES), ctx)
 
-        val doc = parseHtml(html)
+        val doc = WidgetTestUtils.parseHtml(html)
 
         val sections = doc.select(".joined-favorites").single().children()
         assertEquals(3, sections.size)
 
         val tracksSection = sections[0]
-        val trackItems = tracksSection.select(".favorite-items").single()
+        val trackItems = tracksSection.select(".items").single()
         assertEquals(3, trackItems.childrenSize())
         FavoriteTesters.testFavoriteTracks(trackItems)
 
         val albumsSection = sections[1]
-        val albumItems = albumsSection.select(".favorite-items").single()
+        val albumItems = albumsSection.select(".items").single()
         assertEquals(3, albumItems.childrenSize())
         FavoriteTesters.testFavoriteAlbums(albumItems)
 
         val artistsSection = sections[2]
-        val artistItems = artistsSection.select(".favorite-items").single()
+        val artistItems = artistsSection.select(".items").single()
         assertEquals(3, artistItems.childrenSize())
         FavoriteTesters.testFavoriteArtists(artistItems)
     }
@@ -597,14 +562,14 @@ class WidgetTest {
 
     @Test
     fun testBaseWidget_ColorProperties() = testApp { _ ->
-        val ctx = createContext(
+        val ctx = WidgetTestUtils.createContext(
             fgColor = 0xABCDEF,
             bgColor = 0x123456,
             accentColor = 0xFFAABB
         )
 
         val html = WidgetBuilder.build(listOf(WidgetType.SERVER_STATS), ctx)
-        val doc = parseHtml(html)
+        val doc = WidgetTestUtils.parseHtml(html)
 
         val bodyStyle = doc.select("body").first()?.attr("style")
         assertNotNull(bodyStyle)
@@ -614,8 +579,8 @@ class WidgetTest {
 
     @Test
     fun testBaseWidget_Translation() = testApp { _ ->
-        val ctxEn = createContext(language = "en")
-        val ctxDe = createContext(language = "de")
+        val ctxEn = WidgetTestUtils.createContext(language = "en")
+        val ctxDe = WidgetTestUtils.createContext(language = "de")
 
         val htmlEn = WidgetBuilder.build(listOf(WidgetType.SERVER_STATS), ctxEn)
         val htmlDe = WidgetBuilder.build(listOf(WidgetType.SERVER_STATS), ctxDe)

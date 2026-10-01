@@ -5,30 +5,32 @@ import de.mickkc.vibin.widgets.BaseWidget
 import de.mickkc.vibin.widgets.WidgetUtils
 import kotlinx.html.*
 
-fun<T> FlowContent.favoritesSection(
+fun<T> FlowContent.itemSection(
     widget: BaseWidget,
     title: String,
-    favorites: List<T?>,
-    type: String,
+    items: List<T?>,
+    getType: (T) -> String,
     getCover: (T) -> ImageEntity?,
     getTitle: (T) -> String,
     getSubtitle: (T) -> String,
+    showPlace: Boolean = false
 ) {
     div("favorites") {
         h2 {
             +title
         }
-        div("favorite-items") {
-            for ((index, item) in favorites.withIndex()) {
+        div("items") {
+            for ((index, item) in items.withIndex()) {
                 val cover = item?.let { getCover(it) }
                 val itemTitle = item?.let { getTitle(it) } ?: ""
                 val itemSubtitle = item?.let { getSubtitle(it) } ?: ""
+                val type = item?.let { getType(it) } ?: ""
 
                 val imageUrl = if (item == null) null else WidgetUtils.getImageUrl(cover, type, 128)
 
                 val cardBg = WidgetUtils.blendColors(widget.ctx.backgroundColor, widget.ctx.accentColor, 0.2f)
 
-                div("favorite-item") {
+                div("item") {
                     style = "background-color: ${WidgetUtils.colorToHex(cardBg)};"
 
                     if (imageUrl != null) {
@@ -54,14 +56,16 @@ fun<T> FlowContent.favoritesSection(
                         }
                     }
 
-                    p("favorite-place") {
-                        style = "background-color: ${widget.backgroundColor}aa; color: ${widget.accentColor};"
+                    if (showPlace && index < 3) {
+                        p("item-place") {
+                            style = "background-color: ${widget.backgroundColor}aa; color: ${widget.accentColor};"
 
-                        when (index) {
-                            0 -> +"🥇"
-                            1 -> +"🥈"
-                            2 -> +"🥉"
-                            else -> +"#${index + 1}"
+                            when (index) {
+                                0 -> +"🥇"
+                                1 -> +"🥈"
+                                2 -> +"🥉"
+                                else -> +"#${index + 1}"
+                            }
                         }
                     }
                 }
