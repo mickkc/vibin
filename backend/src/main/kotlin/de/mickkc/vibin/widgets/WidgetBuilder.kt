@@ -49,7 +49,7 @@ object WidgetBuilder {
                     link(rel = "stylesheet", href = "/api/widgets/styles", type = "text/css")
                 }
 
-                body {
+                body("vibin-widget") {
                     style = "margin: 0; padding: 0; background-color: $bgColor; color: $fgColor; accent-color: $accentColor"
                     widgets.forEach { widget ->
                         insert(widget) {}

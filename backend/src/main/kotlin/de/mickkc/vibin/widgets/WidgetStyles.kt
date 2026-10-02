@@ -23,7 +23,7 @@ object WidgetStyles {
             height = LinearDimension.fitContent
         }
 
-        rule("*::-webkit-scrollbar") {
+        rule(".vibin-widget *::-webkit-scrollbar") {
             display = Display.none
         }
 
@@ -31,27 +31,27 @@ object WidgetStyles {
             padding = Padding(all = 1.rem)
         }
 
-        p {
+        rule(".vibin-widget p") {
             margin = Margin(all = 0.rem)
             padding = Padding(all = 0.rem)
         }
 
-        h1 {
+        rule(".vibin-widget h1") {
             margin = Margin(all = 0.rem)
             padding = Padding(all = 0.rem)
         }
 
-        h2 {
+        rule(".vibin-widget h2") {
             margin = Margin(left = 0.rem, top = 0.rem, bottom = 1.rem, right = 0.rem)
             padding = Padding(all = 0.rem)
         }
 
-        h3 {
+        rule(".vibin-widget h3") {
             margin = Margin(all = 0.rem)
             padding = Padding(all = 0.rem)
         }
 
-        rule(".activity-grid") {
+        rule(".vibin-widget .activity-grid") {
             display = Display.grid
             gridTemplateRows = GridTemplateRows("repeat(7, 14px)")
             gap = 4.px
@@ -59,14 +59,14 @@ object WidgetStyles {
             gridAutoFlow = GridAutoFlow.column
         }
 
-        rule(".activity-grid > div") {
+        rule(".vibin-widget .activity-grid > div") {
             borderRadius = 2.px
             height = 14.px
             minWidth = 14.px
             display = Display.inlineBlock
         }
 
-        rule(".btn") {
+        rule(".vibin-widget .btn") {
             padding = Padding(vertical = 0.5.rem, horizontal = 1.rem)
             textDecoration = TextDecoration.none
             borderRadius = 4.px
@@ -74,7 +74,7 @@ object WidgetStyles {
             width = LinearDimension.fitContent
         }
 
-        rule(".user-container") {
+        rule(".vibin-widget .user-container") {
             display = Display.flex
             flexDirection = FlexDirection.row
             alignItems = Align.start
@@ -82,25 +82,25 @@ object WidgetStyles {
         }
 
         media("(max-width: 720px)") {
-            rule(".user-container") {
+            rule(".vibin-widget .user-container") {
                 flexDirection = FlexDirection.column
                 alignItems = Align.center
                 textAlign = TextAlign.center
             }
 
-            rule(".user-info") {
+            rule(".vibin-widget .user-info") {
                 alignItems = Align.center
             }
         }
 
-        rule(".user-container img") {
+        rule(".vibin-widget .user-container img") {
             borderRadius = 50.pct
             width = 192.px
             height = 192.px
             objectFit = ObjectFit.cover
         }
 
-        rule(".user-info") {
+        rule(".vibin-widget .user-info") {
             display = Display.flex
             flexDirection = FlexDirection.column
             margin = Margin(all = 1.rem)
@@ -110,18 +110,18 @@ object WidgetStyles {
             minHeight = 0.px
         }
 
-        rule(".description") {
+        rule(".vibin-widget .description") {
             margin = Margin(top = 0.5.rem, bottom = 0.5.rem)
             opacity = 0.8
             fontSize = 0.9.rem
             wordWrap = WordWrap.breakWord
         }
 
-        rule(".description:empty") {
+        rule(".vibin-widget .description:empty") {
             display = Display.none
         }
 
-        rule(".stats") {
+        rule(".vibin-widget .stats") {
             display = Display.flex
             flexDirection = FlexDirection.row
             gap = 1.rem
@@ -131,7 +131,7 @@ object WidgetStyles {
             flexWrap = FlexWrap.wrap
         }
 
-        rule(".stat-card") {
+        rule(".vibin-widget .stat-card") {
             padding = Padding(all = 1.rem)
             display = Display.flex
             alignItems = Align.center
@@ -142,19 +142,19 @@ object WidgetStyles {
             height = LinearDimension.maxContent
         }
 
-        rule(".favorites") {
+        rule(".vibin-widget .favorites") {
             display = Display.flex
             flexDirection = FlexDirection.column
         }
 
-        rule(".items") {
+        rule(".vibin-widget .items") {
             display = Display.flex
             flexDirection = FlexDirection.row
             gap = 1.rem
             overflowX = Overflow.scroll
         }
 
-        rule(".item") {
+        rule(".vibin-widget .item") {
             display = Display.flex
             flexDirection = FlexDirection.column
             gap = 0.25.rem
@@ -163,7 +163,7 @@ object WidgetStyles {
             position = Position.relative
         }
 
-        rule(".item-place") {
+        rule(".vibin-widget .item-place") {
             position = Position.absolute
             top = 0.5.rem
             right = 1.rem
@@ -174,34 +174,34 @@ object WidgetStyles {
             userSelect = UserSelect.none
         }
 
-        rule(".item-info") {
+        rule(".vibin-widget .item-info") {
             display = Display.flex
             flexDirection = FlexDirection.column
             gap = 0.25.rem
         }
 
-        rule(".item-info > *") {
+        rule(".vibin-widget .item-info > *") {
             overflow = Overflow.hidden
             textOverflow = TextOverflow.ellipsis
             whiteSpace = WhiteSpace.nowrap
             maxWidth = 128.px
         }
 
-        rule(".item-subtitle") {
+        rule(".vibin-widget .item-subtitle") {
             padding = Padding(all = 0.rem)
             margin = Margin(all = 0.rem)
             opacity = 0.8
             fontSize = 0.9.rem
         }
 
-        rule(".item-cover") {
+        rule(".vibin-widget .item-cover") {
             width = 128.px
             height = 128.px
             objectFit = ObjectFit.cover
             borderRadius = 0.5.rem
         }
 
-        rule(".joined-favorites") {
+        rule(".vibin-widget .joined-favorites") {
             display = Display.flex
             flexDirection = FlexDirection.row
             gap = 2.rem
@@ -211,19 +211,19 @@ object WidgetStyles {
         }
 
         media("(max-width: 1000px)") {
-            rule(".joined-favorites") {
+            rule(".vibin-widget .joined-favorites") {
                 flexDirection = FlexDirection.column
                 alignItems = Align.center
                 justifyContent = JustifyContent.center
                 width = 100.vw - 2.rem
                 gap = 1.rem
             }
-            rule(".joined-favorites .items") {
+            rule(".vibin-widget .joined-favorites .items") {
                 width = 100.vw - 4.rem
             }
         }
 
-        rule(".listening-to") {
+        rule(".vibin-widget .listening-to") {
             display = Display.flex
             flexDirection = FlexDirection.row
             gap = 1.rem
@@ -249,7 +249,7 @@ object WidgetStyles {
             }
         }
 
-        rule(".progress") {
+        rule(".vibin-widget .progress") {
             width = 100.pct
             display = Display.flex
             flexDirection = FlexDirection.row
@@ -257,18 +257,18 @@ object WidgetStyles {
             alignItems = Align.center
         }
 
-        rule(".progress > p") {
+        rule(".vibin-widget .progress > p") {
             fontSize = 1.rem
         }
 
-        rule(".progress-container") {
+        rule(".vibin-widget .progress-container") {
             height = 5.px
             borderRadius = 2.5.px
             overflow = Overflow.hidden
             flex = Flex.GROW
         }
 
-        rule(".progress-bar") {
+        rule(".vibin-widget .progress-bar") {
             height = 100.pct
             width = 0.pct
             borderRadius = 2.5.px
@@ -280,7 +280,7 @@ object WidgetStyles {
             to { transform += Transform("translateX", arrayOf(350.pct)) }
         }
 
-        rule(".progress-bar.indeterminate") {
+        rule(".vibin-widget .progress-bar.indeterminate") {
             width = 40.pct
             animation += Animation(
                 name = "indeterminate",
