@@ -1,5 +1,7 @@
 package de.mickkc.vibin.widgets.impl
 
+import de.mickkc.vibin.config.EnvUtil
+import de.mickkc.vibin.config.EnvUtil.EXTERNAL_URL
 import de.mickkc.vibin.repos.ControlRepo
 import de.mickkc.vibin.repos.SessionPlayState
 import de.mickkc.vibin.repos.TrackRepo
@@ -26,6 +28,13 @@ class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
         else date.format(DateTimeFormatter.ofPattern(t("widgets.listening_to.date.format")))
     }
 
+    val baseUrl = run {
+        if (ctx.external) {
+            return@run EnvUtil.getOrNull(EXTERNAL_URL) ?: "https://external-url-not-configured.example.com"
+        }
+        return@run ""
+    }
+
     override fun FlowContent.apply() {
 
         val initialSession = ControlRepo.getCurrentSession(ctx.userId)
@@ -33,7 +42,7 @@ class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
         val initialTrack = initialSession?.currentTrackId?.let { TrackRepo.getById(it) }
         val initialAlbum = initialTrack?.let { TrackRepo.getAlbum(it) }
         val initialArtists = initialTrack?.let { TrackRepo.getArtists(it) }?.joinToString { it.name }
-        val coverUrl = WidgetUtils.getImageUrl(initialTrack?.let { TrackRepo.getCover(it) }, "track", 128)
+        val coverUrl = WidgetUtils.getImageUrl(initialTrack?.let { TrackRepo.getCover(it) }, "track", 128, ctx.external)
 
         div("widget-body") {
             h2 {
@@ -125,7 +134,7 @@ class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
                     }
                 }
 
-                script(src = "/api/js/listeningToUpdater.js") {}
+                script(src = "$baseUrl/api/js/listeningToUpdater.js") {}
             }
         }
     }

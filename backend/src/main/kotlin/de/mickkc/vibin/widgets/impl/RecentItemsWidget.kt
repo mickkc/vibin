@@ -74,6 +74,7 @@ abstract class ItemsWidget<T>(
     override fun FlowContent.apply() {
         itemSection(
             widget = this@ItemsWidget,
+            ctx = ctx,
             title = t(titleKey),
             items = items,
             getType = ::getType,

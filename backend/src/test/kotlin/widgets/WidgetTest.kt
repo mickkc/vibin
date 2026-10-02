@@ -76,7 +76,7 @@ class WidgetTest {
 
     @Test
     fun testGetImageUrl() {
-        val url = WidgetUtils.getImageUrl(null, "track", 192)
+        val url = WidgetUtils.getImageUrl(null, "track", 192, false)
         assertNotNull(url)
         assertTrue(url.contains("default-track"))
     }

@@ -45,7 +45,8 @@ object WidgetTestUtils {
         foregroundColor = fgColor,
         backgroundColor = bgColor,
         accentColor = accentColor,
-        language = language
+        language = language,
+        external = false
     )
 
     fun parseHtml(html: String): Document {

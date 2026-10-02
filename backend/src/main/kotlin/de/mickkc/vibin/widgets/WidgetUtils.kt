@@ -1,5 +1,7 @@
 package de.mickkc.vibin.widgets
 
+import de.mickkc.vibin.config.EnvUtil
+import de.mickkc.vibin.config.EnvUtil.EXTERNAL_URL
 import de.mickkc.vibin.db.images.ImageEntity
 import de.mickkc.vibin.utils.AccessCryptoUtil
 
@@ -31,9 +33,11 @@ object WidgetUtils {
      * @param quality The desired quality/size of the image
      * @return A signed URL, or null if image is null
      */
-    fun getImageUrl(image: ImageEntity?, type: String, quality: Int = 192): String {
+    fun getImageUrl(image: ImageEntity?, type: String, quality: Int = 192, external: Boolean): String {
 
-        return AccessCryptoUtil.generateSignedImageUrl(
+        val baseUrl = if (external) EnvUtil.getOrNull(EXTERNAL_URL) ?: "https://external-url-not-configured.example.com" else ""
+
+        return baseUrl + AccessCryptoUtil.generateSignedImageUrl(
             checksum = image?.sourceChecksum ?: "default-$type",
             quality = quality
         )

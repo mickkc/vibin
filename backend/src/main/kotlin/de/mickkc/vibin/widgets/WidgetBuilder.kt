@@ -4,6 +4,7 @@ import de.mickkc.vibin.widgets.impl.*
 import io.ktor.server.html.*
 import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
+import kotlinx.html.stream.createHTML
 
 object WidgetBuilder {
 
@@ -37,6 +38,24 @@ object WidgetBuilder {
         val fgColor = WidgetUtils.colorToHex(ctx.foregroundColor)
         val accentColor = WidgetUtils.colorToHex(ctx.accentColor)
 
+        fun HtmlBlockTag.applyBody() {
+            style = "margin: 0; padding: 0; background-color: $bgColor; color: $fgColor; accent-color: $accentColor"
+            widgets.forEach { widget ->
+                insert(widget) {}
+                if (widget != widgets.last()) {
+                    div {
+                        style = "width: 100%; height: 1px; background-color: ${fgColor}33; margin: 1rem 0;"
+                    }
+                }
+            }
+        }
+
+        if (ctx.external) {
+            return createHTML().div("vibin-widget") {
+                applyBody()
+            }
+        }
+
         return buildString {
             appendHTML(prettyPrint = false).html {
 
@@ -50,15 +69,7 @@ object WidgetBuilder {
                 }
 
                 body("vibin-widget") {
-                    style = "margin: 0; padding: 0; background-color: $bgColor; color: $fgColor; accent-color: $accentColor"
-                    widgets.forEach { widget ->
-                        insert(widget) {}
-                        if (widget != widgets.last()) {
-                            div {
-                                style = "width: 100%; height: 1px; background-color: ${fgColor}33; margin: 1rem 0;"
-                            }
-                        }
-                    }
+                    applyBody()
                 }
             }
         }

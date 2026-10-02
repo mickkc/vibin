@@ -17,6 +17,7 @@ class FavoriteAlbumsWidget(ctx: WidgetContext) : BaseWidget(ctx) {
 
             itemSection(
                 this@FavoriteAlbumsWidget,
+                ctx = ctx,
                 title = t("widgets.favorites.albums.title"),
                 items = favorites,
                 getType = {"album"},

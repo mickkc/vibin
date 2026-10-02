@@ -51,7 +51,7 @@ class ListeningToWidgetListener(session: Session, val userId: Long, val outgoing
         val imageUrl = if (lastTrackId != session.currentTrackId) {
             lastTrackId = session.currentTrackId
             val img = track?.let { TrackRepo.getCover(track) }
-            WidgetUtils.getImageUrl(img, "track", 128)
+            WidgetUtils.getImageUrl(img, "track", 128, true)
         }
         else null
 

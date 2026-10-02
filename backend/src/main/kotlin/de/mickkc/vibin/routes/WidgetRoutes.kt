@@ -31,15 +31,15 @@ private data class WidgetColors(
 
 private fun RoutingCall.parseWidgetColors(widget: SharedWidgetEntity): WidgetColors {
     val backgroundColor = request.queryParameters["bgColor"]?.let {
-        WidgetUtils.colorFromHex(it)
+        WidgetUtils.colorFromHex(it.removePrefix("#"))
     } ?: widget.bgColor ?: 0x1D2021
 
     val foregroundColor = request.queryParameters["fgColor"]?.let {
-        WidgetUtils.colorFromHex(it)
+        WidgetUtils.colorFromHex(it.removePrefix("#"))
     } ?: widget.fgColor ?: 0xEBDBB2
 
     val accentColor = request.queryParameters["accentColor"]?.let {
-        WidgetUtils.colorFromHex(it)
+        WidgetUtils.colorFromHex(it.removePrefix("#"))
     } ?: widget.accentColor ?: 0x689D6A
 
     return WidgetColors(backgroundColor, foregroundColor, accentColor)
@@ -69,14 +69,16 @@ private fun getValidatedWidgetTypes(widget: SharedWidgetEntity): List<WidgetType
 private fun createWidgetContext(
     widget: SharedWidgetEntity,
     colors: WidgetColors,
-    language: String
+    language: String,
+    external: Boolean = false
 ): WidgetContext {
     return WidgetContext(
         userId = WidgetRepo.getUserId(widget),
         accentColor = colors.accentColor,
         backgroundColor = colors.backgroundColor,
         foregroundColor = colors.foregroundColor,
-        language = language
+        language = language,
+        external = external
     )
 }
 
@@ -124,10 +126,12 @@ fun Application.configureWidgetRoutes() = routing {
         val id = call.getStringParameter("id")
         val widget = WidgetRepo.getWidget(id) ?: notFound()
 
+        val external = call.getBooleanOrDefault("external", false)
+
         val colors = call.parseWidgetColors(widget)
         val language = call.parseLanguage()
         val widgetTypes = getValidatedWidgetTypes(widget)
-        val ctx = createWidgetContext(widget, colors, language)
+        val ctx = createWidgetContext(widget, colors, language, external)
 
         call.respondText(WidgetBuilder.build(widgetTypes, ctx), contentType = ContentType.Text.Html)
     }

@@ -6,4 +6,5 @@ data class WidgetContext(
     val backgroundColor: Int,
     val accentColor: Int,
     val language: String,
+    val external: Boolean
 )
