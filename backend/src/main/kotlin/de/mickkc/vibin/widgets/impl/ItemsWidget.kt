@@ -14,6 +14,7 @@ import de.mickkc.vibin.widgets.BaseWidget
 import de.mickkc.vibin.widgets.WidgetContext
 import de.mickkc.vibin.widgets.components.itemSection
 import kotlinx.html.FlowContent
+import kotlinx.html.div
 
 abstract class ItemsWidget<T>(
     ctx: WidgetContext,
@@ -72,17 +73,19 @@ abstract class ItemsWidget<T>(
     }
 
     override fun FlowContent.apply() {
-        itemSection(
-            widget = this@ItemsWidget,
-            ctx = ctx,
-            title = t(titleKey),
-            items = items,
-            getType = ::getType,
-            getCover = ::getCover,
-            getTitle = ::getTitle,
-            getSubtitle = ::getSubtitle,
-            showPlace = showPlace
-        )
+        div("widget-body") {
+            itemSection(
+                widget = this@ItemsWidget,
+                ctx = ctx,
+                title = t(titleKey),
+                items = items,
+                getType = ::getType,
+                getCover = ::getCover,
+                getTitle = ::getTitle,
+                getSubtitle = ::getSubtitle,
+                showPlace = showPlace
+            )
+        }
     }
 
 }
