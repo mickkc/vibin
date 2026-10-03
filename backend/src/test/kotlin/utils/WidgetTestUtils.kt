@@ -39,14 +39,15 @@ object WidgetTestUtils {
         fgColor: Int = 0xFFFFFF,
         bgColor: Int = 0x000000,
         accentColor: Int = 0xFF0000,
-        language: String = "en"
+        language: String = "en",
+        external: Boolean = false
     ) = WidgetContext(
         userId = userId,
         foregroundColor = fgColor,
         backgroundColor = bgColor,
         accentColor = accentColor,
         language = language,
-        external = false
+        external = external
     )
 
     fun parseHtml(html: String): Document {

@@ -1,5 +1,6 @@
 package widgets
 
+import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.db.ListenType
 import de.mickkc.vibin.dto.users.UserEditDto
 import de.mickkc.vibin.repos.ListenRepo
@@ -173,6 +174,56 @@ class WidgetTest {
 
         // Non-interactive should not have interactive elements
         assertTrue(docNonInteractive.select("a.btn").isEmpty())
+    }
+
+    @Test
+    fun testWidgetBuilder_NotExternal() = testApp { _ ->
+        EnvUtil.overrides[EnvUtil.EXTERNAL_URL.name] = "https://test.example.com"
+        val ctx = WidgetTestUtils.createContext(external = false)
+        val html = WidgetBuilder.build(listOf(WidgetType.LISTENING_TO), ctx, interactive = true)
+
+        val doc = WidgetTestUtils.parseHtml(html)
+        val script = doc.selectFirst("script[src]")
+
+        assertNotNull(script)
+        assertEquals("/api/js/listeningToUpdater.js", script.attr("src"))
+
+        val img = doc.selectFirst("img")
+        assertNotNull(img)
+        assertTrue(img.attr("src").startsWith("/api/widgets/images/default-track"))
+    }
+
+    @Test
+    fun testWidgetBuilder_External() = testApp { _ ->
+        EnvUtil.overrides[EnvUtil.EXTERNAL_URL.name] = "https://test.example.com"
+        val ctx = WidgetTestUtils.createContext(external = true)
+        val html = WidgetBuilder.build(listOf(WidgetType.LISTENING_TO), ctx, interactive = true)
+
+        val doc = WidgetTestUtils.parseHtml(html)
+        val script = doc.selectFirst("script[src]")
+
+        assertNotNull(script)
+        assertEquals("https://test.example.com/api/js/listeningToUpdater.js", script.attr("src"))
+
+        val img = doc.selectFirst("img")
+        assertNotNull(img)
+        assertTrue(img.attr("src").startsWith("https://test.example.com/api/widgets/images/default-track"))
+    }
+
+    @Test
+    fun testWidgetBuilder_External_NotSet() = testApp { _ ->
+        val ctx = WidgetTestUtils.createContext(external = true)
+        val html = WidgetBuilder.build(listOf(WidgetType.LISTENING_TO), ctx, interactive = true)
+
+        val doc = WidgetTestUtils.parseHtml(html)
+        val script = doc.selectFirst("script[src]")
+
+        assertNotNull(script)
+        assertEquals("https://external-url-not-configured.example.com/api/js/listeningToUpdater.js", script.attr("src"))
+
+        val img = doc.selectFirst("img")
+        assertNotNull(img)
+        assertTrue(img.attr("src").startsWith("https://external-url-not-configured.example.com/api/widgets/images/default-track"))
     }
 
     // endregion
