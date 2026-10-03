@@ -163,6 +163,10 @@ object WidgetStyles {
             position = Position.relative
         }
 
+        rule(".vibin-widget .item.item-artist img") {
+            borderRadius = 50.pct
+        }
+
         rule(".vibin-widget .item-place") {
             position = Position.absolute
             top = 0.5.rem

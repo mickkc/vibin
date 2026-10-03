@@ -32,7 +32,7 @@ fun<T> FlowContent.itemSection(
 
                 val cardBg = WidgetUtils.blendColors(widget.ctx.backgroundColor, widget.ctx.accentColor, 0.2f)
 
-                div("item") {
+                div("item item-$type") {
                     style = "background-color: ${WidgetUtils.colorToHex(cardBg)};"
 
                     if (imageUrl != null) {
