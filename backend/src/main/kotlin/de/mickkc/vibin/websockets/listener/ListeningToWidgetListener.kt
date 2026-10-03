@@ -17,7 +17,12 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.time.Duration.Companion.seconds
 
-class ListeningToWidgetListener(session: Session, val userId: Long, val outgoing: SendChannel<Frame>) : SessionListener(session) {
+class ListeningToWidgetListener(
+    session: Session,
+    val userId: Long,
+    val outgoing: SendChannel<Frame>,
+    val external: Boolean
+) : SessionListener(session) {
 
     val logger: Logger = LoggerFactory.getLogger(ListeningToWidgetListener::class.java)
     private val gson = Gson().newBuilder().serializeNulls().create()
@@ -51,7 +56,7 @@ class ListeningToWidgetListener(session: Session, val userId: Long, val outgoing
         val imageUrl = if (lastTrackId != session.currentTrackId) {
             lastTrackId = session.currentTrackId
             val img = track?.let { TrackRepo.getCover(track) }
-            WidgetUtils.getImageUrl(img, "track", 128, true)
+            WidgetUtils.getImageUrl(img, "track", 128, external)
         }
         else null
 

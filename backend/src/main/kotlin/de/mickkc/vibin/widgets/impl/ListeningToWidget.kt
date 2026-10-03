@@ -49,7 +49,8 @@ class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
 
         div("widget-body listening-to-widget") {
             if (interactive) {
-                attributes["data-ws-url"] = "$baseUrl/api/widgets/${ctx.widgetId}/listeningto/ws"
+                val wsQuery = if (ctx.external) "?external=true" else ""
+                attributes["data-ws-url"] = "$baseUrl/api/widgets/${ctx.widgetId}/listeningto/ws$wsQuery"
                 attributes["data-lang"] = buildJsonObject {
                     putJsonObject("date") {
                         put("today", t("widgets.listening_to.date.today"))

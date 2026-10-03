@@ -246,12 +246,14 @@ fun Application.configureWidgetRoutes() = routing {
         }
 
         val userId = WidgetRepo.getUserId(widget)
+        val external = call.getBooleanOrDefault("external", false)
 
         val session = ControlRepo.getCurrentSession(userId)
             ?: ControlRepo.getLatestSession(userId)
             ?: return@webSocket close(CloseReason(CloseReason.Codes.TRY_AGAIN_LATER, "No current or previous session for user."))
 
-        val listener = ListeningToWidgetListener(session, userId, outgoing)
+
+        val listener = ListeningToWidgetListener(session, userId, outgoing, external)
 
         try {
             listener.reconnect()

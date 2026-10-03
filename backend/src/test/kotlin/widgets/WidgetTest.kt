@@ -233,7 +233,7 @@ class WidgetTest {
 
         val root = doc.selectFirst(".listening-to-widget")
         assertNotNull(root)
-        assertEquals("https://test.example.com/api/widgets/test-widget/listeningto/ws", root.attr("data-ws-url"))
+        assertEquals("https://test.example.com/api/widgets/test-widget/listeningto/ws?external=true", root.attr("data-ws-url"))
 
         val img = doc.selectFirst("img")
         assertNotNull(img)
@@ -254,7 +254,7 @@ class WidgetTest {
 
         val root = doc.selectFirst(".listening-to-widget")
         assertNotNull(root)
-        assertEquals("https://external-url-not-configured.example.com/api/widgets/test-widget/listeningto/ws", root.attr("data-ws-url"))
+        assertEquals("https://external-url-not-configured.example.com/api/widgets/test-widget/listeningto/ws?external=true", root.attr("data-ws-url"))
 
         val img = doc.selectFirst("img")
         assertNotNull(img)
