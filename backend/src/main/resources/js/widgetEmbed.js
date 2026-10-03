@@ -87,7 +87,7 @@ function collectParams(element, config, names, out) {
 
       const queryString = params.length === 0
         ? ""
-        : `?${params.map((p) => `${p[0]}=${p[1]}`).join('&')}`;
+        : `?${params.map((p) => `${p[0]}=${encodeURIComponent(p[1])}`).join('&')}`;
 
       const response = await fetch(`${baseUrl}/api/widgets/${id}${queryString}`);
       const html = await response.text();

@@ -178,6 +178,25 @@ class WidgetRestTest {
     }
 
     @Test
+    fun testGetWidget_External_WithEncodedHashColors() = testApp { client ->
+        val user = UserTestUtils.createTestUser("testuser", "password")
+        val widget = WidgetRepo.shareWidget(user, listOf(WidgetType.SERVER_STATS), null, null, null)
+
+        val response = client.get(
+            "/api/widgets/${widget.id.value}?external=true&bgColor=%23123456&fgColor=%23ABCDEF&accentColor=%23FF0000"
+        )
+
+        assertTrue(response.status.isSuccess())
+
+        val style = Jsoup.parse(response.body<String>()).selectFirst("div.vibin-widget")?.attr("style")
+        assertNotNull(style)
+
+        assertEquals("#123456", style.substringAfter("background-color: ").substringBefore(";"))
+        assertEquals("#ABCDEF", style.substringAfter(" color: ").substringBefore(";"))
+        assertEquals("#FF0000", style.substringAfterLast("accent-color: ").substringBefore(";"))
+    }
+
+    @Test
     fun testGetWidget_WithLanguage() = testApp { client ->
         val user = UserTestUtils.createTestUser("testuser", "password")
         val widget = WidgetRepo.shareWidget(user, listOf(WidgetType.SERVER_STATS), null, null, null)
