@@ -13,13 +13,12 @@ object WidgetStyles {
 
     fun render(): String = CssBuilder().apply {
 
-        root {
+        rule(".vibin-widget") {
             fontFamily = "Arial, sans-serif"
+            containerName = ContainerName("vibinWidgetContainer")
+            containerType = ContainerType.inlineSize
             put("-ms-overflow-style", "none")
             put("scrollbar-width", "none")
-        }
-
-        body {
             height = LinearDimension.fitContent
         }
 
@@ -27,7 +26,7 @@ object WidgetStyles {
             display = Display.none
         }
 
-        rule(".widget-body") {
+        rule(".vibin-widget .widget-body") {
             padding = Padding(all = 1.rem)
         }
 
@@ -81,7 +80,7 @@ object WidgetStyles {
             gap = 2.rem
         }
 
-        media("(max-width: 720px)") {
+        container("vibinWidgetContainer (max-width: 720px)") {
             rule(".vibin-widget .user-container") {
                 flexDirection = FlexDirection.column
                 alignItems = Align.center
@@ -214,16 +213,16 @@ object WidgetStyles {
             alignItems = Align.center
         }
 
-        media("(max-width: 1000px)") {
+        container("vibinWidgetContainer (max-width: 1000px)") {
             rule(".vibin-widget .joined-favorites") {
                 flexDirection = FlexDirection.column
                 alignItems = Align.center
                 justifyContent = JustifyContent.center
-                width = 100.vw - 2.rem
+                width = LinearDimension("100cqi") - 2.rem
                 gap = 1.rem
             }
             rule(".vibin-widget .joined-favorites .items") {
-                width = 100.vw - 4.rem
+                width = LinearDimension("100cqi") - 4.rem
             }
         }
 
@@ -279,7 +278,7 @@ object WidgetStyles {
             transition += Transition("width", 1.s, Timing.ease)
         }
 
-        keyframes("indeterminate") {
+        keyframes("vibinProgressBarIndeterminate") {
             from { transform += Transform("translateX", arrayOf((-100).pct)) }
             to { transform += Transform("translateX", arrayOf(350.pct)) }
         }
@@ -287,7 +286,7 @@ object WidgetStyles {
         rule(".vibin-widget .progress-bar.indeterminate") {
             width = 40.pct
             animation += Animation(
-                name = "indeterminate",
+                name = "vibinProgressBarIndeterminate",
                 duration = 1.5.s,
                 timing = Timing.easeInOut,
                 iterationCount = IterationCount.infinite
