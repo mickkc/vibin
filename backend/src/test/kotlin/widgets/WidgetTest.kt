@@ -212,6 +212,7 @@ class WidgetTest {
 
     @Test
     fun testWidgetBuilder_External_NotSet() = testApp { _ ->
+        EnvUtil.overrides.remove(EnvUtil.EXTERNAL_URL.name)
         val ctx = WidgetTestUtils.createContext(external = true)
         val html = WidgetBuilder.build(listOf(WidgetType.LISTENING_TO), ctx, interactive = true)
 
