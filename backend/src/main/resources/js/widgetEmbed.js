@@ -61,12 +61,18 @@ function collectParams(element, config, names, out) {
   }
 
   if (config.attributes["data-css"]?.value !== "false") {
-    await loadCss(baseUrl);
+    try {
+      await loadCss(baseUrl);
+    }
+    catch (e) {
+      console.error("An error occurred while loading the widget CSS.", e);
+      return;
+    }
   }
 
   const widgets = document.querySelectorAll(".vibin-widget");
-  for (const widget of widgets) {
 
+  await Promise.all(Array.from(widgets).map(async (widget) => {
     try {
       /** @type {Array.<Array.<String>>} */
       const params = [];
@@ -75,7 +81,7 @@ function collectParams(element, config, names, out) {
       const id = widget.attributes["data-widget-id"]?.value;
       if (!id) {
         console.error("No id defined for widget", widget);
-        continue;
+        return;
       }
 
       collectParams(widget, config, [
@@ -90,13 +96,16 @@ function collectParams(element, config, names, out) {
         : `?${params.map((p) => `${p[0]}=${encodeURIComponent(p[1])}`).join('&')}`;
 
       const response = await fetch(`${baseUrl}/api/widgets/${id}${queryString}`);
-      const html = await response.text();
+      if (!response.ok) {
+        console.error(`An error occurred while loading widget ${id}: ${response.status} - ${response.statusText}`, await response.text())
+        return;
+      }
 
-      widget.innerHTML = html;
+      widget.innerHTML = await response.text();
       activateScripts(widget);
     }
     catch (e) {
       console.error("An error occurred while creating the widget.", widget, e);
     }
-  }
+  }));
 })();
