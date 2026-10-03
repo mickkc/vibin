@@ -73,6 +73,7 @@ private fun createWidgetContext(
     external: Boolean = false
 ): WidgetContext {
     return WidgetContext(
+        widgetId = widget.id.value,
         userId = WidgetRepo.getUserId(widget),
         accentColor = colors.accentColor,
         backgroundColor = colors.backgroundColor,

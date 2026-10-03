@@ -11,6 +11,22 @@ async function loadCss(baseUrl) {
 }
 
 /**
+ * Scripts inserted via innerHTML are never executed, so each one has to be replaced by a new copy.
+ * @param element {Element}
+ */
+function activateScripts(element) {
+  element.querySelectorAll("script").forEach((oldScript) => {
+    const newScript = document.createElement("script");
+    for (const attr of oldScript.attributes) {
+      newScript.setAttribute(attr.name, attr.value);
+    }
+    newScript.textContent = oldScript.textContent;
+    newScript.async = false;
+    oldScript.replaceWith(newScript);
+  });
+}
+
+/**
  * @param element {Element}
  * @param config {Element}
  * @param names {Array.<String>}
@@ -77,6 +93,7 @@ function collectParams(element, config, names, out) {
       const html = await response.text();
 
       widget.innerHTML = html;
+      activateScripts(widget);
     }
     catch (e) {
       console.error("An error occurred while creating the widget.", widget, e);

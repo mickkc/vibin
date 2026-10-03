@@ -9,6 +9,8 @@ import de.mickkc.vibin.utils.DateTimeUtils
 import de.mickkc.vibin.widgets.WidgetBuilder
 import de.mickkc.vibin.widgets.WidgetType
 import de.mickkc.vibin.widgets.WidgetUtils
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 import utils.*
 import kotlin.test.*
 import kotlin.time.Duration.Companion.days
@@ -177,6 +179,26 @@ class WidgetTest {
     }
 
     @Test
+    fun testWidgetBuilder_ListeningTo_NoGlobalIds() = testApp { _ ->
+        val ctx = WidgetTestUtils.createContext()
+        val html = WidgetBuilder.build(listOf(WidgetType.LISTENING_TO, WidgetType.LISTENING_TO), ctx, interactive = true)
+
+        val doc = WidgetTestUtils.parseHtml(html)
+
+        // Multiple instances must not share element IDs or global inline scripts
+        assertTrue(doc.select(".listening-to-widget [id]").isEmpty())
+        assertTrue(doc.select("script:not([src])").isEmpty())
+
+        val roots = doc.select(".listening-to-widget")
+        assertEquals(2, roots.size)
+        roots.forEach { root ->
+            val lang = Json.parseToJsonElement(root.attr("data-lang")).jsonObject
+            assertNotNull(lang["date"]?.jsonObject?.get("today"))
+            assertNotNull(lang["state"]?.jsonObject?.get("playing"))
+        }
+    }
+
+    @Test
     fun testWidgetBuilder_NotExternal() = testApp { _ ->
         EnvUtil.overrides[EnvUtil.EXTERNAL_URL.name] = "https://test.example.com"
         val ctx = WidgetTestUtils.createContext(external = false)
@@ -187,6 +209,10 @@ class WidgetTest {
 
         assertNotNull(script)
         assertEquals("/api/js/listeningToUpdater.js", script.attr("src"))
+
+        val root = doc.selectFirst(".listening-to-widget")
+        assertNotNull(root)
+        assertEquals("/api/widgets/test-widget/listeningto/ws", root.attr("data-ws-url"))
 
         val img = doc.selectFirst("img")
         assertNotNull(img)
@@ -205,6 +231,10 @@ class WidgetTest {
         assertNotNull(script)
         assertEquals("https://test.example.com/api/js/listeningToUpdater.js", script.attr("src"))
 
+        val root = doc.selectFirst(".listening-to-widget")
+        assertNotNull(root)
+        assertEquals("https://test.example.com/api/widgets/test-widget/listeningto/ws", root.attr("data-ws-url"))
+
         val img = doc.selectFirst("img")
         assertNotNull(img)
         assertTrue(img.attr("src").startsWith("https://test.example.com/api/widgets/images/default-track"))
@@ -221,6 +251,10 @@ class WidgetTest {
 
         assertNotNull(script)
         assertEquals("https://external-url-not-configured.example.com/api/js/listeningToUpdater.js", script.attr("src"))
+
+        val root = doc.selectFirst(".listening-to-widget")
+        assertNotNull(root)
+        assertEquals("https://external-url-not-configured.example.com/api/widgets/test-widget/listeningto/ws", root.attr("data-ws-url"))
 
         val img = doc.selectFirst("img")
         assertNotNull(img)

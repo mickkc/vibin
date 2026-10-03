@@ -10,6 +10,9 @@ import de.mickkc.vibin.widgets.BaseWidget
 import de.mickkc.vibin.widgets.WidgetContext
 import de.mickkc.vibin.widgets.WidgetUtils
 import kotlinx.html.*
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonObject
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
@@ -44,26 +47,41 @@ class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
         val initialArtists = initialTrack?.let { TrackRepo.getArtists(it) }?.joinToString { it.name }
         val coverUrl = WidgetUtils.getImageUrl(initialTrack?.let { TrackRepo.getCover(it) }, "track", 128, ctx.external)
 
-        div("widget-body") {
+        div("widget-body listening-to-widget") {
+            if (interactive) {
+                attributes["data-ws-url"] = "$baseUrl/api/widgets/${ctx.widgetId}/listeningto/ws"
+                attributes["data-lang"] = buildJsonObject {
+                    putJsonObject("date") {
+                        put("today", t("widgets.listening_to.date.today"))
+                        put("yesterday", t("widgets.listening_to.date.yesterday"))
+                        put("daysAgo", t("widgets.listening_to.date.days_ago", "{0}"))
+                        put("weeksAgo", t("widgets.listening_to.date.weeks_ago", "{0}"))
+                    }
+                    putJsonObject("state") {
+                        put("empty", t("widgets.listening_to.state.empty"))
+                        put("offline", t("widgets.listening_to.state.offline", "{0}"))
+                        put("playing", t("widgets.listening_to.state.playing"))
+                        put("paused", t("widgets.listening_to.state.paused"))
+                        put("stopped", t("widgets.listening_to.state.stopped"))
+                    }
+                }.toString()
+            }
+
             h2 {
                 +t("widgets.listening_to.title")
             }
             div("listening-to") {
                 img(t("widgets.listening_to.album_cover"), coverUrl, classes = "cover") {
-                    id = "listeningToAlbumCover"
                     title = initialAlbum?.title ?: t("widgets.listening_to.unknown")
                 }
                 div("details") {
                     p("title") {
-                        id = "listeningToTitle"
                         +(initialTrack?.title ?: t("widgets.listening_to.unknown"))
                     }
                     p("artists") {
-                        id = "listeningToArtists"
                         +(initialArtists ?: t("widgets.listening_to.unknown"))
                     }
                     p("state") {
-                        id = "listeningToState"
                         if (initialSession != null) {
                             unsafe {
                                 if (initialSession.removed) {
@@ -82,13 +100,11 @@ class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
                         }
                     }
                     div("progress") {
-                        id = "listeningToProgressRow"
                         if (initialSession == null || initialSession.removed || !interactive) {
                             style = "visibility: hidden"
                         }
 
-                        p {
-                            id = "listeningToPosition"
+                        p("position") {
                             +"0:00"
                         }
 
@@ -99,12 +115,10 @@ class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
 
                             div("progress-bar") {
                                 style = "background: $accentColor"
-                                id = "listeningToProgress"
                             }
                         }
 
-                        p {
-                            id = "listeningToDuration"
+                        p("duration") {
                             +"3:00"
                         }
                     }
@@ -112,28 +126,6 @@ class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
             }
 
             if (interactive) {
-                script {
-                    unsafe {
-                        +"""
-                            const lang = {
-                                "date": {
-                                    "today": "${t("widgets.listening_to.date.today")}",
-                                    "yesterday": "${t("widgets.listening_to.date.yesterday")}",
-                                    "daysAgo": "${t("widgets.listening_to.date.days_ago", "{0}")}",
-                                    "weeksAgo": "${t("widgets.listening_to.date.weeks_ago", "{0}")}"
-                                },
-                                "state": {
-                                    "empty": "${t("widgets.listening_to.state.empty")}",
-                                    "offline": "${t("widgets.listening_to.state.offline", "{0}")}",
-                                    "playing": "${t("widgets.listening_to.state.playing")}",
-                                    "paused": "${t("widgets.listening_to.state.paused")}",
-                                    "stopped": "${t("widgets.listening_to.state.stopped")}"
-                                }
-                            };
-                        """.trimIndent()
-                    }
-                }
-
                 script(src = "$baseUrl/api/js/listeningToUpdater.js") {}
             }
         }

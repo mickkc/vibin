@@ -1,6 +1,7 @@
 package de.mickkc.vibin.widgets
 
 data class WidgetContext(
+    val widgetId: String,
     val userId: Long,
     val foregroundColor: Int,
     val backgroundColor: Int,

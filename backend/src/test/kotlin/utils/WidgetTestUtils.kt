@@ -35,6 +35,7 @@ object WidgetTestUtils {
     }
 
     fun createContext(
+        widgetId: String = "test-widget",
         userId: Long = 1,
         fgColor: Int = 0xFFFFFF,
         bgColor: Int = 0x000000,
@@ -42,6 +43,7 @@ object WidgetTestUtils {
         language: String = "en",
         external: Boolean = false
     ) = WidgetContext(
+        widgetId = widgetId,
         userId = userId,
         foregroundColor = fgColor,
         backgroundColor = bgColor,
