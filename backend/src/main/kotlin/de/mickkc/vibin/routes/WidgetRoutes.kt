@@ -136,7 +136,16 @@ fun Application.configureWidgetRoutes() = routing {
         val widgetTypes = getValidatedWidgetTypes(widget)
         val ctx = createWidgetContext(widget, colors, language, baseUrl)
 
-        call.respondText(WidgetBuilder.build(widgetTypes, ctx), contentType = if (ctx.external) ContentType.Text.Plain else ContentType.Text.Html)
+        val html = WidgetBuilder.build(widgetTypes, ctx)
+
+        if (ctx.external) {
+            call.response.header("X-Content-Type-Options", "nosniff")
+            call.respondText(html, ContentType.Text.Plain)
+        }
+        else {
+            call.respondText(html, ContentType.Text.Html)
+        }
+
     }
 
     getP("/api/widgets/{id}/image") {

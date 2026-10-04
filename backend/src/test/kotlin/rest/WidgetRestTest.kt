@@ -187,6 +187,8 @@ class WidgetRestTest {
         )
 
         assertTrue(response.status.isSuccess())
+        assertEquals("text/plain; charset=UTF-8", response.contentType()?.toString())
+        assertEquals("nosniff", response.headers["X-Content-Type-Options"])
 
         val style = Jsoup.parse(response.body<String>()).selectFirst("div.vibin-widget-container")?.attr("style")
         assertNotNull(style)
