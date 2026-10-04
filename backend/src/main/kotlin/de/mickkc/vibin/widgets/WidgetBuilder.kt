@@ -51,7 +51,7 @@ object WidgetBuilder {
         }
 
         if (ctx.external) {
-            return createHTML().div("vibin-widget") {
+            return createHTML().div("vibin-widget-container") {
                 applyBody()
             }
         }
@@ -76,7 +76,7 @@ object WidgetBuilder {
                     }
                 }
 
-                body("vibin-widget") {
+                body("vibin-widget-container") {
                     applyBody()
                 }
             }

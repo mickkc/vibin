@@ -74,7 +74,7 @@ function collectParams(element, config, names, out) {
     }
   }
 
-  const widgets = document.querySelectorAll(".vibin-widget");
+  const widgets = document.querySelectorAll(".vibin-widget[data-widget-id]");
 
   await Promise.all(Array.from(widgets).map(async (widget) => {
     try {

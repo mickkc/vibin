@@ -188,7 +188,7 @@ class WidgetRestTest {
 
         assertTrue(response.status.isSuccess())
 
-        val style = Jsoup.parse(response.body<String>()).selectFirst("div.vibin-widget")?.attr("style")
+        val style = Jsoup.parse(response.body<String>()).selectFirst("div.vibin-widget-container")?.attr("style")
         assertNotNull(style)
 
         assertEquals("#123456", style.substringAfter("background-color: ").substringBefore(";"))
