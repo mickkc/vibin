@@ -1,3 +1,11 @@
+/**
+ * Parses the base URL from the currentScript's URL
+ * @type {string|null}
+ */
+const scriptBaseUrl = document.currentScript
+  ? new URL("../..", document.currentScript.src).href.replace(/\/+$/, "")
+  : null;
+
 async function loadCss(baseUrl) {
   return new Promise((resolve, reject) => {
     const link = document.createElement("link");
@@ -28,7 +36,7 @@ function activateScripts(element) {
 
 /**
  * @param element {Element}
- * @param config {Element}
+ * @param config {Element|null}
  * @param names {Array.<String>}
  * @param out {Array.<Array.<String>>}
  */
@@ -38,7 +46,7 @@ function collectParams(element, config, names, out) {
     if (value) {
       out.push([n, value]);
     }
-    else {
+    else if (config) {
       value = config.attributes[`data-${n.toLowerCase()}`]?.value;
       if (value) {
         out.push([n, value]);
@@ -49,18 +57,14 @@ function collectParams(element, config, names, out) {
 
 (async function () {
   const config = document.getElementById("vibin-config");
-  if (!config) {
-    console.error("No element with id \"vibin-config\" found!");
-    return;
-  }
 
-  const baseUrl = config.attributes["data-base-url"]?.value;
+  const baseUrl = config?.attributes["data-base-url"]?.value?.replace(/\/+$/, "") ?? scriptBaseUrl;
   if (!baseUrl) {
-    console.error("No base URL was defined for the Vibin' widgets!");
+    console.error("Couldn't determine the base URL for the Vibin' widgets! Set it with data-base-url on #vibin-config.");
     return;
   }
 
-  if (config.attributes["data-css"]?.value !== "false") {
+  if (config?.attributes["data-css"]?.value !== "false") {
     try {
       await loadCss(baseUrl);
     }
@@ -76,7 +80,7 @@ function collectParams(element, config, names, out) {
     try {
       /** @type {Array.<Array.<String>>} */
       const params = [];
-      params.push(["external", "true"]);
+      params.push(["baseUrl", baseUrl]);
 
       const id = widget.attributes["data-widget-id"]?.value;
       if (!id) {

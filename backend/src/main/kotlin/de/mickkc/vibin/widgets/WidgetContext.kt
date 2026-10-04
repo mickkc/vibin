@@ -7,5 +7,8 @@ data class WidgetContext(
     val backgroundColor: Int,
     val accentColor: Int,
     val language: String,
+    val baseUrl: String? = null
+) {
     val external: Boolean
-)
+        get() = baseUrl != null
+}

@@ -1,7 +1,5 @@
 package de.mickkc.vibin.widgets.impl
 
-import de.mickkc.vibin.config.EnvUtil
-import de.mickkc.vibin.config.EnvUtil.EXTERNAL_URL
 import de.mickkc.vibin.repos.ControlRepo
 import de.mickkc.vibin.repos.SessionPlayState
 import de.mickkc.vibin.repos.TrackRepo
@@ -9,6 +7,7 @@ import de.mickkc.vibin.utils.DateTimeUtils
 import de.mickkc.vibin.widgets.BaseWidget
 import de.mickkc.vibin.widgets.WidgetContext
 import de.mickkc.vibin.widgets.WidgetUtils
+import io.ktor.http.encodeURLParameter
 import kotlinx.html.*
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -31,12 +30,7 @@ class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
         else date.format(DateTimeFormatter.ofPattern(t("widgets.listening_to.date.format")))
     }
 
-    val baseUrl = run {
-        if (ctx.external) {
-            return@run EnvUtil.getOrNull(EXTERNAL_URL) ?: "https://external-url-not-configured.example.com"
-        }
-        return@run ""
-    }
+    val baseUrl = ctx.baseUrl.orEmpty()
 
     override fun FlowContent.apply() {
 
@@ -45,11 +39,11 @@ class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
         val initialTrack = initialSession?.currentTrackId?.let { TrackRepo.getById(it) }
         val initialAlbum = initialTrack?.let { TrackRepo.getAlbum(it) }
         val initialArtists = initialTrack?.let { TrackRepo.getArtists(it) }?.joinToString { it.name }
-        val coverUrl = WidgetUtils.getImageUrl(initialTrack?.let { TrackRepo.getCover(it) }, "track", 128, ctx.external)
+        val coverUrl = WidgetUtils.getImageUrl(initialTrack?.let { TrackRepo.getCover(it) }, "track", 128, ctx.baseUrl)
 
         div("widget-body listening-to-widget") {
             if (interactive) {
-                val wsQuery = if (ctx.external) "?external=true" else ""
+                val wsQuery = ctx.baseUrl?.let { "?baseUrl=${it.encodeURLParameter()}" }.orEmpty()
                 attributes["data-ws-url"] = "$baseUrl/api/widgets/${ctx.widgetId}/listeningto/ws$wsQuery"
                 attributes["data-lang"] = buildJsonObject {
                     putJsonObject("date") {

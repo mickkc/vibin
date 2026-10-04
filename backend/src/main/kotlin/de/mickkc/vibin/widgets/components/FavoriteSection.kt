@@ -28,7 +28,7 @@ fun<T> FlowContent.itemSection(
                 val itemSubtitle = item?.let { getSubtitle(it) } ?: ""
                 val type = item?.let { getType(it) } ?: ""
 
-                val imageUrl = if (item == null) null else WidgetUtils.getImageUrl(cover, type, 128, ctx.external)
+                val imageUrl = if (item == null) null else WidgetUtils.getImageUrl(cover, type, 128, ctx.baseUrl)
 
                 val cardBg = WidgetUtils.blendColors(widget.ctx.backgroundColor, widget.ctx.accentColor, 0.2f)
 

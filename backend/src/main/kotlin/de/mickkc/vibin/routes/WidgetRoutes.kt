@@ -70,7 +70,7 @@ private fun createWidgetContext(
     widget: SharedWidgetEntity,
     colors: WidgetColors,
     language: String,
-    external: Boolean = false
+    baseUrl: String? = null
 ): WidgetContext {
     return WidgetContext(
         widgetId = widget.id.value,
@@ -79,7 +79,7 @@ private fun createWidgetContext(
         backgroundColor = colors.backgroundColor,
         foregroundColor = colors.foregroundColor,
         language = language,
-        external = external
+        baseUrl = baseUrl
     )
 }
 
@@ -127,12 +127,14 @@ fun Application.configureWidgetRoutes() = routing {
         val id = call.getStringParameter("id")
         val widget = WidgetRepo.getWidget(id) ?: notFound()
 
-        val external = call.getBooleanOrDefault("external", false)
+        val baseUrl = call.parameters["baseUrl"]?.let {
+            WidgetUtils.parseBaseUrl(it) ?: invalidParameter("baseUrl")
+        }
 
         val colors = call.parseWidgetColors(widget)
         val language = call.parseLanguage()
         val widgetTypes = getValidatedWidgetTypes(widget)
-        val ctx = createWidgetContext(widget, colors, language, external)
+        val ctx = createWidgetContext(widget, colors, language, baseUrl)
 
         call.respondText(WidgetBuilder.build(widgetTypes, ctx), contentType = ContentType.Text.Html)
     }
@@ -246,14 +248,17 @@ fun Application.configureWidgetRoutes() = routing {
         }
 
         val userId = WidgetRepo.getUserId(widget)
-        val external = call.getBooleanOrDefault("external", false)
+        val baseUrl = call.parameters["baseUrl"]?.let {
+            WidgetUtils.parseBaseUrl(it)
+                ?: return@webSocket close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "Invalid base URL"))
+        }
 
         val session = ControlRepo.getCurrentSession(userId)
             ?: ControlRepo.getLatestSession(userId)
             ?: return@webSocket close(CloseReason(CloseReason.Codes.TRY_AGAIN_LATER, "No current or previous session for user."))
 
 
-        val listener = ListeningToWidgetListener(session, userId, outgoing, external)
+        val listener = ListeningToWidgetListener(session, userId, outgoing, baseUrl)
 
         try {
             listener.reconnect()

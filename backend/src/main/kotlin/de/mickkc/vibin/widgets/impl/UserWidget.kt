@@ -14,7 +14,7 @@ class UserWidget(ctx: WidgetContext) : BaseWidget(ctx) {
             ?: return p { +t("widgets.user.not_found") }
 
         val image = UserRepo.getProfilePicture(user)
-        val avatarUrl = WidgetUtils.getImageUrl(image, "user", 192, ctx.external)
+        val avatarUrl = WidgetUtils.getImageUrl(image, "user", 192, ctx.baseUrl)
 
         div("widget-body") {
 

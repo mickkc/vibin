@@ -1,6 +1,5 @@
 package widgets
 
-import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.db.ListenType
 import de.mickkc.vibin.dto.users.UserEditDto
 import de.mickkc.vibin.repos.ListenRepo
@@ -79,7 +78,7 @@ class WidgetTest {
 
     @Test
     fun testGetImageUrl() {
-        val url = WidgetUtils.getImageUrl(null, "track", 192, false)
+        val url = WidgetUtils.getImageUrl(null, "track", 192, null)
         assertNotNull(url)
         assertTrue(url.contains("default-track"))
     }
@@ -200,8 +199,7 @@ class WidgetTest {
 
     @Test
     fun testWidgetBuilder_NotExternal() = testApp { _ ->
-        EnvUtil.overrides[EnvUtil.EXTERNAL_URL.name] = "https://test.example.com"
-        val ctx = WidgetTestUtils.createContext(external = false)
+        val ctx = WidgetTestUtils.createContext()
         val html = WidgetBuilder.build(listOf(WidgetType.LISTENING_TO), ctx, interactive = true)
 
         val doc = WidgetTestUtils.parseHtml(html)
@@ -221,8 +219,7 @@ class WidgetTest {
 
     @Test
     fun testWidgetBuilder_External() = testApp { _ ->
-        EnvUtil.overrides[EnvUtil.EXTERNAL_URL.name] = "https://test.example.com"
-        val ctx = WidgetTestUtils.createContext(external = true)
+        val ctx = WidgetTestUtils.createContext(baseUrl = "https://test.example.com")
         val html = WidgetBuilder.build(listOf(WidgetType.LISTENING_TO), ctx, interactive = true)
 
         val doc = WidgetTestUtils.parseHtml(html)
@@ -233,7 +230,7 @@ class WidgetTest {
 
         val root = doc.selectFirst(".listening-to-widget")
         assertNotNull(root)
-        assertEquals("https://test.example.com/api/widgets/test-widget/listeningto/ws?external=true", root.attr("data-ws-url"))
+        assertEquals("https://test.example.com/api/widgets/test-widget/listeningto/ws?baseUrl=https%3A%2F%2Ftest.example.com", root.attr("data-ws-url"))
 
         val img = doc.selectFirst("img")
         assertNotNull(img)
@@ -241,24 +238,17 @@ class WidgetTest {
     }
 
     @Test
-    fun testWidgetBuilder_External_NotSet() = testApp { _ ->
-        EnvUtil.overrides.remove(EnvUtil.EXTERNAL_URL.name)
-        val ctx = WidgetTestUtils.createContext(external = true)
-        val html = WidgetBuilder.build(listOf(WidgetType.LISTENING_TO), ctx, interactive = true)
+    fun testParseBaseUrl() {
+        assertEquals("https://test.example.com", WidgetUtils.parseBaseUrl("https://test.example.com"))
+        assertEquals("https://test.example.com", WidgetUtils.parseBaseUrl("https://test.example.com/"))
+        assertEquals("http://localhost:8080/vibin", WidgetUtils.parseBaseUrl("http://localhost:8080/vibin//"))
 
-        val doc = WidgetTestUtils.parseHtml(html)
-        val script = doc.selectFirst("script[src]")
-
-        assertNotNull(script)
-        assertEquals("https://external-url-not-configured.example.com/api/js/listeningToUpdater.js", script.attr("src"))
-
-        val root = doc.selectFirst(".listening-to-widget")
-        assertNotNull(root)
-        assertEquals("https://external-url-not-configured.example.com/api/widgets/test-widget/listeningto/ws?external=true", root.attr("data-ws-url"))
-
-        val img = doc.selectFirst("img")
-        assertNotNull(img)
-        assertTrue(img.attr("src").startsWith("https://external-url-not-configured.example.com/api/widgets/images/default-track"))
+        assertNull(WidgetUtils.parseBaseUrl("javascript:alert(1)"))
+        assertNull(WidgetUtils.parseBaseUrl("ftp://test.example.com"))
+        assertNull(WidgetUtils.parseBaseUrl("/relative/path"))
+        assertNull(WidgetUtils.parseBaseUrl("https://user:pass@test.example.com"))
+        assertNull(WidgetUtils.parseBaseUrl("https://test.example.com?a=b"))
+        assertNull(WidgetUtils.parseBaseUrl("https://test.example.com/\"><script>"))
     }
 
     // endregion

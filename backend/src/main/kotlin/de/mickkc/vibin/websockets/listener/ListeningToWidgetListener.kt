@@ -21,7 +21,7 @@ class ListeningToWidgetListener(
     session: Session,
     val userId: Long,
     val outgoing: SendChannel<Frame>,
-    val external: Boolean
+    val baseUrl: String?
 ) : SessionListener(session) {
 
     val logger: Logger = LoggerFactory.getLogger(ListeningToWidgetListener::class.java)
@@ -56,7 +56,7 @@ class ListeningToWidgetListener(
         val imageUrl = if (lastTrackId != session.currentTrackId) {
             lastTrackId = session.currentTrackId
             val img = track?.let { TrackRepo.getCover(track) }
-            WidgetUtils.getImageUrl(img, "track", 128, external)
+            WidgetUtils.getImageUrl(img, "track", 128, baseUrl)
         }
         else null
 
