@@ -8,6 +8,8 @@ import de.mickkc.vibin.utils.DateTimeUtils
 import de.mickkc.vibin.widgets.WidgetBuilder
 import de.mickkc.vibin.widgets.WidgetType
 import de.mickkc.vibin.widgets.WidgetUtils
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 import utils.*
 import kotlin.test.*
 import kotlin.time.Duration.Companion.days
@@ -76,7 +78,7 @@ class WidgetTest {
 
     @Test
     fun testGetImageUrl() {
-        val url = WidgetUtils.getImageUrl(null, "track", 192)
+        val url = WidgetUtils.getImageUrl(null, "track", 192, null)
         assertNotNull(url)
         assertTrue(url.contains("default-track"))
     }
@@ -173,6 +175,80 @@ class WidgetTest {
 
         // Non-interactive should not have interactive elements
         assertTrue(docNonInteractive.select("a.btn").isEmpty())
+    }
+
+    @Test
+    fun testWidgetBuilder_ListeningTo_NoGlobalIds() = testApp { _ ->
+        val ctx = WidgetTestUtils.createContext()
+        val html = WidgetBuilder.build(listOf(WidgetType.LISTENING_TO, WidgetType.LISTENING_TO), ctx, interactive = true)
+
+        val doc = WidgetTestUtils.parseHtml(html)
+
+        // Multiple instances must not share element IDs or global inline scripts
+        assertTrue(doc.select(".listening-to-widget [id]").isEmpty())
+        assertTrue(doc.select("script:not([src])").isEmpty())
+
+        val roots = doc.select(".listening-to-widget")
+        assertEquals(2, roots.size)
+        roots.forEach { root ->
+            val lang = Json.parseToJsonElement(root.attr("data-lang")).jsonObject
+            assertNotNull(lang["date"]?.jsonObject?.get("today"))
+            assertNotNull(lang["state"]?.jsonObject?.get("playing"))
+        }
+    }
+
+    @Test
+    fun testWidgetBuilder_NotExternal() = testApp { _ ->
+        val ctx = WidgetTestUtils.createContext()
+        val html = WidgetBuilder.build(listOf(WidgetType.LISTENING_TO), ctx, interactive = true)
+
+        val doc = WidgetTestUtils.parseHtml(html)
+        val script = doc.selectFirst("script[src]")
+
+        assertNotNull(script)
+        assertEquals("/api/js/listeningToUpdater.js", script.attr("src"))
+
+        val root = doc.selectFirst(".listening-to-widget")
+        assertNotNull(root)
+        assertEquals("/api/widgets/test-widget/listeningto/ws", root.attr("data-ws-url"))
+
+        val img = doc.selectFirst("img")
+        assertNotNull(img)
+        assertTrue(img.attr("src").startsWith("/api/widgets/images/default-track"))
+    }
+
+    @Test
+    fun testWidgetBuilder_External() = testApp { _ ->
+        val ctx = WidgetTestUtils.createContext(baseUrl = "https://test.example.com")
+        val html = WidgetBuilder.build(listOf(WidgetType.LISTENING_TO), ctx, interactive = true)
+
+        val doc = WidgetTestUtils.parseHtml(html)
+        val script = doc.selectFirst("script[src]")
+
+        assertNotNull(script)
+        assertEquals("https://test.example.com/api/js/listeningToUpdater.js", script.attr("src"))
+
+        val root = doc.selectFirst(".listening-to-widget")
+        assertNotNull(root)
+        assertEquals("https://test.example.com/api/widgets/test-widget/listeningto/ws?baseUrl=https%3A%2F%2Ftest.example.com", root.attr("data-ws-url"))
+
+        val img = doc.selectFirst("img")
+        assertNotNull(img)
+        assertTrue(img.attr("src").startsWith("https://test.example.com/api/widgets/images/default-track"))
+    }
+
+    @Test
+    fun testParseBaseUrl() {
+        assertEquals("https://test.example.com", WidgetUtils.parseBaseUrl("https://test.example.com"))
+        assertEquals("https://test.example.com", WidgetUtils.parseBaseUrl("https://test.example.com/"))
+        assertEquals("http://localhost:8080/vibin", WidgetUtils.parseBaseUrl("http://localhost:8080/vibin//"))
+
+        assertNull(WidgetUtils.parseBaseUrl("javascript:alert(1)"))
+        assertNull(WidgetUtils.parseBaseUrl("ftp://test.example.com"))
+        assertNull(WidgetUtils.parseBaseUrl("/relative/path"))
+        assertNull(WidgetUtils.parseBaseUrl("https://user:pass@test.example.com"))
+        assertNull(WidgetUtils.parseBaseUrl("https://test.example.com?a=b"))
+        assertNull(WidgetUtils.parseBaseUrl("https://test.example.com/\"><script>"))
     }
 
     // endregion

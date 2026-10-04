@@ -2,11 +2,13 @@ package de.mickkc.vibin.widgets.components
 
 import de.mickkc.vibin.db.images.ImageEntity
 import de.mickkc.vibin.widgets.BaseWidget
+import de.mickkc.vibin.widgets.WidgetContext
 import de.mickkc.vibin.widgets.WidgetUtils
 import kotlinx.html.*
 
 fun<T> FlowContent.itemSection(
     widget: BaseWidget,
+    ctx: WidgetContext,
     title: String,
     items: List<T?>,
     getType: (T) -> String,
@@ -26,11 +28,11 @@ fun<T> FlowContent.itemSection(
                 val itemSubtitle = item?.let { getSubtitle(it) } ?: ""
                 val type = item?.let { getType(it) } ?: ""
 
-                val imageUrl = if (item == null) null else WidgetUtils.getImageUrl(cover, type, 128)
+                val imageUrl = if (item == null) null else WidgetUtils.getImageUrl(cover, type, 128, ctx.baseUrl)
 
                 val cardBg = WidgetUtils.blendColors(widget.ctx.backgroundColor, widget.ctx.accentColor, 0.2f)
 
-                div("item") {
+                div("item item-$type") {
                     style = "background-color: ${WidgetUtils.colorToHex(cardBg)};"
 
                     if (imageUrl != null) {

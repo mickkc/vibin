@@ -31,15 +31,15 @@ private data class WidgetColors(
 
 private fun RoutingCall.parseWidgetColors(widget: SharedWidgetEntity): WidgetColors {
     val backgroundColor = request.queryParameters["bgColor"]?.let {
-        WidgetUtils.colorFromHex(it)
+        WidgetUtils.colorFromHex(it.removePrefix("#"))
     } ?: widget.bgColor ?: 0x1D2021
 
     val foregroundColor = request.queryParameters["fgColor"]?.let {
-        WidgetUtils.colorFromHex(it)
+        WidgetUtils.colorFromHex(it.removePrefix("#"))
     } ?: widget.fgColor ?: 0xEBDBB2
 
     val accentColor = request.queryParameters["accentColor"]?.let {
-        WidgetUtils.colorFromHex(it)
+        WidgetUtils.colorFromHex(it.removePrefix("#"))
     } ?: widget.accentColor ?: 0x689D6A
 
     return WidgetColors(backgroundColor, foregroundColor, accentColor)
@@ -69,14 +69,17 @@ private fun getValidatedWidgetTypes(widget: SharedWidgetEntity): List<WidgetType
 private fun createWidgetContext(
     widget: SharedWidgetEntity,
     colors: WidgetColors,
-    language: String
+    language: String,
+    baseUrl: String? = null
 ): WidgetContext {
     return WidgetContext(
+        widgetId = widget.id.value,
         userId = WidgetRepo.getUserId(widget),
         accentColor = colors.accentColor,
         backgroundColor = colors.backgroundColor,
         foregroundColor = colors.foregroundColor,
-        language = language
+        language = language,
+        baseUrl = baseUrl
     )
 }
 
@@ -124,12 +127,25 @@ fun Application.configureWidgetRoutes() = routing {
         val id = call.getStringParameter("id")
         val widget = WidgetRepo.getWidget(id) ?: notFound()
 
+        val baseUrl = call.parameters["baseUrl"]?.let {
+            WidgetUtils.parseBaseUrl(it) ?: invalidParameter("baseUrl")
+        }
+
         val colors = call.parseWidgetColors(widget)
         val language = call.parseLanguage()
         val widgetTypes = getValidatedWidgetTypes(widget)
-        val ctx = createWidgetContext(widget, colors, language)
+        val ctx = createWidgetContext(widget, colors, language, baseUrl)
 
-        call.respondText(WidgetBuilder.build(widgetTypes, ctx), contentType = ContentType.Text.Html)
+        val html = WidgetBuilder.build(widgetTypes, ctx)
+
+        if (ctx.external) {
+            call.response.header("X-Content-Type-Options", "nosniff")
+            call.respondText(html, ContentType.Text.Plain)
+        }
+        else {
+            call.respondText(html, ContentType.Text.Html)
+        }
+
     }
 
     getP("/api/widgets/{id}/image") {
@@ -241,12 +257,17 @@ fun Application.configureWidgetRoutes() = routing {
         }
 
         val userId = WidgetRepo.getUserId(widget)
+        val baseUrl = call.parameters["baseUrl"]?.let {
+            WidgetUtils.parseBaseUrl(it)
+                ?: return@webSocket close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "Invalid base URL"))
+        }
 
         val session = ControlRepo.getCurrentSession(userId)
             ?: ControlRepo.getLatestSession(userId)
             ?: return@webSocket close(CloseReason(CloseReason.Codes.TRY_AGAIN_LATER, "No current or previous session for user."))
 
-        val listener = ListeningToWidgetListener(session, userId, outgoing)
+
+        val listener = ListeningToWidgetListener(session, userId, outgoing, baseUrl)
 
         try {
             listener.reconnect()

@@ -4,6 +4,7 @@ import de.mickkc.vibin.widgets.impl.*
 import io.ktor.server.html.*
 import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
+import kotlinx.html.stream.createHTML
 
 object WidgetBuilder {
 
@@ -37,6 +38,24 @@ object WidgetBuilder {
         val fgColor = WidgetUtils.colorToHex(ctx.foregroundColor)
         val accentColor = WidgetUtils.colorToHex(ctx.accentColor)
 
+        fun HtmlBlockTag.applyBody() {
+            style = "margin: 0; padding: 0; background-color: $bgColor; color: $fgColor; accent-color: $accentColor"
+            widgets.forEach { widget ->
+                insert(widget) {}
+                if (widget != widgets.last()) {
+                    div {
+                        style = "width: 100%; height: 1px; background-color: ${fgColor}33; margin: 1rem 0;"
+                    }
+                }
+            }
+        }
+
+        if (ctx.external) {
+            return createHTML().div("vibin-widget-container") {
+                applyBody()
+            }
+        }
+
         return buildString {
             appendHTML(prettyPrint = false).html {
 
@@ -47,18 +66,18 @@ object WidgetBuilder {
                     meta("charset", "UTF-8")
                     meta("viewport", "width=device-width, initial-scale=1.0")
                     link(rel = "stylesheet", href = "/api/widgets/styles", type = "text/css")
-                }
-
-                body {
-                    style = "margin: 0; padding: 0; background-color: $bgColor; color: $fgColor; accent-color: $accentColor"
-                    widgets.forEach { widget ->
-                        insert(widget) {}
-                        if (widget != widgets.last()) {
-                            div {
-                                style = "width: 100%; height: 1px; background-color: ${fgColor}33; margin: 1rem 0;"
-                            }
+                    style {
+                        unsafe {
+                            +"""
+                                html {-ms-overflow-style:none;scrollbar-width:none;}
+                                *::-webkit-scrollbar {display:none;}
+                            """.trimIndent()
                         }
                     }
+                }
+
+                body("vibin-widget-container") {
+                    applyBody()
                 }
             }
         }

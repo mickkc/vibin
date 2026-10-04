@@ -35,17 +35,21 @@ object WidgetTestUtils {
     }
 
     fun createContext(
+        widgetId: String = "test-widget",
         userId: Long = 1,
         fgColor: Int = 0xFFFFFF,
         bgColor: Int = 0x000000,
         accentColor: Int = 0xFF0000,
-        language: String = "en"
+        language: String = "en",
+        baseUrl: String? = null
     ) = WidgetContext(
+        widgetId = widgetId,
         userId = userId,
         foregroundColor = fgColor,
         backgroundColor = bgColor,
         accentColor = accentColor,
-        language = language
+        language = language,
+        baseUrl = baseUrl
     )
 
     fun parseHtml(html: String): Document {

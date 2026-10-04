@@ -1,9 +1,14 @@
 package de.mickkc.vibin.widgets
 
 data class WidgetContext(
+    val widgetId: String,
     val userId: Long,
     val foregroundColor: Int,
     val backgroundColor: Int,
     val accentColor: Int,
     val language: String,
-)
+    val baseUrl: String? = null
+) {
+    val external: Boolean
+        get() = baseUrl != null
+}
