@@ -79,17 +79,17 @@
   await Promise.all(Array.from(widgets).map(async (widget) => {
     try {
 
-      if (widget.dataset.status === "loading" || widget.dataset.status === "loaded") {
+      if (widget.dataset.vibinStatus === "loading" || widget.dataset.vibinStatus === "loaded") {
         return;
       }
 
-      widget.dataset.status = "loading";
+      widget.dataset.vibinStatus = "loading";
 
       /** @type {Array.<Array.<String>>} */
       const params = [];
       params.push(["baseUrl", baseUrl]);
 
-      const id = widget.attributes["data-widget-id"]?.value;
+      const id = widget.dataset.widgetId;
       if (!id) {
         console.error("No id defined for widget", widget);
         return;
@@ -108,16 +108,18 @@
 
       const response = await fetch(`${baseUrl}/api/widgets/${id}${queryString}`);
       if (!response.ok) {
-        console.error(`An error occurred while loading widget ${id}: ${response.status} - ${response.statusText}`, await response.text())
+        console.error(`An error occurred while loading widget ${id}: ${response.status} - ${response.statusText}`, await response.text());
+        widget.dataset.vibinStatus = "failed";
         return;
       }
 
       widget.innerHTML = await response.text();
       activateScripts(widget);
-      widget.dataset.status = "loaded";
+      widget.dataset.vibinStatus = "loaded";
     }
     catch (e) {
       console.error("An error occurred while creating the widget.", widget, e);
+      widget.dataset.vibinStatus = "failed";
     }
   }));
 })();
