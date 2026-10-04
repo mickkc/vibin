@@ -136,7 +136,7 @@ fun Application.configureWidgetRoutes() = routing {
         val widgetTypes = getValidatedWidgetTypes(widget)
         val ctx = createWidgetContext(widget, colors, language, baseUrl)
 
-        call.respondText(WidgetBuilder.build(widgetTypes, ctx), contentType = ContentType.Text.Html)
+        call.respondText(WidgetBuilder.build(widgetTypes, ctx), contentType = if (ctx.external) ContentType.Text.Plain else ContentType.Text.Html)
     }
 
     getP("/api/widgets/{id}/image") {
