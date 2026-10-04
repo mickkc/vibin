@@ -42,12 +42,12 @@ function activateScripts(element) {
  */
 function collectParams(element, config, names, out) {
   names.forEach((n) => {
-    let value = element.attributes[`data-${n.toLowerCase()}`]?.value;
+    let value = element.dataset[n];
     if (value) {
       out.push([n, value]);
     }
     else if (config) {
-      value = config.attributes[`data-${n.toLowerCase()}`]?.value;
+      value = config.dataset[n];
       if (value) {
         out.push([n, value]);
       }
@@ -58,13 +58,13 @@ function collectParams(element, config, names, out) {
 (async function () {
   const config = document.getElementById("vibin-config");
 
-  const baseUrl = config?.attributes["data-base-url"]?.value?.replace(/\/+$/, "") ?? scriptBaseUrl;
+  const baseUrl = config?.dataset?.baseUrl?.replace(/\/+$/, "") ?? scriptBaseUrl;
   if (!baseUrl) {
     console.error("Couldn't determine the base URL for the Vibin' widgets! Set it with data-base-url on #vibin-config.");
     return;
   }
 
-  if (config?.attributes["data-css"]?.value !== "false") {
+  if (config?.dataset?.css !== "false") {
     try {
       await loadCss(baseUrl);
     }
@@ -78,6 +78,13 @@ function collectParams(element, config, names, out) {
 
   await Promise.all(Array.from(widgets).map(async (widget) => {
     try {
+
+      if (widget.dataset.status === "loading" || widget.dataset.status === "loaded") {
+        return;
+      }
+
+      widget.dataset.status = "loading";
+
       /** @type {Array.<Array.<String>>} */
       const params = [];
       params.push(["baseUrl", baseUrl]);
@@ -107,6 +114,7 @@ function collectParams(element, config, names, out) {
 
       widget.innerHTML = await response.text();
       activateScripts(widget);
+      widget.dataset.status = "loaded";
     }
     catch (e) {
       console.error("An error occurred while creating the widget.", widget, e);
