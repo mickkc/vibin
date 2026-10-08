@@ -96,8 +96,9 @@ To learn more about Vibin', you can check out the [Wiki](https://vibin.rip/docs/
 
 Thank you to everyone who contributed to Vibin'! ❤️
 
-- @Vistaus - Dutch translation
-- @WreckingBANG, @blorg - Testing, Issue reporting
+- **@Vistaus** - Dutch translation
+- **@rhododendrhon** - Romanian translation
+- **@WreckingBANG**, **@blorg** - Testing, Issue reporting
 
 ---
 

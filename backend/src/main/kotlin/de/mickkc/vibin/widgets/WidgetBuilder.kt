@@ -8,7 +8,7 @@ import kotlinx.html.stream.createHTML
 
 object WidgetBuilder {
 
-    val SUPPORTED_LANGUAGES = listOf("en", "de")
+    val SUPPORTED_LANGUAGES = listOf("en", "de", "ro")
 
     fun build(types: List<WidgetType>, ctx: WidgetContext, interactive: Boolean = true): String {
 
