@@ -9,7 +9,7 @@ object TemplateTranslator {
 
     val language = EnvUtil.getOrError(SERVER_LANGUAGE)
 
-    private val supportedTemplateLanguages = setOf("de", "en")
+    private val supportedTemplateLanguages = setOf("de", "en", "ro")
     private var resourceBundle: ResourceBundle? = null
 
     init {
