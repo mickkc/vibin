@@ -53,9 +53,9 @@ class ActivityWidget(widgetContext: WidgetContext, val extended: Boolean = true)
 
             if (extended) {
                 val durationThisYear = durationsPerDay.sumOf { it.second }
-                val durationThisMonth = durationsPerDay.filter { it.first.monthValue == end.monthValue }.sumOf { it.second }
+                val durationThisMonth = durationsPerDay.filter { it.first.monthValue == end.monthValue && it.first.year == end.year }.sumOf { it.second }
                 val durationThisWeek = durationsPerDay.filter { it.first >= end.with(DayOfWeek.MONDAY) }.sumOf { it.second }
-                val durationToday = durationsPerDay.find { it.first.dayOfYear == end.dayOfYear }?.second ?: 0
+                val durationToday = durationsPerDay.find { it.first.dayOfYear == end.dayOfYear && it.first.year == end.year }?.second ?: 0
 
                 div("stats") {
                     statCard(this@ActivityWidget, DateTimeUtils.formatDuration(durationThisYear), t("widgets.activity.year"))
