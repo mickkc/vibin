@@ -1,5 +1,6 @@
 package de.mickkc.vibin.routes
 
+import de.mickkc.vibin.mail.MailSender
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -7,6 +8,7 @@ import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.settings.server.WelcomeTexts
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.auth.authenticate
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.uri
 
@@ -66,6 +68,12 @@ fun Application.configureMiscRoutes() = routing {
                 appendLine(ip)
                 appendLine(port)
             }, ContentType.Text.Plain, HttpStatusCode.OK)
+        }
+    }
+
+    authenticate("tokenAuth") {
+        get("/api/mail/supported") {
+            call.success(MailSender.configured)
         }
     }
 

@@ -169,6 +169,9 @@ paths:
   /api/misc/welcome:
     $ref: 'methods/misc.yaml#/Welcome'
 
+  /api/mail/supported:
+    $ref: 'methods/misc.yaml#/MailSupport'
+
   # █▀█ █▀▀ █▀█ █▀▄▀█ █ █▀ █▀ █ █▀█ █▄░█ █▀
   # █▀▀ ██▄ █▀▄ █░▀░█ █ ▄█ ▄█ █ █▄█ █░▀█ ▄█
 
