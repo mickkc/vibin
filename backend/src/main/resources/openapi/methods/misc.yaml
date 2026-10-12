@@ -12,3 +12,25 @@ Welcome:
             schema:
               type: string
               example: "Welcome back!"
+
+MailSupport:
+  get:
+    summary: Check if sending mails is supported on this server
+    operationId: getMailSupported
+    tags:
+      - Misc
+    security:
+      - tokenAuth: [ ]
+    responses:
+      200:
+        description: True if mails are supported, false otherwise
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
