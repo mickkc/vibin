@@ -71,6 +71,21 @@ pipeline {
                 archiveArtifacts artifacts: 'backend/**/build/libs/*.jar', fingerprint: true
             }
         }
+
+        stage('Count LOC') {
+            steps {
+                script {
+                    def loc = sh(
+                        script: "cloc --json --quiet --exclude-dir=build,gradle --include-lang=Kotlin backend/ | jq '.SUM.code'",
+                        returnStdout: true
+                    ).trim()
+
+                    def badge = addEmbeddableBadgeConfiguration(id: 'loc', subject: 'Lines of code')
+                    badge.setStatus(loc)
+                    badge.setColor('blue')
+                }
+            }
+        }
     }
 
     post {
