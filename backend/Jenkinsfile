@@ -74,14 +74,16 @@ pipeline {
 
         stage('Count LOC') {
             steps {
-                def loc = sh(
-                    script: "cloc --json --quiet --exclude-dir=build,gradle --include-lang=Kotlin backend/ | jq '.SUM.code'",
-                    returnStdout: true
-                ).trim()
+                script {
+                    def loc = sh(
+                        script: "cloc --json --quiet --exclude-dir=build,gradle --include-lang=Kotlin backend/ | jq '.SUM.code'",
+                        returnStdout: true
+                    ).trim()
 
-                def badge = addEmbeddableBadgeConfiguration(id: 'loc', subject: 'Lines of code')
-                badge.setStatus(loc)
-                badge.setColor('blue')
+                    def badge = addEmbeddableBadgeConfiguration(id: 'loc', subject: 'Lines of code')
+                    badge.setStatus(loc)
+                    badge.setColor('blue')
+                }
             }
         }
     }
