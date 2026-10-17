@@ -87,7 +87,9 @@ fun createTables() = transaction {
 }
 
 /**
- * Creates a default admin user with username "Admin" and password "admin".
+ * Creates a default admin user with username "Admin".
+ * The password is read from the DEFAULT_ADMIN_PASSWORD environment variable.
+ * If the variable is not set, a random password is generated and logged.
  */
 fun createDefaultAdminUser() = transaction {
 
@@ -99,9 +101,18 @@ fun createDefaultAdminUser() = transaction {
     logger.info("Checking for existing users in database")
     val username = "Admin"
     val salt = CryptoUtil.getSalt()
-    val passwordHash = CryptoUtil.hashPassword("admin", salt)
 
-    logger.warn("No users found in database, creating default admin user with username 'Admin' and password 'admin'. Please change the password immediately after logging in.")
+    val envPassword = EnvUtil.getOrNull(EnvUtil.DEFAULT_ADMIN_PASSWORD)
+    val password: String
+    if (envPassword.isNullOrBlank()) {
+        password = CryptoUtil.createToken(12)
+        logger.warn("No users found in database, creating default admin user with username 'Admin' and a randomly generated password: $password. Please change the password immediately after logging in.")
+    } else {
+        password = envPassword
+        logger.warn("No users found in database, creating default admin user with username 'Admin' and the password from the DEFAULT_ADMIN_PASSWORD environment variable. Please change the password immediately after logging in.")
+    }
+
+    val passwordHash = CryptoUtil.hashPassword(password, salt)
 
     UserEntity.new {
         this.username = username
