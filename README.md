@@ -72,12 +72,16 @@
    installed on your system.
 2. Download / copy the [example docker-compose.yml](docker-compose.example.yml) file and the [example .env](.env.example) file and 
    modify them to your needs using the [configuration wiki](https://vibin.rip/docs/config).
+   - Make sure to set the `DEFAULT_ADMIN_PASSWORD` variable. If you don't, a password will be logged to the console, and
+     you'll need to run `docker compose logs vibin` to see it.
 3. Run the following command:
     ```bash
     docker compose up -d
     ```
 4. You can now access the application at `http://localhost:8080`. (Or the port you specified in the docker-compose.yml file.)
-5. Login with the default credentials (username `Admin`, password `admin`)
+5. Login with the default credentials
+   - Username: `Admin`
+   - Password: Either the value of `DEFAULT_ADMIN_PASSWORD` or the password found in the container logs.
 6. CHANGE THE PASSWORD OF THE ADMIN USER IMMEDIATELY!
 7. Configure the [metadata settings](https://vibin.rip/docs/config#metadata-settings) and run the [first scan](https://vibin.rip/docs/first-scan) to add your library.
 

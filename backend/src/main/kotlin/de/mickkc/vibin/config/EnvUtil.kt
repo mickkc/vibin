@@ -63,6 +63,8 @@ object EnvUtil {
     val DB_USER = EnvKey("DB_USER", null, String::trim)
     val DB_PASSWORD = EnvKey("DB_PASSWORD", null, String::trim)
 
+    val DEFAULT_ADMIN_PASSWORD = EnvKey("DEFAULT_ADMIN_PASSWORD", null, String::trim)
+
     val MUSIC_DIR = EnvKey("MUSIC_DIR", File("/opt/vibin/music"), ::fileParser)
     val UPLOADS_DIR = EnvKey("UPLOADS_DIR", File("/opt/vibin/uploads"), ::fileParser)
 
