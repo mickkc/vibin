@@ -45,7 +45,7 @@ fun Application.configureUserRoutes() = routing {
             call.respond(UserRepo.toDto(user))
         }
 
-        getP("/api/users/username/{username}/exists") {
+        getP("/api/users/username/{username}/exists", PermissionType.VIEW_USERS) {
             val username = call.getStringParameter("username")
             val exists = UserRepo.checkUsernameExists(username)
             call.success(exists)
