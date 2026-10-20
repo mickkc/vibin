@@ -4,6 +4,7 @@ import de.mickkc.vibin.auth.CryptoUtil
 import de.mickkc.vibin.dto.PaginatedDto
 import de.mickkc.vibin.dto.users.UserDto
 import de.mickkc.vibin.dto.users.UserEditDto
+import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.routes.PaginatedSearchParams
 import io.ktor.client.call.*
@@ -427,6 +428,43 @@ class UserRestTest {
             assertNull(user.profilePicture)
             assertContentEquals(CryptoUtil.hashPassword("password123", user.salt), user.passwordHash)
         }
+    }
+
+    @Test
+    fun testUserExists_Exists() = testApp { client ->
+        UserTestUtils.createTestUser("testUser", "testPassword")
+        val userExists = client.get("/api/users/username/testUser/exists")
+
+        assertEquals(HttpStatusCode.OK, userExists.status)
+
+        val success = userExists.body<Map<String, Boolean>>()["success"]
+        assertNotNull(success)
+        assertTrue(success)
+    }
+
+    @Test
+    fun testUserExists_DoesNotExist() = testApp { client ->
+        val userExists = client.get("/api/users/username/fakeUser/exists")
+
+        assertEquals(HttpStatusCode.OK, userExists.status)
+
+        val success = userExists.body<Map<String, Boolean>>()["success"]
+        assertNotNull(success)
+        assertFalse(success)
+    }
+
+    @Test
+    fun testUserExists_NoPermission() = testApp(false) { client ->
+        UserTestUtils.createTestUser("testUser", "testPassword")
+
+        val (_, token) = UserTestUtils.createUserAndSessionWithPermissions("requestingUser", "somePassword",
+            PermissionType.VIEW_USERS to false)
+
+        val userExists = client.get("/api/users/username/requestingUser/exists") {
+            bearerAuth(token)
+        }
+
+        assertEquals(HttpStatusCode.Forbidden, userExists.status)
     }
 
     @Test
