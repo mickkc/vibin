@@ -20,6 +20,7 @@ import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.security.LoginNotificationManager
 import de.mickkc.vibin.security.TotpManager
 import de.mickkc.vibin.utils.RateLimiter
+import java.security.MessageDigest
 
 fun Application.configureAuthRoutes() = routing {
 
@@ -48,10 +49,18 @@ fun Application.configureAuthRoutes() = routing {
         }
 
         val user = UserRepo.getByUsername(username)?.takeIf { it.isActive }
-            ?: unauthorized("Invalid username or password")
+
+        if (user == null) {
+            logger.warn("Failed login attempt for non-existent user: $username")
+            loginRateLimiter.checkAndIncrement(clientId)
+            // Pretend to hash and check the password to prevent time-based username enumeration
+            val hashedDummyPassword = CryptoUtil.hashPassword(password, CryptoUtil.getSalt())
+            MessageDigest.isEqual(hashedDummyPassword, hashedDummyPassword.reversedArray())
+            unauthorized("Invalid username or password")
+        }
 
         val hashedPassword = CryptoUtil.hashPassword(password, user.salt)
-        if (!hashedPassword.contentEquals(user.passwordHash)) {
+        if (!MessageDigest.isEqual(hashedPassword, user.passwordHash)) {
             logger.warn("Failed login attempt for user: $username")
             loginRateLimiter.checkAndIncrement(clientId)
             unauthorized("Invalid username or password")
