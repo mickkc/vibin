@@ -89,6 +89,22 @@ class AuthRestTest {
     }
 
     @Test
+    fun testLogin_UnknownUser_SameResponseAsWrongPassword() = testApp { client ->
+        suspend fun login(username: String) = client.post("/api/auth/login") {
+            parameter("username", username)
+            parameter("password", "wrongpassword")
+            parameter("deviceId", "test")
+            parameter("deviceName", "Test Device")
+        }
+        val known = login("Admin")
+        val unknown = login("DoesNotExist")
+
+        assertEquals(HttpStatusCode.Unauthorized, unknown.status)
+        assertEquals(known.status, unknown.status)
+        assertEquals(known.bodyAsText(), unknown.bodyAsText())
+    }
+
+    @Test
     fun logout() = testApp {client ->
 
         assertEquals(1, SessionRepo.count()) // one active session (default admin user)
