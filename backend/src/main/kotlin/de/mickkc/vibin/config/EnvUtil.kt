@@ -105,4 +105,8 @@ object EnvUtil {
     val EXTERNAL_URL = EnvKey("EXTERNAL_URL", null, String::trim)
     val SERVER_LANGUAGE = EnvKey("SERVER_LANGUAGE", "en", String::trim)
     val LOG_LEVEL = EnvKey("LOG_LEVEL", "info", String::trim)
+
+    val CORS_ALLOWED_HOSTS = EnvKey("CORS_ALLOWED_HOSTS", "*", String::trim)
+    val CORS_ADDITIONAL_ALLOWED_HEADERS = EnvKey("CORS_ADDITIONAL_ALLOWED_HEADERS", null, String::trim)
+    val CORS_ADDITIONAL_ALLOWED_METHODS = EnvKey("CORS_ADDITIONAL_ALLOWED_METHODS", null, String::trim)
 }

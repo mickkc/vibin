@@ -40,6 +40,7 @@ fun Application.module() {
     configureSerialization()
     configureSecurity()
     configureHTTP()
+    configureCors()
     configureStatusPages()
     configureWebSockets()
     configureControlRoutes()
