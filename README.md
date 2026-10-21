@@ -85,6 +85,12 @@
 6. CHANGE THE PASSWORD OF THE ADMIN USER IMMEDIATELY!
 7. Configure the [metadata settings](https://vibin.rip/docs/config#metadata-settings) and run the [first scan](https://vibin.rip/docs/first-scan) to add your library.
 
+>[!IMPORTANT]
+> The latest release does not yet include the option of setting the admin password as an environment variable.
+> Please use the password `admin` instead.
+> 
+> From version 0.0.16 onwards, the admin password will be read from the environment variable or randomly generated as described above, and this notice will be removed.
+
 > [!NOTE]
 > For other installation methods, check out the [installation wiki page](https://vibin.rip/docs/installation).
 
