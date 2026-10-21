@@ -98,7 +98,7 @@ object EnvUtil {
     val SMTP_RETRY_DELAY_MS = EnvKey("SMTP_RETRY_DELAY_MS", 2500, String::toIntOrNull)
     val SMTP_FAILED_MAILS_DIR = EnvKey("SMTP_FAILED_MAILS_DIR", null, ::fileParser)
 
-    val REAL_IP_HEADER = EnvKey("REAL_IP_HEADER", "X-Forwarded-For", String::trim)
+    val REAL_IP_HEADER = EnvKey("REAL_IP_HEADER", null, String::trim)
 
     val SERVER_HOST = EnvKey("SERVER_HOST", "0.0.0.0", String::trim)
     val SERVER_PORT = EnvKey("SERVER_PORT", 8080, String::toIntOrNull)

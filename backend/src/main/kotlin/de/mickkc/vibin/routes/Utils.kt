@@ -75,14 +75,14 @@ fun ApplicationCall.hasPermissions(vararg permissions: PermissionType): Boolean 
  */
 fun ApplicationCall.getClientId(): String {
 
-    val realIpHeader = EnvUtil.getOrError(EnvUtil.REAL_IP_HEADER)
+    val realIpHeader = EnvUtil.getOrNull(EnvUtil.REAL_IP_HEADER)
 
     // Example values:
     // X-Forwarded-For: 0.0.0.0, 1.1.1.1, 2.2.2.2 (first is the client IP, then potential proxies / load balancers)
     // X-Real-IP: 0.0.0.0
     // Forwarded: for=0.0.0.0;proto=http;by=1.1.1.1 (for is the client IP, by is the proxy)
 
-    if (realIpHeader.isNotEmpty()) {
+    if (!realIpHeader.isNullOrEmpty()) {
         val realIp = request.headers[realIpHeader]
         if (realIp != null) {
             val clientIp = realIp.split(",", ";").firstOrNull()?.trim()
