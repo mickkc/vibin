@@ -89,14 +89,14 @@ object LoginNotificationManager {
             return LoginNotificationResult.InvalidEmail
         }
 
-        if (!user.emailVerified) {
-            logger.warn("Can't send login notification email because user ${user.username} has not verified their email address.")
-            return LoginNotificationResult.EmailNotVerified
-        }
-
         if (!MailSender.configured) {
             logger.warn("Can't send login notification email because SMTP is not configured.")
             return LoginNotificationResult.NotConfigured
+        }
+
+        if (!user.emailVerified) {
+            logger.warn("Can't send login notification email because user ${user.username} has not verified their email address.")
+            return LoginNotificationResult.EmailNotVerified
         }
 
         val externalUrl = EnvUtil.getOrNull(EXTERNAL_URL)?.trim()?.removeSuffix("/")
