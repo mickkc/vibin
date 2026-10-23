@@ -2,6 +2,8 @@ package de.mickkc.vibin.security
 
 import de.mickkc.vibin.auth.CryptoUtil
 import de.mickkc.vibin.config.EnvUtil
+import de.mickkc.vibin.config.EnvUtil.EMAIL_VERIFICATION_RATE_LIMIT_REQUESTS
+import de.mickkc.vibin.config.EnvUtil.EMAIL_VERIFICATION_RATE_LIMIT_TIMEOUT
 import de.mickkc.vibin.config.EnvUtil.EXTERNAL_URL
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.mail.MailLayout
@@ -28,7 +30,10 @@ object MailVerificationManager {
         Sent
     }
 
-    val rateLimiter = RateLimiter(2, 30)
+    val rateLimiter = RateLimiter(
+        maxRequests = EnvUtil.getOrError(EMAIL_VERIFICATION_RATE_LIMIT_REQUESTS),
+        windowMinutes = EnvUtil.getOrError(EMAIL_VERIFICATION_RATE_LIMIT_TIMEOUT)
+    )
 
     suspend fun sendVerificationMail(user: UserEntity, clientId: String? = null): MailVerificationResult {
         if (clientId != null && !rateLimiter.checkAndIncrement(clientId)) {
