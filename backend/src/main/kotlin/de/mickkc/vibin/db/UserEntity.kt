@@ -23,6 +23,7 @@ object UserTable : ModifiableLongIdTable("user") {
     val passwordHash = binary("password_hash", 256)
     val salt = binary("salt", 16)
     val email = varchar("email", 255).nullable()
+    val emailVerified = bool("email_verified").default(false)
     val isActive = bool("is_active").default(true)
     val isAdmin = bool("is_admin").default(false)
     val lastLogin = long("last_login").nullable()
@@ -55,6 +56,7 @@ class UserEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, UserTable) {
     var passwordHash by UserTable.passwordHash
     var salt by UserTable.salt
     var email by UserTable.email
+    var emailVerified by UserTable.emailVerified
     var isActive by UserTable.isActive
     var isAdmin by UserTable.isAdmin
     var lastLogin by UserTable.lastLogin

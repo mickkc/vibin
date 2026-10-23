@@ -57,6 +57,7 @@ object LoginNotificationManager {
         AlreadyTrusted,
         Disabled,
         InvalidEmail,
+        EmailNotVerified,
         NotConfigured,
         Sent
     }
@@ -86,6 +87,11 @@ object LoginNotificationManager {
         if (user.email.isNullOrBlank()) {
             logger.warn("Can't send login notification email because user ${user.username} has no Email address configured.")
             return LoginNotificationResult.InvalidEmail
+        }
+
+        if (!user.emailVerified) {
+            logger.warn("Can't send login notification email because user ${user.username} has not verified their email address.")
+            return LoginNotificationResult.EmailNotVerified
         }
 
         if (!MailSender.configured) {

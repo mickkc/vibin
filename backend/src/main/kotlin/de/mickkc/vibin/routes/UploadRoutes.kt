@@ -60,7 +60,7 @@ fun Application.configureUploadRoutes() = routing {
                 call.respond(UploadManager.toDto(upload))
             }
             catch (_: FileAlreadyExistsException) {
-                conflict()
+                conflict("A file with the same path already exists.")
             }
             catch (_: PreParseException) {
                 invalidParameter("file")
