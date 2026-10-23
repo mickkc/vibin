@@ -213,3 +213,10 @@ object TotpMailExpirationDuration : ServerSetting<Long>(
     serializer = { value -> value.toString() },
     defaultValue = 5.minutes.inWholeSeconds
 )
+
+object VerificationMailExpirationDuration : ServerSetting<Long>(
+    key = "verification_mail_validity",
+    parser = { value -> value.toLong() },
+    serializer = { value -> value.toString() },
+    defaultValue = 10.minutes.inWholeSeconds
+)

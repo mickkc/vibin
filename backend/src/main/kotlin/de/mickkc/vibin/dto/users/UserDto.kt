@@ -10,6 +10,7 @@ data class UserDto(
     val description: String,
     val imageId: Long?,
     val email: String?,
+    val emailVerified: Boolean,
     val isActive: Boolean,
     val isAdmin: Boolean,
     val lastLogin: Long?,

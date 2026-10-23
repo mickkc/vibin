@@ -11,6 +11,7 @@ import de.mickkc.vibin.db.images.ImageEntity
 import de.mickkc.vibin.dto.users.UserDto
 import de.mickkc.vibin.dto.users.UserEditDto
 import de.mickkc.vibin.routes.PaginatedSearchParams
+import de.mickkc.vibin.security.MailVerificationManager
 import de.mickkc.vibin.utils.DateTimeUtils
 
 /**
@@ -84,12 +85,15 @@ object UserRepo {
 
         val (imageUpdated, newImage) = ImageRepo.getUpdatedImage(editDto.profilePictureUrl)
 
-        return transaction {
+        val updatedUser = transaction {
             if (id != null) {
                 user.apply {
                     editDto.username?.takeIf { it.isNotBlank() }?.let { this.username = it }
                     editDto.displayName?.let { this.displayName = it.takeIf { it.isNotBlank() } }
-                    editDto.email?.let { this.email = it.takeIf { it.isNotBlank() } }
+                    editDto.email?.let {
+                        this.emailVerified = this.email == it
+                        this.email = it.takeIf { it.isNotBlank() }
+                    }
                     editDto.isActive?.let { this.isActive = it }
                     editDto.isAdmin?.let { this.isAdmin = it }
                     editDto.password?.let {
@@ -109,6 +113,12 @@ object UserRepo {
             user.updatedAt = DateTimeUtils.now()
             user
         }
+
+        if (!updatedUser.emailVerified && !updatedUser.email.isNullOrBlank()) {
+            MailVerificationManager.sendVerificationMail(updatedUser)
+        }
+
+        return updatedUser
     }
 
     fun updatePassword(userId: Long, newPassword: String): Boolean = transaction {
@@ -193,6 +203,7 @@ object UserRepo {
             displayName = entity.displayName,
             imageId = entity.profilePicture?.id?.value,
             email = entity.email,
+            emailVerified = entity.emailVerified,
             isActive = entity.isActive,
             isAdmin = entity.isAdmin,
             lastLogin = entity.lastLogin,

@@ -36,7 +36,7 @@ fun Application.configureRelatedTrackRoutes() = routing {
             }
 
             if (TrackRelationRepo.doesRelationExist(trackId, relatedTrackId)) {
-                conflict()
+                conflict("The two tracks are already marked as related.")
             }
 
             val track = TrackRepo.getById(trackId) ?: notFound()
