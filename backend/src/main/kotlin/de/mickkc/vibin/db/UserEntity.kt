@@ -8,6 +8,7 @@ import de.mickkc.vibin.db.images.ImageEntity
 import de.mickkc.vibin.db.images.ImageTable
 import de.mickkc.vibin.db.security.TrustedDeviceIdTable
 import de.mickkc.vibin.repos.PlaylistRepo
+import de.mickkc.vibin.repos.SecurityRepo
 import de.mickkc.vibin.repos.SessionRepo
 
 enum class TotpType {
@@ -80,6 +81,9 @@ class UserEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, UserTable) {
 
         // Remove all trusted devices for this user
         TrustedDeviceIdTable.deleteWhere { TrustedDeviceIdTable.userId eq userId }
+
+        // Remove all pending email verifications
+        SecurityRepo.deleteVerificationEmailsForUser(userId)
 
         super.delete()
     }
