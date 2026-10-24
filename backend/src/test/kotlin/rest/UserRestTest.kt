@@ -205,6 +205,30 @@ class UserRestTest {
     }
 
     @Test
+    fun testCreateUser_UsernameAlreadyTaken() = testApp { client ->
+        UserTestUtils.createTestUser("testuser", "password")
+
+        val response = client.post("/api/users") {
+            setBody(UserEditDto(
+                username = "TestUser", // Capitalization should not matter
+                displayName = "Test user",
+                description = "A test user",
+                email = "test@example.com",
+                isAdmin = false,
+                isActive = null,
+                profilePictureUrl = null,
+                oldPassword = null,
+                password = "password123"
+            ))
+        }
+        assertFalse(response.status.isSuccess())
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val bodyText = response.bodyAsText()
+        assertContains(bodyText, "\"parameterName\":\"username\"")
+    }
+
+    @Test
     fun testEditUser() = testApp { client ->
         val testUser = UserTestUtils.createTestUser("edituser", "oldpassword")
         val response = client.put("/api/users/${testUser.id.value}") {
@@ -428,6 +452,40 @@ class UserRestTest {
             assertNull(user.profilePicture)
             assertContentEquals(CryptoUtil.hashPassword("password123", user.salt), user.passwordHash)
         }
+    }
+
+    @Test
+    fun testEditUser_UsernameAlreadyTaken() = testApp { client ->
+        UserTestUtils.createTestUser("testuser", "password")
+        val testUser = UserTestUtils.createTestUser("user", "password")
+
+        val response = client.put("/api/users/${testUser.id.value}") {
+            setBody(UserEditDto(
+                username = "TestUser" // Capitalization should not matter
+            ))
+        }
+
+        assertFalse(response.status.isSuccess())
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+
+        val bodyText = response.bodyAsText()
+        assertContains(bodyText, "\"parameterName\":\"username\"")
+    }
+
+    @Test
+    fun testEditUser_SameUsernameDifferentCapitalization() = testApp { client ->
+        val testUser = UserTestUtils.createTestUser("testuser", "password")
+
+        val response = client.put("/api/users/${testUser.id.value}") {
+            setBody(UserEditDto(
+                username = "TestUser"
+            ))
+        }
+
+        assertTrue(response.status.isSuccess())
+
+        val user = response.body<UserDto>()
+        assertEquals("TestUser", user.username)
     }
 
     @Test

@@ -87,7 +87,7 @@ fun Application.configureUserRoutes() = routing {
             }
 
 
-            if (userEditDto.username != null && userEditDto.username != user.username) {
+            if (userEditDto.username != null && !userEditDto.username.equals(user.username, true)) {
                 if (UserRepo.checkUsernameExists(userEditDto.username))
                     invalidParameter("username")
             }
