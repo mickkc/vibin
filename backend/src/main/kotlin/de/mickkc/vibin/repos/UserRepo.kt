@@ -94,7 +94,9 @@ object UserRepo {
                     editDto.displayName?.let { this.displayName = it.takeIf { it.isNotBlank() } }
                     editDto.email?.let {
                         emailChanged = this.email != it
-                        this.emailVerified = it.isNotBlank() && this.email == it
+                        if (emailChanged) {
+                            this.emailVerified = false
+                        }
                         this.email = it.takeIf { it.isNotBlank() }
                     }
                     editDto.isActive?.let { this.isActive = it }
