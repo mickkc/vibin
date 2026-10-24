@@ -178,14 +178,14 @@ object SecurityRepo {
     }
 
     fun sentVerificationEmail(user: UserEntity, email: String, token: String) = transaction {
-        EmailVerificationTokenEntity.new(token) {
+        EmailVerificationTokenEntity.new(CryptoUtil.hashToken(token)) {
             this.user = user
             this.emailAddress = email
         }
     }
 
     fun getMailAddressFromVerificationToken(token: String): String? = transaction {
-        val entity = EmailVerificationTokenEntity.findById(token)
+        val entity = EmailVerificationTokenEntity.findById(CryptoUtil.hashToken(token))
             ?: return@transaction null
 
         if (entity.createdAt <= DateTimeUtils.now() - Settings.get(VerificationMailExpirationDuration)) {
@@ -197,7 +197,7 @@ object SecurityRepo {
     }
 
     fun verifyEmailAddress(token: String): Boolean = transaction {
-        val entity = EmailVerificationTokenEntity.findById(token)
+        val entity = EmailVerificationTokenEntity.findById(CryptoUtil.hashToken(token))
             ?: return@transaction false
 
         if (entity.emailAddress != entity.user.email) {

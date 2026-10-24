@@ -1,5 +1,6 @@
 package rest
 
+import de.mickkc.vibin.auth.CryptoUtil
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.security.EmailVerificationTokenEntity
 import de.mickkc.vibin.permissions.PermissionType
@@ -24,7 +25,7 @@ import kotlin.test.*
 class EmailVerificationRestTest {
 
     private fun expireVerificationToken(token: String) = transaction {
-        EmailVerificationTokenEntity.findById(token)?.let {
+        EmailVerificationTokenEntity.findById(CryptoUtil.hashToken(token))?.let {
             it.createdAt = DateTimeUtils.now() - (Settings.get(VerificationMailExpirationDuration) + 60)
         }
     }
@@ -34,7 +35,7 @@ class EmailVerificationRestTest {
     }
 
     private fun verificationTokenExists(token: String): Boolean = transaction {
-        EmailVerificationTokenEntity.findById(token) != null
+        EmailVerificationTokenEntity.findById(CryptoUtil.hashToken(token)) != null
     }
 
     private fun userEmailVerified(userId: Long): Boolean = transaction {
@@ -56,10 +57,11 @@ class EmailVerificationRestTest {
         SecurityRepo.sentVerificationEmail(user, "test@example.com", "test-token")
 
         transaction {
-            val entity = EmailVerificationTokenEntity.findById("test-token")
+            val entity = EmailVerificationTokenEntity.findById(CryptoUtil.hashToken("test-token"))
             assertNotNull(entity)
             assertEquals("test@example.com", entity.emailAddress)
             assertEquals(user.id.value, entity.user.id.value)
+            assertEquals(CryptoUtil.hashToken("test-token"), entity.id.value)
         }
     }
 
@@ -221,10 +223,11 @@ class EmailVerificationRestTest {
                 assertEquals(MailVerificationManager.MailVerificationResult.Sent, result)
                 assertEquals(1, verificationTokenCount())
 
-                val token = transaction {
-                    EmailVerificationTokenEntity.all().first().id.value
+                transaction {
+                    val entity = EmailVerificationTokenEntity.all().first()
+                    assertEquals("test@example.com", entity.emailAddress)
+                    assertTrue(entity.id.value.matches(Regex("^[0-9a-f]{64}$")))
                 }
-                assertEquals("test@example.com", SecurityRepo.getMailAddressFromVerificationToken(token))
             }
         }
     }
@@ -430,10 +433,11 @@ class EmailVerificationRestTest {
                 assertTrue(response.status.isSuccess())
 
                 assertEquals(1, verificationTokenCount())
-                val token = transaction {
-                    EmailVerificationTokenEntity.all().first().id.value
+                transaction {
+                    val entity = EmailVerificationTokenEntity.all().first()
+                    assertEquals("test@example.com", entity.emailAddress)
+                    assertTrue(entity.id.value.matches(Regex("^[0-9a-f]{64}$")))
                 }
-                assertEquals("test@example.com", SecurityRepo.getMailAddressFromVerificationToken(token))
             }
         }
     }
