@@ -11,7 +11,6 @@ import de.mickkc.vibin.db.images.ImageEntity
 import de.mickkc.vibin.dto.users.UserDto
 import de.mickkc.vibin.dto.users.UserEditDto
 import de.mickkc.vibin.routes.PaginatedSearchParams
-import de.mickkc.vibin.security.MailVerificationManager
 import de.mickkc.vibin.utils.DateTimeUtils
 
 /**
@@ -64,7 +63,10 @@ object UserRepo {
      *                user.
      * @return The created / updated user or null, if the user wit the ID could not be found (this only affects updating).
      */
-    suspend fun updateOrCreateUser(id: Long?, editDto: UserEditDto): UserEntity? {
+    suspend fun updateOrCreateUser(id: Long?, editDto: UserEditDto): ModifiedUser? {
+
+        var emailChanged = false
+
         val user = transaction {
             if (id != null)
                 UserEntity.findById(id)
@@ -91,7 +93,8 @@ object UserRepo {
                     editDto.username?.takeIf { it.isNotBlank() }?.let { this.username = it }
                     editDto.displayName?.let { this.displayName = it.takeIf { it.isNotBlank() } }
                     editDto.email?.let {
-                        this.emailVerified = this.email == it
+                        emailChanged = this.email != it
+                        this.emailVerified = it.isNotBlank() && this.email == it
                         this.email = it.takeIf { it.isNotBlank() }
                     }
                     editDto.isActive?.let { this.isActive = it }
@@ -104,6 +107,7 @@ object UserRepo {
             }
             else {
                 PermissionRepo.addDefaultPermissions(user.id.value)
+                emailChanged = true
             }
 
             if (imageUpdated) {
@@ -114,12 +118,10 @@ object UserRepo {
             user
         }
 
-        if (!updatedUser.emailVerified && !updatedUser.email.isNullOrBlank()) {
-            MailVerificationManager.sendVerificationMail(updatedUser)
-        }
-
-        return updatedUser
+        return ModifiedUser(updatedUser, emailChanged && !updatedUser.emailVerified)
     }
+
+    data class ModifiedUser(val user: UserEntity, val shouldVerifyEmail: Boolean)
 
     fun updatePassword(userId: Long, newPassword: String): Boolean = transaction {
         val user = UserEntity.findById(userId) ?: return@transaction false
