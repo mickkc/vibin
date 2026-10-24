@@ -34,22 +34,54 @@ pipeline {
             }
         }
 
-        stage('Build') {
-            steps {
-                script {
-                    docker.build("${IMAGE}:${TAG_NAME}", "--build-arg VIBIN_TAG=${TAG_NAME} .")
+        stage('Build & Push') {
+            parallel {
+                stage('amd64') {
+                    steps {
+                        script {
+                            def img = docker.build("${IMAGE}:${TAG_NAME}-amd64", "--build-arg VIBIN_TAG=${TAG_NAME} .")
+                            docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
+                                img.push()
+                            }
+                        }
+                    }
+                    post {
+                        always {
+                            sh "docker rmi ${IMAGE}:${TAG_NAME}-amd64 || true"
+                        }
+                    }
+                }
+
+                stage('arm64') {
+                    agent { label 'macos' }
+                    steps {
+                        checkout scm
+                        script {
+                            def img = docker.build("${IMAGE}:${TAG_NAME}-arm64", "--build-arg VIBIN_TAG=${TAG_NAME} .")
+                            docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
+                                img.push()
+                            }
+                        }
+                    }
+                    post {
+                        always {
+                            sh "docker rmi ${IMAGE}:${TAG_NAME}-arm64 || true"
+                        }
+                    }
                 }
             }
         }
 
-        stage('Push') {
+        stage('Create multi-arch manifest') {
             steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
-                        def img = docker.image("${IMAGE}:${TAG_NAME}")
-                        img.push()
-                        img.push('latest')
-                    }
+                withDockerRegistry(url: 'https://index.docker.io/v1/', credentialsId: 'dockerhub-credentials') {
+                    sh """
+                        docker buildx imagetools create \
+                            --tag ${IMAGE}:${TAG_NAME} \
+                            --tag ${IMAGE}:latest \
+                            ${IMAGE}:${TAG_NAME}-amd64 \
+                            ${IMAGE}:${TAG_NAME}-arm64
+                    """
                 }
             }
         }
@@ -108,7 +140,6 @@ pipeline {
 
     post {
         always {
-            sh "docker rmi ${IMAGE}:${TAG_NAME} || true"
             sh "rm -f payload.json"
         }
     }
