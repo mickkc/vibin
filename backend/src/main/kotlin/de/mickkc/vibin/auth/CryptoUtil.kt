@@ -3,6 +3,7 @@ package de.mickkc.vibin.auth
 import org.jetbrains.exposed.sql.transactions.transaction
 import de.mickkc.vibin.db.SessionEntity
 import de.mickkc.vibin.db.SessionTable
+import java.security.MessageDigest
 import java.security.SecureRandom
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
@@ -42,5 +43,18 @@ object CryptoUtil {
             }.joinToString("")
         } while (SessionEntity.find { SessionTable.token eq token }.any())
         return@transaction token
+    }
+
+    /**
+     * Hashes a token using SHA-256 and returns the lowercase hex-encoded hash (64 characters).
+     *
+     * @param token The raw token to hash.
+     * @return The SHA-256 hash of the token as a lowercase hex string.
+     */
+    fun hashToken(token: String): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        return digest
+            .digest(token.toByteArray(Charsets.UTF_8))
+            .joinToString("") { "%02x".format(it) }
     }
 }
