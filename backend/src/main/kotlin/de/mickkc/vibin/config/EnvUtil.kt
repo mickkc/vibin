@@ -91,6 +91,7 @@ object EnvUtil {
     val SMTP_STARTTLS_REQUIRED = EnvKey("SMTP_STARTTLS_REQUIRED", true, String::toBooleanStrictOrNull)
     val SMTP_SSL = EnvKey("SMTP_SSL", true, String::toBooleanStrictOrNull)
 
+    val SMTP_MOCK = EnvKey("SMTP_MOCK", false, String::toBooleanStrictOrNull)
     val SMTP_AUTH = EnvKey("SMTP_AUTH", true, String::toBooleanStrictOrNull)
     val SMTP_USERNAME = EnvKey("SMTP_USERNAME", null, String::trim)
     val SMTP_PASSWORD = EnvKey("SMTP_PASSWORD", null, String::trim)

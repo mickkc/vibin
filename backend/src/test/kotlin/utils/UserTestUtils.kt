@@ -9,6 +9,7 @@ import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.PermissionRepo
 import de.mickkc.vibin.repos.SessionRepo
 import de.mickkc.vibin.repos.UserRepo
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object UserTestUtils {
 
@@ -48,4 +49,8 @@ object UserTestUtils {
         }
         return user to token
     }
+
+    fun getAdminUser(): UserEntity = UserRepo.getById(1)!!
+    fun setUserEmail(user: UserEntity, email: String?) = transaction { user.email = email }
+    fun setUserEmailVerified(user: UserEntity, verified: Boolean) = transaction { user.emailVerified = verified }
 }

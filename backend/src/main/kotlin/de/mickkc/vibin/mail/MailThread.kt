@@ -4,6 +4,7 @@ import de.mickkc.vibin.auth.CryptoUtil
 import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.config.EnvUtil.SMTP_DELAY_MS
 import de.mickkc.vibin.config.EnvUtil.SMTP_FAILED_MAILS_DIR
+import de.mickkc.vibin.config.EnvUtil.SMTP_MOCK
 import de.mickkc.vibin.config.EnvUtil.SMTP_RETRIES
 import de.mickkc.vibin.config.EnvUtil.SMTP_RETRY_DELAY_MS
 import de.mickkc.vibin.db.PendingMailEntity
@@ -29,6 +30,7 @@ object MailThread {
     private val retryDelay = EnvUtil.getOrError(SMTP_RETRY_DELAY_MS).milliseconds
     private val failedMailsDir = EnvUtil.getOrNull(SMTP_FAILED_MAILS_DIR)
     private val maxRetries = EnvUtil.getOrError(SMTP_RETRIES).coerceAtLeast(1)
+    private val mocking = EnvUtil.getOrNull(SMTP_MOCK) ?: false
     private val mutex = Mutex()
     private val logger = LoggerFactory.getLogger(MailThread::class.java)
     private var job: Job? = null
@@ -94,6 +96,7 @@ object MailThread {
      *                 [PRIORITY_LOGIN_NOTIFICATIONS], etc.
      */
     suspend fun scheduleMail(to: String, subject: String, body: String, priority: Int = PRIORITY_NORMAL) {
+        if (mocking) return
         if (!MailSender.configured) {
             logger.warn("Not adding mail with subject '$subject' to the queue because SMTP is not configured.")
             return
