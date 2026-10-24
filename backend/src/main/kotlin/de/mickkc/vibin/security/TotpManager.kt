@@ -130,7 +130,7 @@ object TotpManager {
             return TotpEmailResult.InvalidEmail
         }
 
-        if (user.emailVerified) {
+        if (!user.emailVerified) {
             logger.warn("Can't send TOTP email because user ${user.username} has not verified their email address.")
             return TotpEmailResult.EmailNotVerified
         }
