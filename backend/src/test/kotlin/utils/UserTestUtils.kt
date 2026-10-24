@@ -14,7 +14,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 object UserTestUtils {
 
     suspend fun createTestUser(username: String, password: String): UserEntity {
-        val user = UserRepo.updateOrCreateUser(null, UserEditDto(
+        val created = UserRepo.updateOrCreateUser(null, UserEditDto(
             username = username,
             password = password,
             email = null,
@@ -25,8 +25,8 @@ object UserTestUtils {
             oldPassword = null,
             description = null
         ))
-        assertNotNull(user)
-        return user
+        assertNotNull(created)
+        return created.user
     }
 
     suspend fun createUserWithSession(username: String, password: String): Pair<UserEntity, String> {
