@@ -5,6 +5,7 @@ import de.mickkc.vibin.dto.PaginatedDto
 import de.mickkc.vibin.dto.users.UserEditDto
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.UserRepo
+import de.mickkc.vibin.security.MailVerificationManager
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
@@ -65,7 +66,11 @@ fun Application.configureUserRoutes() = routing {
                 invalidParameter("username")
 
             val created = UserRepo.updateOrCreateUser(null, userEditDto)!!
-            call.respond(UserRepo.toDto(created))
+            if (created.shouldVerifyEmail) {
+                MailVerificationManager.sendVerificationMail(created.user, call.getClientId())
+            }
+
+            call.respond(UserRepo.toDto(created.user))
         }
 
         putP("/api/users/{userId}") {
@@ -100,8 +105,11 @@ fun Application.configureUserRoutes() = routing {
             }
 
             val updated = UserRepo.updateOrCreateUser(user.id.value, userEditDto) ?: notFound()
+            if (updated.shouldVerifyEmail) {
+                MailVerificationManager.sendVerificationMail(updated.user, call.getClientId())
+            }
 
-            call.respond(UserRepo.toDto(updated))
+            call.respond(UserRepo.toDto(updated.user))
         }
 
         deleteP("/api/users/{userId}") {
