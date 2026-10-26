@@ -173,7 +173,7 @@ class EmailVerificationRestTest {
         setUserEmail(user, "test@example.com")
         setUserEmailVerified(user, true)
 
-        val result = MailVerificationManager.sendVerificationMail(user, "test-client")
+        val result = MailVerificationManager.sendVerificationMail(user)
         assertEquals(MailVerificationManager.MailVerificationResult.AlreadyVerified, result)
         assertEquals(0, verificationTokenCount())
     }
@@ -183,7 +183,7 @@ class EmailVerificationRestTest {
         val user = getAdminUser()
         setUserEmail(user, null)
 
-        val result = MailVerificationManager.sendVerificationMail(user, "test-client")
+        val result = MailVerificationManager.sendVerificationMail(user)
         assertEquals(MailVerificationManager.MailVerificationResult.InvalidEmail, result)
         assertEquals(0, verificationTokenCount())
     }
@@ -193,7 +193,7 @@ class EmailVerificationRestTest {
         val user = getAdminUser()
         setUserEmail(user, "test@example.com")
 
-        val result = MailVerificationManager.sendVerificationMail(user, "test-client")
+        val result = MailVerificationManager.sendVerificationMail(user)
         assertEquals(MailVerificationManager.MailVerificationResult.NotConfigured, result)
         assertEquals(0, verificationTokenCount())
     }
@@ -204,11 +204,11 @@ class EmailVerificationRestTest {
         setUserEmail(user, "test@example.com")
 
         repeat(2) {
-            val result = MailVerificationManager.sendVerificationMail(user, "test-client")
+            val result = MailVerificationManager.sendVerificationMail(user)
             assertEquals(MailVerificationManager.MailVerificationResult.NotConfigured, result)
         }
 
-        val result = MailVerificationManager.sendVerificationMail(user, "test-client")
+        val result = MailVerificationManager.sendVerificationMail(user)
         assertEquals(MailVerificationManager.MailVerificationResult.RateLimited, result)
     }
 
@@ -219,7 +219,7 @@ class EmailVerificationRestTest {
                 val user = getAdminUser()
                 setUserEmail(user, "test@example.com")
 
-                val result = MailVerificationManager.sendVerificationMail(user, "test-client")
+                val result = MailVerificationManager.sendVerificationMail(user)
                 assertEquals(MailVerificationManager.MailVerificationResult.Sent, result)
                 assertEquals(1, verificationTokenCount())
 

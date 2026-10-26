@@ -227,10 +227,9 @@ fun Application.configureSecurityRoutes() = routing {
         }
 
         postP("/api/auth/mail/verify", PermissionType.MANAGE_OWN_USER) {
-            val clientId = call.getClientId()
             val user = call.getUser() ?: unauthorized()
 
-            val result = MailVerificationManager.sendVerificationMail(user, clientId)
+            val result = MailVerificationManager.sendVerificationMail(user)
 
             when (result) {
                 MailVerificationManager.MailVerificationResult.AlreadyVerified -> conflict("The email address is already verified.")

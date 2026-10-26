@@ -35,8 +35,8 @@ object MailVerificationManager {
         windowMinutes = EnvUtil.getOrError(EMAIL_VERIFICATION_RATE_LIMIT_TIMEOUT)
     )
 
-    suspend fun sendVerificationMail(user: UserEntity, clientId: String? = null): MailVerificationResult {
-        if (clientId != null && !rateLimiter.checkAndIncrement(clientId)) {
+    suspend fun sendVerificationMail(user: UserEntity): MailVerificationResult {
+        if (!rateLimiter.checkAndIncrement(user.id.value.toString())) {
             return MailVerificationResult.RateLimited
         }
 
