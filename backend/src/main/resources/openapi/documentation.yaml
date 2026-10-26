@@ -66,6 +66,9 @@ paths:
   /api/auth/logout:
     $ref: 'methods/auth.yaml#/Logout'
 
+  /api/auth/mail/verify:
+    $ref: 'methods/auth.yaml#/VerifyEmail'
+
   # █▄▄ ▄▀█ ▀█▀ █▀▀ █░█
   # █▄█ █▀█ ░█░ █▄▄ █▀█
 
