@@ -177,6 +177,13 @@ object SecurityRepo {
         TotpMailTable.deleteWhere { TotpMailTable.sessionId eq sessionId }
     }
 
+    fun deleteExpiredTotpMails(): Int = transaction {
+        val start = DateTimeUtils.now() - Settings.get(TotpMailExpirationDuration)
+        TotpMailTable.deleteWhere {
+            TotpMailTable.sent less start
+        }
+    }
+
     fun sentVerificationEmail(user: UserEntity, email: String, token: String) = transaction {
         EmailVerificationTokenEntity.new(CryptoUtil.hashToken(token)) {
             this.user = user
@@ -218,6 +225,13 @@ object SecurityRepo {
     fun deleteVerificationEmailsForUser(userId: Long): Int = transaction {
         EmailVerificationTokenTable.deleteWhere {
             EmailVerificationTokenTable.userId eq userId
+        }
+    }
+
+    fun deleteExpiredVerificationEmails(): Int = transaction {
+        val start = DateTimeUtils.now() - Settings.get(VerificationMailExpirationDuration)
+        EmailVerificationTokenTable.deleteWhere {
+            EmailVerificationTokenTable.createdAt less start
         }
     }
 }
