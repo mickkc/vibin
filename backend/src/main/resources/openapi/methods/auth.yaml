@@ -90,3 +90,43 @@ Validate:
           application/json:
             schema:
               $ref: '../models/error.yaml#/Error'
+
+VerifyEmail:
+  post:
+    summary: Resend the verification email for the logged in user
+    operationId: resendVerificationEmail
+    tags:
+      - Auth
+    security:
+      - tokenAuth: []
+    responses:
+      200:
+        description: Mail was sent
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      409:
+        description: Email address is already verified or invalid
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Conflict'
+      503:
+        description: SMTP is not configured
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Unavailable'
+      429:
+        description: Rate limited (too many mails sent)
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/RateLimited'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

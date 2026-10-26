@@ -115,6 +115,7 @@ object TotpManager {
     enum class TotpEmailResult {
         Disabled,
         InvalidEmail,
+        EmailNotVerified,
         NotConfigured,
         Sent
     }
@@ -127,6 +128,11 @@ object TotpManager {
         if (user.email.isNullOrBlank()) {
             logger.warn("Can't send TOTP email because user ${user.username} has no Email address configured.")
             return TotpEmailResult.InvalidEmail
+        }
+
+        if (!user.emailVerified) {
+            logger.warn("Can't send TOTP email because user ${user.username} has not verified their email address.")
+            return TotpEmailResult.EmailNotVerified
         }
 
         if (!MailSender.configured) {

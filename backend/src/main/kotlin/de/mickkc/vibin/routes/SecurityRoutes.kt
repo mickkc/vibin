@@ -10,6 +10,7 @@ import de.mickkc.vibin.repos.PermissionRepo
 import de.mickkc.vibin.repos.SecurityRepo
 import de.mickkc.vibin.repos.SessionRepo
 import de.mickkc.vibin.security.LoginNotificationManager
+import de.mickkc.vibin.security.MailVerificationManager
 import de.mickkc.vibin.security.TotpManager
 import de.mickkc.vibin.security.exception.LoginNotificationAlreadyHandledException
 import de.mickkc.vibin.security.exception.LoginNotificationExpiredException
@@ -48,6 +49,14 @@ fun Application.configureSecurityRoutes() = routing {
         }
     }
 
+    suspend fun ApplicationCall.invalidVerificationToken() {
+        respondHtmlTemplate(BaseTemplate(TemplateTranslator.getTranslation("web.security.invalid_token.title"))) {
+            content {
+                insert(InvalidVerificationTokenTemplate()) {}
+            }
+        }
+    }
+
     suspend fun ApplicationCall.processDone() {
         respondHtmlTemplate(BaseTemplate(TemplateTranslator.getTranslation("web.security.done.title"))) {
             content {
@@ -80,6 +89,19 @@ fun Application.configureSecurityRoutes() = routing {
         call.respondHtmlTemplate(BaseTemplate(TemplateTranslator.getTranslation("web.security.trust_device.title"))) {
             content {
                 insert(TrustDeviceTemplate(token)) {}
+            }
+        }
+    }
+
+    get("/api/mail/verify") {
+        val token = call.getStringParameter("tk")
+
+        val emailAddress = SecurityRepo.getMailAddressFromVerificationToken(token)
+            ?: return@get call.invalidVerificationToken()
+
+        call.respondHtmlTemplate(BaseTemplate(TemplateTranslator.getTranslation("web.security.verify_email.title"))) {
+            content {
+                insert(VerifyEmailAddressTemplate(token, emailAddress)) {}
             }
         }
     }
@@ -144,6 +166,19 @@ fun Application.configureSecurityRoutes() = routing {
         call.processDone()
     }
 
+    post("/api/mail/verify") {
+        val parameters = call.receiveParameters()
+
+        val token = parameters["token"] ?: return@post call.returnHtmlError("web.security.error.missing_token")
+
+        if (SecurityRepo.verifyEmailAddress(token)) {
+            return@post call.processDone()
+        }
+        else {
+            return@post call.invalidVerificationToken()
+        }
+    }
+
     authenticate("tokenAuth") {
         getP("/api/auth/totp/qr", PermissionType.MANAGE_OWN_2FA) {
             try {
@@ -172,6 +207,11 @@ fun Application.configureSecurityRoutes() = routing {
         putP("/api/auth/totp", PermissionType.MANAGE_OWN_2FA) {
             val user = call.getUser() ?: unauthorized()
             val type = call.getEnum<TotpType>("type", null)
+
+            if (type == TotpType.Mail && !user.emailVerified) {
+                conflict("Could not set the TOTP type to Email because the user's email address isn't verified.")
+            }
+
             when (type) {
                 TotpType.None -> TotpManager.disableTotp(user)
                 TotpType.Mail -> TotpManager.enableEmailTotp(user)
@@ -186,6 +226,20 @@ fun Application.configureSecurityRoutes() = routing {
             call.success()
         }
 
+        postP("/api/auth/mail/verify", PermissionType.MANAGE_OWN_USER) {
+            val clientId = call.getClientId()
+            val user = call.getUser() ?: unauthorized()
+
+            val result = MailVerificationManager.sendVerificationMail(user, clientId)
+
+            when (result) {
+                MailVerificationManager.MailVerificationResult.AlreadyVerified -> conflict("The email address is already verified.")
+                MailVerificationManager.MailVerificationResult.InvalidEmail -> conflict("The configured email address is invalid.")
+                MailVerificationManager.MailVerificationResult.NotConfigured -> unavailable("SMTP is not configured.")
+                MailVerificationManager.MailVerificationResult.RateLimited -> rateLimitExceeded()
+                MailVerificationManager.MailVerificationResult.Sent -> call.success()
+            }
+        }
     }
 
     post("/api/auth/totp") {

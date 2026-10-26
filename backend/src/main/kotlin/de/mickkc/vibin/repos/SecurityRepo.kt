@@ -7,6 +7,7 @@ import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.security.*
 import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.settings.server.TotpMailExpirationDuration
+import de.mickkc.vibin.settings.server.VerificationMailExpirationDuration
 import de.mickkc.vibin.utils.DateTimeUtils
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
@@ -174,5 +175,63 @@ object SecurityRepo {
 
     fun removeTotpMailCode(sessionId: Long) = transaction {
         TotpMailTable.deleteWhere { TotpMailTable.sessionId eq sessionId }
+    }
+
+    fun deleteExpiredTotpMails(): Int = transaction {
+        val start = DateTimeUtils.now() - Settings.get(TotpMailExpirationDuration)
+        TotpMailTable.deleteWhere {
+            TotpMailTable.sent less start
+        }
+    }
+
+    fun sentVerificationEmail(user: UserEntity, email: String, token: String) = transaction {
+        EmailVerificationTokenEntity.new(CryptoUtil.hashToken(token)) {
+            this.user = user
+            this.emailAddress = email
+        }
+    }
+
+    fun getMailAddressFromVerificationToken(token: String): String? = transaction {
+        val entity = EmailVerificationTokenEntity.findById(CryptoUtil.hashToken(token))
+            ?: return@transaction null
+
+        if (entity.createdAt <= DateTimeUtils.now() - Settings.get(VerificationMailExpirationDuration)) {
+            entity.delete()
+            return@transaction null
+        }
+
+        return@transaction entity.emailAddress
+    }
+
+    fun verifyEmailAddress(token: String): Boolean = transaction {
+        val entity = EmailVerificationTokenEntity.findById(CryptoUtil.hashToken(token))
+            ?: return@transaction false
+
+        if (entity.emailAddress != entity.user.email) {
+            entity.delete()
+            return@transaction false
+        }
+
+        if (entity.createdAt < DateTimeUtils.now() - Settings.get(VerificationMailExpirationDuration)) {
+            entity.delete()
+            return@transaction false
+        }
+
+        entity.user.emailVerified = true
+        entity.delete()
+        return@transaction true
+    }
+
+    fun deleteVerificationEmailsForUser(userId: Long): Int = transaction {
+        EmailVerificationTokenTable.deleteWhere {
+            EmailVerificationTokenTable.userId eq userId
+        }
+    }
+
+    fun deleteExpiredVerificationEmails(): Int = transaction {
+        val start = DateTimeUtils.now() - Settings.get(VerificationMailExpirationDuration)
+        EmailVerificationTokenTable.deleteWhere {
+            EmailVerificationTokenTable.createdAt less start
+        }
     }
 }

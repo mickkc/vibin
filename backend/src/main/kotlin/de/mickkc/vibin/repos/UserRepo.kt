@@ -63,7 +63,10 @@ object UserRepo {
      *                user.
      * @return The created / updated user or null, if the user wit the ID could not be found (this only affects updating).
      */
-    suspend fun updateOrCreateUser(id: Long?, editDto: UserEditDto): UserEntity? {
+    suspend fun updateOrCreateUser(id: Long?, editDto: UserEditDto): ModifiedUser? {
+
+        var emailChanged = false
+
         val user = transaction {
             if (id != null)
                 UserEntity.findById(id)
@@ -84,12 +87,18 @@ object UserRepo {
 
         val (imageUpdated, newImage) = ImageRepo.getUpdatedImage(editDto.profilePictureUrl)
 
-        return transaction {
+        val updatedUser = transaction {
             if (id != null) {
                 user.apply {
                     editDto.username?.takeIf { it.isNotBlank() }?.let { this.username = it }
                     editDto.displayName?.let { this.displayName = it.takeIf { it.isNotBlank() } }
-                    editDto.email?.let { this.email = it.takeIf { it.isNotBlank() } }
+                    editDto.email?.let {
+                        emailChanged = this.email != it
+                        if (emailChanged) {
+                            this.emailVerified = false
+                        }
+                        this.email = it.takeIf { it.isNotBlank() }
+                    }
                     editDto.isActive?.let { this.isActive = it }
                     editDto.isAdmin?.let { this.isAdmin = it }
                     editDto.password?.let {
@@ -100,6 +109,7 @@ object UserRepo {
             }
             else {
                 PermissionRepo.addDefaultPermissions(user.id.value)
+                emailChanged = true
             }
 
             if (imageUpdated) {
@@ -109,7 +119,11 @@ object UserRepo {
             user.updatedAt = DateTimeUtils.now()
             user
         }
+
+        return ModifiedUser(updatedUser, emailChanged && !updatedUser.emailVerified)
     }
+
+    data class ModifiedUser(val user: UserEntity, val shouldVerifyEmail: Boolean)
 
     fun updatePassword(userId: Long, newPassword: String): Boolean = transaction {
         val user = UserEntity.findById(userId) ?: return@transaction false
@@ -193,6 +207,7 @@ object UserRepo {
             displayName = entity.displayName,
             imageId = entity.profilePicture?.id?.value,
             email = entity.email,
+            emailVerified = entity.emailVerified,
             isActive = entity.isActive,
             isAdmin = entity.isAdmin,
             lastLogin = entity.lastLogin,

@@ -32,8 +32,11 @@ fun invalidParameter(param: String, vararg allowedParameters: String): Nothing =
 fun unauthorized(reason: String = "Unauthorized"): Nothing =
     throw ApiException(ErrorDtoType.UNAUTHORIZED, "reason" to reason)
 
-fun conflict(): Nothing =
-    throw ApiException(ErrorDtoType.CONFLICT)
+fun conflict(reason: String): Nothing =
+    throw ApiException(ErrorDtoType.CONFLICT, "reason" to reason)
+
+fun unavailable(reason: String): Nothing =
+    throw ApiException(ErrorDtoType.UNAVAILABLE, "reason" to reason)
 
 fun forbidden(vararg requiredPermissions: PermissionType): Nothing =
     throw ApiException(ErrorDtoType.NO_PERMISSION, "requiredPermissions" to requiredPermissions.joinToString(",") { it.id })

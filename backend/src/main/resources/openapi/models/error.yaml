@@ -8,3 +8,36 @@ Error:
       type: object
       additionalProperties: true
       example: {"parameterName": "username"}
+
+Conflict:
+  type: object
+  properties:
+    type:
+      type: string
+      example: "CONFLICT"
+    data:
+      type: object
+      additionalProperties: true
+      example: {"reason": "The email address is already verified."}
+
+Unavailable:
+  type: object
+  properties:
+    type:
+      type: string
+      example: "UNAVAILABLE"
+    data:
+      type: object
+      additionalProperties: true
+      example: { "reason": "SMTP is not configured." }
+
+RateLimited:
+  type: object
+  properties:
+    type:
+      type: string
+      example: "RATE_LIMIT_EXCEEDED"
+    data:
+      type: object
+      additionalProperties: true
+      example: {}

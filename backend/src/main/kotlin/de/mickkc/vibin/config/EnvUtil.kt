@@ -79,6 +79,8 @@ object EnvUtil {
     val WIDGET_IMAGE_CACHE_RATE_LIMIT_REQUESTS = EnvKey("WIDGET_IMAGE_CACHE_RATE_LIMIT_REQUESTS", 5, String::toIntOrNull)
     val LOGIN_RATE_LIMIT_ATTEMPTS = EnvKey("LOGIN_RATE_LIMIT_ATTEMPTS", 5, String::toIntOrNull)
     val LOGIN_RATE_LIMIT_TIMEOUT = EnvKey("LOGIN_RATE_LIMIT_TIMEOUT", 10, String::toIntOrNull)
+    val EMAIL_VERIFICATION_RATE_LIMIT_REQUESTS = EnvKey("EMAIL_VERIFICATION_RATE_LIMIT_REQUESTS", 2, String::toIntOrNull)
+    val EMAIL_VERIFICATION_RATE_LIMIT_TIMEOUT = EnvKey("EMAIL_VERIFICATION_RATE_LIMIT_TIMEOUT", 10, String::toIntOrNull)
     val CHROME_BINARY_PATH = EnvKey("CHROME_BINARY_PATH", "/usr/bin/chromium", String::trim)
     val WIDGET_IMAGE_RENDER_POOL_SIZE = EnvKey("WIDGET_IMAGE_RENDER_POOL_SIZE", 2, String::toIntOrNull)
     val SCRAPING_POOL_SIZE = EnvKey("SCRAPING_POOL_SIZE", 2, String::toIntOrNull)
@@ -89,6 +91,7 @@ object EnvUtil {
     val SMTP_STARTTLS_REQUIRED = EnvKey("SMTP_STARTTLS_REQUIRED", true, String::toBooleanStrictOrNull)
     val SMTP_SSL = EnvKey("SMTP_SSL", true, String::toBooleanStrictOrNull)
 
+    val SMTP_MOCK = EnvKey("SMTP_MOCK", false, String::toBooleanStrictOrNull)
     val SMTP_AUTH = EnvKey("SMTP_AUTH", true, String::toBooleanStrictOrNull)
     val SMTP_USERNAME = EnvKey("SMTP_USERNAME", null, String::trim)
     val SMTP_PASSWORD = EnvKey("SMTP_PASSWORD", null, String::trim)

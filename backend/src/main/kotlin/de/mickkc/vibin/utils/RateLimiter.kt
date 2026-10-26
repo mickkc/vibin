@@ -96,6 +96,10 @@ class RateLimiter(
         rateLimits.remove(clientId)
     }
 
+    fun resetAll() {
+        rateLimits.clear()
+    }
+
     /**
      * Cleans up expired entries.
      */

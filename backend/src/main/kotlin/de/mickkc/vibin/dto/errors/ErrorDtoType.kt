@@ -12,4 +12,5 @@ enum class ErrorDtoType(val code: HttpStatusCode) {
     RATE_LIMIT_EXCEEDED(HttpStatusCode.TooManyRequests),
 
     CONFLICT(HttpStatusCode.Conflict),
+    UNAVAILABLE(HttpStatusCode.ServiceUnavailable)
 }

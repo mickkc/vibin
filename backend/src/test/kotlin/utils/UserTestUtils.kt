@@ -9,11 +9,12 @@ import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.PermissionRepo
 import de.mickkc.vibin.repos.SessionRepo
 import de.mickkc.vibin.repos.UserRepo
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object UserTestUtils {
 
     suspend fun createTestUser(username: String, password: String): UserEntity {
-        val user = UserRepo.updateOrCreateUser(null, UserEditDto(
+        val created = UserRepo.updateOrCreateUser(null, UserEditDto(
             username = username,
             password = password,
             email = null,
@@ -24,8 +25,8 @@ object UserTestUtils {
             oldPassword = null,
             description = null
         ))
-        assertNotNull(user)
-        return user
+        assertNotNull(created)
+        return created.user
     }
 
     suspend fun createUserWithSession(username: String, password: String): Pair<UserEntity, String> {
@@ -48,4 +49,8 @@ object UserTestUtils {
         }
         return user to token
     }
+
+    fun getAdminUser(): UserEntity = UserRepo.getById(1)!!
+    fun setUserEmail(user: UserEntity, email: String?) = transaction { user.email = email }
+    fun setUserEmailVerified(user: UserEntity, verified: Boolean) = transaction { user.emailVerified = verified }
 }
