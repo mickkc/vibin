@@ -91,6 +91,24 @@ Validate:
             schema:
               $ref: '../models/error.yaml#/Error'
 
+CanVerifyEmail:
+  get:
+    summary: Check if the email address for the current user can be verified
+    operationId: checkCanVerifyEmail
+    tags:
+      - Auth
+    security:
+      - tokenAuth: []
+    responses:
+      200:
+        description: True if the email address can be verified by sending a verification email to it,
+          false if Sending mails is not configured, the user's email address is already configured or invalid,
+          or the rate limiter prevents emails from being sent for that user.
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+
 VerifyEmail:
   post:
     summary: Resend the verification email for the logged in user
