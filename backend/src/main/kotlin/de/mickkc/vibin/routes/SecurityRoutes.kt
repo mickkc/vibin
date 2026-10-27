@@ -5,6 +5,7 @@ import de.mickkc.vibin.config.EnvUtil.LOGIN_RATE_LIMIT_ATTEMPTS
 import de.mickkc.vibin.config.EnvUtil.LOGIN_RATE_LIMIT_TIMEOUT
 import de.mickkc.vibin.db.TotpType
 import de.mickkc.vibin.dto.TotpStatusDto
+import de.mickkc.vibin.mail.MailSender
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.PermissionRepo
 import de.mickkc.vibin.repos.SecurityRepo
@@ -227,10 +228,9 @@ fun Application.configureSecurityRoutes() = routing {
         }
 
         postP("/api/auth/mail/verify", PermissionType.MANAGE_OWN_USER) {
-            val clientId = call.getClientId()
             val user = call.getUser() ?: unauthorized()
 
-            val result = MailVerificationManager.sendVerificationMail(user, clientId)
+            val result = MailVerificationManager.sendVerificationMail(user)
 
             when (result) {
                 MailVerificationManager.MailVerificationResult.AlreadyVerified -> conflict("The email address is already verified.")
@@ -239,6 +239,21 @@ fun Application.configureSecurityRoutes() = routing {
                 MailVerificationManager.MailVerificationResult.RateLimited -> rateLimitExceeded()
                 MailVerificationManager.MailVerificationResult.Sent -> call.success()
             }
+        }
+
+        getP("/api/auth/mail/can-verify", PermissionType.MANAGE_OWN_USER) {
+            if (!MailSender.configured) {
+                return@getP call.success(false)
+            }
+            val user = call.getUser() ?: unauthorized()
+            if (user.email.isNullOrBlank() || user.emailVerified) {
+                return@getP call.success(false)
+            }
+            if (!MailVerificationManager.rateLimiter.check(user.id.value.toString())) {
+                return@getP call.success(false)
+            }
+
+            return@getP call.success(true)
         }
     }
 

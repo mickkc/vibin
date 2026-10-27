@@ -69,6 +69,9 @@ paths:
   /api/auth/mail/verify:
     $ref: 'methods/auth.yaml#/VerifyEmail'
 
+  /api/auth/mail/can-verify:
+    $ref: 'methods/auth.yaml#/CanVerifyEmail'
+
   # █▄▄ ▄▀█ ▀█▀ █▀▀ █░█
   # █▄█ █▀█ ░█░ █▄▄ █▀█
 

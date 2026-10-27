@@ -18,6 +18,8 @@ User:
     email:
       type: string
       nullable: true
+    emailVerified:
+      type: boolean
     isActive:
       type: boolean
     isAdmin:

@@ -67,7 +67,7 @@ fun Application.configureUserRoutes() = routing {
 
             val created = UserRepo.updateOrCreateUser(null, userEditDto)!!
             if (created.shouldVerifyEmail) {
-                MailVerificationManager.sendVerificationMail(created.user, call.getClientId())
+                MailVerificationManager.sendVerificationMail(created.user)
             }
 
             call.respond(UserRepo.toDto(created.user))
@@ -106,7 +106,7 @@ fun Application.configureUserRoutes() = routing {
 
             val updated = UserRepo.updateOrCreateUser(user.id.value, userEditDto) ?: notFound()
             if (updated.shouldVerifyEmail) {
-                MailVerificationManager.sendVerificationMail(updated.user, call.getClientId())
+                MailVerificationManager.sendVerificationMail(updated.user)
             }
 
             call.respond(UserRepo.toDto(updated.user))
