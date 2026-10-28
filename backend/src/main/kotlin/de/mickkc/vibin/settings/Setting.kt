@@ -5,4 +5,5 @@ open class Setting<T>(
     val parser: (String) -> T?,
     val serializer: (T) -> String,
     val defaultValue: T,
+    val validationRegex: Regex? = null
 )

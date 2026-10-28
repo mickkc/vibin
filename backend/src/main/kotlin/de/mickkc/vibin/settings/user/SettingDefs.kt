@@ -91,12 +91,14 @@ object LastFmUserApiKey : UserSetting<String>(
     key = "lastfm_user_api_key",
     parser = { value -> value },
     serializer = { value -> value },
-    defaultValue = ""
+    defaultValue = "",
+    validationRegex = Regex("^[0-9a-fA-F]{32}$")
 )
 
 object LastFmUserSharedSecret : UserSetting<String>(
     key = "lastfm_user_shared_secret",
     parser = { value -> value },
     serializer = { value -> value },
-    defaultValue = ""
+    defaultValue = "",
+    validationRegex = Regex("^[0-9a-fA-F]{32}$")
 )

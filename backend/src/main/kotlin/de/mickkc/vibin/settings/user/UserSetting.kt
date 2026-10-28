@@ -7,9 +7,11 @@ open class UserSetting<T>(
     parser: (String) -> T,
     serializer: (T) -> String,
     defaultValue: T,
+    validationRegex: Regex? = null
 ) : Setting<T>(
     key,
     parser,
     serializer,
     defaultValue,
+    validationRegex
 )

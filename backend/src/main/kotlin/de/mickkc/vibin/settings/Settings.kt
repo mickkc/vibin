@@ -26,16 +26,42 @@ object Settings {
         return parsedValue
     }
 
+    fun isValid(serverSetting: ServerSetting<*>): Boolean {
+        if (serverSetting.validationRegex == null) return true
+        val value = SettingsRepo.getServerSettingValue(serverSetting.key) ?: return true
+
+        return serverSetting.validationRegex.matches(value)
+    }
+
     fun <T>get(userSetting: UserSetting<T>, userId: Long): T {
         val stringValue = SettingsRepo.getUserSettingValue(userSetting.key, userId)
         val parsedValue = stringValue?.let { userSetting.parser(it) }
         return parsedValue ?: userSetting.defaultValue
     }
 
+    fun isValid(userSetting: UserSetting<*>, userId: Long): Boolean {
+        if (userSetting.validationRegex == null) return true
+        val value = SettingsRepo.getUserSettingValue(userSetting.key, userId) ?: return true
+
+        return userSetting.validationRegex.matches(value)
+    }
+
     fun <T>getOrNull(userSetting: UserSetting<T>, userId: Long): T? {
         val stringValue = SettingsRepo.getUserSettingValue(userSetting.key, userId)
         val parsedValue = stringValue?.let { userSetting.parser(it) }
         return parsedValue
+    }
+
+    fun allValid(settings: List<Setting<*>>, userId: Long): Boolean {
+        return settings.all { setting ->
+            if (setting is ServerSetting<*>) {
+                return@all isValid(setting)
+            }
+            else if (setting is UserSetting<*>) {
+                return@all isValid(setting, userId)
+            }
+            return@all false
+        }
     }
 
     enum class SettingSource {

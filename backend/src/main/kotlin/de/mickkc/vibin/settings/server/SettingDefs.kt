@@ -92,14 +92,16 @@ object LastFmApiKey : ServerSetting<String>(
     key = "lastfm_api_key",
     parser = { value -> value },
     serializer = { value -> value },
-    defaultValue = ""
+    defaultValue = "",
+    validationRegex = Regex("^[0-9a-fA-F]{32}$")
 )
 
 object LastFmSharedSecret : ServerSetting<String>(
     key = "lastfm_shared_secret",
     parser = { value -> value },
     serializer = { value -> value },
-    defaultValue = ""
+    defaultValue = "",
+    validationRegex = Regex("^[0-9a-fA-F]{32}$")
 )
 
 object LyricFilePathTemplate : ServerSetting<String>(

@@ -29,6 +29,7 @@ fun Application.configureSettingRoutes() = routing {
 
             val settingKey = call.getStringParameter("settingKey")
             val setting = SettingsRepo.getServerSetting(settingKey)
+            val settingValue = call.receive<String>()
 
             if (setting == null) {
                 val userSetting = SettingsRepo.getUserSetting(settingKey) ?: notFound()
@@ -36,8 +37,11 @@ fun Application.configureSettingRoutes() = routing {
                 if (!call.hasPermissions(PermissionType.CHANGE_OWN_USER_SETTINGS))
                     forbidden()
 
+                if (userSetting.validationRegex != null && !userSetting.validationRegex.matches(settingValue)) {
+                    invalidParameter("value", userSetting.validationRegex.pattern)
+                }
+
                 val userId = call.getUserId() ?: unauthorized()
-                val settingValue = call.receive<String>()
                 val parsedValue = userSetting.parser(settingValue)
                     ?: invalidParameter("body")
 
@@ -48,7 +52,10 @@ fun Application.configureSettingRoutes() = routing {
                 if (!call.hasPermissions(PermissionType.CHANGE_SERVER_SETTINGS))
                     forbidden()
 
-                val settingValue = call.receive<String>()
+                if (setting.validationRegex != null && !setting.validationRegex.matches(settingValue)) {
+                    invalidParameter("value", setting.validationRegex.pattern)
+                }
+
                 val parsedValue = setting.parser(settingValue)
                     ?: invalidParameter("body")
 
