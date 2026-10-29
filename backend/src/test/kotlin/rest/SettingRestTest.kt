@@ -9,6 +9,7 @@ import kotlinx.serialization.json.Json
 import utils.UserTestUtils
 import utils.testApp
 import de.mickkc.vibin.dto.KeyValueDto
+import de.mickkc.vibin.dto.SettingDto
 import de.mickkc.vibin.parsing.MetadataFetchingType
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.settings.Settings
@@ -34,20 +35,20 @@ class SettingRestTest {
 
         assertTrue(response.status.isSuccess())
 
-        val settings = response.body<Map<String, @Serializable @Contextual Any>>()
+        val settings = response.body<Map<String, SettingDto<*>>>()
 
         serverSettings.forEach {
             assertTrue(settings.containsKey(it.key))
 
             when (val actualValue = Settings.get(it)) {
                 is MetadataFetchingType -> {
-                    assertEquals(actualValue.name, settings[it.key])
+                    assertEquals(actualValue.name, settings[it.key]!!.value)
                 }
                 is Number -> {
-                    assertEquals(actualValue.toDouble(), settings[it.key])
+                    assertEquals(actualValue.toDouble(), settings[it.key]!!.value)
                 }
                 else -> {
-                    assertEquals(actualValue, settings[it.key])
+                    assertEquals(actualValue, settings[it.key]!!.value)
                 }
             }
         }
@@ -315,8 +316,8 @@ class SettingRestTest {
         val getResponse = client.get("/api/settings/server")
         assertTrue(getResponse.status.isSuccess())
 
-        val settings = getResponse.body<Map<String, @Serializable @Contextual Any>>()
-        assertEquals("de", settings["metadata_language"])
+        val settings = getResponse.body<Map<String, SettingDto<*>>>()
+        assertEquals("de", settings["metadata_language"]!!.value)
     }
 
     @Test
@@ -332,8 +333,8 @@ class SettingRestTest {
         val getResponse = client.get("/api/settings/user")
         assertTrue(getResponse.status.isSuccess())
 
-        val settings = getResponse.body<Map<String, @Serializable @Contextual Any>>()
-        assertEquals(false, settings["show_activities_to_others"])
+        val settings = getResponse.body<Map<String, SettingDto<*>>>()
+        assertEquals(false, settings["show_activities_to_others"]!!.value)
     }
 
     // endregion
