@@ -1,0 +1,12 @@
+Scrobbler:
+  type: object
+  properties:
+    id:
+      type: string
+      example: "last_fm"
+    name:
+      type: string
+      example: "Last.fm"
+    available:
+      type: boolean
+      example: true

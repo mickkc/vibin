@@ -1,0 +1,24 @@
+Settings:
+  type: object
+  additionalProperties:
+    type: object
+    properties:
+      key:
+        type: string
+        example: "extended_metadata"
+      value:
+        type:
+          - string
+          - number
+          - array
+          - object
+        example: true
+      validationRegex:
+        type: string
+        nullable: true
+        example: "(true|false)"
+  example: {
+    artist_name_delimiters: { key: "artist_name_delimiters", value: [", "," & "," feat. "," ft. ","; "], validationRegex: null },
+    metadata_language: { key: "extended_metadata", value: false, validationRegex: null},
+    lastfm_user_api_key: { key: "lastfm_user_api_key", value: "", validationRegex: "^[0-9a-fA-F]{32}$"},
+  }
