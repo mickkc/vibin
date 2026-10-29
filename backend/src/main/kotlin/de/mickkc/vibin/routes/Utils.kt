@@ -38,8 +38,12 @@ fun conflict(reason: String): Nothing =
 fun unavailable(reason: String): Nothing =
     throw ApiException(ErrorDtoType.UNAVAILABLE, "reason" to reason)
 
-fun forbidden(vararg requiredPermissions: PermissionType): Nothing =
+fun noPermission(vararg requiredPermissions: PermissionType): Nothing =
     throw ApiException(ErrorDtoType.NO_PERMISSION, "requiredPermissions" to requiredPermissions.joinToString(",") { it.id })
+
+fun forbidden(reason: String = "forbidden"): Nothing =
+    throw ApiException(ErrorDtoType.FORBIDDEN, "reason" to reason)
+
 
 fun notFound(): Nothing =
     throw ApiException(ErrorDtoType.NOT_FOUND)
@@ -101,7 +105,7 @@ fun ApplicationCall.getClientId(): String {
 fun Route.getP(path: String, vararg permissions: PermissionType, body: suspend RoutingContext.() -> Unit) {
     get(path) {
         if (permissions.isNotEmpty() && !call.hasPermissions(*permissions)) {
-            forbidden(*permissions)
+            noPermission(*permissions)
         }
         body()
     }
@@ -110,7 +114,7 @@ fun Route.getP(path: String, vararg permissions: PermissionType, body: suspend R
 fun Route.postP(path: String, vararg permissions: PermissionType, body: suspend RoutingContext.() -> Unit) {
     post(path) {
         if (permissions.isNotEmpty() && !call.hasPermissions(*permissions)) {
-            forbidden(*permissions)
+            noPermission(*permissions)
         }
         body()
     }
@@ -119,7 +123,7 @@ fun Route.postP(path: String, vararg permissions: PermissionType, body: suspend 
 fun Route.putP(path: String, vararg permissions: PermissionType, body: suspend RoutingContext.() -> Unit) {
     put(path) {
         if (permissions.isNotEmpty() && !call.hasPermissions(*permissions)) {
-            forbidden(*permissions)
+            noPermission(*permissions)
         }
         body()
     }
@@ -128,7 +132,7 @@ fun Route.putP(path: String, vararg permissions: PermissionType, body: suspend R
 fun Route.deleteP(path: String, vararg permissions: PermissionType, body: suspend RoutingContext.() -> Unit) {
     delete(path) {
         if (permissions.isNotEmpty() && !call.hasPermissions(*permissions)) {
-            forbidden(*permissions)
+            noPermission(*permissions)
         }
         body()
     }

@@ -34,7 +34,7 @@ fun Application.configureScrobblingRoutes() = routing {
             val scrobbler = ScrobblingManager.getScrobblerById(scrobblerId) ?: notFound()
 
             if (state && !scrobbler.isAvailable(userId))
-                forbidden()
+                forbidden("Scrobbler is not available")
 
             ScrobblingManager.setScrobblerEnabled(userId, scrobblerId, state)
 

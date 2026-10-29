@@ -45,7 +45,7 @@ fun Application.configurePlaylistRoutes() = routing {
             val userId = call.getLongParameter("userId")
 
             if (requestingUserId != userId && !call.hasPermissions(PermissionType.VIEW_USERS)) {
-                forbidden(PermissionType.VIEW_USERS)
+                noPermission(PermissionType.VIEW_USERS)
             }
 
             val playlists = PlaylistRepo.getAllForUser(userId, userId == requestingUserId)
@@ -73,7 +73,7 @@ fun Application.configurePlaylistRoutes() = routing {
             // Check permissions for public/private playlists
             if ((editDto.isPublic == true && !call.hasPermissions(PermissionType.CREATE_PUBLIC_PLAYLISTS) ||
                 (editDto.isPublic == false && !call.hasPermissions(PermissionType.CREATE_PRIVATE_PLAYLISTS)))) {
-                forbidden(if (editDto.isPublic) PermissionType.CREATE_PUBLIC_PLAYLISTS else PermissionType.CREATE_PRIVATE_PLAYLISTS)
+                noPermission(if (editDto.isPublic) PermissionType.CREATE_PUBLIC_PLAYLISTS else PermissionType.CREATE_PRIVATE_PLAYLISTS)
             }
 
             return editDto

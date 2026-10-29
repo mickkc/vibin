@@ -40,7 +40,7 @@ fun Application.configureSettingRoutes() = routing {
                 val userSetting = SettingsRepo.getUserSetting(settingKey) ?: notFound()
 
                 if (!call.hasPermissions(PermissionType.CHANGE_OWN_USER_SETTINGS))
-                    forbidden()
+                    noPermission(PermissionType.CHANGE_OWN_USER_SETTINGS)
 
                 if (userSetting.validationRegex != null && !userSetting.validationRegex.matches(settingValue)) {
                     invalidParameter("value", userSetting.validationRegex.pattern)
@@ -55,7 +55,7 @@ fun Application.configureSettingRoutes() = routing {
             }
             else {
                 if (!call.hasPermissions(PermissionType.CHANGE_SERVER_SETTINGS))
-                    forbidden()
+                    noPermission(PermissionType.CHANGE_SERVER_SETTINGS)
 
                 if (setting.validationRegex != null && !setting.validationRegex.matches(settingValue)) {
                     invalidParameter("value", setting.validationRegex.pattern)

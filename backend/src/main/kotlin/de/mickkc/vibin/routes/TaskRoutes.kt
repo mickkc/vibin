@@ -61,7 +61,7 @@ fun Application.configureTaskRoutes() = routing {
         val userId = SessionRepo.validateAndUpdateToken(token) ?: unauthorized()
 
         if (!PermissionRepo.hasPermission(userId, PermissionType.MANAGE_TASKS)) {
-            forbidden(PermissionType.MANAGE_TASKS)
+            noPermission(PermissionType.MANAGE_TASKS)
         }
 
         val json = Gson().newBuilder().serializeNulls().create()
