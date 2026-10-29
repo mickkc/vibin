@@ -7,6 +7,8 @@ import io.ktor.client.*
 
 abstract class Scrobbler(val client: HttpClient) {
 
+    abstract val id: String
+
     /**
      * Human-readable name of the service this implementation scrobbles to.
      */

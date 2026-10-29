@@ -24,6 +24,9 @@ class LastFmScrobbler(client: HttpClient) : Scrobbler(client) {
     private val logger = LoggerFactory.getLogger(LastFmScrobbler::class.java)
     private val baseUrl = "https://ws.audioscrobbler.com/2.0/"
 
+    override val id: String
+        get() = "last_fm"
+
     override val name: String
         get() = "Last.fm"
 

@@ -1,5 +1,6 @@
 package de.mickkc.vibin.settings
 
+import de.mickkc.vibin.dto.SettingDto
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.PermissionRepo
 import de.mickkc.vibin.repos.SettingsRepo
@@ -28,7 +29,7 @@ object Settings {
 
     fun isValid(serverSetting: ServerSetting<*>): Boolean {
         if (serverSetting.validationRegex == null) return true
-        val value = SettingsRepo.getServerSettingValue(serverSetting.key) ?: return true
+        val value = SettingsRepo.getServerSettingValue(serverSetting.key) ?: serverSetting.serializer(serverSetting.defaultValue)
 
         return serverSetting.validationRegex.matches(value)
     }
@@ -41,7 +42,7 @@ object Settings {
 
     fun isValid(userSetting: UserSetting<*>, userId: Long): Boolean {
         if (userSetting.validationRegex == null) return true
-        val value = SettingsRepo.getUserSettingValue(userSetting.key, userId) ?: return true
+        val value = SettingsRepo.getUserSettingValue(userSetting.key, userId) ?: userSetting.serializer(userSetting.defaultValue)
 
         return userSetting.validationRegex.matches(value)
     }
@@ -97,5 +98,17 @@ object Settings {
     fun <T>set(setting: ServerSetting<T>, value: T) {
         val stringValue = setting.serializer(value)
         SettingsRepo.updateServerSetting(setting, stringValue)
+    }
+
+    fun<T> toDto(setting: Setting<T>, userId: Long): SettingDto<T> {
+        return SettingDto(
+            key = setting.key,
+            value = when (setting) {
+                is ServerSetting<T> -> get(setting)
+                is UserSetting<T> -> get(setting, userId)
+                else -> throw IllegalArgumentException("Invalid setting type: $setting")
+            },
+            validationRegex = setting.validationRegex?.pattern
+        )
     }
 }

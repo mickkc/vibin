@@ -8,21 +8,26 @@ import io.ktor.server.routing.*
 import de.mickkc.vibin.dto.KeyValueDto
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.SettingsRepo
+import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.settings.server.serverSettings
 import de.mickkc.vibin.settings.user.userSettings
+import kotlin.to
 
 fun Application.configureSettingRoutes() = routing {
     authenticate("tokenAuth") {
 
         getP("/api/settings/server", PermissionType.CHANGE_SERVER_SETTINGS) {
-            val settings = SettingsRepo.getAllValues(serverSettings)
-            call.respond(settings)
+            val userId = call.getUserId() ?: unauthorized()
+            call.respond(serverSettings.associate {
+                it.key to Settings.toDto(it, userId)
+            })
         }
 
         getP("/api/settings/user", PermissionType.CHANGE_OWN_USER_SETTINGS) {
             val userId = call.getUserId() ?: unauthorized()
-            val settings = SettingsRepo.getAllValues(userId, userSettings)
-            call.respond(settings)
+            call.respond(userSettings.associate {
+                it.key to Settings.toDto(it, userId)
+            })
         }
 
         putP("/api/settings/{settingKey}") {
