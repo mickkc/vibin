@@ -5,6 +5,7 @@ import de.mickkc.vibin.db.TrackListenDurationEntity
 import de.mickkc.vibin.db.TrackListenDurationTable
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.tracks.TrackEntity
+import de.mickkc.vibin.scrobbling.ScrobblingManager
 import de.mickkc.vibin.utils.DateTimeUtils
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.Sum
@@ -174,6 +175,13 @@ object ListenTrackingRepo {
             this.listenedDurationSeconds = normalizedDuration
             this.createdAt = listen.created
         }
+
+        ScrobblingManager.scrobble(
+            userId = listen.userId,
+            trackId = listen.trackId,
+            duration = listen.totalListenedSeconds,
+            start = listen.created
+        )
 
         ListenRepo.listenedTo(
             userId = listen.userId,
