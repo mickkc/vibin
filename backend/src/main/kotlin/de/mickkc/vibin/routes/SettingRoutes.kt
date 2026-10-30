@@ -42,7 +42,7 @@ fun Application.configureSettingRoutes() = routing {
                 if (!call.hasPermissions(PermissionType.CHANGE_OWN_USER_SETTINGS))
                     noPermission(PermissionType.CHANGE_OWN_USER_SETTINGS)
 
-                if (userSetting.validationRegex != null && !userSetting.validationRegex.matches(settingValue)) {
+                if (settingValue.isNotEmpty() && userSetting.validationRegex != null && !userSetting.validationRegex.matches(settingValue)) {
                     invalidParameter("value", userSetting.validationRegex.pattern)
                 }
 
@@ -57,7 +57,7 @@ fun Application.configureSettingRoutes() = routing {
                 if (!call.hasPermissions(PermissionType.CHANGE_SERVER_SETTINGS))
                     noPermission(PermissionType.CHANGE_SERVER_SETTINGS)
 
-                if (setting.validationRegex != null && !setting.validationRegex.matches(settingValue)) {
+                if (settingValue.isNotEmpty() && setting.validationRegex != null && !setting.validationRegex.matches(settingValue)) {
                     invalidParameter("value", setting.validationRegex.pattern)
                 }
 
