@@ -4,6 +4,7 @@ import de.mickkc.vibin.db.tracks.TrackEntity
 import de.mickkc.vibin.repos.SettingsRepo
 import de.mickkc.vibin.repos.TrackRepo
 import de.mickkc.vibin.scrobbling.Scrobbler
+import de.mickkc.vibin.scrobbling.ScrobblerStatus
 import de.mickkc.vibin.scrobbling.lastfm.settings.LastFmUserCredentialsPassword
 import de.mickkc.vibin.scrobbling.lastfm.settings.LastFmUserCredentialsUsername
 import de.mickkc.vibin.scrobbling.lastfm.settings.LastFmUserSessionKey
@@ -99,12 +100,16 @@ class LastFmScrobbler(client: HttpClient) : Scrobbler(client) {
         })
 
         if (!response.status.isSuccess()) {
-            logger.error("An error occurred while requesting method ${params["method"]} from Last.fm. " +
-                    "${response.status.value} - ${response.status.description}:\n${response.bodyAsText()}")
+            val message = "An error occurred while requesting method ${params["method"]} from Last.fm. " +
+                    "${response.status.value} - ${response.status.description}:\n${response.bodyAsText()}"
+            logger.error(message)
+            setStatus(userId, ScrobblerStatus.error(message))
             return null
         }
 
-        return response.body<T>()
+        return response.body<T>().also {
+            setStatus(userId, ScrobblerStatus.success())
+        }
     }
 
     override suspend fun scrobble(userId: Long, track: TrackEntity, duration: Long, timestamp: Long) {

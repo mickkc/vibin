@@ -93,7 +93,8 @@ SupervisorJob()
         return ScrobblerDto(
             id = scrobbler.id,
             name = scrobbler.name,
-            available = userId?.let { scrobbler.isAvailable(it) } ?: true
+            available = userId?.let { scrobbler.isAvailable(it) } ?: true,
+            status = userId?.let { scrobbler.getStatus(it) }
         )
     }
 }

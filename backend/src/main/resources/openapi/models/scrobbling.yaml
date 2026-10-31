@@ -10,3 +10,18 @@ Scrobbler:
     available:
       type: boolean
       example: true
+    status:
+      $ref: '#/ScrobblerStatus'
+      nullable: true
+
+ScrobblerStatus:
+  type: object
+  properties:
+    error:
+      type: boolean
+      nullable: false
+      example: false
+    message:
+      type: string
+      nullable: true
+      example: null

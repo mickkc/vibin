@@ -4,6 +4,7 @@ import de.mickkc.vibin.db.tracks.TrackEntity
 import de.mickkc.vibin.settings.Setting
 import de.mickkc.vibin.settings.Settings
 import io.ktor.client.*
+import java.util.concurrent.ConcurrentHashMap
 
 abstract class Scrobbler(val client: HttpClient) {
 
@@ -18,6 +19,8 @@ abstract class Scrobbler(val client: HttpClient) {
      * A list of settings that apply to this scrobbler.
      */
     open val settings: List<Setting<*>> = emptyList()
+
+    private val statusMap = ConcurrentHashMap<Long, ScrobblerStatus>()
 
     /**
      * Called when the currently playing track changes, or a track is resumed after being paused.
@@ -46,4 +49,12 @@ abstract class Scrobbler(val client: HttpClient) {
      * @return true if the scrobbler can be used for that user, false otherwise.
      */
     open fun isAvailable(userId: Long): Boolean = Settings.allValid(settings, userId)
+
+    protected fun setStatus(userId: Long, status: ScrobblerStatus) {
+        statusMap[userId] = status
+    }
+
+    fun getStatus(userId: Long): ScrobblerStatus? {
+        return statusMap[userId]
+    }
 }
