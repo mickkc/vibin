@@ -1,5 +1,9 @@
 package rest
 
+import de.mickkc.vibin.db.SettingsEntity
+import de.mickkc.vibin.db.SettingsTable
+import de.mickkc.vibin.db.UserSettingsEntity
+import de.mickkc.vibin.db.UserSettingsTable
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -13,15 +17,19 @@ import de.mickkc.vibin.dto.SettingDto
 import de.mickkc.vibin.parsing.MetadataFetchingType
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.settings.Settings
+import de.mickkc.vibin.settings.SettingsCrypto
 import de.mickkc.vibin.settings.server.MetadataLanguage
 import de.mickkc.vibin.settings.server.WelcomeTexts
 import de.mickkc.vibin.settings.server.serverSettings
 import de.mickkc.vibin.settings.user.BlockedArtists
 import de.mickkc.vibin.settings.user.BlockedTags
 import de.mickkc.vibin.settings.user.ShowActivitiesToOthers
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.transactions.transaction
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class SettingRestTest {
@@ -156,6 +164,23 @@ class SettingRestTest {
     }
 
     @Test
+    fun testUpdateServerSetting_Encrypted() = testApp { client ->
+        val response = client.put("/api/settings/spotify_client_secret") {
+            setBody("password123")
+        }
+        assertTrue(response.status.isSuccess())
+
+        val dbValue = transaction { SettingsEntity.find { SettingsTable.key eq "spotify_client_secret" }.singleOrNull() }?.value
+        assertNotNull(dbValue)
+        assertTrue(dbValue.startsWith("enc:v1:"))
+        assertEquals("password123", SettingsCrypto.decrypt(dbValue))
+
+        val valueResponse = client.get("/api/settings/server")
+        val settings = valueResponse.body<Map<String, SettingDto<*>>>()
+        assertEquals("password123", settings["spotify_client_secret"]!!.value)
+    }
+
+    @Test
     fun testUpdateServerSetting_NoPermission() = testApp(false) { client ->
         val (_, token) = UserTestUtils.createUserAndSessionWithPermissions(
             username = "regularuser",
@@ -240,6 +265,23 @@ class SettingRestTest {
 
         val updatedValue = Settings.get(BlockedTags, 1)
         assertTrue(updatedValue.isEmpty())
+    }
+
+    @Test
+    fun testUpdateUserSetting_Encrypted() = testApp { client ->
+        val response = client.put("/api/settings/lastfm_user_credentials_password") {
+            setBody("password123")
+        }
+        assertTrue(response.status.isSuccess())
+
+        val dbValue = transaction { UserSettingsEntity.find { (UserSettingsTable.key eq "lastfm_user_credentials_password") and (UserSettingsTable.userId eq 1) }.singleOrNull() }?.value
+        assertNotNull(dbValue)
+        assertTrue(dbValue.startsWith("enc:v1:"))
+        assertEquals("password123", SettingsCrypto.decrypt(dbValue))
+
+        val valueResponse = client.get("/api/settings/user")
+        val settings = valueResponse.body<Map<String, SettingDto<*>>>()
+        assertEquals("password123", settings["lastfm_user_credentials_password"]!!.value)
     }
 
     @Test
