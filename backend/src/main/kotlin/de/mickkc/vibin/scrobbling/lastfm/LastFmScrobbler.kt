@@ -1,5 +1,6 @@
 package de.mickkc.vibin.scrobbling.lastfm
 
+import de.mickkc.vibin.auth.CryptoUtil
 import de.mickkc.vibin.db.tracks.TrackEntity
 import de.mickkc.vibin.repos.SettingsRepo
 import de.mickkc.vibin.repos.TrackRepo
@@ -18,7 +19,6 @@ import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import org.slf4j.LoggerFactory
-import java.security.MessageDigest
 
 class LastFmScrobbler(client: HttpClient) : Scrobbler(client) {
 
@@ -55,9 +55,7 @@ class LastFmScrobbler(client: HttpClient) : Scrobbler(client) {
             .toSortedMap()
             .entries.joinToString("") { (k, v) -> k + v } + secret
 
-        return MessageDigest.getInstance("MD5")
-            .digest(raw.toByteArray(Charsets.UTF_8))
-            .joinToString("") { "%02x".format(it) }
+        return CryptoUtil.hashMd5(raw)
     }
 
     /**
@@ -70,16 +68,21 @@ class LastFmScrobbler(client: HttpClient) : Scrobbler(client) {
      * @return The session key or null if an error occurred (logged).
      */
     private suspend fun getSessionKey(userId: Long): String? {
+        val username = Settings.get(LastFmUserCredentialsUsername, userId)
+        val password = Settings.get(LastFmUserCredentialsPassword, userId)
+
+        val credentialsHash = CryptoUtil.hashMd5(username + password)
+
         val cachedKey = Settings.get(LastFmUserSessionKey, userId).takeIf { it.isNotBlank() }
-        if (cachedKey != null)
-            return cachedKey
+        if (cachedKey != null && cachedKey.startsWith("$credentialsHash:"))
+            return cachedKey.substringAfter(":")
 
         return call<GetMobileSessionResponse>(userId, buildMap {
             put("method", "auth.getMobileSession")
-            put("username", Settings.get(LastFmUserCredentialsUsername, userId))
-            put("password", Settings.get(LastFmUserCredentialsPassword, userId))
+            put("username", username)
+            put("password", password)
         })?.session?.key?.also {
-            SettingsRepo.updateUserSetting(LastFmUserSessionKey, userId, it)
+            SettingsRepo.updateUserSetting(LastFmUserSessionKey, userId, "$credentialsHash:$it")
         }
     }
 
