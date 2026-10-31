@@ -15,5 +15,6 @@ object LastFmUserCredentialsPassword : UserSetting<String>(
     parser = { value -> value },
     serializer = { value -> value },
     defaultValue = "",
-    validationRegex = Regex("^(?=.*\\S).+$")
+    validationRegex = Regex("^(?=.*\\S).+$"),
+    secret = true
 )

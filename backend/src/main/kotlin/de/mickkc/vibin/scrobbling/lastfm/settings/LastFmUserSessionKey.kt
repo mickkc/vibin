@@ -6,5 +6,6 @@ object LastFmUserSessionKey : UserSetting<String>(
     key = "lastfm_user_session_key",
     parser = { value -> value },
     serializer = { value -> value },
-    defaultValue = ""
+    defaultValue = "",
+    secret = true
 )

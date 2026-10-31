@@ -85,7 +85,8 @@ object SpotifyClientSecret : ServerSetting<String>(
     key = "spotify_client_secret",
     parser = { value -> value },
     serializer = { value -> value },
-    defaultValue = ""
+    defaultValue = "",
+    secret = true
 )
 
 object LastFmApiKey : ServerSetting<String>(
@@ -93,7 +94,8 @@ object LastFmApiKey : ServerSetting<String>(
     parser = { value -> value },
     serializer = { value -> value },
     defaultValue = "",
-    validationRegex = Regex("^[0-9a-fA-F]{32}$")
+    validationRegex = Regex("^[0-9a-fA-F]{32}$"),
+    secret = true
 )
 
 object LastFmSharedSecret : ServerSetting<String>(
@@ -101,7 +103,8 @@ object LastFmSharedSecret : ServerSetting<String>(
     parser = { value -> value },
     serializer = { value -> value },
     defaultValue = "",
-    validationRegex = Regex("^[0-9a-fA-F]{32}$")
+    validationRegex = Regex("^[0-9a-fA-F]{32}$"),
+    secret = true
 )
 
 object LyricFilePathTemplate : ServerSetting<String>(

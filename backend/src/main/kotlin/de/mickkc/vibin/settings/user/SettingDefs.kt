@@ -1,5 +1,7 @@
 package de.mickkc.vibin.settings.user
 
+import de.mickkc.vibin.scrobbling.lastfm.settings.LastFmUserCredentialsPassword
+import de.mickkc.vibin.scrobbling.lastfm.settings.LastFmUserCredentialsUsername
 import kotlinx.serialization.json.Json
 
 val userSettings = listOf(
@@ -14,7 +16,10 @@ val userSettings = listOf(
     SpotifyUserClientId,
     SpotifyUserClientSecret,
     LastFmUserApiKey,
-    LastFmUserSharedSecret
+    LastFmUserSharedSecret,
+
+    LastFmUserCredentialsUsername,
+    LastFmUserCredentialsPassword
 )
 
 object ShowActivitiesToOthers : UserSetting<Boolean>(
@@ -84,7 +89,8 @@ object SpotifyUserClientSecret : UserSetting<String>(
     key = "spotify_user_client_secret",
     parser = { value -> value },
     serializer = { value -> value },
-    defaultValue = ""
+    defaultValue = "",
+    secret = true
 )
 
 object LastFmUserApiKey : UserSetting<String>(
@@ -92,7 +98,8 @@ object LastFmUserApiKey : UserSetting<String>(
     parser = { value -> value },
     serializer = { value -> value },
     defaultValue = "",
-    validationRegex = Regex("^[0-9a-fA-F]{32}$")
+    validationRegex = Regex("^[0-9a-fA-F]{32}$"),
+    secret = true
 )
 
 object LastFmUserSharedSecret : UserSetting<String>(
@@ -100,5 +107,6 @@ object LastFmUserSharedSecret : UserSetting<String>(
     parser = { value -> value },
     serializer = { value -> value },
     defaultValue = "",
-    validationRegex = Regex("^[0-9a-fA-F]{32}$")
+    validationRegex = Regex("^[0-9a-fA-F]{32}$"),
+    secret = true
 )
