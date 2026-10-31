@@ -25,6 +25,7 @@ fun initTestDb() {
     transaction { SchemaUtils.drop(*allTables) }
     createTables()
     EnvUtil.addOverride(EnvUtil.DEFAULT_ADMIN_PASSWORD, "admin")
+    EnvUtil.addOverride(EnvUtil.SETTINGS_ENCRYPTION_KEY, "kGMdQzMzmeRSATHkSAU7BkvqxCuFWK77OS901LgmzcA=")
     createDefaultAdminUser()
 
     val user = UserRepo.getById(1)!!
