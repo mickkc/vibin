@@ -5,6 +5,7 @@ import de.mickkc.vibin.db.TrackListenDurationEntity
 import de.mickkc.vibin.db.TrackListenDurationTable
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.tracks.TrackEntity
+import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.scrobbling.ScrobblingManager
 import de.mickkc.vibin.utils.DateTimeUtils
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -176,12 +177,14 @@ object ListenTrackingRepo {
             this.createdAt = listen.created
         }
 
-        ScrobblingManager.scrobble(
-            userId = listen.userId,
-            trackId = listen.trackId,
-            duration = listen.totalListenedSeconds,
-            start = listen.created
-        )
+        if (PermissionRepo.hasPermission(listen.userId, PermissionType.MANAGE_SCROBBLING)) {
+            ScrobblingManager.scrobble(
+                userId = listen.userId,
+                trackId = listen.trackId,
+                duration = normalizedDuration,
+                start = listen.created
+            )
+        }
 
         ListenRepo.listenedTo(
             userId = listen.userId,
