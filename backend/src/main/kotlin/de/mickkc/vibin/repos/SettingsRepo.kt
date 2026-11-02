@@ -9,7 +9,9 @@ import de.mickkc.vibin.settings.server.ServerSetting
 import de.mickkc.vibin.settings.server.serverSettings
 import de.mickkc.vibin.settings.user.UserSetting
 import de.mickkc.vibin.settings.user.userSettings
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
@@ -72,5 +74,9 @@ object SettingsRepo {
                 this.value = stored
             }
         }
+    }
+
+    fun clearUserSetting(setting: UserSetting<*>, userId: Long) = transaction {
+        UserSettingsTable.deleteWhere { (UserSettingsTable.key eq setting.key) and (UserSettingsTable.userId eq userId) }
     }
 }

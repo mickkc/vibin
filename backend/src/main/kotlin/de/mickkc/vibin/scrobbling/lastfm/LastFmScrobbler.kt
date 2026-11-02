@@ -103,6 +103,10 @@ class LastFmScrobbler(client: HttpClient) : Scrobbler(client) {
         })
 
         if (!response.status.isSuccess()) {
+            if (response.status == HttpStatusCode.Unauthorized || response.status == HttpStatusCode.Forbidden) {
+                SettingsRepo.clearUserSetting(LastFmUserSessionKey, userId)
+            }
+
             val message = "An error occurred while requesting method ${params["method"]} from Last.fm. " +
                     "${response.status.value} - ${response.status.description}:\n${response.bodyAsText()}"
             logger.error(message)
