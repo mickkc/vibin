@@ -17,10 +17,21 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
+import java.util.concurrent.ConcurrentHashMap
+import de.mickkc.vibin.utils.DateTimeUtils
 
 object ScrobblingManager {
 
+    private data class SetCurrentTrackRequest(
+        var trackId: Long,
+        var timestamp: Long
+    )
+
     private val logger = LoggerFactory.getLogger(ScrobblingManager::class.java)
+
+    const val SET_CURRENT_DEBOUNCE_SECONDS = 5L
+
+    private val setCurrentTrackRequestMap = ConcurrentHashMap<Long, SetCurrentTrackRequest>()
 
     private val scope = CoroutineScope(
 SupervisorJob()
@@ -73,6 +84,7 @@ SupervisorJob()
 
     fun scrobble(userId: Long, trackId: Long, duration: Long, start: Long) {
         val track = TrackRepo.getById(trackId) ?: return
+        if (duration <= 0) return
 
         scope.launch {
             getEnabledScrobblers(userId).forEach { scrobbler ->
@@ -90,6 +102,9 @@ SupervisorJob()
     }
 
     fun setCurrentlyPlaying(userId: Long, trackId: Long) {
+        if (!checkAndRecordSetCurrentRequest(userId, trackId))
+            return
+
         val track = TrackRepo.getById(trackId) ?: return
 
         scope.launch {
@@ -105,6 +120,21 @@ SupervisorJob()
                 }
             }
         }
+    }
+
+    /**
+     * Checks whether a set-currently-playing request for the same user and track was recently sent, and records this
+     * request if not.
+     *
+     * @return true if the request should be sent, false if it was debounced
+     */
+    internal fun checkAndRecordSetCurrentRequest(userId: Long, trackId: Long, now: Long = DateTimeUtils.now()): Boolean {
+        val existing = setCurrentTrackRequestMap[userId]
+        if (existing != null && existing.trackId == trackId && now - existing.timestamp < SET_CURRENT_DEBOUNCE_SECONDS) {
+            return false
+        }
+        setCurrentTrackRequestMap[userId] = SetCurrentTrackRequest(trackId, now)
+        return true
     }
 
     fun toDto(scrobbler: Scrobbler, userId: Long?): ScrobblerDto {
