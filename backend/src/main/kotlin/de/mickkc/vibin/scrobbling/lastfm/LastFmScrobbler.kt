@@ -130,7 +130,7 @@ class LastFmScrobbler(client: HttpClient) : Scrobbler(client) {
         call<Any>(userId, buildMap {
             put("method", "track.scrobble")
             put("sk", sessionKey)
-            put("artist", TrackRepo.getArtists(track).first().name)
+            put("artist", TrackRepo.getArtists(track).firstOrNull()?.name ?: "")
             put("track", track.title)
             put("timestamp", timestamp.toString())
             put("album", TrackRepo.getAlbum(track).title)
@@ -146,7 +146,7 @@ class LastFmScrobbler(client: HttpClient) : Scrobbler(client) {
         call<Any>(userId, buildMap {
             put("method", "track.updateNowPlaying")
             put("sk", sessionKey)
-            put("artist", TrackRepo.getArtists(track).first().name)
+            put("artist", TrackRepo.getArtists(track).firstOrNull()?.name ?: "")
             put("track", track.title)
             put("album", TrackRepo.getAlbum(track).title)
             track.duration?.let {

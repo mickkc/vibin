@@ -89,6 +89,24 @@ SupervisorJob()
         }
     }
 
+    fun setCurrentlyPlaying(userId: Long, trackId: Long) {
+        val track = TrackRepo.getById(trackId) ?: return
+
+        scope.launch {
+            getEnabledScrobblers(userId).forEach { scrobbler ->
+                try {
+                    if (scrobbler.isAvailable(userId))
+                        scrobbler.setNowPlaying(userId, track)
+                    else
+                        logger.warn("Scrobbler ${scrobbler.name} is no longer available for user $userId. Skip setting the currently playing track...")
+                }
+                catch (e: Exception) {
+                    logger.error("Error setting the current track on ${scrobbler.name}.", e)
+                }
+            }
+        }
+    }
+
     fun toDto(scrobbler: Scrobbler, userId: Long?): ScrobblerDto {
         return ScrobblerDto(
             id = scrobbler.id,

@@ -56,6 +56,7 @@ object ListenTrackingRepo {
      */
     fun trackStarted(sessionId: String, userId: Long, trackId: Long, timestamp: Long) {
         calculateOffset(sessionId, timestamp)
+        scrobbleCurrentTrack(userId, trackId)
 
         listenMap.compute(sessionId) { _, existingListen ->
             existingListen?.let {
@@ -96,6 +97,7 @@ object ListenTrackingRepo {
         calculateOffset(sessionId, timestamp)
 
         listenMap.computeIfPresent(sessionId) { _, listen ->
+            scrobbleCurrentTrack(listen.userId, listen.trackId)
             listen.start(timestamp)
             listen
         }
@@ -158,6 +160,12 @@ object ListenTrackingRepo {
             listen.stop(timestamp)
             createListenEntity(listen)
             null // Remove the entry
+        }
+    }
+
+    fun scrobbleCurrentTrack(userId: Long, trackId: Long) {
+        if (PermissionRepo.hasPermission(userId, PermissionType.MANAGE_SCROBBLING)) {
+            ScrobblingManager.setCurrentlyPlaying(userId, trackId)
         }
     }
 
