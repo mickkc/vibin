@@ -137,6 +137,8 @@ SupervisorJob()
         return true
     }
 
+    internal fun clearSetCurrentTrackRequests() = setCurrentTrackRequestMap.clear()
+
     fun toDto(scrobbler: Scrobbler, userId: Long?): ScrobblerDto {
         return ScrobblerDto(
             id = scrobbler.id,

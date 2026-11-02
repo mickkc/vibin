@@ -1,11 +1,17 @@
 package scrobbling
 
 import de.mickkc.vibin.scrobbling.ScrobblingManager
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ScrobblingManagerTest {
+
+    @BeforeTest
+    fun clearRequests() {
+        ScrobblingManager.clearSetCurrentTrackRequests()
+    }
 
     @Test
     fun testSetCurrentRequest_firstRequest() {
