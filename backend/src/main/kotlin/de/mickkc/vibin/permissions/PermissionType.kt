@@ -53,7 +53,8 @@ enum class PermissionType(val id: String, val grantedByDefault: Boolean) {
 
     MANAGE_OWN_2FA("manage_own_2fa", true),
 
-    USE_SERVER_API_CREDENTIALS("use_server_api_credentials", true);
+    USE_SERVER_API_CREDENTIALS("use_server_api_credentials", true),
+    MANAGE_SCROBBLING("manage_scrobbling", true);
 
     companion object {
         private val map = entries.associateBy(PermissionType::id)

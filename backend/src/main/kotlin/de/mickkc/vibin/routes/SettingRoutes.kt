@@ -8,36 +8,45 @@ import io.ktor.server.routing.*
 import de.mickkc.vibin.dto.KeyValueDto
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.SettingsRepo
+import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.settings.server.serverSettings
 import de.mickkc.vibin.settings.user.userSettings
+import kotlin.to
 
 fun Application.configureSettingRoutes() = routing {
     authenticate("tokenAuth") {
 
         getP("/api/settings/server", PermissionType.CHANGE_SERVER_SETTINGS) {
-            val settings = SettingsRepo.getAllValues(serverSettings)
-            call.respond(settings)
+            val userId = call.getUserId() ?: unauthorized()
+            call.respond(serverSettings.associate {
+                it.key to Settings.toDto(it, userId)
+            })
         }
 
         getP("/api/settings/user", PermissionType.CHANGE_OWN_USER_SETTINGS) {
             val userId = call.getUserId() ?: unauthorized()
-            val settings = SettingsRepo.getAllValues(userId, userSettings)
-            call.respond(settings)
+            call.respond(userSettings.associate {
+                it.key to Settings.toDto(it, userId)
+            })
         }
 
         putP("/api/settings/{settingKey}") {
 
             val settingKey = call.getStringParameter("settingKey")
             val setting = SettingsRepo.getServerSetting(settingKey)
+            val settingValue = call.receive<String>()
 
             if (setting == null) {
                 val userSetting = SettingsRepo.getUserSetting(settingKey) ?: notFound()
 
                 if (!call.hasPermissions(PermissionType.CHANGE_OWN_USER_SETTINGS))
-                    forbidden()
+                    noPermission(PermissionType.CHANGE_OWN_USER_SETTINGS)
+
+                if (settingValue.isNotEmpty() && userSetting.validationRegex != null && !userSetting.validationRegex.matches(settingValue)) {
+                    invalidParameter("value", userSetting.validationRegex.pattern)
+                }
 
                 val userId = call.getUserId() ?: unauthorized()
-                val settingValue = call.receive<String>()
                 val parsedValue = userSetting.parser(settingValue)
                     ?: invalidParameter("body")
 
@@ -46,9 +55,12 @@ fun Application.configureSettingRoutes() = routing {
             }
             else {
                 if (!call.hasPermissions(PermissionType.CHANGE_SERVER_SETTINGS))
-                    forbidden()
+                    noPermission(PermissionType.CHANGE_SERVER_SETTINGS)
 
-                val settingValue = call.receive<String>()
+                if (settingValue.isNotEmpty() && setting.validationRegex != null && !setting.validationRegex.matches(settingValue)) {
+                    invalidParameter("value", setting.validationRegex.pattern)
+                }
+
                 val parsedValue = setting.parser(settingValue)
                     ?: invalidParameter("body")
 

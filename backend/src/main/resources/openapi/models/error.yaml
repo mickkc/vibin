@@ -41,3 +41,14 @@ RateLimited:
       type: object
       additionalProperties: true
       example: {}
+
+Forbidden:
+  type: object
+  properties:
+    type:
+      type: string
+      example: "FORBIDDEN"
+    data:
+      type: object
+      additionalProperties: true
+      example: {}

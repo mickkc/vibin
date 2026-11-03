@@ -39,7 +39,7 @@ fun Application.configureUserRoutes() = routing {
             val userId = call.getLongParameter("userId")
             val requestingUserId = call.getUserId()
             if (requestingUserId != userId && !call.hasPermissions(PermissionType.VIEW_USERS)) {
-                forbidden(PermissionType.VIEW_USERS)
+                noPermission(PermissionType.VIEW_USERS)
             }
 
             val user = UserRepo.getById(userId) ?: notFound()
@@ -85,10 +85,10 @@ fun Application.configureUserRoutes() = routing {
                 forbidden()
             if (userId == currentUser.id.value) {
                 if (!call.hasPermissions(PermissionType.MANAGE_OWN_USER))
-                    forbidden(PermissionType.MANAGE_OWN_USER)
+                    noPermission(PermissionType.MANAGE_OWN_USER)
             } else {
                 if (!call.hasPermissions(PermissionType.MANAGE_USERS))
-                    forbidden(PermissionType.MANAGE_USERS)
+                    noPermission(PermissionType.MANAGE_USERS)
             }
 
 
@@ -100,7 +100,7 @@ fun Application.configureUserRoutes() = routing {
             if (userEditDto.password != null) {
                 val oldHashedPassword = userEditDto.oldPassword?.let { CryptoUtil.hashPassword(it, user.salt) }
                 if (!oldHashedPassword.contentEquals(user.passwordHash) && !currentUser.isAdmin) {
-                    forbidden()
+                    forbidden("Old password is incorrect")
                 }
             }
 
@@ -118,11 +118,11 @@ fun Application.configureUserRoutes() = routing {
 
             if (userId == call.getUserId()) {
                 if (!call.hasPermissions(PermissionType.DELETE_OWN_USER))
-                    forbidden(PermissionType.DELETE_OWN_USER)
+                    noPermission(PermissionType.DELETE_OWN_USER)
             }
             else {
                 if (!call.hasPermissions(PermissionType.DELETE_USERS))
-                    forbidden(PermissionType.DELETE_USERS)
+                    noPermission(PermissionType.DELETE_USERS)
             }
 
             val deleted = UserRepo.deleteUser(userId, deleteData)
@@ -139,7 +139,7 @@ fun Application.configureUserRoutes() = routing {
             val userId = call.getLongParameter("userId")
 
             if (requestingUserId != userId && !call.hasPermissions(PermissionType.VIEW_USERS)) {
-                forbidden(PermissionType.VIEW_USERS)
+                noPermission(PermissionType.VIEW_USERS)
             }
 
             val quality = call.getIntOrDefault("quality", 0)

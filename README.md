@@ -72,7 +72,9 @@
    installed on your system.
 2. Download / copy the [example docker-compose.yml](docker-compose.example.yml) file and the [example .env](.env.example) file and 
    modify them to your needs using the [configuration wiki](https://vibin.rip/docs/config).
-   - Make sure to set the `DEFAULT_ADMIN_PASSWORD` variable. If you don't, a password will be logged to the console, and
+   - **Make sure to set the `SETTINGS_ENCRYPTION_KEY` variable to a valid value.** You can either generate it yourself using
+     `openssl rand -base64 32` or use the built-in generator on the documentation website: https://vibin.rip/docs/config.
+   - You should also set the `DEFAULT_ADMIN_PASSWORD` variable. If you don't, a password will be logged to the console, and
      you'll need to run `docker compose logs vibin` to see it.
 3. Run the following command:
     ```bash

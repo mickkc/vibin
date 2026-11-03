@@ -111,8 +111,7 @@ fun Application.configureStatisticRoutes() = routing {
             if (!Settings.get(ShowActivitiesToOthers, userId)) {
                 val callerId = call.getUserId() ?: unauthorized()
                 if (callerId != userId) {
-                    // User has disabled showing activities to others
-                    forbidden()
+                    forbidden("User has disabled showing activities to others")
                 }
             }
 
@@ -146,7 +145,7 @@ fun Application.configureStatisticRoutes() = routing {
         }
 
         getP("/api/stats/tracks/{id}/duration", PermissionType.VIEW_TRACKS) {
-            val userId = call.getUserId() ?: forbidden()
+            val userId = call.getUserId() ?: unauthorized()
             val trackId = call.pathParameters["id"]?.toLongOrNull() ?: missingParameter("id")
 
             val duration = ListenTrackingRepo.getUserListenDurationForTrack(trackId, userId)

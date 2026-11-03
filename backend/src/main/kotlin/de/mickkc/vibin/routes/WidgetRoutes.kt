@@ -102,7 +102,7 @@ fun Application.configureWidgetRoutes() = routing {
         val signature = call.getStringParameter("sig")
 
         if (!AccessCryptoUtil.validateSignature(checksum, expirationTimestamp, signature)) {
-            forbidden()
+            forbidden("Invalid signature")
         }
 
         if (checksum.startsWith("default-")) {
@@ -234,7 +234,7 @@ fun Application.configureWidgetRoutes() = routing {
 
             val success = WidgetRepo.deleteWidget(widget, userId)
             if (!success) {
-                forbidden()
+                forbidden("Widget is not owned by user")
             }
 
             // Evict cached images for this widget

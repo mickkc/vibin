@@ -5,6 +5,8 @@ import de.mickkc.vibin.db.TrackListenDurationEntity
 import de.mickkc.vibin.db.TrackListenDurationTable
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.tracks.TrackEntity
+import de.mickkc.vibin.permissions.PermissionType
+import de.mickkc.vibin.scrobbling.ScrobblingManager
 import de.mickkc.vibin.utils.DateTimeUtils
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.Sum
@@ -54,6 +56,7 @@ object ListenTrackingRepo {
      */
     fun trackStarted(sessionId: String, userId: Long, trackId: Long, timestamp: Long) {
         calculateOffset(sessionId, timestamp)
+        scrobbleCurrentTrack(userId, trackId)
 
         listenMap.compute(sessionId) { _, existingListen ->
             existingListen?.let {
@@ -94,6 +97,7 @@ object ListenTrackingRepo {
         calculateOffset(sessionId, timestamp)
 
         listenMap.computeIfPresent(sessionId) { _, listen ->
+            scrobbleCurrentTrack(listen.userId, listen.trackId)
             listen.start(timestamp)
             listen
         }
@@ -159,6 +163,12 @@ object ListenTrackingRepo {
         }
     }
 
+    fun scrobbleCurrentTrack(userId: Long, trackId: Long) {
+        if (PermissionRepo.hasPermission(userId, PermissionType.MANAGE_SCROBBLING)) {
+            ScrobblingManager.setCurrentlyPlaying(userId, trackId)
+        }
+    }
+
     private fun createListenEntity(listen: Listen) = transaction {
         val user = UserEntity.findById(listen.userId) ?: return@transaction
         val track = TrackEntity.findById(listen.trackId) ?: return@transaction
@@ -173,6 +183,15 @@ object ListenTrackingRepo {
             this.track = track
             this.listenedDurationSeconds = normalizedDuration
             this.createdAt = listen.created
+        }
+
+        if (PermissionRepo.hasPermission(listen.userId, PermissionType.MANAGE_SCROBBLING)) {
+            ScrobblingManager.scrobble(
+                userId = listen.userId,
+                trackId = listen.trackId,
+                duration = normalizedDuration,
+                start = listen.created
+            )
         }
 
         ListenRepo.listenedTo(

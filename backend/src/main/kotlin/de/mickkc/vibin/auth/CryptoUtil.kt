@@ -31,6 +31,12 @@ object CryptoUtil {
         return factory.generateSecret(spec).encoded
     }
 
+    fun hashMd5(input: String): String {
+        return MessageDigest.getInstance("MD5")
+            .digest(input.toByteArray(Charsets.UTF_8))
+            .joinToString("") { "%02x".format(it) }
+    }
+
     /**
      * Generates a random token consisting of 64 alphanumeric characters that is guaranteed to be unique.
      * @return A randomly generated token string.

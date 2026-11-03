@@ -53,6 +53,7 @@ fun Application.module() {
     configureUserRoutes()
 
     configureMetadataRoutes()
+    configureScrobblingRoutes()
 
     configureTrackRoutes()
     configureRelatedTrackRoutes()

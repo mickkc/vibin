@@ -28,7 +28,7 @@ fun Application.configureFavoriteRoutes() = routing {
             val userId = call.getLongParameter("userId")
 
             if (requestingUserId != userId && !call.hasPermissions(PermissionType.VIEW_USERS)) {
-                forbidden(PermissionType.VIEW_USERS)
+                noPermission(PermissionType.VIEW_USERS)
             }
 
             val favorites = FavoriteRepo.getFavoriteDtoForUser(userId)

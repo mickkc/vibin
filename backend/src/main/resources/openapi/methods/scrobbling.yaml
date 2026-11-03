@@ -1,0 +1,120 @@
+GetAll:
+  get:
+    summary: Get all scrobblers
+    operationId: getAllScrobblers
+    tags:
+      - Scrobbling
+    security:
+      - tokenAuth: []
+    responses:
+      200:
+        description: A list of all scrobblers
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../models/scrobbling.yaml#/Scrobbler'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+GetEnabled:
+  get:
+    summary: Get all enabled scrobblers for the current user
+    operationId: getEnabledScrobblers
+    tags:
+      - Scrobbling
+    security:
+      - tokenAuth: []
+    responses:
+      200:
+        description: A list of all enabled scrobblers
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../models/scrobbling.yaml#/Scrobbler'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+SetEnabled:
+  put:
+    summary: Enables / Disables a scrobbler for the current user
+    operationId: setScrobblerEnabled
+    tags:
+      - Scrobbling
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The id of the scrobbler to enable / disable
+        example: "last_fm"
+      - name: state
+        in: query
+        required: true
+        schema:
+          type: boolean
+        description: True to enable the scrobble, false to disable
+        example: true
+    responses:
+      200:
+        description: A list of all enabled scrobblers
+        content:
+          application/json:
+            schema:
+              $ref: '../models/success.yaml#/Success'
+      403:
+        description: The scrobbler is not available
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Forbidden'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'
+
+GetSettings:
+  get:
+    summary: Get a scrobbler's settings
+    operationId: getScrobblerSettings
+    tags:
+      - Scrobbling
+    security:
+      - tokenAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The id of the scrobbler to get the settings for
+        example: "last_fm"
+    responses:
+      200:
+        description: A map of all settings for the scrobbler
+        content:
+          application/json:
+            schema:
+              $ref: '../models/settings.yaml#/Settings'
+      default:
+        description: Error
+        content:
+          application/json:
+            schema:
+              $ref: '../models/error.yaml#/Error'

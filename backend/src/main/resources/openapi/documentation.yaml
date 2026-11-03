@@ -217,6 +217,21 @@ paths:
   /api/tracks/{id}/related:
     $ref: 'methods/relatedTracks.yaml#/Base'
 
+  # █▀ █▀▀ █▀█ █▀█ █▄▄ █▄▄ █░░ █ █▄░█ █▀▀
+  # ▄█ █▄▄ █▀▄ █▄█ █▄█ █▄█ █▄▄ █ █░▀█ █▄█
+
+  /api/scrobbling/scrobblers/enabled:
+    $ref: 'methods/scrobbling.yaml#/GetEnabled'
+
+  /api/scrobbling/scrobblers/all:
+    $ref: 'methods/scrobbling.yaml#/GetAll'
+
+  /api/scrobbling/scrobblers/{id}/enabled:
+    $ref: 'methods/scrobbling.yaml#/SetEnabled'
+
+  /api/scrobbling/scrobblers/{id}/settings:
+    $ref: 'methods/scrobbling.yaml#/GetSettings'
+
   # █▀ █▀▀ █▀▀ █░█ █▀█ █ ▀█▀ █▄█
   # ▄█ ██▄ █▄▄ █▄█ █▀▄ █ ░█░ ░█░
 

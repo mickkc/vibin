@@ -1,17 +1,18 @@
 package de.mickkc.vibin.repos
 
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.Serializable
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.transactions.transaction
 import de.mickkc.vibin.db.SettingsEntity
 import de.mickkc.vibin.db.SettingsTable
 import de.mickkc.vibin.db.UserSettingsEntity
 import de.mickkc.vibin.db.UserSettingsTable
+import de.mickkc.vibin.settings.SettingsCrypto
 import de.mickkc.vibin.settings.server.ServerSetting
 import de.mickkc.vibin.settings.server.serverSettings
 import de.mickkc.vibin.settings.user.UserSetting
 import de.mickkc.vibin.settings.user.userSettings
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
  * Repository for managing [de.mickkc.vibin.db.SettingsEntity] instances.
@@ -25,7 +26,8 @@ object SettingsRepo {
      * @return The value of the setting if found, otherwise null.
      */
     fun getServerSettingValue(key: String): String?  = transaction {
-        SettingsEntity.find { SettingsTable.key eq key }.firstOrNull()?.value
+        val value = SettingsEntity.find { SettingsTable.key eq key }.firstOrNull()?.value
+        return@transaction value?.let { if (SettingsCrypto.isEncrypted(it)) SettingsCrypto.decrypt(it) else it }
     }
 
     /**
@@ -36,54 +38,45 @@ object SettingsRepo {
      * @return The value of the setting if found, otherwise null.
      */
     fun getUserSettingValue(key: String, userId: Long): String?  = transaction {
-        UserSettingsEntity.find {
+        val value = UserSettingsEntity.find {
             (UserSettingsTable.key eq key) and (UserSettingsTable.userId eq userId)
         }.firstOrNull()?.value
-    }
-
-    fun getAllValues(keys: List<ServerSetting<out Any>>): Map<String, @Serializable @Contextual Any> = transaction {
-        keys.associate { setting ->
-            setting.key to (SettingsEntity.find { SettingsTable.key eq setting.key }.firstOrNull()?.value?.let { setting.parser(it) }
-                ?: setting.defaultValue)
-        }
-    }
-
-    fun getAllValues(userId: Long, keys: List<UserSetting<out Any>>): Map<String, @Serializable @Contextual Any> = transaction {
-        keys.associate { setting ->
-            setting.key to (UserSettingsEntity.find {
-                (UserSettingsTable.key eq setting.key) and (UserSettingsTable.userId eq userId)
-            }.firstOrNull()?.value?.let { setting.parser(it) }
-                ?: setting.defaultValue)
-        }
+        return@transaction value?.let { if (SettingsCrypto.isEncrypted(it)) SettingsCrypto.decrypt(it) else it }
     }
 
     fun getServerSetting(key: String): ServerSetting<out Any>? = serverSettings.firstOrNull { it.key == key }
     fun getUserSetting(key: String): UserSetting<out Any>? = userSettings.firstOrNull { it.key == key }
 
     fun updateServerSetting(setting: ServerSetting<*>, value: String) = transaction {
+        val stored = if (setting.secret) SettingsCrypto.encrypt(value) else value
         val settingEntity = SettingsEntity.find { SettingsTable.key eq setting.key }.firstOrNull()
         if (settingEntity != null) {
-            settingEntity.value = value
+            settingEntity.value = stored
         } else {
             SettingsEntity.new {
                 this.key = setting.key
-                this.value = value
+                this.value = stored
             }
         }
     }
 
     fun updateUserSetting(setting: UserSetting<*>, userId: Long, value: String) = transaction {
+        val stored = if (setting.secret) SettingsCrypto.encrypt(value) else value
         val settingEntity = UserSettingsEntity.find {
             (UserSettingsTable.key eq setting.key) and (UserSettingsTable.userId eq userId)
         }.firstOrNull()
         if (settingEntity != null) {
-            settingEntity.value = value
+            settingEntity.value = stored
         } else {
             UserSettingsEntity.new {
                 this.key = setting.key
                 this.userId = userId
-                this.value = value
+                this.value = stored
             }
         }
+    }
+
+    fun clearUserSetting(setting: UserSetting<*>, userId: Long) = transaction {
+        UserSettingsTable.deleteWhere { (UserSettingsTable.key eq setting.key) and (UserSettingsTable.userId eq userId) }
     }
 }

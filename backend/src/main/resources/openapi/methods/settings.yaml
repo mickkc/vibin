@@ -12,14 +12,7 @@ Server:
         content:
           application/json:
             schema:
-              type: object
-              additionalProperties:
-                type: object
-                properties:
-                  key:
-                    type: string
-                  value:
-                    type: object
+              $ref: '../models/settings.yaml#/Settings'
       default:
         description: Error
         content:
@@ -41,14 +34,7 @@ User:
         content:
           application/json:
             schema:
-              type: object
-              additionalProperties:
-                type: object
-                properties:
-                  key:
-                    type: string
-                  value:
-                    type: object
+              $ref: '../models/settings.yaml#/Settings'
       default:
         description: Error
         content:

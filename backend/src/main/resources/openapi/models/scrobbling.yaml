@@ -1,0 +1,27 @@
+Scrobbler:
+  type: object
+  properties:
+    id:
+      type: string
+      example: "last_fm"
+    name:
+      type: string
+      example: "Last.fm"
+    available:
+      type: boolean
+      example: true
+    status:
+      $ref: '#/ScrobblerStatus'
+      nullable: true
+
+ScrobblerStatus:
+  type: object
+  properties:
+    error:
+      type: boolean
+      nullable: false
+      example: false
+    message:
+      type: string
+      nullable: true
+      example: null

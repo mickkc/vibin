@@ -142,7 +142,7 @@ fun Application.configureAuthRoutes() = routing {
             val sessionUserId = SessionRepo.getUserFromSessionId(sessionId)?.id?.value ?: notFound()
 
             if (sessionUserId != userId) {
-                forbidden()
+                noPermission()
             }
 
             SessionRepo.invalidateSessionById(sessionId)

@@ -188,7 +188,7 @@ fun Application.configureSecurityRoutes() = routing {
             }
             catch (e: IllegalStateException) {
                 logger.error(e)
-                forbidden()
+                noPermission()
             }
         }
 
@@ -265,7 +265,7 @@ fun Application.configureSecurityRoutes() = routing {
         val user = SessionRepo.getUser(session)
 
         if (!PermissionRepo.hasPermission(user.id.value, PermissionType.MANAGE_OWN_2FA)) {
-            forbidden(PermissionType.MANAGE_OWN_2FA)
+            noPermission(PermissionType.MANAGE_OWN_2FA)
         }
 
         if (!totpRateLimiter.check(call.getClientId())) {

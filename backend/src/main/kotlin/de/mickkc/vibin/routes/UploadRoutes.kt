@@ -29,7 +29,7 @@ fun Application.configureUploadRoutes() = routing {
         val userId = getUserId() ?: unauthorized()
 
         if (upload.uploaderId != userId) {
-            forbidden()
+            forbidden("Upload was created by another user")
         }
 
         return upload
