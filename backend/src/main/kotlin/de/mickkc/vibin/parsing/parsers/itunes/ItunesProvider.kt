@@ -14,8 +14,12 @@ import de.mickkc.vibin.parsing.parsers.AlbumSearchProvider
 import de.mickkc.vibin.parsing.parsers.FileParser
 import de.mickkc.vibin.parsing.parsers.PreparseData
 import de.mickkc.vibin.parsing.parsers.TrackSearchProvider
+import de.mickkc.vibin.utils.http.RateLimitedClient
+import de.mickkc.vibin.utils.http.RatelimitConfig
 
-class ItunesProvider(val client: HttpClient) : TrackSearchProvider, AlbumSearchProvider, FileParser {
+class ItunesProvider(val client: HttpClient) : TrackSearchProvider, AlbumSearchProvider, FileParser, RateLimitedClient(
+    RatelimitConfig(windowSize = 20, windowDelayMs = 60000)
+) {
 
     private val logger = LoggerFactory.getLogger(ItunesProvider::class.java)
     private val json  = Json {
@@ -26,12 +30,14 @@ class ItunesProvider(val client: HttpClient) : TrackSearchProvider, AlbumSearchP
     override suspend fun searchTrack(query: String, user: UserEntity?): List<TrackInfoMetadata>? {
 
         try {
-            val response = client.get("https://itunes.apple.com/search") {
-                parameter("term", query)
-                parameter("media", "music")
-                parameter("entity", "song")
-                ParsingUtils.limit?.let {
-                    parameter("limit", it)
+            val response = waitAndRun {
+                client.get("https://itunes.apple.com/search") {
+                    parameter("term", query)
+                    parameter("media", "music")
+                    parameter("entity", "song")
+                    ParsingUtils.limit?.let {
+                        parameter("limit", it)
+                    }
                 }
             }
 
@@ -71,12 +77,14 @@ class ItunesProvider(val client: HttpClient) : TrackSearchProvider, AlbumSearchP
 
     override suspend fun searchAlbum(query: String, user: UserEntity?): List<AlbumMetadata>? {
         try {
-            val response = client.get("https://itunes.apple.com/search") {
-                parameter("term", query)
-                parameter("media", "music")
-                parameter("entity", "album")
-                ParsingUtils.limit?.let {
-                    parameter("limit", it)
+            val response = waitAndRun {
+                client.get("https://itunes.apple.com/search") {
+                    parameter("term", query)
+                    parameter("media", "music")
+                    parameter("entity", "album")
+                    ParsingUtils.limit?.let {
+                        parameter("limit", it)
+                    }
                 }
             }
 

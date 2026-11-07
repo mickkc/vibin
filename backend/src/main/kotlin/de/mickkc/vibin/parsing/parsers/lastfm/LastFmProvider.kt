@@ -18,8 +18,12 @@ import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.settings.server.ExtendedMetadata
 import de.mickkc.vibin.settings.server.LastFmApiKey
 import de.mickkc.vibin.settings.user.LastFmUserApiKey
+import de.mickkc.vibin.utils.http.RateLimitedClient
+import de.mickkc.vibin.utils.http.RatelimitConfig
 
-class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearchProvider, AlbumSearchProvider, FileParser {
+class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearchProvider, AlbumSearchProvider, FileParser, RateLimitedClient(
+    RatelimitConfig(windowSize = 5, windowDelayMs = 1000)
+) {
 
     private val logger: Logger = LoggerFactory.getLogger(LastFmProvider::class.java)
 
@@ -40,12 +44,14 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
 
     private suspend fun getExtendedTrackMetadata(artist: String, track: String, user: UserEntity?): TrackInfoMetadata? {
 
-        val response = client.get("https://ws.audioscrobbler.com/2.0") {
-            parameter("method", "track.getinfo")
-            parameter("artist", artist)
-            parameter("track", track)
-            parameter("api_key", getApiKey(user))
-            parameter("format", "json")
+        val response = waitAndRun {
+            client.get("https://ws.audioscrobbler.com/2.0") {
+                parameter("method", "track.getinfo")
+                parameter("artist", artist)
+                parameter("track", track)
+                parameter("api_key", getApiKey(user))
+                parameter("format", "json")
+            }
         }
 
         if (!response.status.isSuccess()) {
@@ -68,12 +74,14 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
 
     override suspend fun searchTrack(query: String, user: UserEntity?): List<TrackInfoMetadata>? {
 
-        val response = client.get("https://ws.audioscrobbler.com/2.0") {
-            parameter("method", "track.search")
-            parameter("track", query)
-            parameter("api_key", getApiKey(user))
-            parameter("format", "json")
-            ParsingUtils.limit?.let {parameter("limit", it) }
+        val response = waitAndRun {
+            client.get("https://ws.audioscrobbler.com/2.0") {
+                parameter("method", "track.search")
+                parameter("track", query)
+                parameter("api_key", getApiKey(user))
+                parameter("format", "json")
+                ParsingUtils.limit?.let {parameter("limit", it) }
+            }
         }
 
         if (!response.status.isSuccess()) {
@@ -104,11 +112,13 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
     }
 
     private suspend fun getExtendedArtistMetadata(artist: String, user: UserEntity?): ArtistMetadata? {
-        val response = client.get("https://ws.audioscrobbler.com/2.0") {
-            parameter("method", "artist.getinfo")
-            parameter("artist", artist)
-            parameter("api_key", getApiKey(user))
-            parameter("format", "json")
+        val response = waitAndRun {
+            client.get("https://ws.audioscrobbler.com/2.0") {
+                parameter("method", "artist.getinfo")
+                parameter("artist", artist)
+                parameter("api_key", getApiKey(user))
+                parameter("format", "json")
+            }
         }
 
         if (!response.status.isSuccess()) {
@@ -127,12 +137,14 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
     }
 
     override suspend fun searchArtist(query: String, user: UserEntity?): List<ArtistMetadata>? {
-        val response = client.get("https://ws.audioscrobbler.com/2.0") {
-            parameter("method", "artist.search")
-            parameter("artist", query)
-            parameter("api_key", getApiKey(user))
-            parameter("format", "json")
-            ParsingUtils.limit?.let {parameter("limit", it) }
+        val response = waitAndRun {
+            client.get("https://ws.audioscrobbler.com/2.0") {
+                parameter("method", "artist.search")
+                parameter("artist", query)
+                parameter("api_key", getApiKey(user))
+                parameter("format", "json")
+                ParsingUtils.limit?.let {parameter("limit", it) }
+            }
         }
 
         if (!response.status.isSuccess()) {
@@ -167,12 +179,14 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
 
     private suspend fun getExtendedAlbumMetadata(artist: String, album: String, user: UserEntity?): AlbumMetadata? {
 
-        val response = client.get("https://ws.audioscrobbler.com/2.0") {
-            parameter("method", "album.getinfo")
-            parameter("artist", artist)
-            parameter("album", album)
-            parameter("api_key", getApiKey(user))
-            parameter("format", "json")
+        val response = waitAndRun {
+            client.get("https://ws.audioscrobbler.com/2.0") {
+                parameter("method", "album.getinfo")
+                parameter("artist", artist)
+                parameter("album", album)
+                parameter("api_key", getApiKey(user))
+                parameter("format", "json")
+            }
         }
 
         if (!response.status.isSuccess()) {
@@ -193,12 +207,14 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
 
     override suspend fun searchAlbum(query: String, user: UserEntity?): List<AlbumMetadata>? {
 
-        val response = client.get("https://ws.audioscrobbler.com/2.0") {
-            parameter("method", "album.search")
-            parameter("album", query)
-            parameter("api_key", getApiKey(user))
-            parameter("format", "json")
-            ParsingUtils.limit?.let { parameter("limit", it) }
+        val response = waitAndRun {
+            client.get("https://ws.audioscrobbler.com/2.0") {
+                parameter("method", "album.search")
+                parameter("album", query)
+                parameter("api_key", getApiKey(user))
+                parameter("format", "json")
+                ParsingUtils.limit?.let { parameter("limit", it) }
+            }
         }
 
         if (!response.status.isSuccess()) {

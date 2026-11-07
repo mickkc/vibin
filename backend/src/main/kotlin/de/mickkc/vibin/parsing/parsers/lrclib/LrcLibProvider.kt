@@ -11,16 +11,22 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import de.mickkc.vibin.parsing.LyricMetadata
 import de.mickkc.vibin.parsing.LyricsSearchProvider
+import de.mickkc.vibin.utils.http.RateLimitedClient
+import de.mickkc.vibin.utils.http.RatelimitConfig
 
-class LrcLibProvider(val client: HttpClient) : LyricsSearchProvider {
+class LrcLibProvider(val client: HttpClient) : LyricsSearchProvider, RateLimitedClient(
+    RatelimitConfig(windowSize = 90, windowDelayMs = 60000)
+) {
 
     private val logger: Logger = LoggerFactory.getLogger(LrcLibProvider::class.java)
 
     override suspend fun searchLyrics(searchQuery: String, user: UserEntity?): List<LyricMetadata>? {
 
         try {
-            val response = client.get("https://lrclib.net/api/search") {
-                parameter("q", searchQuery)
+            val response = waitAndRun {
+                client.get("https://lrclib.net/api/search") {
+                    parameter("q", searchQuery)
+                }
             }
 
             if (!response.status.isSuccess()) {
@@ -55,11 +61,13 @@ class LrcLibProvider(val client: HttpClient) : LyricsSearchProvider {
     override suspend fun searchLyrics(trackName: String, artistName: String, albumName: String, duration: Long, user: UserEntity?): String? {
 
         try {
-            val response = client.get("https://lrclib.net/api/get") {
-                parameter("track_name", trackName)
-                parameter("artist_name", artistName)
-                parameter("album_name", albumName)
-                parameter("duration", duration / 1000) // Milliseconds to seconds
+            val response = waitAndRun {
+                client.get("https://lrclib.net/api/get") {
+                    parameter("track_name", trackName)
+                    parameter("artist_name", artistName)
+                    parameter("album_name", albumName)
+                    parameter("duration", duration / 1000) // Milliseconds to seconds
+                }
             }
 
             if (!response.status.isSuccess()) {

@@ -18,8 +18,12 @@ import de.mickkc.vibin.parsing.parsers.PreparseData
 import de.mickkc.vibin.parsing.parsers.TrackSearchProvider
 import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.settings.server.ExtendedMetadata
+import de.mickkc.vibin.utils.http.RateLimitedClient
+import de.mickkc.vibin.utils.http.RatelimitConfig
 
-class DeezerProvider(val client: HttpClient) : FileParser, ArtistSearchProvider, TrackSearchProvider, AlbumSearchProvider {
+class DeezerProvider(val client: HttpClient) : FileParser, ArtistSearchProvider, TrackSearchProvider, AlbumSearchProvider, RateLimitedClient(
+    RatelimitConfig(windowSize = 50, windowDelayMs = 5000, requestDelayMs = 100)
+) {
 
     private val logger = LoggerFactory.getLogger(DeezerProvider::class.java)
 
@@ -90,10 +94,12 @@ class DeezerProvider(val client: HttpClient) : FileParser, ArtistSearchProvider,
 
     private suspend inline fun <reified T>get(url: String, q: String): T? {
         return try {
-            val response = client.get(url) {
-                parameter("q", q)
-                ParsingUtils.limit?.let {
-                    parameter("limit", it)
+            val response = waitAndRun {
+                client.get(url) {
+                    parameter("q", q)
+                    ParsingUtils.limit?.let {
+                        parameter("limit", it)
+                    }
                 }
             }
 

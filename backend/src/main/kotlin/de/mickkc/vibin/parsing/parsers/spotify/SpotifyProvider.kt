@@ -1,13 +1,6 @@
 package de.mickkc.vibin.parsing.parsers.spotify
 
 import de.mickkc.vibin.db.UserEntity
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import de.mickkc.vibin.parsing.AlbumMetadata
 import de.mickkc.vibin.parsing.ArtistMetadata
 import de.mickkc.vibin.parsing.ParsingUtils
@@ -19,10 +12,20 @@ import de.mickkc.vibin.settings.server.SpotifyClientId
 import de.mickkc.vibin.settings.server.SpotifyClientSecret
 import de.mickkc.vibin.settings.user.SpotifyUserClientId
 import de.mickkc.vibin.settings.user.SpotifyUserClientSecret
+import de.mickkc.vibin.utils.http.RateLimitedClient
+import de.mickkc.vibin.utils.http.RatelimitConfig
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 
-class SpotifyProvider(val client: HttpClient) : ArtistSearchProvider, TrackSearchProvider, FileParser, AlbumSearchProvider {
+class SpotifyProvider(val client: HttpClient) : ArtistSearchProvider, TrackSearchProvider, FileParser, AlbumSearchProvider, RateLimitedClient(
+    RatelimitConfig(windowSize = 10, windowDelayMs = 60000)
+) {
 
     private val logger: Logger = LoggerFactory.getLogger(SpotifyProvider::class.java)
     private var token: String? = null
@@ -54,7 +57,6 @@ class SpotifyProvider(val client: HttpClient) : ArtistSearchProvider, TrackSearc
         return clientId to clientSecret
     }
 
-    @OptIn(ExperimentalEncodingApi::class)
     suspend fun updateAccessToken(user: UserEntity?): String {
         if (token != null && System.currentTimeMillis() < tokenExpiry) {
             return token!!
@@ -65,10 +67,12 @@ class SpotifyProvider(val client: HttpClient) : ArtistSearchProvider, TrackSearc
 
         val credentials = Base64.encode("${loadedCredentials.first}:${loadedCredentials.second}".toByteArray())
 
-        val response = client.post("https://accounts.spotify.com/api/token") {
-            header("Authorization", "Basic $credentials")
-            header("Content-Type", "application/x-www-form-urlencoded")
-            setBody("grant_type=client_credentials")
+        val response = waitAndRun {
+            client.post("https://accounts.spotify.com/api/token") {
+                header("Authorization", "Basic $credentials")
+                header("Content-Type", "application/x-www-form-urlencoded")
+                setBody("grant_type=client_credentials")
+            }
         }
 
         if (!response.status.isSuccess()) {
@@ -87,12 +91,14 @@ class SpotifyProvider(val client: HttpClient) : ArtistSearchProvider, TrackSearc
         try {
             val accessToken = updateAccessToken(user)
 
-            val response = client.get("https://api.spotify.com/v1/search") {
-                header("Authorization", "Bearer $accessToken")
-                parameter("q", query)
-                parameter("type", "artist")
-                ParsingUtils.limit?.let {
-                    parameter("limit", it)
+            val response = waitAndRun {
+                client.get("https://api.spotify.com/v1/search") {
+                    header("Authorization", "Bearer $accessToken")
+                    parameter("q", query)
+                    parameter("type", "artist")
+                    ParsingUtils.limit?.let {
+                        parameter("limit", it)
+                    }
                 }
             }
 
@@ -121,12 +127,14 @@ class SpotifyProvider(val client: HttpClient) : ArtistSearchProvider, TrackSearc
         try {
             val accessToken = updateAccessToken(user)
 
-            val response = client.get("https://api.spotify.com/v1/search") {
-                header("Authorization", "Bearer $accessToken")
-                parameter("q", query)
-                parameter("type", "track")
-                ParsingUtils.limit?.let {
-                    parameter("limit", it)
+            val response = waitAndRun {
+                client.get("https://api.spotify.com/v1/search") {
+                    header("Authorization", "Bearer $accessToken")
+                    parameter("q", query)
+                    parameter("type", "track")
+                    ParsingUtils.limit?.let {
+                        parameter("limit", it)
+                    }
                 }
             }
 
@@ -167,12 +175,14 @@ class SpotifyProvider(val client: HttpClient) : ArtistSearchProvider, TrackSearc
         try {
             val accessToken = updateAccessToken(user)
 
-            val response = client.get("https://api.spotify.com/v1/search") {
-                header("Authorization", "Bearer $accessToken")
-                parameter("q", query)
-                parameter("type", "album")
-                ParsingUtils.limit?.let {
-                    parameter("limit", it)
+            val response = waitAndRun {
+                client.get("https://api.spotify.com/v1/search") {
+                    header("Authorization", "Bearer $accessToken")
+                    parameter("q", query)
+                    parameter("type", "album")
+                    ParsingUtils.limit?.let {
+                        parameter("limit", it)
+                    }
                 }
             }
 
