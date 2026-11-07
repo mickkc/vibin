@@ -28,13 +28,8 @@ check_repo() {
 }
 
 check_versions() {
-  # Check versions in server (version and supportedAppVersions in Application.kt)
-  local server_version="$(grep -oPz 'val version: String\s+get\(\) = "\K.*(?=")' "$VIBIN_DIR/backend/src/main/kotlin/de/mickkc/vibin/Application.kt")"
+  # Check supported versions in server (supportedAppVersions in Application.kt)
   local server_supported_versions="$(grep -oPz 'val supportedAppVersions: List<String>\s+get\(\) = listOf\(\K.+(?=\))' "$VIBIN_DIR/backend/src/main/kotlin/de/mickkc/vibin/Application.kt")"
-
-  if [[ "$server_version" != "$TAG" ]]; then
-    die "Server version in Application.kt is not '$TAG': $server_version"
-  fi
 
   if [[ "$server_supported_versions" != \"*"$TAG"*\" ]]; then
     die "Version '$TAG' is not specified in supported versions in Application.kt: $server_supported_versions"
