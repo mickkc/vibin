@@ -13,6 +13,8 @@ import de.mickkc.vibin.settings.Setting
 import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.settings.user.LastFmUserApiKey
 import de.mickkc.vibin.settings.user.LastFmUserSharedSecret
+import de.mickkc.vibin.utils.http.RateLimitedClient
+import de.mickkc.vibin.utils.http.RatelimitConfig
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.forms.*
@@ -21,6 +23,10 @@ import io.ktor.http.*
 import org.slf4j.LoggerFactory
 
 class LastFmScrobbler(client: HttpClient) : Scrobbler(client) {
+
+    private val rateLimiter = RateLimitedClient(
+        RatelimitConfig(5, 1000, 200)
+    )
 
     private val logger = LoggerFactory.getLogger(LastFmScrobbler::class.java)
     private val baseUrl = "https://ws.audioscrobbler.com/2.0/"
@@ -98,9 +104,11 @@ class LastFmScrobbler(client: HttpClient) : Scrobbler(client) {
         val paramsWithKey = params + ("api_key" to apiKey)
         val signed = paramsWithKey + ("api_sig" to sign(userId, paramsWithKey)) + ("format" to "json")
 
-        val response = client.submitForm(baseUrl, parameters {
-            signed.forEach { (k,v) -> append(k, v) }
-        })
+        val response = rateLimiter.waitAndRun {
+            client.submitForm(baseUrl, parameters {
+                signed.forEach { (k,v) -> append(k, v) }
+            })
+        }
 
         if (!response.status.isSuccess()) {
             if (response.status == HttpStatusCode.Unauthorized || response.status == HttpStatusCode.Forbidden) {
