@@ -19,6 +19,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import de.mickkc.vibin.utils.DateTimeUtils
+import de.mickkc.vibin.utils.http.UserAgentBuilder
+import io.ktor.client.engine.cio.CIO
 
 object ScrobblingManager {
 
@@ -38,7 +40,8 @@ SupervisorJob()
         + Dispatchers.IO
     )
 
-    private val client = HttpClient {
+    private val client = HttpClient(CIO) {
+        UserAgentBuilder.configureUserAgent(this, "Scrobbling")
         install(ContentNegotiation) {
             gson {  }
         }
