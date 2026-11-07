@@ -19,9 +19,6 @@ fun main() {
         .start(wait = true)
 }
 
-val version: String
-    get() = "0.0.15"
-
 val supportedAppVersions: List<String>
     get() = listOf("0.0.15")
 

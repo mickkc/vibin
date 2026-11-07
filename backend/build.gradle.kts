@@ -85,3 +85,32 @@ tasks.jacocoTestReport {
 tasks.test {
     finalizedBy(tasks.jacocoTestReport)
 }
+
+val buildInfoDir = layout.buildDirectory.dir("generated/buildInfo/kotlin")
+
+val generateBuildInfo by tasks.registering {
+
+    description = "Generates BuildInfo.kt, which contains the current app and Ktor versions."
+
+    val appVersion = project.version.toString()
+    val ktorVersion = libs.versions.ktor.get()
+
+    inputs.properties("appVersion" to appVersion, "ktorVersion" to ktorVersion)
+    outputs.dir(buildInfoDir)
+
+    doLast {
+        val pkgDir = buildInfoDir.get().asFile.resolve("de/mickkc/vibin/utils").also { it.mkdirs() }
+        pkgDir.resolve("BuildInfo.kt").writeText(
+            """
+                package de.mickkc.vibin.utils
+                
+                object BuildInfo {
+                    const val APP_VERSION = "$appVersion"
+                    const val KTOR_VERSION = "$ktorVersion"
+                }
+            """.trimIndent()
+        )
+    }
+}
+
+kotlin.sourceSets["main"].kotlin.srcDir(generateBuildInfo)

@@ -13,15 +13,21 @@ import de.mickkc.vibin.parsing.ArtistMetadata
 import de.mickkc.vibin.parsing.parsers.ArtistSearchProvider
 import de.mickkc.vibin.settings.server.MetadataLanguage
 import de.mickkc.vibin.settings.Settings
+import de.mickkc.vibin.utils.http.RateLimitedClient
+import de.mickkc.vibin.utils.http.RatelimitConfig
 
-class TheAudioDbProvider(val client: HttpClient) : ArtistSearchProvider {
+class TheAudioDbProvider(val client: HttpClient) : ArtistSearchProvider, RateLimitedClient(
+    RatelimitConfig(windowSize = 30, windowDelayMs = 60000)
+) {
 
     private val logger: Logger = LoggerFactory.getLogger(TheAudioDbProvider::class.java)
 
     override suspend fun searchArtist(query: String, user: UserEntity?): List<ArtistMetadata>? {
         try {
-            val response = client.get("https://www.theaudiodb.com/api/v1/json/123/search.php") {
-                parameter("s", query)
+            val response = waitAndRun {
+                client.get("https://www.theaudiodb.com/api/v1/json/123/search.php") {
+                    parameter("s", query)
+                }
             }
 
             if (!response.status.isSuccess()) {

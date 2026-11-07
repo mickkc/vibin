@@ -1,19 +1,7 @@
 package de.mickkc.vibin.parsing
 
 import de.mickkc.vibin.db.UserEntity
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.serialization.gson.*
-import org.slf4j.LoggerFactory
-import de.mickkc.vibin.parsing.parsers.AlbumSearchProvider
-import de.mickkc.vibin.parsing.parsers.ArtistSearchProvider
-import de.mickkc.vibin.parsing.parsers.BaseMetadataProvider
-import de.mickkc.vibin.parsing.parsers.FileParser
-import de.mickkc.vibin.parsing.parsers.TrackSearchProvider
+import de.mickkc.vibin.parsing.parsers.*
 import de.mickkc.vibin.parsing.parsers.deezer.DeezerProvider
 import de.mickkc.vibin.parsing.parsers.itunes.ItunesProvider
 import de.mickkc.vibin.parsing.parsers.lastfm.LastFmProvider
@@ -24,15 +12,19 @@ import de.mickkc.vibin.parsing.parsers.spotify.SpotifyProvider
 import de.mickkc.vibin.parsing.parsers.spotify.SpotifyScrapingProvider
 import de.mickkc.vibin.parsing.parsers.theaudiodb.TheAudioDbProvider
 import de.mickkc.vibin.repos.AlbumRepo
-import de.mickkc.vibin.settings.server.FallbackMetadataSource
-import de.mickkc.vibin.settings.server.PrimaryMetadataSource
 import de.mickkc.vibin.settings.Settings
-import de.mickkc.vibin.settings.server.AlbumMetadataFetchType
-import de.mickkc.vibin.settings.server.ArtistMetadataFetchType
-import de.mickkc.vibin.settings.server.ArtistMetadataSource
-import de.mickkc.vibin.settings.server.LyricsMetadataSource
+import de.mickkc.vibin.settings.server.*
+import de.mickkc.vibin.utils.http.UserAgentBuilder
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.serialization.gson.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.InetAddress
 import java.net.MalformedURLException
@@ -45,6 +37,7 @@ object Parser {
     private val logger = LoggerFactory.getLogger(Parser::class.java)
 
     private val client = HttpClient(CIO) {
+        UserAgentBuilder.configureUserAgent(this, "Metadata")
         install(ContentNegotiation) {
             gson {
                 serializeNulls()
