@@ -28,7 +28,7 @@ fun Application.configureStatisticRoutes() = routing {
             val userId = call.getUserId() ?: unauthorized()
             val limit = call.getIntOrDefault("limit", 5)
 
-            val recentTracks = ListenRepo.getRecentTracks(userId, 0, limit)
+            val recentTracks = ListenRepo.getRecentTracks(userId, 0, limit, userId)
             call.respond(TrackRepo.toMinimalDto(recentTracks))
         }
 
@@ -36,7 +36,7 @@ fun Application.configureStatisticRoutes() = routing {
             val userId = call.getUserId() ?: unauthorized()
             val limit = call.getIntOrDefault("limit", 5)
 
-            val recent = ListenRepo.getRecentNonTrackDtos(userId, limit)
+            val recent = ListenRepo.getRecentNonTrackDtos(userId, limit, userId)
             call.respond(recent)
         }
 
@@ -59,19 +59,19 @@ fun Application.configureStatisticRoutes() = routing {
 
             val response = when (type) {
                 "tracks" -> {
-                    val topTracks = ListenRepo.getMostListenedTracks(userId, since)
+                    val topTracks = ListenRepo.getMostListenedTracks(userId, since, userId)
                     TrackRepo.toMinimalDto(sortAndLimit(topTracks))
                 }
                 "artists" -> {
-                    val topArtists = ListenRepo.getMostListenedArtistsByTracks(userId, since)
+                    val topArtists = ListenRepo.getMostListenedArtistsByTracks(userId, since, userId)
                     ArtistRepo.toDto(sortAndLimit(topArtists))
                 }
                 "albums" -> {
-                    val topAlbums = ListenRepo.getMostListenedAlbums(userId, since)
+                    val topAlbums = ListenRepo.getMostListenedAlbums(userId, since, userId)
                     AlbumRepo.toDto(sortAndLimit(topAlbums))
                 }
                 "tags" -> {
-                    val topTags = ListenRepo.getMostListenedTags(userId, since)
+                    val topTags = ListenRepo.getMostListenedTags(userId, since, userId)
                     TagRepo.toDto(sortAndLimit(topTags))
                 }
                 "playlists" -> {
@@ -79,11 +79,11 @@ fun Application.configureStatisticRoutes() = routing {
                     PlaylistRepo.toDto(sortAndLimit(topPlaylists))
                 }
                 "nontracks" -> {
-                    val top = ListenRepo.getMostListenedToAsDtos(userId, since)
+                    val top = ListenRepo.getMostListenedToAsDtos(userId, since, userId)
                     sortAndLimit(top)
                 }
                 "global_nontracks" -> {
-                    val top = ListenRepo.getMostListenedToAsDtos(userId, since, global = true)
+                    val top = ListenRepo.getMostListenedToAsDtos(userId, since, global = true, requestingUserId = userId)
                     sortAndLimit(top)
                 }
                 else -> {
@@ -122,7 +122,7 @@ fun Application.configureStatisticRoutes() = routing {
                 invalidParameter("limit", "limit > 0")
             }
 
-            val activity = ListenRepo.getActivityForUser(userId, since, limit)
+            val activity = ListenRepo.getActivityForUser(userId, since, limit, userId)
 
             call.respond(UserActivityDto(
                 recentTracks = TrackRepo.toMinimalDto(activity.recentTracks),

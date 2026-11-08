@@ -93,19 +93,19 @@ abstract class ItemsWidget<T>(
 class RecentTracksWidget(ctx: WidgetContext) : ItemsWidget<TrackEntity>(
     ctx,
     titleKey = "widgets.recent_tracks.title",
-    getter = { ListenRepo.getRecentTracks(ctx.userId, DateTimeUtils.startOfYear(), 10) }
+    getter = { ListenRepo.getRecentTracks(ctx.userId, DateTimeUtils.startOfYear(), 10, null) }
 )
 
 class RecentAlbumsWidget(ctx: WidgetContext) : ItemsWidget<AlbumEntity>(
     ctx,
     titleKey = "widgets.recent_albums.title",
-    getter = { ListenRepo.getRecentAlbums(ctx.userId, DateTimeUtils.startOfYear(), 10) }
+    getter = { ListenRepo.getRecentAlbums(ctx.userId, DateTimeUtils.startOfYear(), 10, null) }
 )
 
 class RecentArtistsWidget(ctx: WidgetContext) : ItemsWidget<ArtistEntity>(
     ctx,
     titleKey = "widgets.recent_artists.title",
-    getter = { ListenRepo.getRecentArtistsFromTracks(ctx.userId, DateTimeUtils.startOfYear(), 10) }
+    getter = { ListenRepo.getRecentArtistsFromTracks(ctx.userId, DateTimeUtils.startOfYear(), 10, null) }
 )
 
 class RecentlyListenedWidget(ctx: WidgetContext) : ItemsWidget<Any>(
@@ -115,6 +115,7 @@ class RecentlyListenedWidget(ctx: WidgetContext) : ItemsWidget<Any>(
         ListenRepo.getRecentNonTrackDtos(
             ctx.userId,
             limit = 10,
+            requestingUserId = null,
             allowedTypes = listOf(ListenType.TRACK, ListenType.ALBUM, ListenType.ARTIST)
         ).map { it.value }
     }
@@ -125,7 +126,7 @@ class MostListenedTracksWidget(ctx: WidgetContext) : ItemsWidget<TrackEntity>(
     titleKey = "widgets.most_listened_tracks.title",
     getter = {
         ListenRepo
-            .getMostListenedTracks(ctx.userId, DateTimeUtils.startOfYear())
+            .getMostListenedTracks(ctx.userId, DateTimeUtils.startOfYear(), null)
             .toList()
             .sortedByDescending { it.second }
             .map { it.first }
@@ -138,7 +139,7 @@ class MostListenedAlbumsWidget(ctx: WidgetContext) : ItemsWidget<AlbumEntity>(
     titleKey = "widgets.most_listened_albums.title",
     getter = {
         ListenRepo
-            .getMostListenedAlbums(ctx.userId, DateTimeUtils.startOfYear())
+            .getMostListenedAlbums(ctx.userId, DateTimeUtils.startOfYear(), null)
             .toList()
             .sortedByDescending { it.second }
             .map { it.first }
@@ -151,7 +152,7 @@ class MostListenedArtistsWidget(ctx: WidgetContext) : ItemsWidget<ArtistEntity>(
     titleKey = "widgets.most_listened_artists.title",
     getter = {
         ListenRepo
-            .getMostListenedArtistsByTracks(ctx.userId, DateTimeUtils.startOfYear())
+            .getMostListenedArtistsByTracks(ctx.userId, DateTimeUtils.startOfYear(), null)
             .toList()
             .sortedByDescending { it.second }
             .map { it.first }
@@ -166,6 +167,7 @@ class MostListenedWidget(ctx: WidgetContext) : ItemsWidget<Any>(
         ListenRepo.getMostListenedToAsDtos(
             ctx.userId,
             DateTimeUtils.startOfYear(),
+            requestingUserId = null,
             false,
             listOf(ListenType.TRACK, ListenType.ARTIST, ListenType.ALBUM)
         )

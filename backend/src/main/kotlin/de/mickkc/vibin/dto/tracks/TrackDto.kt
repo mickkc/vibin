@@ -1,10 +1,11 @@
 package de.mickkc.vibin.dto.tracks
 
-import kotlinx.serialization.Serializable
+import de.mickkc.vibin.db.tracks.TrackVisibility
+import de.mickkc.vibin.dto.albums.AlbumDto
 import de.mickkc.vibin.dto.artists.ArtistDto
 import de.mickkc.vibin.dto.tags.TagDto
 import de.mickkc.vibin.dto.users.UserDto
-import de.mickkc.vibin.dto.albums.AlbumDto
+import kotlinx.serialization.Serializable
 
 @Serializable
 data class TrackDto (
@@ -28,6 +29,7 @@ data class TrackDto (
     val tags: List<TagDto>,
     val uploader: UserDto?,
     val hasLyrics: Boolean,
+    val visibility: TrackVisibility,
     val createdAt: Long,
     val updatedAt: Long?
 )

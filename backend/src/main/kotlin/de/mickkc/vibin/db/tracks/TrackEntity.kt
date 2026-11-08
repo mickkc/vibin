@@ -1,9 +1,5 @@
 package de.mickkc.vibin.db.tracks
 
-import org.jetbrains.exposed.dao.LongEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.deleteWhere
 import de.mickkc.vibin.db.ModifiableLongIdEntity
 import de.mickkc.vibin.db.ModifiableLongIdTable
 import de.mickkc.vibin.db.UserEntity
@@ -21,7 +17,15 @@ import de.mickkc.vibin.repos.LyricsRepo
 import de.mickkc.vibin.repos.PlaylistTrackRepo
 import de.mickkc.vibin.repos.TrackRelationRepo
 import de.mickkc.vibin.utils.PathUtils
-import kotlinx.css.tr
+import org.jetbrains.exposed.dao.LongEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
+
+enum class TrackVisibility {
+    Public,
+    Instance
+}
 
 object TrackTable : ModifiableLongIdTable("track") {
     val title = varchar("title", 255).index()
@@ -42,6 +46,7 @@ object TrackTable : ModifiableLongIdTable("track") {
     val checksum = text("checksum").uniqueIndex()
     val uploader = reference("uploader", UserTable).nullable()
     val volumeOffset = double("volume_offset").nullable().default(null)
+    val visibility = enumeration<TrackVisibility>("visibility").default(TrackVisibility.Public)
 }
 
 /**
@@ -88,6 +93,7 @@ class TrackEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, TrackTable) {
     var tags by TagEntity via TrackTagConnection
     var uploader by UserEntity.Companion optionalReferencedOn TrackTable.uploader
     var volumeOffset by TrackTable.volumeOffset
+    var visibility by TrackTable.visibility
 
     override fun delete() {
 
@@ -115,7 +121,7 @@ class TrackEntity(id: EntityID<Long>) : ModifiableLongIdEntity(id, TrackTable) {
 
         super.delete()
 
-        // Delete the track file from the filesystem after it has been deleted ffrom the database
+        // Delete the track file from the filesystem after it has been deleted from the database
         // In case the database deletion fails, this will not delete the file
         PathUtils.getTrackFileFromPath(trackPath).delete()
     }

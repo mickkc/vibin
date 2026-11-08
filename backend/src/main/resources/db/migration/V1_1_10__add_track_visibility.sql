@@ -1,0 +1,1 @@
+alter table "track" add column visibility integer default 0;

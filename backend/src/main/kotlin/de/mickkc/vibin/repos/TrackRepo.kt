@@ -142,6 +142,7 @@ object TrackRepo {
             this.checksum = ChecksumUtil.getChecksum(file)
             this.uploader = UserRepo.getById(upload.uploaderId)
             this.cover = cover
+            this.visibility = upload.visibility
 
             this.album = AlbumRepo.getById(upload.album) ?: AlbumRepo.getUnknownAlbum()
             this.artists = SizedCollection(upload.artists.mapNotNull { ArtistRepo.getById(it) })
@@ -182,6 +183,7 @@ object TrackRepo {
         return transaction {
             editDto.title?.takeIf { it.isNotBlank() }?.let { track.title = it }
             editDto.explicit?.let { track.explicit = it }
+            editDto.visibility?.let { track.visibility = it }
 
             track.trackNumber = editDto.trackNumber
             track.trackCount = editDto.trackCount
@@ -487,6 +489,7 @@ object TrackRepo {
             tags = trackEntity.tags.map { TagRepo.toDtoInternal(it) },
             hasLyrics = LyricsRepo.hasLyrics(trackEntity.id.value),
             uploader = trackEntity.uploader?.let { UserRepo.toDtoInternal(it) },
+            visibility = trackEntity.visibility,
             createdAt = trackEntity.createdAt,
             updatedAt = trackEntity.updatedAt
         )

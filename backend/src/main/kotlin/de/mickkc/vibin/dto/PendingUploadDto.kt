@@ -1,5 +1,6 @@
 package de.mickkc.vibin.dto
 
+import de.mickkc.vibin.db.tracks.TrackVisibility
 import kotlinx.serialization.Serializable
 import de.mickkc.vibin.dto.albums.AlbumDto
 import de.mickkc.vibin.dto.artists.ArtistDto
@@ -21,6 +22,7 @@ data class PendingUploadDto(
     var year: Int?,
     var comment: String,
     var lyrics: String?,
+    var visibility: TrackVisibility,
     var uploaderId: Long,
     var lastUpdated: Long
 )
