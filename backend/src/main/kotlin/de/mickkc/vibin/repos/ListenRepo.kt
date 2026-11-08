@@ -201,7 +201,7 @@ object ListenRepo {
      */
     private fun listenAlbumVisibleToUser(userId: Long?): Op<Boolean> {
         if (userId != null) return Op.TRUE
-        return (ListenTable.entityId inSubQuery AlbumTable.select(TrackTable.id).where {
+        return (ListenTable.entityId inSubQuery AlbumTable.select(AlbumTable.id).where {
             AlbumTable.id inSubQuery TrackTable.select(TrackTable.albumId).where {
                 TrackTable.visibility eq TrackVisibility.Public
             }

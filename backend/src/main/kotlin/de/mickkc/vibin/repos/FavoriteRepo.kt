@@ -39,8 +39,8 @@ object FavoriteRepo {
         return@transaction (1..3).map { place ->
             val pair = albumIds.firstOrNull { it.second == place }
             pair?.let { AlbumEntity.findById(it.first) }?.takeIf {
-                requestingUserId != null || TrackRepo.getAllFromAlbum(it.id.value, requestingUserId).any {
-                    it.visibility == TrackVisibility.Public
+                requestingUserId != null || TrackRepo.getAllFromAlbum(it.id.value, requestingUserId).let { tracks ->
+                    tracks.isEmpty() || tracks.any { track -> track.visibility == TrackVisibility.Public }
                 }
             }
         }
@@ -51,8 +51,8 @@ object FavoriteRepo {
         return@transaction (1..3).map { place ->
             val pair = artistIds.firstOrNull { it.second == place }
             pair?.let { ArtistEntity.findById(it.first) }?.takeIf {
-                requestingUserId != null || TrackRepo.getByArtistId(it.id.value, requestingUserId).any {
-                    it.visibility == TrackVisibility.Public
+                requestingUserId != null || TrackRepo.getByArtistId(it.id.value, requestingUserId).let { tracks ->
+                    tracks.isEmpty() || tracks.any { track -> track.visibility == TrackVisibility.Public }
                 }
             }
         }
