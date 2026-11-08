@@ -6,6 +6,8 @@ import de.mickkc.vibin.db.ListenType
 import de.mickkc.vibin.db.albums.AlbumEntity
 import de.mickkc.vibin.db.albums.AlbumTable
 import de.mickkc.vibin.db.artists.ArtistEntity
+import de.mickkc.vibin.db.artists.ArtistTable
+import de.mickkc.vibin.db.artists.TrackArtistConnection
 import de.mickkc.vibin.db.playlists.PlaylistEntity
 import de.mickkc.vibin.db.tags.TagEntity
 import de.mickkc.vibin.db.tracks.TrackEntity
@@ -245,6 +247,22 @@ object ListenRepo {
             .toList()
     }
 
+    /**
+     * Filters out listens of users that only appear in instance-only tracks.
+     * If [userId] is null, only artists appearing in at least one public track are included, otherwise, instance-only
+     * artists are included as well.
+     */
+    private fun listenArtistVisibleToUser(userId: Long?): Op<Boolean> {
+        if (userId != null) return Op.TRUE
+        return (ListenTable.entityId inSubQuery ArtistTable.select(ArtistTable.id).where {
+            ArtistTable.id inSubQuery TrackArtistConnection.select(TrackArtistConnection.artist).where {
+                TrackArtistConnection.track inSubQuery TrackTable.select(TrackTable.id).where {
+                    TrackTable.visibility eq TrackVisibility.Public
+                }
+            }
+        })
+    }
+
     fun getRecentNonTrackDtos(
         userId: Long,
         limit: Int,
@@ -255,7 +273,8 @@ object ListenRepo {
         return@transaction ListenEntity
             .find { (ListenTable.user eq userId) and (ListenTable.type inList allowedTypes) and
                 ((ListenTable.type neq ListenType.TRACK) or listenTrackVisibleToUser(requestingUserId)) and
-                ((ListenTable.type neq ListenType.ALBUM) or listenAlbumVisibleToUser(requestingUserId))
+                ((ListenTable.type neq ListenType.ALBUM) or listenAlbumVisibleToUser(requestingUserId)) and
+                ((ListenTable.type neq ListenType.ARTIST) or listenArtistVisibleToUser(requestingUserId))
             }
             .orderBy(ListenTable.listenedAt to SortOrder.DESC)
             .mapNotNull { KeyValueDto(it.type.name, when (it.type) {
