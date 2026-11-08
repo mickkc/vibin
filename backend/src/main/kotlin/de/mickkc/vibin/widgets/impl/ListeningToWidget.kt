@@ -1,8 +1,11 @@
 package de.mickkc.vibin.widgets.impl
 
+import de.mickkc.vibin.db.tracks.TrackVisibility
 import de.mickkc.vibin.repos.ControlRepo
 import de.mickkc.vibin.repos.SessionPlayState
 import de.mickkc.vibin.repos.TrackRepo
+import de.mickkc.vibin.repos.UserRepo
+import de.mickkc.vibin.templates.TemplateTranslator
 import de.mickkc.vibin.utils.DateTimeUtils
 import de.mickkc.vibin.widgets.BaseWidget
 import de.mickkc.vibin.widgets.WidgetContext
@@ -39,7 +42,13 @@ class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
         val initialTrack = initialSession?.currentTrackId?.let { TrackRepo.getById(it) }
         val initialAlbum = initialTrack?.let { TrackRepo.getAlbum(it) }
         val initialArtists = initialTrack?.let { TrackRepo.getArtists(it) }?.joinToString { it.name }
-        val coverUrl = WidgetUtils.getImageUrl(initialTrack?.let { TrackRepo.getCover(it) }, "track", 128, ctx.baseUrl)
+
+        val trackPrivate = initialTrack != null && initialTrack.visibility != TrackVisibility.Public
+
+        val coverUrl = if (trackPrivate)
+            WidgetUtils.getImageUrl(null, "track", 128, ctx.baseUrl)
+        else
+            WidgetUtils.getImageUrl(initialTrack?.let { TrackRepo.getCover(it) }, "track", 128, ctx.baseUrl)
 
         div("widget-body listening-to-widget") {
             if (interactive) {
@@ -67,14 +76,16 @@ class ListeningToWidget(ctx: WidgetContext) : BaseWidget(ctx) {
             }
             div("listening-to") {
                 img(t("widgets.listening_to.album_cover"), coverUrl, classes = "cover") {
-                    title = initialAlbum?.title ?: t("widgets.listening_to.unknown")
+                    title = if (trackPrivate) "" else initialAlbum?.title ?: t("widgets.listening_to.unknown")
                 }
                 div("details") {
                     p("title") {
-                        +(initialTrack?.title ?: t("widgets.listening_to.unknown"))
+                        +(if (trackPrivate) TemplateTranslator.getTranslation("listening_to.private.title")
+                            else initialTrack?.title ?: t("widgets.listening_to.unknown"))
                     }
                     p("artists") {
-                        +(initialArtists ?: t("widgets.listening_to.unknown"))
+                        +(if (trackPrivate) TemplateTranslator.getTranslation("listening_to.private.desc", UserRepo.getUsername(ctx.userId) ?: "User")
+                            else initialArtists ?: t("widgets.listening_to.unknown"))
                     }
                     p("state") {
                         if (initialSession != null) {
