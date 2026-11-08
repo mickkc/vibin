@@ -48,6 +48,11 @@ Upload:
     uploaderId:
       type: integer
       format: int64
+    visibility:
+      type: string
+      enum:
+        - Public
+        - Instance
     lastUpdated:
       type: integer
       format: int64
