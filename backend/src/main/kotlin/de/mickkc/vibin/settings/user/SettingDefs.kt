@@ -2,6 +2,7 @@ package de.mickkc.vibin.settings.user
 
 import de.mickkc.vibin.scrobbling.lastfm.settings.LastFmUserCredentialsPassword
 import de.mickkc.vibin.scrobbling.lastfm.settings.LastFmUserCredentialsUsername
+import de.mickkc.vibin.scrobbling.listenbrainz.settings.ListenBrainzToken
 import kotlinx.serialization.json.Json
 
 val userSettings = listOf(
@@ -19,7 +20,9 @@ val userSettings = listOf(
     LastFmUserSharedSecret,
 
     LastFmUserCredentialsUsername,
-    LastFmUserCredentialsPassword
+    LastFmUserCredentialsPassword,
+
+    ListenBrainzToken
 )
 
 object ShowActivitiesToOthers : UserSetting<Boolean>(
