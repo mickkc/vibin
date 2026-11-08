@@ -202,9 +202,9 @@ object ListenRepo {
     private fun listenAlbumVisibleToUser(userId: Long?): Op<Boolean> {
         if (userId != null) return Op.TRUE
         return (ListenTable.entityId inSubQuery AlbumTable.select(AlbumTable.id).where {
-            AlbumTable.id inSubQuery TrackTable.select(TrackTable.albumId).where {
+            (AlbumTable.id inSubQuery TrackTable.select(TrackTable.albumId).where {
                 TrackTable.visibility eq TrackVisibility.Public
-            }
+            }) or (AlbumTable.id notInSubQuery TrackTable.select(TrackTable.albumId))
         })
     }
 
@@ -255,11 +255,11 @@ object ListenRepo {
     private fun listenArtistVisibleToUser(userId: Long?): Op<Boolean> {
         if (userId != null) return Op.TRUE
         return (ListenTable.entityId inSubQuery ArtistTable.select(ArtistTable.id).where {
-            ArtistTable.id inSubQuery TrackArtistConnection.select(TrackArtistConnection.artist).where {
+            (ArtistTable.id inSubQuery TrackArtistConnection.select(TrackArtistConnection.artist).where {
                 TrackArtistConnection.track inSubQuery TrackTable.select(TrackTable.id).where {
                     TrackTable.visibility eq TrackVisibility.Public
                 }
-            }
+            }) or (ArtistTable.id notInSubQuery TrackArtistConnection.select(TrackArtistConnection.artist))
         })
     }
 
