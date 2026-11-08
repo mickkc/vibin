@@ -4,6 +4,7 @@ import de.mickkc.vibin.db.EnabledScrobblerTable
 import de.mickkc.vibin.dto.scrobbling.ScrobblerDto
 import de.mickkc.vibin.repos.TrackRepo
 import de.mickkc.vibin.scrobbling.lastfm.LastFmScrobbler
+import de.mickkc.vibin.scrobbling.listenbrainz.ListenBrainzScrobbler
 import io.ktor.client.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.gson.*
@@ -48,7 +49,8 @@ SupervisorJob()
     }
 
     val scrobblers = listOf(
-        LastFmScrobbler(client)
+        LastFmScrobbler(client),
+        ListenBrainzScrobbler(client)
     )
 
     fun getScrobblerById(id: String): Scrobbler? = scrobblers.firstOrNull { it.id == id }
