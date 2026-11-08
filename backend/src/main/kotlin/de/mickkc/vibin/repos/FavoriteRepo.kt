@@ -12,40 +12,49 @@ import de.mickkc.vibin.db.FavoriteType
 import de.mickkc.vibin.db.albums.AlbumEntity
 import de.mickkc.vibin.db.artists.ArtistEntity
 import de.mickkc.vibin.db.tracks.TrackEntity
+import de.mickkc.vibin.db.tracks.TrackVisibility
 import de.mickkc.vibin.dto.FavoriteDto
 import kotlin.collections.map
 
 object FavoriteRepo {
 
-    fun getFavoriteDtoForUser(userId: Long): FavoriteDto = transaction {
+    fun getFavoriteDtoForUser(userId: Long, requestingUserId: Long?): FavoriteDto = transaction {
         FavoriteDto(
-            tracks = getFavoriteTracksForUser(userId).map { it?.let { TrackRepo.toMinimalDtoInternal(it) } },
-            albums = getFavoriteAlbumsForUser(userId).map { it?.let { AlbumRepo.toDtoInternal(it) } },
-            artists = getFavoriteArtistsForUser(userId).map { it?.let { ArtistRepo.toDtoInternal(it) } },
+            tracks = getFavoriteTracksForUser(userId, requestingUserId).map { it?.let { TrackRepo.toMinimalDtoInternal(it) } },
+            albums = getFavoriteAlbumsForUser(userId, requestingUserId).map { it?.let { AlbumRepo.toDtoInternal(it) } },
+            artists = getFavoriteArtistsForUser(userId, requestingUserId).map { it?.let { ArtistRepo.toDtoInternal(it) } },
         )
     }
 
-    fun getFavoriteTracksForUser(userId: Long): List<TrackEntity?> = transaction {
+    fun getFavoriteTracksForUser(userId: Long, requestingUserId: Long?): List<TrackEntity?> = transaction {
         val trackIds = getFavoriteIdsByTypeForUser(userId, FavoriteType.TRACK)
         return@transaction (1..3).map { place ->
             val pair = trackIds.firstOrNull { it.second == place }
-            pair?.let { TrackEntity.findById(it.first) }
+            pair?.let { TrackEntity.findById(it.first) }?.takeIf { requestingUserId != null || it.visibility == TrackVisibility.Public }
         }
     }
 
-    fun getFavoriteAlbumsForUser(userId: Long): List<AlbumEntity?> = transaction {
+    fun getFavoriteAlbumsForUser(userId: Long, requestingUserId: Long?): List<AlbumEntity?> = transaction {
         val albumIds = getFavoriteIdsByTypeForUser(userId, FavoriteType.ALBUM)
         return@transaction (1..3).map { place ->
             val pair = albumIds.firstOrNull { it.second == place }
-            pair?.let { AlbumEntity.findById(it.first) }
+            pair?.let { AlbumEntity.findById(it.first) }?.takeIf {
+                requestingUserId != null || TrackRepo.getAllFromAlbum(it.id.value, requestingUserId).any {
+                    it.visibility == TrackVisibility.Public
+                }
+            }
         }
     }
 
-    fun getFavoriteArtistsForUser(userId: Long): List<ArtistEntity?> = transaction {
+    fun getFavoriteArtistsForUser(userId: Long, requestingUserId: Long?): List<ArtistEntity?> = transaction {
         val artistIds = getFavoriteIdsByTypeForUser(userId, FavoriteType.ARTIST)
         return@transaction (1..3).map { place ->
             val pair = artistIds.firstOrNull { it.second == place }
-            pair?.let { ArtistEntity.findById(it.first) }
+            pair?.let { ArtistEntity.findById(it.first) }?.takeIf {
+                requestingUserId != null || TrackRepo.getByArtistId(it.id.value, requestingUserId).any {
+                    it.visibility == TrackVisibility.Public
+                }
+            }
         }
     }
 

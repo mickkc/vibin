@@ -13,7 +13,7 @@ class FavoriteArtistsWidget(ctx: WidgetContext) : BaseWidget(ctx) {
     override fun FlowContent.apply() {
         div("widget-body") {
 
-            val favorites = FavoriteRepo.getFavoriteArtistsForUser(ctx.userId)
+            val favorites = FavoriteRepo.getFavoriteArtistsForUser(ctx.userId, null)
 
             itemSection(
                 this@FavoriteArtistsWidget,

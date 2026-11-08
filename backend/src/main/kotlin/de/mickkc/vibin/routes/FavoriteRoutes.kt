@@ -31,7 +31,7 @@ fun Application.configureFavoriteRoutes() = routing {
                 noPermission(PermissionType.VIEW_USERS)
             }
 
-            val favorites = FavoriteRepo.getFavoriteDtoForUser(userId)
+            val favorites = FavoriteRepo.getFavoriteDtoForUser(userId, requestingUserId)
 
             call.respond(favorites)
         }
