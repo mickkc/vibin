@@ -252,7 +252,8 @@ class TrackRestTest {
             album = newAlbum.id.value,
             artists = listOf(newArtist.id.value),
             tags = listOf(tag.id.value),
-            lyrics = "New lyrics"
+            lyrics = "New lyrics",
+            visibility = null
         )
 
         val response = client.put("/api/tracks/${track.id.value}") {
@@ -329,7 +330,8 @@ class TrackRestTest {
             album = null,
             artists = null,
             tags = null,
-            lyrics = null
+            lyrics = null,
+            visibility = null
         )
 
         val response = client.put("/api/tracks/${track.id.value}") {
@@ -378,7 +380,8 @@ class TrackRestTest {
             album = null,
             artists = null,
             tags = null,
-            lyrics = null
+            lyrics = null,
+            visibility = null
         )
 
         val response = client.put("/api/tracks/${track.id.value}") {
@@ -407,7 +410,8 @@ class TrackRestTest {
             album = null,
             artists = null,
             tags = null,
-            lyrics = null
+            lyrics = null,
+            visibility = null
         )
 
         val response = client.put("/api/tracks/9999") {
@@ -440,7 +444,8 @@ class TrackRestTest {
             album = null,
             artists = null,
             tags = null,
-            lyrics = null
+            lyrics = null,
+            visibility = null
         )
 
         val response = client.put("/api/tracks/${track.id.value}") {
