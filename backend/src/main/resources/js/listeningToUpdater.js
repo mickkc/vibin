@@ -63,7 +63,7 @@
     let lastData = null;
 
     function updateDuration() {
-        if (lastData == null || lastData.old) {
+        if (lastData == null || lastData.old || lastData.state === "STOPPED") {
             progressRow.style.visibility = 'hidden';
         }
         else {

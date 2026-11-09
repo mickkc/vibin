@@ -5,6 +5,7 @@ import kotlinx.coroutines.sync.Mutex
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import de.mickkc.vibin.db.tracks.TrackEntity
+import de.mickkc.vibin.db.tracks.TrackVisibility
 import de.mickkc.vibin.dto.PendingUploadDto
 import de.mickkc.vibin.dto.tracks.TrackEditDto
 import de.mickkc.vibin.parsing.Parser
@@ -96,6 +97,7 @@ object UploadManager {
                     comment = parsed.trackInfo.comment ?: "",
                     lyrics = parsed.trackInfo.lyrics ?: Parser.searchLyricsAuto(parsed, user),
                     uploaderId = user.id.value,
+                    visibility = TrackVisibility.Public,
                     lastUpdated = DateTimeUtils.now()
                 )
 
@@ -143,6 +145,7 @@ object UploadManager {
             upload.year = metadata.year
             upload.comment = metadata.comment ?: upload.comment
             upload.lyrics = metadata.lyrics ?: upload.lyrics
+            upload.visibility = metadata.visibility ?: upload.visibility
 
             if (metadata.imageUrl != null) {
                 if (metadata.imageUrl.isEmpty()) {
@@ -343,6 +346,7 @@ object UploadManager {
             year = upload.year,
             comment = upload.comment,
             lyrics = upload.lyrics,
+            visibility = upload.visibility,
             uploaderId = upload.uploaderId,
             lastUpdated = upload.lastUpdated
         )

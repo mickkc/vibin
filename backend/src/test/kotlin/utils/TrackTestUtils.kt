@@ -4,6 +4,7 @@ import de.mickkc.vibin.db.images.ImageEntity
 import org.jetbrains.exposed.sql.SizedCollection
 import org.jetbrains.exposed.sql.transactions.transaction
 import de.mickkc.vibin.db.tracks.TrackEntity
+import de.mickkc.vibin.db.tracks.TrackVisibility
 import de.mickkc.vibin.repos.UserRepo
 
 object TrackTestUtils {
@@ -26,6 +27,7 @@ object TrackTestUtils {
         checksum: String? = null,
         tags: List<String>? = null,
         coverChecksum: String? = null,
+        visibility: TrackVisibility = TrackVisibility.Public,
     ): TrackEntity {
 
         val splitArtists = artists.split(",").map { it.trim() }
@@ -57,6 +59,7 @@ object TrackTestUtils {
                 this.artists = SizedCollection(artists)
                 this.checksum = checksum ?: "checksum_${title.hashCode()}"
                 this.tags = SizedCollection(tags)
+                this.visibility = visibility
                 this.cover = coverChecksum?.let {
                     ImageEntity.new {
                         this.sourceChecksum = it

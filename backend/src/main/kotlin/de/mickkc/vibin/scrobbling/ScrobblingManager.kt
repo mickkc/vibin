@@ -1,6 +1,7 @@
 package de.mickkc.vibin.scrobbling
 
 import de.mickkc.vibin.db.EnabledScrobblerTable
+import de.mickkc.vibin.db.tracks.TrackVisibility
 import de.mickkc.vibin.dto.scrobbling.ScrobblerDto
 import de.mickkc.vibin.repos.TrackRepo
 import de.mickkc.vibin.scrobbling.lastfm.LastFmScrobbler
@@ -90,6 +91,7 @@ SupervisorJob()
     fun scrobble(userId: Long, trackId: Long, duration: Long, start: Long) {
         val track = TrackRepo.getById(trackId) ?: return
         if (duration <= 0) return
+        if (track.visibility != TrackVisibility.Public) return
 
         scope.launch {
             getEnabledScrobblers(userId).forEach { scrobbler ->
@@ -111,6 +113,7 @@ SupervisorJob()
             return
 
         val track = TrackRepo.getById(trackId) ?: return
+        if (track.visibility != TrackVisibility.Public) return
 
         scope.launch {
             getEnabledScrobblers(userId).forEach { scrobbler ->

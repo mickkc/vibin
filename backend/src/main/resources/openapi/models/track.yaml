@@ -64,6 +64,11 @@ Track:
       $ref: 'user.yaml#/User'
     hasLyrics:
       type: boolean
+    visibility:
+      type: string
+      enum:
+        - Public
+        - Instance
     createdAt:
       type: integer
       format: int64
@@ -177,6 +182,11 @@ TrackEditData:
     lyrics:
       type: string
       nullable: true
+    visibility:
+      type: string
+      enum:
+        - Public
+        - Instance
 
 MinimalTrack:
   type: object

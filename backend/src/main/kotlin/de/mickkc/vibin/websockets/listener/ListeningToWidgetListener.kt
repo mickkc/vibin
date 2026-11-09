@@ -1,9 +1,12 @@
 package de.mickkc.vibin.websockets.listener
 
 import com.google.gson.Gson
+import de.mickkc.vibin.db.tracks.TrackVisibility
 import de.mickkc.vibin.repos.ControlRepo
 import de.mickkc.vibin.repos.TrackRepo
+import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.routes.WsFrame
+import de.mickkc.vibin.templates.TemplateTranslator
 import de.mickkc.vibin.utils.DateTimeUtils.now
 import de.mickkc.vibin.websockets.Session
 import de.mickkc.vibin.websockets.SessionListener
@@ -56,13 +59,16 @@ class ListeningToWidgetListener(
         val imageUrl = if (lastTrackId != session.currentTrackId) {
             lastTrackId = session.currentTrackId
             val img = track?.let { TrackRepo.getCover(track) }
-            WidgetUtils.getImageUrl(img, "track", 128, baseUrl)
+            if (track?.visibility == TrackVisibility.Public)
+                WidgetUtils.getImageUrl(img, "track", 128, baseUrl)
+            else
+                WidgetUtils.getImageUrl(null, "track", 128, baseUrl)
         }
         else null
 
         send(WsFrame(
             type = "state",
-            data = mapOf(
+            data = if (track == null || track.visibility == TrackVisibility.Public) mapOf(
                 "title" to track?.title.orEmpty(),
                 "artists" to artists.orEmpty().joinToString { it.name },
                 "album" to album?.title.orEmpty(),
@@ -72,6 +78,16 @@ class ListeningToWidgetListener(
                 "old" to session.removed,
                 "duration" to track?.duration,
                 "position" to session.lastPosition + (now() - session.lastPositionUpdate)
+            ) else mapOf(
+                "title" to TemplateTranslator.getTranslation("listening_to.private.title"),
+                "artists" to TemplateTranslator.getTranslation("listening_to.private.desc", UserRepo.getUsername(userId) ?: "User"),
+                "album" to "",
+                "cover" to imageUrl,
+                "state" to session.state.name,
+                "updated" to session.lastUpdate,
+                "old" to session.removed,
+                "duration" to null,
+                "position" to null
             ),
             timestamp = now()
         ))

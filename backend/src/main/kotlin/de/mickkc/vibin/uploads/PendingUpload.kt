@@ -1,5 +1,6 @@
 package de.mickkc.vibin.uploads
 
+import de.mickkc.vibin.db.tracks.TrackVisibility
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -19,5 +20,6 @@ data class PendingUpload(
     var comment: String,
     var lyrics: String?,
     var uploaderId: Long,
+    var visibility: TrackVisibility,
     var lastUpdated: Long
 )

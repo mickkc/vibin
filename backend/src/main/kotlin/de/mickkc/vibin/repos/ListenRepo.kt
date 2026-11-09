@@ -1,22 +1,28 @@
 package de.mickkc.vibin.repos
 
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.transactions.transaction
 import de.mickkc.vibin.db.ListenEntity
 import de.mickkc.vibin.db.ListenTable
 import de.mickkc.vibin.db.ListenType
 import de.mickkc.vibin.db.albums.AlbumEntity
+import de.mickkc.vibin.db.albums.AlbumTable
 import de.mickkc.vibin.db.artists.ArtistEntity
+import de.mickkc.vibin.db.artists.ArtistTable
+import de.mickkc.vibin.db.artists.TrackArtistConnection
 import de.mickkc.vibin.db.playlists.PlaylistEntity
 import de.mickkc.vibin.db.tags.TagEntity
 import de.mickkc.vibin.db.tracks.TrackEntity
+import de.mickkc.vibin.db.tracks.TrackTable
+import de.mickkc.vibin.db.tracks.TrackVisibility
 import de.mickkc.vibin.dto.KeyValueDto
 import de.mickkc.vibin.utils.DateTimeUtils
 import de.mickkc.vibin.utils.UserActivity
-import java.time.LocalDate
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inSubQuery
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.or
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object ListenRepo {
 
@@ -57,9 +63,9 @@ object ListenRepo {
         }
     }
 
-    fun getMostListenedTracks(userId: Long?, since: Long): Map<TrackEntity, Int> = transaction {
+    fun getMostListenedTracks(userId: Long?, since: Long, requestingUserId: Long?): Map<TrackEntity, Int> = transaction {
         ListenEntity
-            .find { (ListenTable.listenedAt greaterEq since) and createOp(userId) and (ListenTable.type eq ListenType.TRACK) }
+            .find { (ListenTable.listenedAt greaterEq since) and createOp(userId) and (ListenTable.type eq ListenType.TRACK) and listenTrackVisibleToUser(requestingUserId) }
             .groupBy { it.entityId }
             .mapValues { it.value.size }
             .mapKeys { TrackRepo.getById(it.key) }
@@ -67,9 +73,9 @@ object ListenRepo {
             .mapKeys { it.key!! }
     }
 
-    fun getMostListenedAlbums(userId: Long?, since: Long): Map<AlbumEntity, Int> = transaction {
+    fun getMostListenedAlbums(userId: Long?, since: Long, requestingUserId: Long?): Map<AlbumEntity, Int> = transaction {
         ListenEntity
-            .find { (ListenTable.listenedAt greaterEq since) and createOp(userId) and (ListenTable.type eq ListenType.ALBUM) }
+            .find { (ListenTable.listenedAt greaterEq since) and createOp(userId) and (ListenTable.type eq ListenType.ALBUM) and listenAlbumVisibleToUser(requestingUserId) }
             .groupBy { it.entityId }
             .mapValues { it.value.size }
             .mapKeys { AlbumRepo.getById(it.key) }
@@ -77,18 +83,18 @@ object ListenRepo {
             .mapKeys { it.key!! }
     }
 
-    fun getMostListenedArtistsByTracks(userId: Long?, since: Long): Map<ArtistEntity, Int> = transaction {
+    fun getMostListenedArtistsByTracks(userId: Long?, since: Long, requestingUserId: Long?): Map<ArtistEntity, Int> = transaction {
 
-        val mostListenedTracks = getMostListenedTracks(userId, since)
+        val mostListenedTracks = getMostListenedTracks(userId, since, requestingUserId)
 
         val artists = mostListenedTracks.flatMap { it.key.artists }
 
         return@transaction artists.groupingBy { it }.eachCount()
     }
 
-    fun getMostListenedArtists(userId: Long?, since: Long): Map<ArtistEntity, Int> = transaction {
+    fun getMostListenedArtists(userId: Long?, since: Long, requestingUserId: Long?): Map<ArtistEntity, Int> = transaction {
         ListenEntity
-            .find { (ListenTable.listenedAt greaterEq since) and createOp(userId) and (ListenTable.type eq ListenType.ARTIST) }
+            .find { (ListenTable.listenedAt greaterEq since) and createOp(userId) and (ListenTable.type eq ListenType.ARTIST) and listenArtistVisibleToUser(requestingUserId) }
             .groupBy { it.entityId }
             .mapValues { it.value.size }
             .mapKeys { ArtistRepo.getById(it.key) }
@@ -114,6 +120,7 @@ object ListenRepo {
     fun getMostListenedToAsDtos(
         userId: Long,
         since: Long,
+        requestingUserId: Long?,
         global: Boolean = false,
         allowedTypes: List<ListenType> = PermissionRepo.getPermittedListenTypes(userId) - ListenType.TRACK
     ): Map<KeyValueDto, Int> = transaction {
@@ -121,19 +128,19 @@ object ListenRepo {
         val dtos = mutableMapOf<KeyValueDto, Int>()
 
         if (allowedTypes.contains(ListenType.TRACK)) {
-            dtos += getMostListenedTracks(userId.takeIf { !global }, since).mapKeys {
+            dtos += getMostListenedTracks(userId.takeIf { !global }, since, requestingUserId).mapKeys {
                 KeyValueDto(ListenType.TRACK.name, TrackRepo.toDto(it.key))
             }
         }
 
         if (allowedTypes.contains(ListenType.ALBUM)) {
-            dtos += getMostListenedAlbums(userId.takeIf { !global }, since).mapKeys {
+            dtos += getMostListenedAlbums(userId.takeIf { !global }, since, requestingUserId).mapKeys {
                 KeyValueDto(ListenType.ALBUM.name, AlbumRepo.toDto(it.key))
             }
         }
 
         if (allowedTypes.contains(ListenType.ARTIST)) {
-            dtos += getMostListenedArtists(userId.takeIf { !global }, since).mapKeys {
+            dtos += getMostListenedArtists(userId.takeIf { !global }, since, requestingUserId).mapKeys {
                 KeyValueDto(ListenType.ARTIST.name, ArtistRepo.toDto(it.key))
             }
         }
@@ -147,8 +154,8 @@ object ListenRepo {
         return@transaction dtos
     }
 
-    fun getMostListenedTags(userId: Long, since: Long): Map<TagEntity, Int> = transaction {
-        val tracks = getMostListenedTracks(userId, since)
+    fun getMostListenedTags(userId: Long, since: Long, requestingUserId: Long?): Map<TagEntity, Int> = transaction {
+        val tracks = getMostListenedTracks(userId, since, requestingUserId)
         val tagCount = mutableMapOf<TagEntity, Int>()
         tracks.forEach { (track, count) ->
             track.tags.forEach { tag ->
@@ -158,9 +165,28 @@ object ListenRepo {
         return@transaction tagCount
     }
 
-    fun getRecentTracks(userId: Long, since: Long, limit: Int): List<TrackEntity> = transaction {
+    /**
+     * Filters out track-listens to only include tracks the user is allowed to see.
+     * If [userId] is null, only public tracks will be included, otherwise, instance-only tracks are included as well.
+     */
+    private fun listenTrackVisibleToUser(userId: Long?): Op<Boolean> {
+        if (userId != null) return Op.TRUE
+        return (ListenTable.entityId inSubQuery TrackTable.select(TrackTable.id).where {
+            TrackTable.visibility eq TrackVisibility.Public
+        })
+    }
+
+    /**
+     * Gets the most recently listened to tracks, sorted so the most recent tracks come first.
+     *
+     * @param userId The user to get the most recently listened tracks for.
+     * @param since The starting timestamp. Tracks listened to before it will not be included.
+     * @param limit The maximum amount of tracks to return.
+     * @param requestingUserId If null, only public tracks will be returned.
+     */
+    fun getRecentTracks(userId: Long, since: Long, limit: Int, requestingUserId: Long?): List<TrackEntity> = transaction {
         return@transaction ListenEntity
-            .find { (ListenTable.listenedAt greaterEq since) and (ListenTable.user eq userId) and (ListenTable.type eq ListenType.TRACK) }
+            .find { (ListenTable.listenedAt greaterEq since) and (ListenTable.user eq userId) and (ListenTable.type eq ListenType.TRACK) and listenTrackVisibleToUser(requestingUserId) }
             .orderBy(ListenTable.listenedAt to SortOrder.DESC)
             .map { it.entityId }
             .distinct()
@@ -168,9 +194,31 @@ object ListenRepo {
             .mapNotNull { TrackRepo.getById(it) }
     }
 
-    fun getRecentAlbums(userId: Long, since: Long, limit: Int): List<AlbumEntity> = transaction {
+    /**
+     * Filters out listens of albums that only contain instance-only tracks.
+     * If [userId] is null, only albums containing at least one public track are included, otherwise, instance-only
+     * albums are included as well.
+     */
+    private fun listenAlbumVisibleToUser(userId: Long?): Op<Boolean> {
+        if (userId != null) return Op.TRUE
+        return (ListenTable.entityId inSubQuery AlbumTable.select(AlbumTable.id).where {
+            (AlbumTable.id inSubQuery TrackTable.select(TrackTable.albumId).where {
+                TrackTable.visibility eq TrackVisibility.Public
+            }) or (AlbumTable.id notInSubQuery TrackTable.select(TrackTable.albumId))
+        })
+    }
+
+    /**
+     * Gets the most recently listened to albums, sorted so the most recent albums come first.
+     *
+     * @param userId The user to get the most recently listened albums for.
+     * @param since The starting timestamp. Albums listened to before it will not be included.
+     * @param limit The maximum amount of albums to return.
+     * @param requestingUserId If null, only albums with at least one public track will be returned.
+     */
+    fun getRecentAlbums(userId: Long, since: Long, limit: Int, requestingUserId: Long?): List<AlbumEntity> = transaction {
         return@transaction ListenEntity
-            .find { (ListenTable.listenedAt greaterEq since) and (ListenTable.user eq userId) and (ListenTable.type eq ListenType.ALBUM) }
+            .find { (ListenTable.listenedAt greaterEq since) and (ListenTable.user eq userId) and (ListenTable.type eq ListenType.ALBUM) and listenAlbumVisibleToUser(requestingUserId) }
             .orderBy(ListenTable.listenedAt to SortOrder.DESC)
             .map { it.entityId }
             .distinct()
@@ -178,9 +226,17 @@ object ListenRepo {
             .mapNotNull { AlbumRepo.getById(it) }
     }
 
-    fun getRecentArtistsFromTracks(userId: Long, since: Long, limit: Int): List<ArtistEntity> = transaction {
+    /**
+     * Gets the most recently listened to artists based on listened to tracks, sorted so the most recent artists come first.
+     *
+     * @param userId The user to get the most recently listened artists for.
+     * @param since The starting timestamp. Artists listened to before it will not be included.
+     * @param limit The maximum amount of artists to return.
+     * @param requestingUserId If null, only artists from public tracks will be returned.
+     */
+    fun getRecentArtistsFromTracks(userId: Long, since: Long, limit: Int, requestingUserId: Long?): List<ArtistEntity> = transaction {
         return@transaction ListenEntity
-            .find { (ListenTable.listenedAt greaterEq since) and (ListenTable.user eq userId) and (ListenTable.type eq ListenType.TRACK) }
+            .find { (ListenTable.listenedAt greaterEq since) and (ListenTable.user eq userId) and (ListenTable.type eq ListenType.TRACK) and listenTrackVisibleToUser(requestingUserId) }
             .orderBy(ListenTable.listenedAt to SortOrder.DESC)
             .asSequence()
             .map { it.entityId }
@@ -191,14 +247,35 @@ object ListenRepo {
             .toList()
     }
 
+    /**
+     * Filters out listens of users that only appear in instance-only tracks.
+     * If [userId] is null, only artists appearing in at least one public track are included, otherwise, instance-only
+     * artists are included as well.
+     */
+    private fun listenArtistVisibleToUser(userId: Long?): Op<Boolean> {
+        if (userId != null) return Op.TRUE
+        return (ListenTable.entityId inSubQuery ArtistTable.select(ArtistTable.id).where {
+            (ArtistTable.id inSubQuery TrackArtistConnection.select(TrackArtistConnection.artist).where {
+                TrackArtistConnection.track inSubQuery TrackTable.select(TrackTable.id).where {
+                    TrackTable.visibility eq TrackVisibility.Public
+                }
+            }) or (ArtistTable.id notInSubQuery TrackArtistConnection.select(TrackArtistConnection.artist))
+        })
+    }
+
     fun getRecentNonTrackDtos(
         userId: Long,
         limit: Int,
+        requestingUserId: Long?,
         allowedTypes: List<ListenType> = PermissionRepo.getPermittedListenTypes(userId) - ListenType.TRACK
     ): List<KeyValueDto> = transaction {
 
         return@transaction ListenEntity
-            .find { (ListenTable.user eq userId) and (ListenTable.type inList allowedTypes) }
+            .find { (ListenTable.user eq userId) and (ListenTable.type inList allowedTypes) and
+                ((ListenTable.type neq ListenType.TRACK) or listenTrackVisibleToUser(requestingUserId)) and
+                ((ListenTable.type neq ListenType.ALBUM) or listenAlbumVisibleToUser(requestingUserId)) and
+                ((ListenTable.type neq ListenType.ARTIST) or listenArtistVisibleToUser(requestingUserId))
+            }
             .orderBy(ListenTable.listenedAt to SortOrder.DESC)
             .mapNotNull { KeyValueDto(it.type.name, when (it.type) {
                 ListenType.ALBUM -> AlbumRepo.toDtoInternal(AlbumRepo.getById(it.entityId) ?: return@mapNotNull null)
@@ -211,16 +288,16 @@ object ListenRepo {
             .take(limit)
     }
 
-    fun getActivityForUser(userId: Long, since: Long, limit: Int): UserActivity {
-        val recentTracks = getRecentTracks(userId, since, limit)
+    fun getActivityForUser(userId: Long, since: Long, limit: Int, requestingUserId: Long): UserActivity {
+        val recentTracks = getRecentTracks(userId, since, limit, requestingUserId)
 
-        val topTracks = getMostListenedTracks(userId, since)
+        val topTracks = getMostListenedTracks(userId, since, requestingUserId)
             .toList()
             .sortedByDescending { it.second }
             .take(limit)
             .map { it.first }
 
-        val topArtists = getMostListenedArtistsByTracks(userId, since)
+        val topArtists = getMostListenedArtistsByTracks(userId, since, requestingUserId)
             .toList()
             .sortedByDescending { it.second }
             .take(limit)
@@ -237,20 +314,5 @@ object ListenRepo {
         return@transaction ListenEntity
             .find { ListenTable.type eq ListenType.TRACK }
             .count()
-    }
-
-    fun getListensPerDay(userId: Long, since: Long): List<Pair<LocalDate, Long>> = transaction {
-        val listens = ListenEntity.find {
-            (ListenTable.listenedAt greaterEq since) and
-            (ListenTable.user eq userId) and
-            (ListenTable.type eq ListenType.TRACK)
-        }
-
-        val listensPerDay = listens.groupBy { DateTimeUtils.toLocalDate(it.listenedAt) }
-            .mapValues { it.value.size.toLong() }
-
-        return@transaction listensPerDay.entries
-            .sortedBy { it.key }
-            .map { it.toPair() }
     }
 }

@@ -41,6 +41,10 @@ object UserRepo {
         UserEntity.find { UserTable.username eq username }.firstOrNull()
     }
 
+    fun getUsername(userId: Long): String? = transaction {
+        UserEntity.findById(userId)?.let { it.displayName ?: it.username }
+    }
+
     /**
      * Retrieves a user by their ID.
      *
