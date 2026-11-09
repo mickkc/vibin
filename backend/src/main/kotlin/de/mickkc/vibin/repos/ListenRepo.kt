@@ -92,9 +92,9 @@ object ListenRepo {
         return@transaction artists.groupingBy { it }.eachCount()
     }
 
-    fun getMostListenedArtists(userId: Long?, since: Long): Map<ArtistEntity, Int> = transaction {
+    fun getMostListenedArtists(userId: Long?, since: Long, requestingUserId: Long?): Map<ArtistEntity, Int> = transaction {
         ListenEntity
-            .find { (ListenTable.listenedAt greaterEq since) and createOp(userId) and (ListenTable.type eq ListenType.ARTIST) }
+            .find { (ListenTable.listenedAt greaterEq since) and createOp(userId) and (ListenTable.type eq ListenType.ARTIST) and listenArtistVisibleToUser(requestingUserId) }
             .groupBy { it.entityId }
             .mapValues { it.value.size }
             .mapKeys { ArtistRepo.getById(it.key) }
@@ -140,7 +140,7 @@ object ListenRepo {
         }
 
         if (allowedTypes.contains(ListenType.ARTIST)) {
-            dtos += getMostListenedArtists(userId.takeIf { !global }, since).mapKeys {
+            dtos += getMostListenedArtists(userId.takeIf { !global }, since, requestingUserId).mapKeys {
                 KeyValueDto(ListenType.ARTIST.name, ArtistRepo.toDto(it.key))
             }
         }
