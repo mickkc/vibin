@@ -1,7 +1,10 @@
 package widgets
 
+import de.mickkc.vibin.db.FavoriteType
 import de.mickkc.vibin.db.ListenType
+import de.mickkc.vibin.db.tracks.TrackVisibility
 import de.mickkc.vibin.dto.users.UserEditDto
+import de.mickkc.vibin.repos.FavoriteRepo
 import de.mickkc.vibin.repos.ListenRepo
 import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.utils.DateTimeUtils
@@ -426,6 +429,30 @@ class WidgetTest {
         }
     }
 
+    @Test
+    fun testFavoriteTracksWidget_HidesInstanceOnlyTrack() = testApp { _ ->
+        val user = UserTestUtils.createTestUser("testuser", "password")
+
+        val publicTrack = TrackTestUtils.createTrack("Public Track", "Public Album", "Public Artist")
+        val instanceTrack = TrackTestUtils.createTrack("Secret Track", "Secret Album", "Secret Artist", visibility = TrackVisibility.Instance)
+
+        FavoriteRepo.addFavorite(user.id.value, FavoriteType.TRACK, publicTrack.id.value, 1)
+        FavoriteRepo.addFavorite(user.id.value, FavoriteType.TRACK, instanceTrack.id.value, 2)
+
+        val ctx = WidgetTestUtils.createContext(userId = user.id.value)
+        val html = WidgetBuilder.build(listOf(WidgetType.FAVORITE_TRACKS), ctx)
+        val doc = WidgetTestUtils.parseHtml(html)
+
+        val items = doc.select(".items").single()
+        assertEquals(3, items.childrenSize())
+
+        assertEquals("Public Track", items.child(0).select(".item-info h3").text())
+        assertEquals("", items.child(1).select(".item-info h3").text())
+
+        assertFalse(html.contains("Secret Track"))
+        assertFalse(html.contains("Secret Artist"))
+    }
+
     // endregion
 
     // region FavoriteAlbumsWidget Tests
@@ -447,6 +474,35 @@ class WidgetTest {
         FavoriteTesters.testFavoriteAlbums(items)
     }
 
+    @Test
+    fun testFavoriteAlbumsWidget_HidesAlbumWithOnlyInstanceOnlyTracks() = testApp { _ ->
+        val user = UserTestUtils.createTestUser("testuser", "password")
+
+        TrackTestUtils.createTrack("Secret Track", "Secret Album", "Artist", visibility = TrackVisibility.Instance)
+        TrackTestUtils.createTrack("Mixed Track", "Mixed Album", "Artist")
+        val secretAlbum = AlbumTestUtils.getOrCreateAlbum("Secret Album")
+        val mixedAlbum = AlbumTestUtils.getOrCreateAlbum("Mixed Album")
+        val emptyAlbum = AlbumTestUtils.createAlbum("Empty Album")
+
+        FavoriteRepo.addFavorite(user.id.value, FavoriteType.ALBUM, secretAlbum.id.value, 1)
+        FavoriteRepo.addFavorite(user.id.value, FavoriteType.ALBUM, mixedAlbum.id.value, 2)
+        FavoriteRepo.addFavorite(user.id.value, FavoriteType.ALBUM, emptyAlbum.id.value, 3)
+
+        val ctx = WidgetTestUtils.createContext(userId = user.id.value)
+        val html = WidgetBuilder.build(listOf(WidgetType.FAVORITE_ALBUMS), ctx)
+        val doc = WidgetTestUtils.parseHtml(html)
+
+        val items = doc.select(".items").single()
+        assertEquals(3, items.childrenSize())
+
+        assertEquals("", items.child(0).select(".item-info h3").text())
+        assertEquals("Mixed Album", items.child(1).select(".item-info h3").text())
+        assertEquals("Empty Album", items.child(2).select(".item-info h3").text())
+
+        assertFalse(html.contains("Secret Album"))
+        assertTrue(html.contains("Empty Album"))
+    }
+
     // endregion
 
     // region FavoriteArtistsWidget Tests
@@ -466,6 +522,35 @@ class WidgetTest {
         assertEquals(3, items.childrenSize())
 
         FavoriteTesters.testFavoriteArtists(items)
+    }
+
+    @Test
+    fun testFavoriteArtistsWidget_HidesArtistWithOnlyInstanceOnlyTracks() = testApp { _ ->
+        val user = UserTestUtils.createTestUser("testuser", "password")
+
+        TrackTestUtils.createTrack("Secret Track", "Album", "Secret Artist", visibility = TrackVisibility.Instance)
+        TrackTestUtils.createTrack("Public Track", "Album", "Public Artist")
+        val secretArtist = ArtistTestUtils.getOrCreateArtist("Secret Artist")
+        val publicArtist = ArtistTestUtils.getOrCreateArtist("Public Artist")
+        val tracklessArtist = ArtistTestUtils.createArtist("Trackless Artist")
+
+        FavoriteRepo.addFavorite(user.id.value, FavoriteType.ARTIST, secretArtist.id.value, 1)
+        FavoriteRepo.addFavorite(user.id.value, FavoriteType.ARTIST, publicArtist.id.value, 2)
+        FavoriteRepo.addFavorite(user.id.value, FavoriteType.ARTIST, tracklessArtist.id.value, 3)
+
+        val ctx = WidgetTestUtils.createContext(userId = user.id.value)
+        val html = WidgetBuilder.build(listOf(WidgetType.FAVORITE_ARTISTS), ctx)
+        val doc = WidgetTestUtils.parseHtml(html)
+
+        val items = doc.select(".items").single()
+        assertEquals(3, items.childrenSize())
+
+        assertEquals("", items.child(0).select(".item-info h3").text())
+        assertEquals("Public Artist", items.child(1).select(".item-info h3").text())
+        assertEquals("Trackless Artist", items.child(2).select(".item-info h3").text())
+
+        assertFalse(html.contains("Secret Artist"))
+        assertTrue(html.contains("Trackless Artist"))
     }
 
     // endregion

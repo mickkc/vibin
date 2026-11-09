@@ -2,6 +2,7 @@ package rest
 
 import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.db.tracks.TrackEntity
+import de.mickkc.vibin.db.tracks.TrackVisibility
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -393,6 +394,36 @@ class TrackRestTest {
 
         val bodyText = response.bodyAsText()
         assertContains(bodyText, "\"parameterName\":\"title\"")
+    }
+
+    @Test
+    fun testUpdateTrack_Visibility() = testApp { client ->
+        val track = TrackTestUtils.createTrack("Track", "Album", "Artist")
+
+        val editDto = TrackEditDto(
+            title = null,
+            explicit = null,
+            trackNumber = null,
+            trackCount = null,
+            discNumber = null,
+            discCount = null,
+            year = null,
+            comment = null,
+            imageUrl = null,
+            album = null,
+            artists = null,
+            tags = null,
+            lyrics = null,
+            visibility = TrackVisibility.Instance
+        )
+
+        val response = client.put("/api/tracks/${track.id.value}") {
+            setBody(editDto)
+        }
+
+        assertTrue(response.status.isSuccess())
+        assertEquals(TrackVisibility.Instance, response.body<TrackDto>().visibility)
+        assertEquals(TrackVisibility.Instance, TrackRepo.getById(track.id.value)!!.visibility)
     }
 
     @Test

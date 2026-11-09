@@ -14,6 +14,7 @@ import utils.TrackTestUtils
 import utils.UserTestUtils
 import utils.testApp
 import de.mickkc.vibin.db.FavoriteType
+import de.mickkc.vibin.db.tracks.TrackVisibility
 import de.mickkc.vibin.dto.FavoriteDto
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.FavoriteRepo
@@ -100,6 +101,16 @@ class FavoriteRestTest {
         assertTrue(favorites.albums.all { it == null })
         assertEquals(3, favorites.artists.size)
         assertTrue(favorites.artists.all { it == null })
+    }
+
+    @Test
+    fun testGetFavorites_PublicViewHidesInstanceOnlyTrack() = testApp { _ ->
+        val user = UserTestUtils.createTestUser("testuser", "password")
+        val instanceTrack = TrackTestUtils.createTrack("Secret Track", "Album", "Artist", visibility = TrackVisibility.Instance)
+        FavoriteRepo.addFavorite(user.id.value, FavoriteType.TRACK, instanceTrack.id.value, 1)
+
+        assertNull(FavoriteRepo.getFavoriteTracksForUser(user.id.value, null)[0])
+        assertNotNull(FavoriteRepo.getFavoriteTracksForUser(user.id.value, user.id.value)[0])
     }
 
     @Test

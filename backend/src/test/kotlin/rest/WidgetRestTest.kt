@@ -2,9 +2,12 @@ package rest
 
 import com.helger.css.reader.CSSReader
 import de.mickkc.vibin.config.EnvUtil
+import de.mickkc.vibin.db.FavoriteType
+import de.mickkc.vibin.db.tracks.TrackVisibility
 import de.mickkc.vibin.dto.widgets.CreateWidgetDto
 import de.mickkc.vibin.dto.widgets.WidgetDto
 import de.mickkc.vibin.permissions.PermissionType
+import de.mickkc.vibin.repos.FavoriteRepo
 import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.repos.WidgetRepo
 import de.mickkc.vibin.utils.ChecksumUtil
@@ -15,12 +18,14 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import org.jsoup.Jsoup
+import utils.TrackTestUtils
 import utils.UserTestUtils
 import utils.testApp
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -290,6 +295,28 @@ class WidgetRestTest {
         val parsed = Jsoup.parse(html)
 
         assertEquals(2, parsed.body().select(".widget-body").size)
+    }
+
+    @Test
+    fun testGetWidget_Unauthenticated_HidesInstanceOnlyFavoriteTracks() = testApp(false) { client ->
+        val user = UserRepo.getById(1)!!
+
+        val publicTrack = TrackTestUtils.createTrack("Public Track", "Public Album", "Public Artist")
+        val instanceTrack = TrackTestUtils.createTrack("Secret Track", "Secret Album", "Secret Artist", visibility = TrackVisibility.Instance)
+
+        FavoriteRepo.addFavorite(user.id.value, FavoriteType.TRACK, publicTrack.id.value, 1)
+        FavoriteRepo.addFavorite(user.id.value, FavoriteType.TRACK, instanceTrack.id.value, 2)
+
+        val widget = WidgetRepo.shareWidget(user, listOf(WidgetType.FAVORITE_TRACKS), null, null, null)
+
+        val response = client.get("/api/widgets/${widget.id.value}")
+
+        assertTrue(response.status.isSuccess())
+        val html = response.body<String>()
+
+        assertTrue(html.contains("Public Track"))
+        assertFalse(html.contains("Secret Track"))
+        assertFalse(html.contains("Secret Artist"))
     }
 
     @Test

@@ -1,15 +1,18 @@
 package widgets
 
 import de.mickkc.vibin.db.ListenType
+import de.mickkc.vibin.db.tracks.TrackVisibility
 import de.mickkc.vibin.repos.ListenRepo
 import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.utils.DateTimeUtils
 import de.mickkc.vibin.widgets.WidgetBuilder
 import de.mickkc.vibin.widgets.WidgetType
+import junit.framework.TestCase.assertFalse
 import org.junit.Test
 import utils.*
 import utils.WidgetTestUtils.testItems
 import utils.WidgetTestUtils.TestItemCheck
+import kotlin.test.assertTrue
 
 class RecentlyListenedWidgetTest {
 
@@ -70,6 +73,23 @@ class RecentlyListenedWidgetTest {
 
         // Validates that the list is there but empty
         testItems(html)
+    }
+
+    @Test
+    fun testRecentlyListenedToArtistsWidget_HidesArtistsOfInstanceOnlyTracks() = testApp { _ ->
+        val user = UserRepo.getById(1)!!
+
+        val instanceTrack = TrackTestUtils.createTrack("Secret Track", "Secret Album", "Secret Artist", visibility = TrackVisibility.Instance)
+        val publicTrack = TrackTestUtils.createTrack("Public Track", "Public Album", "Public Artist")
+
+        ListenRepo.listenedTo(user.id.value, instanceTrack.id.value, ListenType.TRACK, DateTimeUtils.now() - 100)
+        ListenRepo.listenedTo(user.id.value, publicTrack.id.value, ListenType.TRACK, DateTimeUtils.now())
+
+        val ctx = WidgetTestUtils.createContext()
+        val html = WidgetBuilder.build(listOf(WidgetType.RECENT_ARTISTS), ctx)
+
+        testItems(html, TestItemCheck("Public Artist", "Artist"))
+        assertFalse(html.contains("Secret Artist"))
     }
 
     @Test
@@ -146,5 +166,24 @@ class RecentlyListenedWidgetTest {
 
         // Validates that the list is there but empty
         testItems(html)
+    }
+
+    @Test
+    fun testRecentlyListenedToWidget_HidesArtistsOfInstanceOnlyTracks() = testApp { _ ->
+        val user = UserRepo.getById(1)!!
+
+        TrackTestUtils.createTrack("Secret Track", "Secret Album", "Secret Artist", visibility = TrackVisibility.Instance)
+        TrackTestUtils.createTrack("Public Track", "Public Album", "Public Artist")
+        val secretArtist = ArtistTestUtils.getOrCreateArtist("Secret Artist")
+        val publicArtist = ArtistTestUtils.getOrCreateArtist("Public Artist")
+
+        ListenRepo.listenedTo(user.id.value, secretArtist.id.value, ListenType.ARTIST, DateTimeUtils.now() - 100)
+        ListenRepo.listenedTo(user.id.value, publicArtist.id.value, ListenType.ARTIST, DateTimeUtils.now())
+
+        val ctx = WidgetTestUtils.createContext()
+        val html = WidgetBuilder.build(listOf(WidgetType.RECENTLY_LISTENED), ctx)
+
+        assertTrue(html.contains("Public Artist"))
+        assertFalse(html.contains("Secret Artist"))
     }
 }
