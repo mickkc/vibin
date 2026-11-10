@@ -20,7 +20,7 @@ fun main() {
 }
 
 val supportedAppVersions: List<String>
-    get() = listOf("0.0.15")
+    get() = listOf("0.1.0")
 
 fun Application.mainModule() {
     configureLogging()
