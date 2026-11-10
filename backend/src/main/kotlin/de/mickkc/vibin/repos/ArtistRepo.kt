@@ -1,11 +1,6 @@
 package de.mickkc.vibin.repos
 
 import de.mickkc.vibin.db.UserEntity
-import io.ktor.server.plugins.*
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInList
-import org.jetbrains.exposed.sql.transactions.transaction
 import de.mickkc.vibin.db.artists.ArtistEntity
 import de.mickkc.vibin.db.artists.ArtistTable
 import de.mickkc.vibin.db.artists.TrackArtistConnection
@@ -17,6 +12,11 @@ import de.mickkc.vibin.routes.PaginatedSearchParams
 import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.settings.user.BlockedArtists
 import de.mickkc.vibin.utils.DateTimeUtils
+import io.ktor.server.plugins.*
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.jdbc.SizedIterable
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 object ArtistRepo {
 

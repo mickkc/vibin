@@ -1,6 +1,5 @@
 package de.mickkc.vibin.processing
 
-import org.jetbrains.exposed.sql.SizedCollection
 import org.slf4j.LoggerFactory
 import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.db.tracks.TrackEntity
@@ -12,6 +11,7 @@ import de.mickkc.vibin.repos.TrackRepo
 import de.mickkc.vibin.settings.server.AddGenreAsTag
 import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.utils.ChecksumUtil
+import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import java.io.File
 
 object AudioFileProcessor {

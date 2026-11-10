@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.angus.mail)
 
     implementation(libs.flyway.core)
+    implementation(libs.flyway.postgres)
 
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
@@ -83,6 +84,9 @@ tasks.jacocoTestReport {
 }
 
 tasks.test {
+    useJUnitPlatform()
+    val kotlinTestClasses = sourceSets.test.get().output.classesDirs
+    classpath += files(kotlinTestClasses)
     finalizedBy(tasks.jacocoTestReport)
 }
 

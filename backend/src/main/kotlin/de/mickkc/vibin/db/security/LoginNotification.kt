@@ -3,10 +3,10 @@ package de.mickkc.vibin.db.security
 import de.mickkc.vibin.db.SessionEntity
 import de.mickkc.vibin.db.SessionTable
 import de.mickkc.vibin.utils.DateTimeUtils
-import org.jetbrains.exposed.dao.LongEntity
-import org.jetbrains.exposed.dao.LongEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.dao.LongEntity
+import org.jetbrains.exposed.v1.dao.LongEntityClass
 
 object LoginNotificationTable : LongIdTable("login_notification") {
     val tokenHash = binary("token_hash", 256)

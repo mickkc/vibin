@@ -1,7 +1,5 @@
 package de.mickkc.vibin.repos
 
-import org.jetbrains.exposed.sql.SizedIterable
-import org.jetbrains.exposed.sql.transactions.transaction
 import de.mickkc.vibin.db.UserTable
 import de.mickkc.vibin.db.albums.AlbumTable
 import de.mickkc.vibin.db.artists.ArtistTable
@@ -12,6 +10,11 @@ import de.mickkc.vibin.db.tracks.TrackTable
 import de.mickkc.vibin.parsing.Parser
 import de.mickkc.vibin.processing.ThumbnailProcessor
 import de.mickkc.vibin.utils.ImageUtils
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.notInList
+import org.jetbrains.exposed.v1.jdbc.SizedIterable
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 object ImageRepo {
 

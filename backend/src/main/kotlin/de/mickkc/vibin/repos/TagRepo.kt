@@ -1,15 +1,12 @@
 package de.mickkc.vibin.repos
 
-import org.jetbrains.exposed.sql.Case
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
-import org.jetbrains.exposed.sql.intLiteral
-import org.jetbrains.exposed.sql.lowerCase
-import org.jetbrains.exposed.sql.transactions.transaction
 import de.mickkc.vibin.db.tags.TagEntity
 import de.mickkc.vibin.db.tags.TagTable
 import de.mickkc.vibin.dto.tags.TagDto
 import de.mickkc.vibin.dto.tags.TagEditDto
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 object TagRepo {
 

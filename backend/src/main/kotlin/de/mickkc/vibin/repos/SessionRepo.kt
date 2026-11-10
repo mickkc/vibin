@@ -1,7 +1,5 @@
 package de.mickkc.vibin.repos
 
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.transactions.transaction
 import de.mickkc.vibin.auth.CryptoUtil
 import de.mickkc.vibin.db.SessionEntity
 import de.mickkc.vibin.db.SessionState
@@ -11,8 +9,12 @@ import de.mickkc.vibin.dto.SessionDto
 import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.settings.server.SessionExpirationDuration
 import de.mickkc.vibin.utils.DateTimeUtils
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
-import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.less
+import org.jetbrains.exposed.v1.core.neq
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 /**
  * Repository for managing [SessionEntity] instances.

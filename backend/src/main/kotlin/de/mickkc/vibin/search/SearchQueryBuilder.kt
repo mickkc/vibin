@@ -1,17 +1,5 @@
 package de.mickkc.vibin.search
 
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.inSubQuery
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInSubQuery
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.lowerCase
-import org.jetbrains.exposed.sql.or
 import de.mickkc.vibin.db.LyricsTable
 import de.mickkc.vibin.db.albums.AlbumTable
 import de.mickkc.vibin.db.artists.ArtistTable
@@ -22,6 +10,19 @@ import de.mickkc.vibin.db.tags.TagTable
 import de.mickkc.vibin.db.tags.TrackTagConnection
 import de.mickkc.vibin.db.tracks.TrackTable
 import de.mickkc.vibin.repos.PlaylistRepo
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greaterEq
+import org.jetbrains.exposed.v1.core.inSubQuery
+import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.core.like
+import org.jetbrains.exposed.v1.core.lowerCase
+import org.jetbrains.exposed.v1.core.neq
+import org.jetbrains.exposed.v1.core.notInSubQuery
+import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.jdbc.select
 
 object SearchQueryBuilder {
 

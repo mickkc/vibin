@@ -1,7 +1,7 @@
 package de.mickkc.vibin.repos
 
-import org.jetbrains.exposed.sql.transactions.transaction
 import de.mickkc.vibin.db.TaskSettingEntity
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 object TaskSettingsRepo {
 

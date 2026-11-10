@@ -1,10 +1,10 @@
 package de.mickkc.vibin.db
 
 import de.mickkc.vibin.mail.MailThread.PRIORITY_NORMAL
-import org.jetbrains.exposed.dao.LongEntity
-import org.jetbrains.exposed.dao.LongEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.dao.LongEntity
+import org.jetbrains.exposed.v1.dao.LongEntityClass
 
 object PendingMailTable : LongIdTable("pending_mail") {
     val priority = integer("priority").default(PRIORITY_NORMAL)

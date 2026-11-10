@@ -1,8 +1,8 @@
 package de.mickkc.vibin.db
 
-import org.jetbrains.exposed.dao.Entity
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.dao.Entity
 
 object TaskSettingTable : StringIdTable("task_setting", "task_id", 255) {
 

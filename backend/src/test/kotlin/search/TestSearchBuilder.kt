@@ -1,9 +1,9 @@
 package search
 
-import org.jetbrains.exposed.sql.transactions.transaction
+import de.mickkc.vibin.search.SearchQueryBuilder
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.assertThrows
 import utils.initTestDb
-import de.mickkc.vibin.search.SearchQueryBuilder
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals

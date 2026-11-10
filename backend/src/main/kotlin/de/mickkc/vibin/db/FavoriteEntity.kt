@@ -1,6 +1,6 @@
 package de.mickkc.vibin.db
 
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.v1.core.Table
 
 object FavoriteTable : Table("favorite") {
     val userId = reference("user_id", UserTable.id)

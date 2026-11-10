@@ -1,9 +1,5 @@
 package utils
 
-import io.ktor.server.application.*
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.transactions.transaction
 import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.config.allTables
 import de.mickkc.vibin.config.createDefaultAdminUser
@@ -17,6 +13,10 @@ import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.settings.server.AlbumMetadataFetchType
 import de.mickkc.vibin.settings.server.ArtistMetadataFetchType
 import de.mickkc.vibin.settings.server.LyricsMetadataSource
+import io.ktor.server.application.*
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 val testToken = "test-token"
 

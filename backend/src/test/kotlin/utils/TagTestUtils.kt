@@ -1,9 +1,9 @@
 package utils
 
-import org.junit.jupiter.api.assertNotNull
 import de.mickkc.vibin.db.tags.TagEntity
 import de.mickkc.vibin.dto.tags.TagEditDto
 import de.mickkc.vibin.repos.TagRepo
+import kotlin.test.assertNotNull
 
 object TagTestUtils {
 

@@ -27,10 +27,10 @@ import de.mickkc.vibin.uploads.PendingUpload
 import de.mickkc.vibin.utils.ChecksumUtil
 import de.mickkc.vibin.utils.DateTimeUtils
 import de.mickkc.vibin.utils.PathUtils
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInSubQuery
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.jdbc.SizedCollection
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.io.File
 
 object TrackRepo {

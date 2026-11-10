@@ -6,23 +6,24 @@ import de.mickkc.vibin.dto.scrobbling.ScrobblerDto
 import de.mickkc.vibin.repos.TrackRepo
 import de.mickkc.vibin.scrobbling.lastfm.LastFmScrobbler
 import de.mickkc.vibin.scrobbling.listenbrainz.ListenBrainzScrobbler
+import de.mickkc.vibin.utils.DateTimeUtils
+import de.mickkc.vibin.utils.http.UserAgentBuilder
 import io.ktor.client.*
+import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.gson.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
-import de.mickkc.vibin.utils.DateTimeUtils
-import de.mickkc.vibin.utils.http.UserAgentBuilder
-import io.ktor.client.engine.cio.CIO
 
 object ScrobblingManager {
 

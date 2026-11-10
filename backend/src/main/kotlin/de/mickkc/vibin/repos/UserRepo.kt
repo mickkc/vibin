@@ -1,8 +1,5 @@
 package de.mickkc.vibin.repos
 
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
-import org.jetbrains.exposed.sql.transactions.transaction
 import de.mickkc.vibin.auth.CryptoUtil
 import de.mickkc.vibin.db.TotpType
 import de.mickkc.vibin.db.UserEntity
@@ -12,6 +9,8 @@ import de.mickkc.vibin.dto.users.UserDto
 import de.mickkc.vibin.dto.users.UserEditDto
 import de.mickkc.vibin.routes.PaginatedSearchParams
 import de.mickkc.vibin.utils.DateTimeUtils
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 /**
  * Repository for managing [de.mickkc.vibin.db.UserEntity] instances.

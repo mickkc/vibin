@@ -1,11 +1,11 @@
 package utils
 
 import de.mickkc.vibin.db.images.ImageEntity
-import org.jetbrains.exposed.sql.SizedCollection
-import org.jetbrains.exposed.sql.transactions.transaction
 import de.mickkc.vibin.db.tracks.TrackEntity
 import de.mickkc.vibin.db.tracks.TrackVisibility
 import de.mickkc.vibin.repos.UserRepo
+import org.jetbrains.exposed.v1.jdbc.SizedCollection
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 object TrackTestUtils {
     suspend fun createTrack(

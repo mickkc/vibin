@@ -4,14 +4,6 @@ import de.mickkc.vibin.db.SettingsEntity
 import de.mickkc.vibin.db.SettingsTable
 import de.mickkc.vibin.db.UserSettingsEntity
 import de.mickkc.vibin.db.UserSettingsTable
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.http.*
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import utils.UserTestUtils
-import utils.testApp
 import de.mickkc.vibin.dto.KeyValueDto
 import de.mickkc.vibin.dto.SettingDto
 import de.mickkc.vibin.parsing.MetadataFetchingType
@@ -24,13 +16,18 @@ import de.mickkc.vibin.settings.server.serverSettings
 import de.mickkc.vibin.settings.user.BlockedArtists
 import de.mickkc.vibin.settings.user.BlockedTags
 import de.mickkc.vibin.settings.user.ShowActivitiesToOthers
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.transactions.transaction
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import utils.UserTestUtils
+import utils.testApp
+import kotlin.test.*
 
 class SettingRestTest {
 

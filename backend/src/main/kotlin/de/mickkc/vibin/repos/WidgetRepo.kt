@@ -7,10 +7,11 @@ import de.mickkc.vibin.db.widgets.SharedWidgetTable
 import de.mickkc.vibin.db.widgets.WidgetTypeTable
 import de.mickkc.vibin.dto.widgets.WidgetDto
 import de.mickkc.vibin.widgets.WidgetType
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 object WidgetRepo {
 

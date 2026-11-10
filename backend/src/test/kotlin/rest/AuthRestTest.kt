@@ -10,7 +10,7 @@ import de.mickkc.vibin.dto.LoginResultDto
 import de.mickkc.vibin.repos.SessionRepo
 import de.mickkc.vibin.utils.DateTimeUtils
 import io.ktor.client.statement.bodyAsText
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals

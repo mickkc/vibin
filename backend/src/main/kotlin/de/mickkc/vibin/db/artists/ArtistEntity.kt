@@ -1,13 +1,13 @@
 package de.mickkc.vibin.db.artists
 
-import org.jetbrains.exposed.dao.LongEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.deleteWhere
 import de.mickkc.vibin.db.ModifiableLongIdEntity
 import de.mickkc.vibin.db.ModifiableLongIdTable
 import de.mickkc.vibin.db.images.ImageEntity
 import de.mickkc.vibin.db.images.ImageTable
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.dao.LongEntityClass
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
 
 object ArtistTable : ModifiableLongIdTable("artist") {
     val name = varchar("name", 255).index()

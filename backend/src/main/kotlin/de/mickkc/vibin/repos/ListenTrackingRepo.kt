@@ -8,13 +8,14 @@ import de.mickkc.vibin.db.tracks.TrackEntity
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.scrobbling.ScrobblingManager
 import de.mickkc.vibin.utils.DateTimeUtils
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.Sum
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.statements.UpdateStatement
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greaterEq
+import org.jetbrains.exposed.v1.core.statements.UpdateStatement
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import java.time.LocalDate
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.round
@@ -220,46 +221,19 @@ object ListenTrackingRepo {
     }
 
     fun getGlobalListenDuration() = transaction {
-        val rs = TrackListenDurationTable.select(Sum(
-            expr = TrackListenDurationTable.listenedDurationSeconds,
-            columnType = TrackListenDurationTable.listenedDurationSeconds.columnType))
-            .execute(this)
-
-        if (rs != null && rs.next()) {
-            return@transaction rs.getLong(1)
-        }
-
-        return@transaction 0L
+        TrackListenDurationTable.selectAll().sumOf { it[TrackListenDurationTable.listenedDurationSeconds] }
     }
 
     fun getGlobalListenDurationForTrack(trackId: Long): Long = transaction {
-        val rs = TrackListenDurationTable
-            .select(Sum(
-                expr = TrackListenDurationTable.listenedDurationSeconds,
-                columnType = TrackListenDurationTable.listenedDurationSeconds.columnType))
+        TrackListenDurationTable.selectAll()
             .where { TrackListenDurationTable.trackId eq trackId }
-            .execute(this)
-
-        if (rs != null && rs.next()) {
-            return@transaction rs.getLong(1)
-        }
-
-        return@transaction 0L
+            .sumOf { it[TrackListenDurationTable.listenedDurationSeconds] }
     }
 
     fun getUserListenDurationForTrack(trackId: Long, userId: Long): Long = transaction {
-        val rs = TrackListenDurationTable
-            .select(Sum(
-                expr = TrackListenDurationTable.listenedDurationSeconds,
-                columnType = TrackListenDurationTable.listenedDurationSeconds.columnType))
+        TrackListenDurationTable.selectAll()
             .where { (TrackListenDurationTable.userId eq userId) and (TrackListenDurationTable.trackId eq trackId) }
-            .execute(this)
-
-        if (rs != null && rs.next()) {
-            return@transaction rs.getLong(1)
-        }
-
-        return@transaction 0L
+            .sumOf { it[TrackListenDurationTable.listenedDurationSeconds] }
     }
 
     /**

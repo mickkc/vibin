@@ -4,7 +4,7 @@ import de.mickkc.vibin.db.artists.ArtistEntity
 import de.mickkc.vibin.db.images.ImageEntity
 import de.mickkc.vibin.dto.artists.ArtistEditData
 import de.mickkc.vibin.repos.ArtistRepo
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 object ArtistTestUtils {
     suspend fun createArtist(name: String, description: String = ""): ArtistEntity {

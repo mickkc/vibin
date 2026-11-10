@@ -11,8 +11,9 @@ import de.mickkc.vibin.repos.TrackRepo.toMinimalDtoInternal
 import de.mickkc.vibin.search.SearchQueryBuilder
 import de.mickkc.vibin.utils.PathUtils
 import io.ktor.util.logging.*
-import org.jetbrains.exposed.sql.SizedCollection
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.jdbc.SizedCollection
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 

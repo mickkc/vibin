@@ -1,7 +1,7 @@
 package de.mickkc.vibin.db.widgets
 
 import de.mickkc.vibin.widgets.WidgetType
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.v1.core.Table
 
 object WidgetTypeTable : Table("widget_type") {
     val widget = reference("widget_id", SharedWidgetTable)

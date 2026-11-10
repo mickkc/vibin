@@ -1,14 +1,11 @@
 package parsers
 
+import de.mickkc.vibin.parsing.Parser
+import de.mickkc.vibin.utils.ChecksumUtil
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.assertDoesNotThrow
-import de.mickkc.vibin.parsing.Parser
-import de.mickkc.vibin.utils.ChecksumUtil
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
+import kotlin.test.*
 
 
 class ImageDownloaderRestTest {

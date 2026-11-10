@@ -6,7 +6,7 @@ import de.mickkc.vibin.dto.ControlSessionQueueItemOutDto
 import de.mickkc.vibin.websockets.Session
 import io.ktor.websocket.*
 import kotlinx.coroutines.channels.SendChannel
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.concurrent.ConcurrentHashMap
 
 enum class SessionPlayState {

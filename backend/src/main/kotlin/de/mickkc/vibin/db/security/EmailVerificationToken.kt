@@ -5,8 +5,8 @@ import de.mickkc.vibin.db.StringIdTable
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.UserTable
 import de.mickkc.vibin.utils.DateTimeUtils
-import org.jetbrains.exposed.dao.Entity
-import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.dao.Entity
 
 object EmailVerificationTokenTable : StringIdTable("email_verification_token", "token_hash", 64) {
     val userId = reference("user_id", UserTable)

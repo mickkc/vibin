@@ -1,6 +1,5 @@
 package utils
 
-import org.junit.jupiter.api.assertNotNull
 import de.mickkc.vibin.auth.CryptoUtil
 import de.mickkc.vibin.db.SessionState
 import de.mickkc.vibin.db.UserEntity
@@ -9,7 +8,8 @@ import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.PermissionRepo
 import de.mickkc.vibin.repos.SessionRepo
 import de.mickkc.vibin.repos.UserRepo
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import kotlin.test.assertNotNull
 
 object UserTestUtils {
 
