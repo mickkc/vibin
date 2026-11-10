@@ -1,10 +1,10 @@
 package utils
 
-import org.junit.jupiter.api.assertNotNull
 import de.mickkc.vibin.db.playlists.PlaylistEntity
 import de.mickkc.vibin.dto.playlists.PlaylistEditDto
 import de.mickkc.vibin.repos.PlaylistRepo
 import de.mickkc.vibin.repos.UserRepo
+import kotlin.test.assertNotNull
 
 object PlaylistTestUtils {
 

@@ -4,10 +4,10 @@ import de.mickkc.vibin.db.StringEntityClass
 import de.mickkc.vibin.db.StringIdTable
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.UserTable
-import org.jetbrains.exposed.dao.Entity
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.dao.Entity
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
 
 object SharedWidgetTable : StringIdTable("shared_widget", columnLength = 64) {
     val userId = reference("user_id", UserTable)

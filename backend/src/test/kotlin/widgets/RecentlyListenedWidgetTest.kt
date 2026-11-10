@@ -7,11 +7,11 @@ import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.utils.DateTimeUtils
 import de.mickkc.vibin.widgets.WidgetBuilder
 import de.mickkc.vibin.widgets.WidgetType
-import junit.framework.TestCase.assertFalse
-import org.junit.Test
 import utils.*
-import utils.WidgetTestUtils.testItems
 import utils.WidgetTestUtils.TestItemCheck
+import utils.WidgetTestUtils.testItems
+import kotlin.test.Test
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class RecentlyListenedWidgetTest {

@@ -20,9 +20,9 @@ import de.mickkc.vibin.db.tracks.TrackTable
 import de.mickkc.vibin.db.widgets.SharedWidgetTable
 import de.mickkc.vibin.db.widgets.WidgetTypeTable
 import org.flywaydb.core.Flyway
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger("Database initialization")

@@ -1,11 +1,11 @@
 package utils
 
-import org.junit.jupiter.api.assertNotNull
 import de.mickkc.vibin.db.albums.AlbumEntity
 import de.mickkc.vibin.db.images.ImageEntity
 import de.mickkc.vibin.dto.albums.AlbumEditDto
 import de.mickkc.vibin.repos.AlbumRepo
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import kotlin.test.assertNotNull
 
 object AlbumTestUtils {
 

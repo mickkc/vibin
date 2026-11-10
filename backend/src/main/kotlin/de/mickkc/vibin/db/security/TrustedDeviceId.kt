@@ -2,7 +2,7 @@ package de.mickkc.vibin.db.security
 
 import de.mickkc.vibin.db.UserTable
 import de.mickkc.vibin.utils.DateTimeUtils
-import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 
 object TrustedDeviceIdTable : LongIdTable("trusted_device") {
     val deviceIdHash = binary("device_id_hash", 256).index()

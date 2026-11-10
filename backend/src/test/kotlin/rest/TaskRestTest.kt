@@ -12,7 +12,7 @@ import de.mickkc.vibin.utils.DateTimeUtils
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import utils.*
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.createFile

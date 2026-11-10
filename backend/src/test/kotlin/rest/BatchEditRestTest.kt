@@ -1,11 +1,7 @@
 package rest
 
 import de.mickkc.vibin.db.TrackListenDurationEntity
-import de.mickkc.vibin.dto.tracks.batch.BatchEditAction
-import de.mickkc.vibin.dto.tracks.batch.BatchEditActionType
-import de.mickkc.vibin.dto.tracks.batch.BatchEditDto
-import de.mickkc.vibin.dto.tracks.batch.BatchEditResultDto
-import de.mickkc.vibin.dto.tracks.batch.BatchEditResultDtoChangeType
+import de.mickkc.vibin.dto.tracks.batch.*
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.ListenTrackingRepo
 import de.mickkc.vibin.repos.PlaylistTrackRepo
@@ -15,7 +11,7 @@ import de.mickkc.vibin.utils.DateTimeUtils
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import utils.*
 import kotlin.test.*
 

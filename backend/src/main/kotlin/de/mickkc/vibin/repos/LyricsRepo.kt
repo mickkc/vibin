@@ -1,9 +1,10 @@
 package de.mickkc.vibin.repos
 
-import org.jetbrains.exposed.sql.transactions.transaction
 import de.mickkc.vibin.db.LyricsEntity
 import de.mickkc.vibin.db.LyricsTable
 import de.mickkc.vibin.db.tracks.TrackEntity
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 object LyricsRepo {
 

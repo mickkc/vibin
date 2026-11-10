@@ -1,14 +1,15 @@
 package de.mickkc.vibin.repos
 
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.transactions.transaction
 import de.mickkc.vibin.db.GrantedPermissionTable
 import de.mickkc.vibin.db.ListenType
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.permissions.PermissionType
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 object PermissionRepo {
 

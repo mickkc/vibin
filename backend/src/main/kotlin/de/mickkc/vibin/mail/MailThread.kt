@@ -17,8 +17,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.eclipse.angus.mail.util.MailConnectException
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.slf4j.LoggerFactory
 import java.net.UnknownHostException
 import kotlin.time.Duration.Companion.milliseconds
@@ -115,7 +115,7 @@ object MailThread {
     /**
      * Starts the [jobFunction] in the `MailSender` thread context if it is not already running.
      */
-    suspend fun startJobIfNotRunning() = mutex.withLock {
+    suspend fun startJobIfNotRunning(): Unit = mutex.withLock {
         if (job?.isActive == true) return
         job = scope.launch {
             jobFunction()

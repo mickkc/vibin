@@ -3,13 +3,13 @@ package de.mickkc.vibin.db
 import de.mickkc.vibin.db.security.LoginNotificationEntity
 import de.mickkc.vibin.db.security.LoginNotificationTable
 import de.mickkc.vibin.db.security.TotpMailTable
-import org.jetbrains.exposed.dao.LongEntity
-import org.jetbrains.exposed.dao.LongEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.LongIdTable
 import de.mickkc.vibin.utils.DateTimeUtils
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.dao.LongEntity
+import org.jetbrains.exposed.v1.dao.LongEntityClass
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
 
 enum class SessionState {
     Valid,

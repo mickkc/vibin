@@ -1,11 +1,11 @@
 package de.mickkc.vibin.db.tags
 
-import org.jetbrains.exposed.dao.LongEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
 import de.mickkc.vibin.db.ModifiableLongIdEntity
 import de.mickkc.vibin.db.ModifiableLongIdTable
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.dao.LongEntityClass
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
 
 object TagTable : ModifiableLongIdTable("tag") {
     val name = varchar("name", 255).index()

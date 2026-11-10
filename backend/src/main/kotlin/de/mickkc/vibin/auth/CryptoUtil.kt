@@ -1,8 +1,9 @@
 package de.mickkc.vibin.auth
 
-import org.jetbrains.exposed.sql.transactions.transaction
 import de.mickkc.vibin.db.SessionEntity
 import de.mickkc.vibin.db.SessionTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.security.MessageDigest
 import java.security.SecureRandom
 import javax.crypto.SecretKeyFactory

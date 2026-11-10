@@ -1,12 +1,5 @@
 package de.mickkc.vibin.repos
 
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.or
-import org.jetbrains.exposed.sql.transactions.transaction
 import de.mickkc.vibin.db.FavoriteTable
 import de.mickkc.vibin.db.FavoriteType
 import de.mickkc.vibin.db.albums.AlbumEntity
@@ -14,6 +7,14 @@ import de.mickkc.vibin.db.artists.ArtistEntity
 import de.mickkc.vibin.db.tracks.TrackEntity
 import de.mickkc.vibin.db.tracks.TrackVisibility
 import de.mickkc.vibin.dto.FavoriteDto
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import kotlin.collections.map
 
 object FavoriteRepo {

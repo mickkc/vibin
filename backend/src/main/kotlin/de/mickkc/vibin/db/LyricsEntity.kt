@@ -1,9 +1,9 @@
 package de.mickkc.vibin.db
 
-import org.jetbrains.exposed.dao.LongEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
 import de.mickkc.vibin.db.tracks.TrackEntity
 import de.mickkc.vibin.db.tracks.TrackTable
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.dao.LongEntityClass
 
 object LyricsTable : ModifiableLongIdTable("lyrics") {
     val track = reference("track_id", TrackTable).uniqueIndex()

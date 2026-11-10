@@ -1,7 +1,7 @@
 package de.mickkc.vibin.db
 
-import org.jetbrains.exposed.sql.Table
 import de.mickkc.vibin.permissions.PermissionType
+import org.jetbrains.exposed.v1.core.Table
 
 object GrantedPermissionTable : Table("granted_permission") {
     val user = reference("user_id", UserTable)

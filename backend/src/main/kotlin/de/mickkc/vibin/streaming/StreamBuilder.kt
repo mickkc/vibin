@@ -3,7 +3,7 @@ package de.mickkc.vibin.streaming
 import de.mickkc.vibin.db.tracks.TrackEntity
 import de.mickkc.vibin.dto.Streamable
 import de.mickkc.vibin.utils.AccessCryptoUtil
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 object StreamBuilder {
 

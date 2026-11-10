@@ -1,11 +1,5 @@
 package de.mickkc.vibin.repos
 
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.inSubQuery
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.slf4j.LoggerFactory
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.playlists.PlaylistCollaborator
 import de.mickkc.vibin.db.playlists.PlaylistEntity
@@ -19,6 +13,11 @@ import de.mickkc.vibin.routes.PaginatedSearchParams
 import de.mickkc.vibin.utils.DateTimeUtils
 import de.mickkc.vibin.utils.ImageUtils
 import de.mickkc.vibin.utils.PathUtils
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.jdbc.SizedCollection
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.slf4j.LoggerFactory
 
 object PlaylistRepo {
 

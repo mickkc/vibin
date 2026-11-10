@@ -9,10 +9,10 @@ import de.mickkc.vibin.settings.server.ServerSetting
 import de.mickkc.vibin.settings.server.serverSettings
 import de.mickkc.vibin.settings.user.UserSetting
 import de.mickkc.vibin.settings.user.userSettings
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 /**
  * Repository for managing [de.mickkc.vibin.db.SettingsEntity] instances.

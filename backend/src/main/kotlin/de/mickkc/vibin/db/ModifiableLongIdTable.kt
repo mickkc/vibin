@@ -1,9 +1,9 @@
 package de.mickkc.vibin.db
 
-import org.jetbrains.exposed.dao.LongEntity
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.LongIdTable
 import de.mickkc.vibin.utils.DateTimeUtils
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.dao.LongEntity
 
 /**
  * A long ID table that includes createdAt and updatedAt fields.

@@ -1,7 +1,7 @@
 package de.mickkc.vibin.db.playlists
 
-import org.jetbrains.exposed.sql.Table
 import de.mickkc.vibin.db.UserTable
+import org.jetbrains.exposed.v1.core.Table
 
 /**
  * Connection table between playlists and their collaborators (users).

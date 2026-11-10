@@ -1,17 +1,10 @@
 package de.mickkc.vibin.repos
 
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.minus
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.notInSubQuery
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.slf4j.LoggerFactory
 import de.mickkc.vibin.db.UserEntity
 import de.mickkc.vibin.db.artists.TrackArtistConnection
-import de.mickkc.vibin.db.playlists.PlaylistTrackEntity
 import de.mickkc.vibin.db.playlists.PlaylistEntity
 import de.mickkc.vibin.db.playlists.PlaylistTable
+import de.mickkc.vibin.db.playlists.PlaylistTrackEntity
 import de.mickkc.vibin.db.playlists.PlaylistTrackTable
 import de.mickkc.vibin.db.tags.TrackTagConnection
 import de.mickkc.vibin.db.tracks.TrackEntity
@@ -20,6 +13,12 @@ import de.mickkc.vibin.dto.playlists.PlaylistTrackDto
 import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.settings.user.BlockedArtists
 import de.mickkc.vibin.settings.user.BlockedTags
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
+import org.slf4j.LoggerFactory
 
 object PlaylistTrackRepo {
 

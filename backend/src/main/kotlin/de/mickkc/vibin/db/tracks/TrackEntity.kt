@@ -17,10 +17,10 @@ import de.mickkc.vibin.repos.LyricsRepo
 import de.mickkc.vibin.repos.PlaylistTrackRepo
 import de.mickkc.vibin.repos.TrackRelationRepo
 import de.mickkc.vibin.utils.PathUtils
-import org.jetbrains.exposed.dao.LongEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.dao.LongEntityClass
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
 
 enum class TrackVisibility {
     Public,

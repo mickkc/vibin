@@ -1,7 +1,7 @@
 package de.mickkc.vibin.db.artists
 
-import org.jetbrains.exposed.sql.Table
 import de.mickkc.vibin.db.tracks.TrackTable
+import org.jetbrains.exposed.v1.core.Table
 
 /**
  * Connection table between tracks and artists.

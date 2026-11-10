@@ -7,12 +7,12 @@ import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.utils.DateTimeUtils
 import de.mickkc.vibin.widgets.WidgetBuilder
 import de.mickkc.vibin.widgets.WidgetType
-import org.junit.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import utils.*
 import utils.WidgetTestUtils.testItems
 import utils.WidgetTestUtils.TestItemCheck
+import kotlin.test.Test
 
 class MostListenedWidgetTest {
 
