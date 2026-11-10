@@ -19,7 +19,7 @@ WORKDIR /home/gradle/src
 RUN gradle buildFatJar --no-daemon
 
 # Stage 3: Build Frontend
-FROM ghcr.io/cirruslabs/flutter:stable AS frontend
+FROM kwop/flutter:3.47.9 AS frontend
 
 ARG VIBIN_TAG=0.1.0
 
@@ -32,10 +32,10 @@ RUN git clone --depth 1 --branch ${VIBIN_TAG} https://codeberg.org/mickkc/vibin-
 
 # Set up Flutter environment
 RUN flutter config --no-analytics --enable-web
-RUN flutter pub get --offline || flutter pub get
+RUN flutter pub get
 
 # Build the web application
-RUN flutter pub run build_runner build --delete-conflicting-outputs
+RUN dart run build_runner build --delete-conflicting-outputs
 RUN flutter build web --debug --pwa-strategy=none --dart-define=VIBIN_EMBEDDED_MODE=true --base-href "/web/"
 
 # Stage 4: Create the Runtime Image
