@@ -69,6 +69,7 @@ private fun getValidatedWidgetTypes(widget: SharedWidgetEntity): List<WidgetType
 private fun createWidgetContext(
     widget: SharedWidgetEntity,
     colors: WidgetColors,
+    layout: String,
     language: String,
     baseUrl: String? = null
 ): WidgetContext {
@@ -78,6 +79,7 @@ private fun createWidgetContext(
         accentColor = colors.accentColor,
         backgroundColor = colors.backgroundColor,
         foregroundColor = colors.foregroundColor,
+        layout = layout,
         language = language,
         baseUrl = baseUrl
     )
@@ -133,8 +135,9 @@ fun Application.configureWidgetRoutes() = routing {
 
         val colors = call.parseWidgetColors(widget)
         val language = call.parseLanguage()
+        val layout = call.getStringOrDefault("layout", "col")
         val widgetTypes = getValidatedWidgetTypes(widget)
-        val ctx = createWidgetContext(widget, colors, language, baseUrl)
+        val ctx = createWidgetContext(widget, colors, layout, language, baseUrl)
 
         val html = WidgetBuilder.build(widgetTypes, ctx)
 
@@ -165,8 +168,9 @@ fun Application.configureWidgetRoutes() = routing {
 
         val colors = call.parseWidgetColors(widget)
         val language = call.parseLanguage()
+        val layout = call.getStringOrDefault("layout", "col")
         val widgetTypes = getValidatedWidgetTypes(widget)
-        val ctx = createWidgetContext(widget, colors, language)
+        val ctx = createWidgetContext(widget, colors, layout, language)
 
         val imageBytes = WidgetImageCache.getOrCreateImage(widget, widgetTypes, ctx, width, height)
 

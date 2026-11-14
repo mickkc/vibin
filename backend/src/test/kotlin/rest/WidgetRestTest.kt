@@ -20,6 +20,7 @@ import io.ktor.http.*
 import org.jsoup.Jsoup
 import utils.TrackTestUtils
 import utils.UserTestUtils
+import utils.WidgetTestUtils
 import utils.testApp
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.createTempDirectory
@@ -227,7 +228,9 @@ class WidgetRestTest {
         assertTrue(response.status.isSuccess())
 
         val html = response.body<String>()
-        assertTrue(html.contains("<html lang=\"de\""))
+        val doc = WidgetTestUtils.parseHtml(html)
+        val htmlElement = doc.select("html").single()
+        assertEquals("de", htmlElement.attr("lang"))
     }
 
     @Test
@@ -242,7 +245,9 @@ class WidgetRestTest {
         assertTrue(response.status.isSuccess())
 
         val html = response.body<String>()
-        assertTrue(html.contains("<html lang=\"de\""))
+        val doc = WidgetTestUtils.parseHtml(html)
+        val htmlElement = doc.select("html").single()
+        assertEquals("de", htmlElement.attr("lang"))
     }
 
     @Test
@@ -257,7 +262,9 @@ class WidgetRestTest {
         assertTrue(response.status.isSuccess())
 
         val html = response.body<String>()
-        assertTrue(html.contains("<html lang=\"de\""))
+        val doc = WidgetTestUtils.parseHtml(html)
+        val htmlElement = doc.select("html").single()
+        assertEquals("de", htmlElement.attr("lang"))
     }
 
     @Test
@@ -272,7 +279,9 @@ class WidgetRestTest {
         assertTrue(response.status.isSuccess())
 
         val html = response.body<String>()
-        assertTrue(html.contains("<html lang=\"en\""))
+        val doc = WidgetTestUtils.parseHtml(html)
+        val htmlElement = doc.select("html").single()
+        assertEquals("en", htmlElement.attr("lang"))
     }
 
     @Test
