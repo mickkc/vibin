@@ -40,6 +40,7 @@ object WidgetTestUtils {
         fgColor: Int = 0xFFFFFF,
         bgColor: Int = 0x000000,
         accentColor: Int = 0xFF0000,
+        layout: String = "col",
         language: String = "en",
         baseUrl: String? = null
     ) = WidgetContext(
@@ -48,6 +49,7 @@ object WidgetTestUtils {
         foregroundColor = fgColor,
         backgroundColor = bgColor,
         accentColor = accentColor,
+        layout = layout,
         language = language,
         baseUrl = baseUrl
     )
