@@ -734,8 +734,8 @@ class WidgetTest {
 
         val bodyStyle = doc.select("body").first()?.attr("style")
         assertNotNull(bodyStyle)
-        assertTrue(bodyStyle.contains("#ABCDEF"))
-        assertTrue(bodyStyle.contains("#123456"))
+        assertContains(bodyStyle, "#ABCDEF")
+        assertContains(bodyStyle, "#123456")
     }
 
     @Test
@@ -752,6 +752,85 @@ class WidgetTest {
 
         // They should be different (different language)
         assertNotEquals(htmlEn, htmlDe)
+    }
+
+    // endregion
+
+    // region Layout Tests
+
+    @Test
+    fun testWidgetBuilder_Styles_NoStyle() = testApp { _ ->
+        val ctx = WidgetTestUtils.createContext(layout = "")
+        val html = WidgetBuilder.build(listOf(WidgetType.SERVER_STATS, WidgetType.USER), ctx)
+        val doc = WidgetTestUtils.parseHtml(html)
+
+        val bodyStyle = doc.select("body").single().attr("style")
+        assertNotNull(bodyStyle)
+        assertFalse(bodyStyle.contains("display:"))
+    }
+
+    @Test
+    fun testWidgetBuilder_Styles_Col() = testApp { _ ->
+        val ctx = WidgetTestUtils.createContext(layout = "col")
+        val html = WidgetBuilder.build(listOf(WidgetType.SERVER_STATS, WidgetType.USER), ctx)
+        val doc = WidgetTestUtils.parseHtml(html)
+
+        val bodyStyle = doc.select("body").single().attr("style")
+        assertNotNull(bodyStyle)
+        assertContains(bodyStyle, "display:flex")
+        assertContains(bodyStyle, "flex-direction:column")
+    }
+
+    @Test
+    fun testWidgetBuilder_Styles_Row() = testApp { _ ->
+        val ctx = WidgetTestUtils.createContext(layout = "row")
+        val html = WidgetBuilder.build(listOf(WidgetType.SERVER_STATS, WidgetType.USER), ctx)
+        val doc = WidgetTestUtils.parseHtml(html)
+
+        val bodyStyle = doc.select("body").single().attr("style")
+        assertNotNull(bodyStyle)
+        assertContains(bodyStyle, "display:flex")
+        assertContains(bodyStyle, "flex-direction:row")
+    }
+
+    @Test
+    fun testWidgetBuilder_Styles_ColumnCount() = testApp { _ ->
+        val ctx = WidgetTestUtils.createContext(layout = "col-2")
+        val html = WidgetBuilder.build(listOf(WidgetType.SERVER_STATS, WidgetType.USER), ctx)
+        val doc = WidgetTestUtils.parseHtml(html)
+
+        val bodyStyle = doc.select("body").single().attr("style")
+        assertNotNull(bodyStyle)
+        assertContains(bodyStyle, "display:grid")
+        assertContains(bodyStyle, "grid-template-columns:repeat(2,1fr)")
+        assertContains(bodyStyle, "align-content:start")
+    }
+
+    @Test
+    fun testWidgetBuilder_Styles_RowCount() = testApp { _ ->
+        val ctx = WidgetTestUtils.createContext(layout = "row-2")
+        val html = WidgetBuilder.build(listOf(WidgetType.SERVER_STATS, WidgetType.USER, WidgetType.FAVORITE_ALBUMS), ctx)
+        val doc = WidgetTestUtils.parseHtml(html)
+
+        val bodyStyle = doc.select("body").single().attr("style")
+        assertNotNull(bodyStyle)
+        assertContains(bodyStyle, "display:grid")
+        assertContains(bodyStyle, "grid-template-columns:repeat(2,1fr)")
+        assertContains(bodyStyle, "grid-template-rows:repeat(2,auto)")
+        assertContains(bodyStyle, "align-content:start")
+    }
+
+    @Test
+    fun testWidgetBuilder_Styles_ColSize() = testApp { _ ->
+        val ctx = WidgetTestUtils.createContext(layout = "col-300px")
+        val html = WidgetBuilder.build(listOf(WidgetType.SERVER_STATS, WidgetType.USER, WidgetType.FAVORITE_ALBUMS), ctx)
+        val doc = WidgetTestUtils.parseHtml(html)
+
+        val bodyStyle = doc.select("body").single().attr("style")
+        assertNotNull(bodyStyle)
+        assertContains(bodyStyle, "display:grid")
+        assertContains(bodyStyle, "grid-template-columns:repeat(auto-fit,minmax(300px,1fr))")
+        assertContains(bodyStyle, "align-content:start")
     }
 
     // endregion

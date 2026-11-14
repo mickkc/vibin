@@ -22,15 +22,15 @@ object WidgetBuilder {
             else -> {
                 if (fixedRowStyleRegex.matches(layout.lowercase())) {
                     val rows = layout.substringAfterLast("-").toIntOrNull() ?: return null
-                    "display:grid;grid-template-rows:repeat($rows, auto);grid-template-columns:repeat(${ceil(widgetAmount.toFloat() / rows).toInt()},1fr);align-content:start;"
+                    "display:grid;grid-template-rows:repeat($rows,auto);grid-template-columns:repeat(${ceil(widgetAmount.toFloat() / rows).toInt()},1fr);align-content:start;"
                 }
                 else if (fixedColStyleRegex.matches(layout.lowercase())) {
                     val cols = layout.substringAfterLast("-").toIntOrNull() ?: return null
-                    "display:grid;grid-template-columns:repeat($cols, 1fr);align-content:start;"
+                    "display:grid;grid-template-columns:repeat($cols,1fr);align-content:start;"
                 }
                 else if (colSizeStyleRegex.matches(layout.lowercase())) {
                     val colWidth = layout.substringAfterLast("-").removeSuffix("px").toIntOrNull() ?: return null
-                    "display:grid;grid-template-columns:repeat(auto-fit,minmax(${colWidth}px,1fr));align-content: start;"
+                    "display:grid;grid-template-columns:repeat(auto-fit,minmax(${colWidth}px,1fr));align-content:start;"
                 }
                 else null
             }
