@@ -36,7 +36,7 @@ RUN flutter pub get
 
 # Build the web application
 RUN dart run build_runner build --delete-conflicting-outputs
-RUN flutter build web --debug --pwa-strategy=none --dart-define=VIBIN_EMBEDDED_MODE=true --base-href "/web/"
+RUN flutter build web --release --no-web-resources-cdn --dart-define=VIBIN_EMBEDDED_MODE=true --base-href "/web/"
 
 # Stage 4: Create the Runtime Image
 FROM debian:latest AS runtime
