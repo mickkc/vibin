@@ -245,7 +245,7 @@ class LastFmProvider(val client: HttpClient) : TrackSearchProvider, ArtistSearch
     }
 
     override suspend fun parse(data: PreparseData, user: UserEntity?): TrackInfoMetadata? {
-        return searchTrack(data.audioFile.file.nameWithoutExtension, user)?.firstOrNull()
+        return searchTrack(data.file.nameWithoutExtension, user)?.firstOrNull()
     }
 
     override fun isAvailable(user: UserEntity?): Boolean {

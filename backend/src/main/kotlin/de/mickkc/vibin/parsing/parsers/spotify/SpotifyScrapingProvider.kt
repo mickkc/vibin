@@ -34,7 +34,7 @@ class SpotifyScrapingProvider : FileParser, TrackSearchProvider, ArtistSearchPro
     }
 
     override suspend fun parse(data: PreparseData, user: UserEntity?): TrackInfoMetadata? {
-        return searchTrack(data.audioFile.file.nameWithoutExtension, user)?.firstOrNull()
+        return searchTrack(data.file.nameWithoutExtension, user)?.firstOrNull()
     }
 
     override suspend fun searchAlbum(query: String, user: UserEntity?): List<AlbumMetadata>? {

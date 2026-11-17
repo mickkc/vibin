@@ -1,13 +1,13 @@
 package de.mickkc.vibin.parsing.parsers
 
-import org.jaudiotagger.audio.AudioFile
+import java.io.File
 
 data class PreparseData(
     val durationMs: Long,
     val bitrate: String?,
     val sampleRate: String?,
     val channels: String?,
-    val audioFile: AudioFile
+    val file: File
 ) {
 
     fun getChannelsInt(): Int? {

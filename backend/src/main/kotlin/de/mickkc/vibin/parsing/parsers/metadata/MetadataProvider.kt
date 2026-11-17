@@ -1,18 +1,18 @@
 package de.mickkc.vibin.parsing.parsers.metadata
 
 import de.mickkc.vibin.db.UserEntity
-import org.jaudiotagger.tag.FieldKey
-import org.jaudiotagger.tag.Tag
-import org.slf4j.LoggerFactory
 import de.mickkc.vibin.parsing.ParsingUtils
 import de.mickkc.vibin.parsing.TrackInfoMetadata
 import de.mickkc.vibin.parsing.parsers.FileParser
 import de.mickkc.vibin.parsing.parsers.PreparseData
-import de.mickkc.vibin.settings.server.LyricFilePathTemplate
 import de.mickkc.vibin.settings.Settings
+import de.mickkc.vibin.settings.server.LyricFilePathTemplate
+import org.jaudiotagger.audio.AudioFileIO
+import org.jaudiotagger.tag.FieldKey
+import org.jaudiotagger.tag.Tag
+import org.slf4j.LoggerFactory
 import java.io.File
 import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 
 class MetadataProvider : FileParser {
 
@@ -48,11 +48,11 @@ class MetadataProvider : FileParser {
 
     private val textTagRegex = Regex("^Text=\"(?<value>.*)\";$")
 
-    @OptIn(ExperimentalEncodingApi::class)
     override suspend fun parse(data: PreparseData, user: UserEntity?): TrackInfoMetadata? {
 
         try {
-            val tag = data.audioFile.tag
+            val audioFile = AudioFileIO.read(data.file)
+            val tag = audioFile.tag
 
             val artist = tag.getFirstNonEmpty(FieldKey.ARTISTS, FieldKey.ARTIST, FieldKey.ORIGINAL_ARTIST, FieldKey.ALBUM_ARTISTS, FieldKey.ALBUM_ARTIST)
             val album = tag.getFirstNonEmpty(FieldKey.ALBUM, FieldKey.ORIGINAL_ALBUM)
@@ -72,9 +72,9 @@ class MetadataProvider : FileParser {
                     .replace("{artist}", artist ?: "")
                     .replace("{album}", album ?: "")
                     .replace("{title}", title ?: "")
-                    .replace("{parentPath}", data.audioFile.file.parentFile.absolutePath)
-                    .replace("{name}", data.audioFile.file.nameWithoutExtension)
-                    .replace("{ext}", data.audioFile.file.extension)
+                    .replace("{parentPath}", data.file.parentFile.absolutePath)
+                    .replace("{name}", data.file.nameWithoutExtension)
+                    .replace("{ext}", data.file.extension)
                     .replace("{sep}", File.separator)
                     .trim()
 
@@ -104,7 +104,7 @@ class MetadataProvider : FileParser {
             val parsedDiscCount = parsedDiscs?.getOrNull(1) ?: discCount?.toIntOrNull()
 
             if (title == null) {
-                logger.info("No useful metadata found in file ${data.audioFile.file.absolutePath}, skipping.")
+                logger.info("No useful metadata found in file ${data.file.absolutePath}, skipping.")
                 return null
             }
 
@@ -127,7 +127,7 @@ class MetadataProvider : FileParser {
             )
         }
         catch (e: Exception) {
-            logger.error("Error parsing file ${data.audioFile.file.absolutePath}", e)
+            logger.error("Error parsing file ${data.file.absolutePath}", e)
             return null
         }
     }

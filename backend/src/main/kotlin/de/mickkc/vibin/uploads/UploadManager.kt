@@ -9,7 +9,6 @@ import de.mickkc.vibin.db.tracks.TrackVisibility
 import de.mickkc.vibin.dto.PendingUploadDto
 import de.mickkc.vibin.dto.tracks.TrackEditDto
 import de.mickkc.vibin.parsing.Parser
-import de.mickkc.vibin.parsing.parsers.preparser.PreParser
 import de.mickkc.vibin.processing.ThumbnailProcessor
 import de.mickkc.vibin.repos.*
 import de.mickkc.vibin.settings.Settings
@@ -193,7 +192,7 @@ object UploadManager {
                 throw IllegalStateException("Upload file does not exist: ${file.absolutePath}")
             }
 
-            val fileInfo = PreParser.preParse(file)
+            val fileInfo = Parser.preParse(file) ?: throw IllegalStateException("Could not preparse ${file.absolutePath}")
 
             val targetFile = getTargetFile(upload)
             targetFile.parentFile.mkdirs()

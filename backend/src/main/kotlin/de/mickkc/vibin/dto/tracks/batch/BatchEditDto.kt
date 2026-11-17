@@ -18,7 +18,7 @@ enum class BatchEditActionType {
 @Serializable
 data class BatchEditAction(
     val actionType: BatchEditActionType,
-    val data: Map<String, @Contextual @Serializable Any>
+    val data: Map<String, @Contextual @Serializable Any>?
 )
 
 @Serializable
