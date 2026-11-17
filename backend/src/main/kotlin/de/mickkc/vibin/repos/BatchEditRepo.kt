@@ -288,6 +288,8 @@ object BatchEditRepo {
 
         val file = PathUtils.getTrackFileFromPath(track.path)
 
+        if (!file.exists()) throw BatchEditException("File for track ${track.title} does not exist.")
+
         val preParseData = runBlocking { Parser.preParse(file, providerOverride) } ?: return null
 
         val newBitrate = preParseData.bitrate?.toIntOrNull() ?: state.bitrate
