@@ -7,7 +7,10 @@ import de.mickkc.vibin.parsing.parsers.itunes.ItunesProvider
 import de.mickkc.vibin.parsing.parsers.lastfm.LastFmProvider
 import de.mickkc.vibin.parsing.parsers.lrclib.LrcLibProvider
 import de.mickkc.vibin.parsing.parsers.metadata.MetadataProvider
+import de.mickkc.vibin.parsing.parsers.preparser.PreParseException
 import de.mickkc.vibin.parsing.parsers.preparser.PreParser
+import de.mickkc.vibin.parsing.parsers.preparser.impl.JAudioTaggerPreParser
+import de.mickkc.vibin.parsing.parsers.preparser.impl.ffprobe.FfprobePreParser
 import de.mickkc.vibin.parsing.parsers.spotify.SpotifyProvider
 import de.mickkc.vibin.parsing.parsers.spotify.SpotifyScrapingProvider
 import de.mickkc.vibin.parsing.parsers.theaudiodb.TheAudioDbProvider
@@ -90,6 +93,11 @@ object Parser {
         "LrcLib" to LrcLibProvider(client)
     )
 
+    val preParsers = mapOf<String, PreParser>(
+        "JAudioTagger" to JAudioTaggerPreParser,
+        "ffprobe" to FfprobePreParser
+    )
+
     /**
      * Tries to parse the given file using the configured primary and fallback metadata sources.
      *
@@ -100,7 +108,7 @@ object Parser {
     suspend fun parse(file: File, user: UserEntity?): TrackMetadata {
 
         val sources = listOf(Settings.get(PrimaryMetadataSource), Settings.get(FallbackMetadataSource))
-        val preParsed = PreParser.preParse(file)
+        val preParsed = preParse(file) ?: throw PreParseException("Could not preparse file.")
 
         for (source in sources) {
             val metadata = fileParsers[source]?.parse(preParsed, user)
@@ -133,6 +141,7 @@ object Parser {
     fun getAvailableArtistSearchProviders(user: UserEntity?) = getAvailableProviderKeys(artistSearchProviders, user)
     fun getAvailableAlbumSearchProviders(user: UserEntity?) = getAvailableProviderKeys(albumSearchProviders, user)
     fun getAvailableLyricsSearchProviders(user: UserEntity?) = getAvailableProviderKeys(lyricsSearchProviders, user)
+    fun getAvailablePreParsers(user: UserEntity?) = getAvailableProviderKeys(preParsers, user)
 
     /**
      * Searches a track provider for tracks using a search query
@@ -310,6 +319,19 @@ object Parser {
         catch (e: Exception) {
             logger.error("Error searching lyrics for '${trackMetadata.trackInfo.title}' by '${trackMetadata.trackInfo.artists.first()}' with provider '$provider': ${e.message}", e)
             null
+        }
+    }
+
+    suspend fun preParse(file: File, providerOverride: String? = null): PreparseData? {
+        val provider = providerOverride ?: Settings.get(PreParserMetadataSource)
+        val parser = preParsers[provider] ?: return null
+
+        return try {
+            parser.preParse(file)
+        }
+        catch (e: Exception) {
+            logger.error("Error preparsing file ${file.absolutePath}.", e)
+            return null
         }
     }
 

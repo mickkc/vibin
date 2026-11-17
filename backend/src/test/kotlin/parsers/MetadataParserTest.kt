@@ -73,7 +73,7 @@ class MetadataParserTest {
         assertEquals("48", fi.bitrate)
         assertEquals(1992, fi.durationMs)
         assertEquals(1, fi.getChannelsInt())
-        assertEquals(file.absolutePath, fi.audioFile.file.absolutePath)
+        assertEquals(file.absolutePath, fi.file.absolutePath)
     }
 
 }

@@ -21,7 +21,7 @@ object ProcessUtil {
         processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE)
         processBuilder.redirectError(ProcessBuilder.Redirect.PIPE)
 
-        logger.info("Running process: ${command.joinToString(" ")} in directory: ${workingDir?.absolutePath ?: "default"}")
+        logger.trace("Running process: ${command.joinToString(" ")} in directory: ${workingDir?.absolutePath ?: "default"}")
 
         lateinit var stdOut: Deferred<String>
         lateinit var stdErr: Deferred<String>

@@ -26,6 +26,7 @@ val serverSettings = listOf(
     AlbumMetadataFetchType,
     AlbumMetadataSource,
     LyricsMetadataSource,
+    PreParserMetadataSource,
     LoginNotificationTokenValidity,
     IncludeIpInLoginNotification,
     IncludeLocationInLoginNotification,
@@ -175,6 +176,13 @@ object LyricsMetadataSource : ServerSetting<String>(
     parser = { value -> value },
     serializer = { value -> value },
     defaultValue = "LrcLib"
+)
+
+object PreParserMetadataSource : ServerSetting<String>(
+    key = "preparser_metadata_source",
+    parser = { value -> value },
+    serializer = { value -> value },
+    defaultValue = "JAudioTagger"
 )
 
 object IsFirstScan : ServerSetting<Boolean>(

@@ -117,5 +117,5 @@ class DeezerProvider(val client: HttpClient) : FileParser, ArtistSearchProvider,
     }
 
     override suspend fun parse(data: PreparseData, user: UserEntity?): TrackInfoMetadata?
-        = searchTrack(data.audioFile.file.nameWithoutExtension, user)?.firstOrNull()
+        = searchTrack(data.file.nameWithoutExtension, user)?.firstOrNull()
 }

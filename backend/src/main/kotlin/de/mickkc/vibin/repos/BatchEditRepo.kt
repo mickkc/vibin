@@ -6,11 +6,12 @@ import de.mickkc.vibin.db.tags.TagEntity
 import de.mickkc.vibin.db.tracks.TrackEntity
 import de.mickkc.vibin.db.tracks.TrackTable
 import de.mickkc.vibin.dto.tracks.batch.*
-import de.mickkc.vibin.parsing.parsers.preparser.PreParser
+import de.mickkc.vibin.parsing.Parser
 import de.mickkc.vibin.repos.TrackRepo.toMinimalDtoInternal
 import de.mickkc.vibin.search.SearchQueryBuilder
 import de.mickkc.vibin.utils.PathUtils
 import io.ktor.util.logging.*
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.SizedCollection
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -70,31 +71,31 @@ object BatchEditRepo {
                 edit.actions.forEach { action ->
                     when (action.actionType) {
                         BatchEditActionType.ADD_TAGS -> {
-                            trackChanges += batchEditTags(track, state, action.data["ids"], edit.dryRun, false)
+                            trackChanges += batchEditTags(track, state, action.data?.get("ids"), edit.dryRun, false)
                         }
                         BatchEditActionType.REMOVE_TAGS -> {
-                            trackChanges += batchEditTags(track, state, action.data["ids"], edit.dryRun, true)
+                            trackChanges += batchEditTags(track, state, action.data?.get("ids"), edit.dryRun, true)
                         }
                         BatchEditActionType.ADD_TO_PLAYLIST -> {
-                            trackChanges += batchEditPlaylist(track, state, action.data["id"], edit.dryRun, userId, false)
+                            trackChanges += batchEditPlaylist(track, state, action.data?.get("id"), edit.dryRun, userId, false)
                         }
                         BatchEditActionType.REMOVE_FROM_PLAYLIST -> {
-                            trackChanges += batchEditPlaylist(track, state, action.data["id"], edit.dryRun, userId, true)
+                            trackChanges += batchEditPlaylist(track, state, action.data?.get("id"), edit.dryRun, userId, true)
                         }
                         BatchEditActionType.TITLE -> {
-                            trackChanges += batchEditRename(track, state, action.data["from"], action.data["to"], edit.dryRun)
+                            trackChanges += batchEditRename(track, state, action.data?.get("from"), action.data?.get("to"), edit.dryRun)
                         }
                         BatchEditActionType.CHANGE_COMMENT -> {
-                            trackChanges += batchEditComment(track, state, action.data["from"], action.data["to"], edit.dryRun)
+                            trackChanges += batchEditComment(track, state, action.data?.get("from"), action.data?.get("to"), edit.dryRun)
                         }
                         BatchEditActionType.REMOVE_LISTEN_DURATION -> {
                             trackChanges += batchEditRemoveListenDuration(track, state, edit.dryRun)
                         }
                         BatchEditActionType.REGENERATE_FILE_METADATA -> {
-                            trackChanges += batchRescanFileMetadata(track, state, edit.dryRun)
+                            trackChanges += batchRescanFileMetadata(track, state, edit.dryRun, action.data?.get("provider")?.let { it as? String })
                         }
                         BatchEditActionType.CHANGE_ALBUM -> {
-                            trackChanges += batchEditAlbum(track, state, action.data["id"], edit.dryRun)
+                            trackChanges += batchEditAlbum(track, state, action.data?.get("id"), edit.dryRun)
                         }
                     }
                 }
@@ -281,13 +282,15 @@ object BatchEditRepo {
         return null
     }
 
-    private fun batchRescanFileMetadata(track: TrackEntity, state: TrackVirtualState, dryRun: Boolean): BatchEditResultDtoChange? {
+    private fun batchRescanFileMetadata(track: TrackEntity, state: TrackVirtualState, dryRun: Boolean, providerOverride: String?): BatchEditResultDtoChange? {
 
         val oldMetadataStr = "Bitrate: ${state.bitrate} kbps, Channels: ${state.channels}, Sample rate: ${state.sampleRate}, Duration: ${state.duration} ms"
 
         val file = PathUtils.getTrackFileFromPath(track.path)
 
-        val preParseData = PreParser.preParse(file)
+        if (!file.exists()) throw BatchEditException("File for track ${track.title} does not exist.")
+
+        val preParseData = runBlocking { Parser.preParse(file, providerOverride) } ?: return null
 
         val newBitrate = preParseData.bitrate?.toIntOrNull() ?: state.bitrate
         val newChannelsInt = preParseData.getChannelsInt() ?: state.channels
