@@ -8,6 +8,7 @@ import de.mickkc.vibin.parsing.parsers.preparser.impl.ffprobe.data.FfProbeResult
 import de.mickkc.vibin.utils.ProcessUtil
 import org.slf4j.LoggerFactory
 import java.io.File
+import kotlin.math.roundToLong
 
 object FfprobePreParser : PreParser {
 
@@ -33,12 +34,15 @@ object FfprobePreParser : PreParser {
             val audioStream = parsed.streams.firstOrNull { it.codec_type == "audio" }
                 ?: throw PreParseException("File ${file.absolutePath} does not contain any audio streams.")
 
-            val duration = (audioStream.duration ?: parsed.format.duration)?.toDouble()?.times(1000)?.toLong()
+            val duration = (audioStream.duration ?: parsed.format.duration)?.toDoubleOrNull()?.times(1000)?.roundToLong()
                 ?: throw PreParseException("File ${file.absolutePath} does not have a duration.")
+
+            // convert from bps to kbps
+            val kBitRate = (audioStream.bit_rate ?: parsed.format.bit_rate)?.toDoubleOrNull()?.div(1000)?.roundToLong()
 
             return PreparseData(
                 durationMs = duration,
-                bitrate = audioStream.bit_rate ?: parsed.format.bit_rate,
+                bitrate = kBitRate?.toString(),
                 sampleRate = audioStream.sample_rate,
                 channels = audioStream.channels,
                 file = file
