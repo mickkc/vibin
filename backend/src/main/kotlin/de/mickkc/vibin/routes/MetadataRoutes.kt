@@ -24,7 +24,7 @@ fun Application.configureMetadataRoutes() = routing {
                 "artist" to Parser.getAvailableArtistSearchProviders(user),
                 "album" to Parser.getAvailableAlbumSearchProviders(user),
                 "lyrics" to Parser.getAvailableLyricsSearchProviders(user),
-                "preparsers" to Parser.getAvailablePreParsers(user)
+                "preParsers" to Parser.getAvailablePreParsers(user)
             ))
         }
 
