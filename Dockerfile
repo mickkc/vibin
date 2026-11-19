@@ -39,15 +39,14 @@ RUN dart run build_runner build --delete-conflicting-outputs
 RUN flutter build web --release --no-web-resources-cdn --dart-define=VIBIN_EMBEDDED_MODE=true --base-href "/web/"
 
 # Stage 4: Create the Runtime Image
-FROM debian:latest AS runtime
+FROM alpine:latest AS runtime
 
 # Install Chromium and ChromeDriver
-RUN apt-get update && apt-get install -y \
-    openjdk-21-jre-headless \
+RUN apk add --no-cache \
+    openjdk21-jre \
     ffmpeg \
     chromium \
-    chromium-driver \
-    && rm -rf /var/lib/apt/lists/*
+    chromium-chromedriver
 
 # Set environment variables for Selenium
 ENV CHROME_BINARY_PATH /usr/bin/chromium
