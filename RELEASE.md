@@ -9,6 +9,11 @@ The docker image can be found here: https://hub.docker.com/r/mickkc/vibin.
 This version is published under the [latest](https://hub.docker.com/layers/mickkc/vibin/latest) and
 [{version}](https://hub.docker.com/layers/mickkc/vibin/{version}/) tags.
 
+A version without chromium installed is also available under the
+[latest-no-chromium](https://hub.docker.com/layers/mickkc/vibin/latest-no-chromium) and
+[{version}-no-chromium](https://hub.docker.com/layers/mickkc/vibin/{version}-no-chromium/) tags.
+See [here](http://localhost:3000/docs/installation#no-chrome) for more info.
+
 ## Compatibility
 
 | Server version | Min. app version | Max. app version | Notes |

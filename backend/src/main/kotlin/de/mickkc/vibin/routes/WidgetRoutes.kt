@@ -9,6 +9,7 @@ import de.mickkc.vibin.repos.ControlRepo
 import de.mickkc.vibin.repos.ImageRepo
 import de.mickkc.vibin.repos.WidgetRepo
 import de.mickkc.vibin.utils.AccessCryptoUtil
+import de.mickkc.vibin.utils.ChromeUtils
 import de.mickkc.vibin.utils.PathUtils
 import de.mickkc.vibin.websockets.listener.ListeningToWidgetListener
 import de.mickkc.vibin.widgets.*
@@ -152,6 +153,9 @@ fun Application.configureWidgetRoutes() = routing {
     }
 
     getP("/api/widgets/{id}/image") {
+        if (!ChromeUtils.isAvailable)
+            notImplemented("Chromium is not available.")
+
         val id = call.getStringParameter("id")
         val widget = WidgetRepo.getWidget(id) ?: notFound()
 

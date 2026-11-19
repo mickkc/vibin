@@ -40,14 +40,16 @@ pipeline {
                     steps {
                         script {
                             def img = docker.build("${IMAGE}:${TAG_NAME}-amd64", "--build-arg VIBIN_TAG=${TAG_NAME} .")
+                            def imgNoChromium = docker.build("${IMAGE}:${TAG_NAME}-amd64-no-chromium", "--build-arg VIBIN_TAG=${TAG_NAME} --build-arg INSTALL_CHROMIUM=false .")
                             docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
                                 img.push()
+                                imgNoChromium.push()
                             }
                         }
                     }
                     post {
                         always {
-                            sh "docker rmi ${IMAGE}:${TAG_NAME}-amd64 || true"
+                            sh "docker rmi ${IMAGE}:${TAG_NAME}-amd64 ${IMAGE}:${TAG_NAME}-amd64-no-chromium || true"
                         }
                     }
                 }
@@ -58,14 +60,16 @@ pipeline {
                         checkout scm
                         script {
                             def img = docker.build("${IMAGE}:${TAG_NAME}-arm64", "--build-arg VIBIN_TAG=${TAG_NAME} .")
+                            def imgNoChromium = docker.build("${IMAGE}:${TAG_NAME}-arm64-no-chromium", "--build-arg VIBIN_TAG=${TAG_NAME} --build-arg INSTALL_CHROMIUM=false .")
                             docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
                                 img.push()
+                                imgNoChromium.push()
                             }
                         }
                     }
                     post {
                         always {
-                            sh "docker rmi ${IMAGE}:${TAG_NAME}-arm64 || true"
+                            sh "docker rmi ${IMAGE}:${TAG_NAME}-arm64 ${IMAGE}:${TAG_NAME}-arm64-no-chromium || true"
                         }
                     }
                 }
@@ -81,6 +85,12 @@ pipeline {
                             --tag ${IMAGE}:latest \
                             ${IMAGE}:${TAG_NAME}-amd64 \
                             ${IMAGE}:${TAG_NAME}-arm64
+
+                        docker buildx imagetools create \
+                            --tag ${IMAGE}:${TAG_NAME}-no-chromium \
+                            --tag ${IMAGE}:latest-no-chromium \
+                            ${IMAGE}:${TAG_NAME}-amd64-no-chromium \
+                            ${IMAGE}:${TAG_NAME}-arm64-no-chromium
                     """
                 }
             }

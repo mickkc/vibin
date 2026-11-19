@@ -13,6 +13,7 @@ import de.mickkc.vibin.scraping.SpotifyScraper
 import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.settings.server.ExtendedMetadata
 import de.mickkc.vibin.settings.server.MetadataLimit
+import de.mickkc.vibin.utils.ChromeUtils
 
 class SpotifyScrapingProvider : FileParser, TrackSearchProvider, ArtistSearchProvider, AlbumSearchProvider {
 
@@ -42,4 +43,6 @@ class SpotifyScrapingProvider : FileParser, TrackSearchProvider, ArtistSearchPro
 
         return scraper.searchAlbums(query, limit)
     }
+
+    override fun isAvailable(user: UserEntity?): Boolean = ChromeUtils.isAvailable
 }
