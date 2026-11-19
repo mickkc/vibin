@@ -44,6 +44,9 @@ fun noPermission(vararg requiredPermissions: PermissionType): Nothing =
 fun forbidden(reason: String = "forbidden"): Nothing =
     throw ApiException(ErrorDtoType.FORBIDDEN, "reason" to reason)
 
+fun notImplemented(reason: String = "Not implemented"): Nothing =
+    throw ApiException(ErrorDtoType.NOT_IMPLEMENTED, "reason" to reason)
+
 
 fun notFound(): Nothing =
     throw ApiException(ErrorDtoType.NOT_FOUND)

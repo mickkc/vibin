@@ -154,7 +154,7 @@ fun Application.configureWidgetRoutes() = routing {
 
     getP("/api/widgets/{id}/image") {
         if (!ChromeUtils.isAvailable)
-            unavailable("Chromium is not available.")
+            notImplemented("Chromium is not available.")
 
         val id = call.getStringParameter("id")
         val widget = WidgetRepo.getWidget(id) ?: notFound()
