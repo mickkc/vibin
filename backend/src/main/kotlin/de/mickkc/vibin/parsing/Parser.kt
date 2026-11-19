@@ -33,7 +33,6 @@ import java.net.InetAddress
 import java.net.MalformedURLException
 import java.net.URL
 import kotlin.io.encoding.Base64
-import kotlin.io.encoding.ExperimentalEncodingApi
 
 object Parser {
 
@@ -152,7 +151,7 @@ object Parser {
      * @param user The user searching for tracks, used for loading API credentials
      */
     suspend fun searchTrack(query: String, provider: String, user: UserEntity?): List<TrackInfoMetadata>? {
-        val parser = trackSearchProviders[provider] ?: return null
+        val parser = trackSearchProviders[provider]?.takeIf { it.isAvailable(user) } ?: return null
 
         return try {
             parser.searchTrack(query, user)
@@ -172,7 +171,7 @@ object Parser {
      * @param user The user searching for artists, used for loading API credentials
      */
     suspend fun searchArtist(query: String, provider: String, user: UserEntity?): List<ArtistMetadata>? {
-        val parser = artistSearchProviders[provider] ?: return null
+        val parser = artistSearchProviders[provider]?.takeIf { it.isAvailable(user) } ?: return null
 
         return try {
             parser.searchArtist(query, user)
@@ -195,7 +194,7 @@ object Parser {
         if (type == MetadataFetchingType.NONE) return null
 
         val provider = Settings.get(ArtistMetadataSource)
-        val parser = artistSearchProviders[provider] ?: return null
+        val parser = artistSearchProviders[provider]?.takeIf { it.isAvailable(user) } ?: return null
 
         return try {
             val results = parser.searchArtist(query, user)
@@ -225,7 +224,7 @@ object Parser {
      * @param user The user searching for albums, used for loading API credentials
      */
     suspend fun searchAlbum(query: String, provider: String, user: UserEntity?): List<AlbumMetadata>? {
-        val parser = albumSearchProviders[provider] ?: return null
+        val parser = albumSearchProviders[provider]?.takeIf { it.isAvailable(user) } ?: return null
 
         return try {
             parser.searchAlbum(query, user)
@@ -248,7 +247,7 @@ object Parser {
         if (type == MetadataFetchingType.NONE) return null
 
         val provider = Settings.get(ArtistMetadataSource)
-        val parser = albumSearchProviders[provider] ?: return null
+        val parser = albumSearchProviders[provider]?.takeIf { it.isAvailable(user) } ?: return null
 
         return try {
             val results = parser.searchAlbum(query, user)
@@ -278,7 +277,7 @@ object Parser {
      * @param user The user searching for lyrics, used for loading API credentials
      */
     suspend fun searchLyrics(query: String, provider: String, user: UserEntity?): List<LyricMetadata>? {
-        val parser = lyricsSearchProviders[provider] ?: return null
+        val parser = lyricsSearchProviders[provider]?.takeIf { it.isAvailable(user) } ?: return null
 
         return try {
             parser.searchLyrics(query, user)
@@ -305,7 +304,7 @@ object Parser {
         }
 
         val provider = Settings.get(LyricsMetadataSource)
-        val parser = lyricsSearchProviders[provider] ?: return null
+        val parser = lyricsSearchProviders[provider]?.takeIf { it.isAvailable(user) } ?: return null
 
         return try {
             parser.searchLyrics(
@@ -324,7 +323,7 @@ object Parser {
 
     suspend fun preParse(file: File, providerOverride: String? = null): PreparseData? {
         val provider = providerOverride ?: Settings.get(PreParserMetadataSource)
-        val parser = preParsers[provider] ?: return null
+        val parser = preParsers[provider]?.takeIf { it.isAvailable(null) } ?: return null
 
         return try {
             parser.preParse(file)
@@ -335,7 +334,6 @@ object Parser {
         }
     }
 
-    @OptIn(ExperimentalEncodingApi::class)
     suspend fun downloadCoverImage(url: String): ByteArray? {
 
         if (url.isBlank()) return null

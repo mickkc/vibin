@@ -41,16 +41,17 @@ RUN flutter build web --release --no-web-resources-cdn --dart-define=VIBIN_EMBED
 # Stage 4: Create the Runtime Image
 FROM alpine:latest AS runtime
 
-# Install Chromium and ChromeDriver
-RUN apk add --no-cache \
-    openjdk21-jre \
-    ffmpeg \
-    chromium \
-    chromium-chromedriver
+ARG INSTALL_CHROMIUM=true
 
 # Set environment variables for Selenium
-ENV CHROME_BINARY_PATH /usr/bin/chromium
-ENV CHROMEDRIVER /usr/bin/chromedriver
+ENV CHROME_BINARY_PATH=/usr/bin/chromium
+ENV CHROMEDRIVER=/usr/bin/chromedriver
+
+RUN apk add --no-cache \
+    openjdk21-jre \
+    ffmpeg
+
+RUN if [ "$INSTALL_CHROMIUM" = "true" ]; then apk add --no-cache chromium chromium-chromedriver; fi
 
 RUN mkdir /app
 
