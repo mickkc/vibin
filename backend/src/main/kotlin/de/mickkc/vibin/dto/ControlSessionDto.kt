@@ -3,7 +3,9 @@ package de.mickkc.vibin.dto
 import de.mickkc.vibin.dto.tracks.MinimalTrackDto
 import de.mickkc.vibin.dto.tracks.TrackDto
 import io.ktor.openapi.JsonSchema
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class ControlSessionQueueItemInDto (
     val id: String,
     @JsonSchema.Example("0")
@@ -12,11 +14,13 @@ data class ControlSessionQueueItemInDto (
     val trackId: Long?
 )
 
+@Serializable
 data class ControlSessionQueueItemOutDto (
     val id: String,
     val track: MinimalTrackDto?
 )
 
+@Serializable
 data class ControlSessionDto (
 
     @JsonSchema.Example("\"970e6075a413f042\"")

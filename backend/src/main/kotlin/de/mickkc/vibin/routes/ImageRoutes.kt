@@ -8,7 +8,10 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.routing.openapi.describe
+import io.ktor.utils.io.ExperimentalKtorApi
 
+@OptIn(ExperimentalKtorApi::class)
 fun Application.configureImageRoutes() = routing {
 
     authenticate("tokenAuth") {
@@ -27,6 +30,20 @@ fun Application.configureImageRoutes() = routing {
             }
 
             call.respondFile(image)
+        }.describe {
+            operationId = "getDefaultImage"
+            summary = "Get a default image"
+            tag("Images")
+            parameters {
+                q("type", "track", required = true,
+                    description = "The image type: `album`, `artist`, `playlist`, `track` or `user`.")
+                q("quality", 64, required = false,
+                    description = "The width and height of the image in pixels. 0 means the original size.")
+            }
+            authResponses {
+                successResponse<ByteArray>("The default image for the specified type.")
+                notFoundResponse("Image file")
+            }
         }
 
         get("/api/images/by-id/{id}") {
@@ -41,6 +58,19 @@ fun Application.configureImageRoutes() = routing {
             }
 
             call.respondFile(imageFile)
+        }.describe {
+            operationId = "getImageById"
+            summary = "Get an image by its Id"
+            tag("Images")
+            parameters {
+                p("id", 1L)
+                q("quality", 64, required = false,
+                    description = "The width and height of the image in pixels. 0 means the original size.")
+            }
+            authResponses {
+                successResponse<ByteArray>("The image for the specified Id.")
+                notFoundResponse("Image or file")
+            }
         }
     }
 
@@ -63,5 +93,23 @@ fun Application.configureImageRoutes() = routing {
         }
 
         call.respondFile(imageFile)
+    }.describe {
+        operationId = "getImageByChecksum"
+        summary = "Get an image by its Checksum"
+        tag("Images")
+        parameters {
+            p("checksum", "C7iUT7hEJH3fQ6vo8heyaRztGIs3hIe6")
+            q("sig", "7QlNYUkZoFXnjcGR+2WLmw57JNDQXrQhIR7s3DfrtWY=", required = true,
+                description = "The image signature")
+            q("exp", 1782511260L, required = true,
+                description = "Expiration timestamp in UNIX seconds")
+            q("quality", 64, required = false,
+                description = "The width and height of the image in pixels. 0 means the original size.")
+        }
+        responses {
+            successResponse<ByteArray>("The image for the specified checksum.")
+            unauthorizedResponse("Invalid or expired image signature")
+            notFoundResponse("Image or file")
+        }
     }
 }

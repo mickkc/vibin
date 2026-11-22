@@ -4,6 +4,7 @@ import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.config.EnvUtil.LOGIN_RATE_LIMIT_ATTEMPTS
 import de.mickkc.vibin.config.EnvUtil.LOGIN_RATE_LIMIT_TIMEOUT
 import de.mickkc.vibin.db.TotpType
+import de.mickkc.vibin.dto.SuccessDto
 import de.mickkc.vibin.dto.TotpStatusDto
 import de.mickkc.vibin.mail.MailSender
 import de.mickkc.vibin.permissions.PermissionType
@@ -27,10 +28,13 @@ import io.ktor.server.http.content.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.routing.openapi.describe
 import io.ktor.util.logging.*
+import io.ktor.utils.io.ExperimentalKtorApi
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+@OptIn(ExperimentalKtorApi::class)
 fun Application.configureSecurityRoutes() = routing {
 
     val logger: Logger = LoggerFactory.getLogger("Security API Routes")
@@ -78,6 +82,17 @@ fun Application.configureSecurityRoutes() = routing {
                 insert(ResetPasswordTemplate(token)) {}
             }
         }
+    }.describe {
+        operationId = "getResetPasswordHTML"
+        summary = "[HTML] Password reset form"
+        tag("Security")
+        parameters {
+            p("tk", "jQKoZx3QheCLlZGRqR7OmwdjeesiMYHPytH4V5Jz6bkX9kPLqHuIXi45w7Pp6GTM",
+                description = "The token from the login notification email")
+        }
+        responses {
+            successResponse<String>("Password reset view or an error view, in case the token is invalid.")
+        }
     }
 
     get("/api/mail/trust-device") {
@@ -92,6 +107,17 @@ fun Application.configureSecurityRoutes() = routing {
                 insert(TrustDeviceTemplate(token)) {}
             }
         }
+    }.describe {
+        operationId = "getTrustDeviceHTML"
+        summary = "[HTML] Trust device form"
+        tag("Security")
+        parameters {
+            p("tk", "jQKoZx3QheCLlZGRqR7OmwdjeesiMYHPytH4V5Jz6bkX9kPLqHuIXi45w7Pp6GTM",
+                description = "The token from the login notification email")
+        }
+        responses {
+            successResponse<String>("Trust device view or an error view, in case the token is invalid.")
+        }
     }
 
     get("/api/mail/verify") {
@@ -104,6 +130,17 @@ fun Application.configureSecurityRoutes() = routing {
             content {
                 insert(VerifyEmailAddressTemplate(token, emailAddress)) {}
             }
+        }
+    }.describe {
+        operationId = "getMailVerificationHTML"
+        summary = "[HTML] Mail verification form"
+        tag("Security")
+        parameters {
+            p("tk", "jQKoZx3QheCLlZGRqR7OmwdjeesiMYHPytH4V5Jz6bkX9kPLqHuIXi45w7Pp6GTM",
+                description = "The token from the verification mail")
+        }
+        responses {
+            successResponse<String>("Mail verification view or an error view, in case the token is invalid.")
         }
     }
 
@@ -144,6 +181,18 @@ fun Application.configureSecurityRoutes() = routing {
         }
 
         call.processDone()
+    }.describe {
+        operationId = "resetPasswordHTML"
+        summary = "[HTML] Password reset endpoint"
+        tag("Security")
+        parameters {
+            q("token", "jQKoZx3QheCLlZGRqR7OmwdjeesiMYHPytH4V5Jz6bkX9kPLqHuIXi45w7Pp6GTM", required = true)
+            q("newPassword", "hunter2", required = true)
+            q("confirmNewPassword", "hunter2", required = true)
+        }
+        responses {
+            successResponse<String>("Success view or an error view, in case the token or password is invalid, or the passwords do not match.")
+        }
     }
 
     post("/api/mail/trust-device") {
@@ -165,6 +214,16 @@ fun Application.configureSecurityRoutes() = routing {
         }
 
         call.processDone()
+    }.describe {
+        operationId = "trustDeviceHTML"
+        summary = "[HTML] Trust device endpoint"
+        tag("Security")
+        parameters {
+            q("token", "jQKoZx3QheCLlZGRqR7OmwdjeesiMYHPytH4V5Jz6bkX9kPLqHuIXi45w7Pp6GTM", required = true)
+        }
+        responses {
+            successResponse<String>("Success view or an error view, in case the token is invalid.")
+        }
     }
 
     post("/api/mail/verify") {
@@ -178,6 +237,16 @@ fun Application.configureSecurityRoutes() = routing {
         else {
             return@post call.invalidVerificationToken()
         }
+    }.describe {
+        operationId = "verifyMailHTML"
+        summary = "[HTML] Mail verification endpoint"
+        tag("Security")
+        parameters {
+            q("token", "jQKoZx3QheCLlZGRqR7OmwdjeesiMYHPytH4V5Jz6bkX9kPLqHuIXi45w7Pp6GTM", required = true)
+        }
+        responses {
+            successResponse<String>("Success view or an error view, in case the token is invalid.")
+        }
     }
 
     authenticate("tokenAuth") {
@@ -188,7 +257,16 @@ fun Application.configureSecurityRoutes() = routing {
             }
             catch (e: IllegalStateException) {
                 logger.error(e)
-                noPermission()
+                forbidden()
+            }
+        }.describe {
+            operationId = "getTotpQrCode"
+            summary = "Get the QR code for TOTP codes"
+            description = "Only available if TOTP is not already configured for the current user."
+            tag("Security")
+            authResponses(PermissionType.MANAGE_OWN_2FA) {
+                successResponse<ByteArray>("PNG image data for the QR code")
+                forbiddenResponse("TOTP is already configured for the current user")
             }
         }
 
@@ -203,6 +281,13 @@ fun Application.configureSecurityRoutes() = routing {
                 status = user.totpType.name,
                 secret = if (user.totpType != TotpType.Totp) user.totpSecret else null
             ))
+        }.describe {
+            operationId = "getTotpStatus"
+            summary = "Get the current TOTP status"
+            tag("Security")
+            authResponses(PermissionType.MANAGE_OWN_2FA) {
+                successResponse<TotpStatusDto>("Current TOTP status")
+            }
         }
 
         putP("/api/auth/totp", PermissionType.MANAGE_OWN_2FA) {
@@ -225,6 +310,22 @@ fun Application.configureSecurityRoutes() = routing {
             }
 
             call.success()
+        }.describe {
+            operationId = "updateTotpType"
+            summary = "Update the current TOTP type"
+            description = "- When `type` is `Totp`, a 6 digit `code` from the authenticator app must be provided.\n" +
+                    "- When `type` is `Mail`, the user's email address must be verified."
+            tag("Security")
+            parameters {
+                q("type", TotpType.Mail, required = true)
+                q("code", "123456", required = true,
+                    description = "The code from the authenticator app if `type` is `Totp`")
+            }
+            authResponses(PermissionType.MANAGE_OWN_2FA) {
+                successResponse<SuccessDto>("Success")
+                invalidParameterResponse("code", "Invalid TOTP code")
+                conflictResponse("TOTP type was set to `Email`, but the user's email address isn't verified.")
+            }
         }
 
         postP("/api/auth/mail/verify", PermissionType.MANAGE_OWN_USER) {
@@ -238,6 +339,16 @@ fun Application.configureSecurityRoutes() = routing {
                 MailVerificationManager.MailVerificationResult.NotConfigured -> unavailable("SMTP is not configured.")
                 MailVerificationManager.MailVerificationResult.RateLimited -> rateLimitExceeded()
                 MailVerificationManager.MailVerificationResult.Sent -> call.success()
+            }
+        }.describe {
+            operationId = "sendVerificationMail"
+            summary = "Send a verification mail"
+            tag("Security")
+            authResponses(PermissionType.MANAGE_OWN_USER) {
+                successResponse<SuccessDto>("Success")
+                conflictResponse("The email address is already verified. / The configured email address is invalid.")
+                unavailableResponse("SMTP is not configured.")
+                rateLimitedResponse()
             }
         }
 
@@ -254,6 +365,18 @@ fun Application.configureSecurityRoutes() = routing {
             }
 
             return@getP call.success(true)
+        }.describe {
+            operationId = "canVerifyMail"
+            summary = "Check if verification mail can be sent"
+            description = "This endpoint checks the following conditions:\n" +
+                    "- Is SMTP configured on the server?\n" +
+                    "- Does the user have an email address set in their account?\n" +
+                    "- Is the user's email address already verified?\n" +
+                    "- Is the user currently rate-limited?"
+            tag("Security")
+            authResponses(PermissionType.MANAGE_OWN_USER) {
+                successResponse<SuccessDto>("True if a verification mail can be sent, false if not")
+            }
         }
     }
 
@@ -302,5 +425,20 @@ fun Application.configureSecurityRoutes() = routing {
         }
 
         notFound()
+    }.describe {
+        operationId = "verify2fa"
+        summary = "Verify a session awaiting 2fa"
+        tag("Security")
+        parameters {
+            q("token", "jQKoZx3QheCLlZGRqR7OmwdjeesiMYHPytH4V5Jz6bkX9kPLqHuIXi45w7Pp6GTM", required = true)
+            q("code", "123456", required = true)
+        }
+        responses {
+            missingPermissionsResponse(PermissionType.MANAGE_OWN_2FA)
+            rateLimitedResponse()
+            unauthorizedResponse("Invalid token")
+            invalidParameterResponse("code", "Incorrect code")
+            notFoundResponse("Totp type for user")
+        }
     }
 }

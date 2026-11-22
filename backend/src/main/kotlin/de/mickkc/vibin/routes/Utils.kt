@@ -1,22 +1,24 @@
 package de.mickkc.vibin.routes
 
-import io.ktor.server.auth.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
 import de.mickkc.vibin.auth.UserPrincipal
 import de.mickkc.vibin.config.ApiException
 import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.db.UserEntity
+import de.mickkc.vibin.dto.SuccessDto
 import de.mickkc.vibin.dto.errors.ErrorDto
 import de.mickkc.vibin.dto.errors.ErrorDtoType
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.PermissionRepo
 import de.mickkc.vibin.repos.UserRepo
-import io.ktor.server.application.ApplicationCall
+import io.ktor.openapi.*
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import kotlin.enums.enumEntries
 
 suspend fun ApplicationCall.success(success: Boolean = true) {
-    respond(mapOf("success" to success))
+    respond(SuccessDto(success))
 }
 
 suspend fun ApplicationCall.respond(error: ErrorDto) {
@@ -105,8 +107,8 @@ fun ApplicationCall.getClientId(): String {
     return request.local.remoteAddress
 }
 
-fun Route.getP(path: String, vararg permissions: PermissionType, body: suspend RoutingContext.() -> Unit) {
-    get(path) {
+fun Route.getP(path: String, vararg permissions: PermissionType, body: suspend RoutingContext.() -> Unit): Route {
+    return get(path) {
         if (permissions.isNotEmpty() && !call.hasPermissions(*permissions)) {
             noPermission(*permissions)
         }
@@ -114,8 +116,8 @@ fun Route.getP(path: String, vararg permissions: PermissionType, body: suspend R
     }
 }
 
-fun Route.postP(path: String, vararg permissions: PermissionType, body: suspend RoutingContext.() -> Unit) {
-    post(path) {
+fun Route.postP(path: String, vararg permissions: PermissionType, body: suspend RoutingContext.() -> Unit): Route {
+    return post(path) {
         if (permissions.isNotEmpty() && !call.hasPermissions(*permissions)) {
             noPermission(*permissions)
         }
@@ -123,8 +125,8 @@ fun Route.postP(path: String, vararg permissions: PermissionType, body: suspend 
     }
 }
 
-fun Route.putP(path: String, vararg permissions: PermissionType, body: suspend RoutingContext.() -> Unit) {
-    put(path) {
+fun Route.putP(path: String, vararg permissions: PermissionType, body: suspend RoutingContext.() -> Unit): Route {
+    return put(path) {
         if (permissions.isNotEmpty() && !call.hasPermissions(*permissions)) {
             noPermission(*permissions)
         }
@@ -132,8 +134,8 @@ fun Route.putP(path: String, vararg permissions: PermissionType, body: suspend R
     }
 }
 
-fun Route.deleteP(path: String, vararg permissions: PermissionType, body: suspend RoutingContext.() -> Unit) {
-    delete(path) {
+fun Route.deleteP(path: String, vararg permissions: PermissionType, body: suspend RoutingContext.() -> Unit): Route {
+    return delete(path) {
         if (permissions.isNotEmpty() && !call.hasPermissions(*permissions)) {
             noPermission(*permissions)
         }
@@ -270,5 +272,197 @@ inline fun<reified E : Enum<E>> ApplicationCall.getEnum(paramName: String, defau
     }
     catch (_: IllegalArgumentException) {
         invalidParameter(paramName, *enumEntries<E>().map { it.name }.toTypedArray())
+    }
+}
+
+inline fun<reified T : Any> Responses.Builder.successResponse(description: String, exampleValue: T? = null) {
+    response(200) {
+        this.description = description
+        this.schema = jsonSchema<T>().let {
+            if (exampleValue != null)
+                it.copy(example = GenericElement(exampleValue))
+            else it
+        }
+    }
+}
+
+fun Responses.Builder.redirectResponse(target: String, permanent: Boolean = false) {
+    response(if (permanent) 301 else 302) {
+        description = "Redirect to $target"
+    }
+}
+
+fun Responses.Builder.missingPermissionsResponse(vararg permissions: PermissionType) {
+    response(403) {
+        description = "Missing a required permission"
+        schema = jsonSchema<ErrorDto>().copy(
+            example = GenericElement.encodeToElement(ErrorDto.serializer(), ErrorDto(
+                type = ErrorDtoType.NO_PERMISSION,
+                data = mapOf("requiredPermissions" to permissions.joinToString(",") { it.id })
+            ))
+        )
+    }
+}
+
+/**
+ * Creates a new [responses] block and automatically adds [missingPermissionsResponse] for all permission types.
+ * Because multiple [responses] blocks can't be defined without overwriting each other, all responses must be be passed
+ * to [otherResponses].
+ *
+ * Also appends a list of all required permissions to the description.
+ */
+fun Operation.Builder.authResponses(vararg permissions: PermissionType, otherResponses: Responses.Builder.() -> Unit = {}) {
+    security {
+        requirement("tokenAuth")
+    }
+    if (permissions.any()) {
+        description = buildString {
+            if (description != null) {
+                append(description)
+                append("\n\n")
+            }
+            appendLine("Required permissions:")
+            permissions.forEach { permission ->
+                appendLine("- `${permission.id}`")
+            }
+        }
+    }
+    responses {
+        otherResponses()
+        if (permissions.any())
+            missingPermissionsResponse(*permissions)
+    }
+}
+
+fun Operation.Builder.optionalPermissions(vararg permissions: Pair<PermissionType, String>) {
+    description = buildString {
+        if (description != null) {
+            append(description)
+            append("\n\n")
+        }
+        appendLine("Optional permissions:")
+        permissions.forEach { (permission, desc) ->
+            appendLine("- `$permission`: $desc")
+        }
+    }
+}
+
+fun Parameters.Builder.paginatedSearch() {
+    q<String>("query", required = false)
+    q("page", 1, false, "Page index, where 1 is the first page.")
+    q("pageSize", 50, false, "Maximum amount of items per page.")
+}
+
+inline fun<reified T : Any> Parameters.Builder.q(name: String, example: T? = null, required: Boolean = true, description: String? = null) {
+    query(name) {
+        this.description = description
+        this.example = example?.let { GenericElement(it) }
+        this.schema = jsonSchema<T>()
+        this.required = required
+    }
+}
+
+inline fun<reified T : Any> Parameters.Builder.p(name: String, example: T? = null, description: String? = null) {
+    path(name) {
+        this.description = description
+        this.example = example?.let { GenericElement(it) }
+        this.schema = jsonSchema<T>()
+        this.required = true
+    }
+}
+
+fun Responses.Builder.notFoundResponse(name: String) {
+    response(404) {
+        description = "$name not found"
+        schema = jsonSchema<ErrorDto>().copy(
+            example = GenericElement.encodeToElement(ErrorDto.serializer(), ErrorDto(
+                type = ErrorDtoType.NOT_FOUND,
+                data = mapOf()
+            ))
+        )
+    }
+}
+
+fun Responses.Builder.missingParameterResponse(name: String) {
+    response(404) {
+        description = "Parameter '$name' is missing"
+        schema = jsonSchema<ErrorDto>().copy(
+            example = GenericElement.encodeToElement(ErrorDto.serializer(), ErrorDto(
+                type = ErrorDtoType.MISSING_PARAMETER,
+                data = mapOf("parameterName" to name)
+            ))
+        )
+    }
+}
+
+fun Responses.Builder.invalidParameterResponse(name: String, explanation: String) {
+    response(400) {
+        description = "Parameter '$name' is invalid: $explanation"
+        schema = jsonSchema<ErrorDto>().copy(
+            example = GenericElement.encodeToElement(ErrorDto.serializer(), ErrorDto(
+                type = ErrorDtoType.INVALID_PARAMETER,
+                data = mapOf("parameterName" to name)
+            ))
+        )
+    }
+}
+
+fun Responses.Builder.unauthorizedResponse(reason: String) {
+    response(401) {
+        description = "Authorization failed for the following reason: $reason"
+        schema = jsonSchema<ErrorDto>().copy(
+            example = GenericElement.encodeToElement(ErrorDto.serializer(), ErrorDto(
+                type = ErrorDtoType.UNAUTHORIZED,
+                data = mapOf("reason" to reason)
+            ))
+        )
+    }
+}
+
+fun Responses.Builder.conflictResponse(reason: String) {
+    response(409) {
+        description = "Conflict: $reason"
+        schema = jsonSchema<ErrorDto>().copy(
+            example = GenericElement.encodeToElement(ErrorDto.serializer(), ErrorDto(
+                type = ErrorDtoType.CONFLICT,
+                data = mapOf("reason" to reason)
+            ))
+        )
+    }
+}
+
+fun Responses.Builder.unavailableResponse(reason: String) {
+    response(501) {
+        description = "Service unavailable: $reason"
+        schema = jsonSchema<ErrorDto>().copy(
+            example = GenericElement.encodeToElement(ErrorDto.serializer(), ErrorDto(
+                type = ErrorDtoType.UNAVAILABLE,
+                data = mapOf("reason" to reason)
+            ))
+        )
+    }
+}
+
+fun Responses.Builder.rateLimitedResponse() {
+    response(429) {
+        description = "A rate-limit has been exceeded."
+        schema = jsonSchema<ErrorDto>().copy(
+            example = GenericElement.encodeToElement(ErrorDto.serializer(), ErrorDto(
+                type = ErrorDtoType.RATE_LIMIT_EXCEEDED,
+                data = mapOf()
+            ))
+        )
+    }
+}
+
+fun Responses.Builder.forbiddenResponse(desc: String = "forbidden") {
+    response(403) {
+        description = desc
+        schema = jsonSchema<ErrorDto>().copy(
+            example = GenericElement.encodeToElement(ErrorDto.serializer(), ErrorDto(
+                type = ErrorDtoType.FORBIDDEN,
+                data = mapOf()
+            ))
+        )
     }
 }

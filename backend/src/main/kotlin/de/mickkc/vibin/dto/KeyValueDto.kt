@@ -4,7 +4,7 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class KeyValueDto(
-    val key: @Contextual @Serializable Any,
-    val value: @Contextual @Serializable Any
+data class KeyValueDto<K, V>(
+    val key: @Contextual @Serializable K,
+    val value: @Contextual @Serializable V
 )
