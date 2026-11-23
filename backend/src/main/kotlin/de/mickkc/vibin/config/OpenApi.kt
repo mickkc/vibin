@@ -25,6 +25,6 @@ fun Application.configureOpenApi() = routing {
             description = "Bearer session token"
         )
         // TODO: Fix styles
-        //customStyle("/api/swagger/static/swagger-dark.css")
+        //customStyle("/api/web/swagger-dark.css")
     }
 }
