@@ -118,3 +118,11 @@ val generateBuildInfo by tasks.registering {
 }
 
 kotlin.sourceSets["main"].kotlin.srcDir(generateBuildInfo)
+
+ktor {
+    openApi {
+        enabled = true
+        codeInferenceEnabled = true
+        onlyCommented = false
+    }
+}
