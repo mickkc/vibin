@@ -1,4 +1,4 @@
-package de.mickkc.vibin
+package de.mickkc.vibin.dto
 
 import io.ktor.openapi.JsonSchema
 import kotlinx.serialization.Serializable

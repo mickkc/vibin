@@ -2,7 +2,9 @@ package de.mickkc.vibin.routes
 
 import de.mickkc.vibin.config.EnvUtil
 import de.mickkc.vibin.db.widgets.SharedWidgetEntity
+import de.mickkc.vibin.dto.SuccessDto
 import de.mickkc.vibin.dto.widgets.CreateWidgetDto
+import de.mickkc.vibin.dto.widgets.WidgetDto
 import de.mickkc.vibin.images.ImageCache
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.ControlRepo
@@ -20,7 +22,9 @@ import io.ktor.server.http.content.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.routing.openapi.*
 import io.ktor.server.websocket.*
+import io.ktor.utils.io.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.channels.consumeEach
 
@@ -86,10 +90,15 @@ private fun createWidgetContext(
     )
 }
 
+@OptIn(ExperimentalKtorApi::class)
 fun Application.configureWidgetRoutes() = routing {
 
     get("/api/widgets/styles") {
         call.respondText(WidgetStyles.render(), contentType = ContentType.Text.CSS)
+    }.describe {
+        operationId = "getWidgetStyles"
+        summary = "Get CSS styles for widgets"
+        tag("Widgets")
     }
 
     /**
@@ -124,6 +133,26 @@ fun Application.configureWidgetRoutes() = routing {
         }
 
         call.respondFile(file)
+    }.describe {
+        operationId = "getImageForWidget"
+        summary = "Get an image for a widget"
+        description = "Because this endpoint is not authenticated, accessing images requires a signature and an expiration " +
+                "timestamp. Checksums starting with `default-` (`default-album`, `default-artist`, `default-playlist`," +
+                "`default-track` and `default-user`) return the default placeholder image of that type."
+        tag("Widgets")
+        parameters {
+            p("checksum", "C7iUT7hEJH3fQ6vo8heyaRztGIs3hIe6", description = "Image checksum")
+            q("quality", 192, required = false, description = "Width and height of the image")
+            q("sig", "7QlNYUkZoFXnjcGR+2WLmw57JNDQXrQhIR7s3DfrtWY=", required = true,
+                description = "Image signature")
+            q("exp", 1782511260L, required = true,
+                description = "Image signature expiration timestamp in UNIX seconds")
+        }
+        responses {
+            successResponse<ByteArray>("image data")
+            notFoundResponse("Image or file")
+            forbiddenResponse("Invalid signature")
+        }
     }
 
     getP("/api/widgets/{id}") {
@@ -149,7 +178,32 @@ fun Application.configureWidgetRoutes() = routing {
         else {
             call.respondText(html, ContentType.Text.Html)
         }
-
+    }.describe {
+        operationId = "getWidgetHTML"
+        summary = "Get a widget as HTML"
+        description = "When `baseUrl` is set, the widget is served as external. This means that it will not be displayed " +
+                "as a HTML page, but in plain text to prevent loading scripts from malicious sources and URL redirection attacks."
+        tag("Widgets")
+        parameters {
+            p("id", "vXSDbMiKk58XkIgJBE3JiwulsSTIpvmeJbQLKMo9qYp0IIKTzgqPpf6TbSBDfyiA")
+            q("baseUrl", "https://vibin.example.com", required = false,
+                description = "Server baseUrl for external embedding mode")
+            q("layout", "col", required = false,
+                description = "- `col`: Column\n- `row`: Row\n" +
+                        "- `col-N`: `N` Columns\n- `row-N`: `N` Rows\n" +
+                        "- `col-200px`: Columns that are max. 200px wide")
+            q("lang", "en", required = false,
+                description = "Widget language: ${WidgetBuilder.SUPPORTED_LANGUAGES.joinToString { "`${it}`" }}\n" +
+                        "If not set, the language will be taken from the `Accept-Language` header.\n" +
+                        "If the language is not supported, english is used as a fallback.")
+            q("bgColor", "000000", required = false, description = "Background hex color, with or without (encoded) #.")
+            q("fgColor", "ffffff", required = false, description = "Foreground hex color, with or without (encoded) #.")
+            q("accentColor", "ff0000", required = false, description = "Accent hex color, with or without (encoded) #.")
+        }
+        responses {
+            successResponse<String>("Widget HTML")
+            notFoundResponse("Widget")
+        }
     }
 
     getP("/api/widgets/{id}/image") {
@@ -182,6 +236,34 @@ fun Application.configureWidgetRoutes() = routing {
         call.response.headers.append(HttpHeaders.CacheControl, "public, max-age=${imageCacheDuration * 60}, stale-while-revalidate=60")
 
         call.respondBytes(imageBytes, ContentType.Image.PNG)
+    }.describe {
+        operationId = "getWidgetImage"
+        summary = "Get a widget as an image"
+        description = "Uses chromium and selenium to render a widget into an image."
+        tag("Widgets")
+        parameters {
+            p("id", "vXSDbMiKk58XkIgJBE3JiwulsSTIpvmeJbQLKMo9qYp0IIKTzgqPpf6TbSBDfyiA")
+            q("layout", "col", required = false,
+                description = "- `col`: Column\n- `row`: Row\n" +
+                        "- `col-N`: `N` Columns\n- `row-N`: `N` Rows\n" +
+                        "- `col-200px`: Columns that are max. 200px wide")
+            q("lang", "en", required = false,
+                description = "Widget language: ${WidgetBuilder.SUPPORTED_LANGUAGES.joinToString { "`${it}`" }}\n" +
+                        "If not set, the language will be taken from the `Accept-Language` header.\n" +
+                        "If the language is not supported, english is used as a fallback.")
+            q("bgColor", "000000", required = false, description = "Background hex color, with or without (encoded) #.")
+            q("fgColor", "ffffff", required = false, description = "Foreground hex color, with or without (encoded) #.")
+            q("accentColor", "ff0000", required = false, description = "Accent hex color, with or without (encoded) #.")
+            q("width", 1080, required = false, description = "Image width")
+            q("height", 720, required = false,
+                description = "Image height. If null, the height is automatically determined by the width and the size of " +
+                        "the widget. This is convient, but also slows down the rendering process a bit.")
+        }
+        responses {
+            successResponse<ByteArray>("Widget Image")
+            rateLimitedResponse()
+            notFoundResponse("Widget")
+        }
     }
 
     authenticate("tokenAuth") {
@@ -193,6 +275,13 @@ fun Application.configureWidgetRoutes() = routing {
             val widgetDtos = WidgetRepo.toDto(widgets)
 
             call.respond(widgetDtos)
+        }.describe {
+            operationId = "getWidgets"
+            summary = "Get all widgets shared by the current user"
+            tag("Widgets")
+            authResponses(PermissionType.MANAGE_WIDGETS) {
+                successResponse<List<WidgetDto>>("A list of shared widgets")
+            }
         }
 
         postP("/api/widgets", PermissionType.MANAGE_WIDGETS) {
@@ -232,6 +321,22 @@ fun Application.configureWidgetRoutes() = routing {
 
             val widget = WidgetRepo.shareWidget(user, parsedTypes, bgColor, fgColor, accentColor)
             call.respond(WidgetRepo.toDto(widget))
+        }.describe {
+            operationId = "createWidget"
+            summary = "Create a new widget"
+            description = "You must either specify all colors, or no colors."
+            tag("Widgets")
+            parameters {
+                q("types", listOf(WidgetType.USER, WidgetType.SERVER_STATS), required = true,
+                    description = "Enabled widget types. All types must be unique.")
+                q("bgColor", "000000", required = false, description = "Background hex color, without #.")
+                q("fgColor", "ffffff", required = false, description = "Foreground hex color, without #.")
+                q("accentColor", "ff0000", required = false, description = "Accent hex color, without #.")
+            }
+            authResponses(PermissionType.MANAGE_WIDGETS) {
+                successResponse<WidgetDto>("The created widget")
+                invalidParameterResponse("colors", "Some colors where specified, while others weren't")
+            }
         }
 
         deleteP("/api/widgets/{id}", PermissionType.MANAGE_WIDGETS) {
@@ -249,10 +354,27 @@ fun Application.configureWidgetRoutes() = routing {
             WidgetImageCache.evictCacheForWidget(id)
 
             call.success()
+        }.describe {
+            operationId = "deleteWidget"
+            summary = "Delete a widget"
+            tag("Widgets")
+            parameters {
+                p("id", "vXSDbMiKk58XkIgJBE3JiwulsSTIpvmeJbQLKMo9qYp0IIKTzgqPpf6TbSBDfyiA")
+            }
+            authResponses(PermissionType.MANAGE_WIDGETS) {
+                successResponse<SuccessDto>("Success")
+                forbiddenResponse("Widget is not owned by user")
+                notFoundResponse("Widget")
+            }
         }
     }
 
     staticResources("/api/js", "js")
+        .describe {
+            operationId = "getWidgetScripts"
+            summary = "Contains scripts used in widgets"
+            tag("Widgets")
+        }
 
     webSocket("/api/widgets/{id}/listeningto/ws") {
         val id = call.parameters["id"]
@@ -288,6 +410,16 @@ fun Application.configureWidgetRoutes() = routing {
         }
         finally {
             listener.stop()
+        }
+    }.describe {
+        operationId = "getListeningToWidgetWS"
+        summary = "Get a live feed of the current listening status"
+        description = "See [Websocket docs](https://vibin.rip/docs/websockets#listening-to-widget)"
+        tag("Tasks")
+        parameters {
+            p("id", "vXSDbMiKk58XkIgJBE3JiwulsSTIpvmeJbQLKMo9qYp0IIKTzgqPpf6TbSBDfyiA")
+            q("baseUrl", "https://vibin.example.com", required = true,
+                description = "The server base URL")
         }
     }
 }

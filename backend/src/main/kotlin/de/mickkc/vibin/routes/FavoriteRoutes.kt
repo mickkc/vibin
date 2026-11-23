@@ -1,6 +1,6 @@
 package de.mickkc.vibin.routes
 
-import de.mickkc.vibin.IsFavoriteDto
+import de.mickkc.vibin.dto.IsFavoriteDto
 import io.ktor.server.application.Application
 import io.ktor.server.auth.authenticate
 import io.ktor.server.response.respond
