@@ -18,7 +18,16 @@ import io.ktor.utils.io.ExperimentalKtorApi
 fun Application.configureFavoriteRoutes() = routing {
     authenticate("tokenAuth") {
 
-        fun RoutingCall.getFavoriteType(): FavoriteType = getEnum<FavoriteType>("entityType", null)
+        fun RoutingCall.getFavoriteType(): FavoriteType {
+            val entityTypeParam = getStringParameter("entityType")
+
+            return when (entityTypeParam.lowercase()) {
+                "track" -> FavoriteType.TRACK
+                "album" -> FavoriteType.ALBUM
+                "artist" -> FavoriteType.ARTIST
+                else -> invalidParameter("entityType", "track", "album", "artist")
+            }
+        }
 
         getP("/api/favorites/{userId}") {
             val requestingUserId = call.getUserId()
