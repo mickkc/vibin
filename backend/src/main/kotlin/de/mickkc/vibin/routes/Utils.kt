@@ -97,8 +97,13 @@ fun ApplicationCall.getClientId(): String {
     // Forwarded: for=0.0.0.0;proto=http;by=1.1.1.1 (for is the client IP, by is the proxy)
 
     if (!realIpHeader.isNullOrEmpty()) {
-        val realIp = request.headers[realIpHeader]
-        if (realIp != null) {
+        // The Ktor OpenAPI code inference copies the argument of headers[...] into the generated docs, which crashes
+        // with a null header name when REAL_IP_HEADER is not configured.
+        val realIp = request.headers.entries()
+            .firstOrNull { it.key.equals(realIpHeader, ignoreCase = true) }
+            ?.value?.firstOrNull()
+
+        if (!realIp.isNullOrEmpty()) {
             val clientIp = realIp.split(",", ";").firstOrNull()?.trim()
             if (!clientIp.isNullOrEmpty()) {
                 return clientIp
