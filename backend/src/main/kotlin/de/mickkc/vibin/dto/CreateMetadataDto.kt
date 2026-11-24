@@ -1,13 +1,21 @@
 package de.mickkc.vibin.dto
 
 import de.mickkc.vibin.routes.invalidParameter
+import io.ktor.openapi.JsonSchema
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class CreateMetadataDto(
+
+    @JsonSchema.Example("[\"Rick Astley\"]")
     val artistNames: List<String>,
+
+    @JsonSchema.Example("[\"pop\"]")
     val tagNames: List<String>,
+
+    @JsonSchema.Example("[\"Whenever You Need Somebody\"]")
     val albumName: String?
+
 ) : ValidatableBaseDto {
     override fun validate() {
         if (artistNames.any { it.length > 255 })

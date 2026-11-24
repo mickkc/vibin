@@ -128,7 +128,7 @@ class SettingRestTest {
 
         assertTrue(response.status.isSuccess())
 
-        val keyValue = response.body<KeyValueDto>()
+        val keyValue = response.body<KeyValueDto<String, Any>>()
         assertEquals("metadata_language", keyValue.key)
         assertEquals("fr", keyValue.value)
 
@@ -149,7 +149,7 @@ class SettingRestTest {
 
         assertTrue(response.status.isSuccess())
 
-        val keyValue = response.body<KeyValueDto>()
+        val keyValue = response.body<KeyValueDto<String, Any>>()
         assertEquals("welcome_texts", keyValue.key)
 
         // Verify the setting was updated
@@ -216,7 +216,7 @@ class SettingRestTest {
 
         assertTrue(response.status.isSuccess())
 
-        val keyValue = response.body<KeyValueDto>()
+        val keyValue = response.body<KeyValueDto<String, Any>>()
         assertEquals("show_activities_to_others", keyValue.key)
         assertEquals(false, keyValue.value)
 
@@ -237,7 +237,7 @@ class SettingRestTest {
 
         assertTrue(response.status.isSuccess())
 
-        val keyValue = response.body<KeyValueDto>()
+        val keyValue = response.body<KeyValueDto<String, Any>>()
         assertEquals("blocked_artists", keyValue.key)
 
         val updatedValue = Settings.get(BlockedArtists, 1)
@@ -257,7 +257,7 @@ class SettingRestTest {
 
         assertTrue(response.status.isSuccess())
 
-        val keyValue = response.body<KeyValueDto>()
+        val keyValue = response.body<KeyValueDto<String, Any>>()
         assertEquals("blocked_tags", keyValue.key)
 
         val updatedValue = Settings.get(BlockedTags, 1)

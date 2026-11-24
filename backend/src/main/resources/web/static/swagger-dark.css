@@ -38,7 +38,8 @@ body { background: #11140e; }
 .swagger-ui section.models h5,
 .swagger-ui .opblock-description-wrapper p,
 .swagger-ui .opblock-external-docs-wrapper p,
-.swagger-ui .opblock-title_normal p { color: #c3c8b9; }
+.swagger-ui .opblock-title_normal p,
+.swagger-ui .opblock-description-wrapper li { color: #c3c8b9; }
 
 .swagger-ui .opblock-tag small { color: #8d9387; }
 

@@ -97,7 +97,7 @@ class StatisticRestTest {
 
         assertTrue(response.status.isSuccess())
 
-        val recentNonTracks = response.body<List<KeyValueDto>>()
+        val recentNonTracks = response.body<List<KeyValueDto<String, Any>>>()
 
         assertEquals(2, recentNonTracks.size)
 
@@ -270,7 +270,7 @@ class StatisticRestTest {
 
         assertTrue(response.status.isSuccess())
 
-        val topNonTracks = response.body<List<KeyValueDto>>()
+        val topNonTracks = response.body<List<KeyValueDto<String, Any>>>()
 
         val albumResult = topNonTracks.first()
         assertEquals("ALBUM", albumResult.key)
@@ -302,7 +302,7 @@ class StatisticRestTest {
 
         assertTrue(response.status.isSuccess())
 
-        val topNonTracks = response.body<List<KeyValueDto>>()
+        val topNonTracks = response.body<List<KeyValueDto<String, Any>>>()
 
         val albumResult = topNonTracks.first()
         assertEquals("ALBUM", albumResult.key)

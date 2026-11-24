@@ -1,25 +1,22 @@
 package de.mickkc.vibin.routes
 
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.response.respond
-import io.ktor.server.routing.*
 import de.mickkc.vibin.db.ListenType
-import de.mickkc.vibin.dto.StatisticsDto
-import de.mickkc.vibin.dto.UserActivityDto
+import de.mickkc.vibin.dto.*
+import de.mickkc.vibin.dto.albums.AlbumDto
+import de.mickkc.vibin.dto.tracks.MinimalTrackDto
 import de.mickkc.vibin.permissions.PermissionType
-import de.mickkc.vibin.repos.AlbumRepo
-import de.mickkc.vibin.repos.ArtistRepo
-import de.mickkc.vibin.repos.ListenRepo
-import de.mickkc.vibin.repos.ListenTrackingRepo
-import de.mickkc.vibin.repos.PlaylistRepo
-import de.mickkc.vibin.repos.TagRepo
-import de.mickkc.vibin.repos.TrackRepo
-import de.mickkc.vibin.repos.UserRepo
+import de.mickkc.vibin.repos.*
 import de.mickkc.vibin.settings.Settings
 import de.mickkc.vibin.settings.user.ShowActivitiesToOthers
 import de.mickkc.vibin.utils.DateTimeUtils
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.server.routing.openapi.*
+import io.ktor.utils.io.*
 
+@OptIn(ExperimentalKtorApi::class)
 fun Application.configureStatisticRoutes() = routing {
 
     authenticate("tokenAuth") {
@@ -30,6 +27,16 @@ fun Application.configureStatisticRoutes() = routing {
 
             val recentTracks = ListenRepo.getRecentTracks(userId, 0, limit, userId)
             call.respond(TrackRepo.toMinimalDto(recentTracks))
+        }.describe {
+            operationId = "getRecentTracks"
+            summary = "Get recently listened to tracks"
+            tag("Statistics")
+            parameters {
+                q("limit", 5, required = false)
+            }
+            authResponses {
+                successResponse<List<MinimalTrackDto>>("List of recently listened to tracks")
+            }
         }
 
         get("/api/stats/recent/nontracks") {
@@ -38,6 +45,19 @@ fun Application.configureStatisticRoutes() = routing {
 
             val recent = ListenRepo.getRecentNonTrackDtos(userId, limit, userId)
             call.respond(recent)
+        }.describe {
+            operationId = "getRecentNonTracks"
+            summary = "Get recently listened to albums, artists and playlists"
+            tag("Statistics")
+            parameters {
+                q("limit", 5, required = false)
+            }
+            authResponses {
+                successResponse<List<KeyValueDto<String, AlbumDto>>>(
+                    "A list of key-value pairs, where the key is the type (`ALBUM`, `ARTIST`, `PLAYLIST`) " +
+                            "and the value is the actual album/artist/playlist object."
+                )
+            }
         }
 
         get("/api/stats/{type}/top{num}") {
@@ -92,17 +112,47 @@ fun Application.configureStatisticRoutes() = routing {
             }
 
             call.respond(response)
+        }.describe {
+            operationId = "getTopStats"
+            summary = "Get the top N objects of a specific type"
+            tag("Statistics")
+            parameters {
+                p("type", "tracks", description = "One of the following types:\n" +
+                        "- `tracks`\n" +
+                        "- `artists`\n" +
+                        "- `albums`\n" +
+                        "- `tags`\n" +
+                        "- `playlists`\n" +
+                        "- `nontracks`: artists, albums and playlists\n" +
+                        "- `global_nontracks`: artists, albums and playlists across all users")
+                p("num", 10, "Maximum amount of returned items")
+                q("since", 1782511260L, required = false)
+            }
+            responses {
+                successResponse<List<MinimalTrackDto>>("A list of items of `type`, sorted by most listened")
+                invalidParameterResponse("num", "num is not a positive integer")
+            }
         }
 
         post("/api/stats/listen/{type}/{entityId}") {
             val userId = call.getUserId() ?: unauthorized()
-            val type = call.parameters["type"]?.let {
-                try { ListenType.valueOf(it) } catch (_: IllegalArgumentException) { null }
-            } ?: missingParameter("type")
+            val type = call.getEnum<ListenType>("type", null)
             val entityId = call.getLongParameter("entityId")
 
             val success = ListenRepo.listenedTo(userId, entityId, type)
             call.success(success)
+        }.describe {
+            operationId = "recordListen"
+            summary = "Record a listen to a specific entity"
+            tag("Statistics")
+            parameters {
+                p("type", ListenType.TRACK)
+                p("entityType", 1L)
+            }
+            responses {
+                successResponse<SuccessDto>("True if the listen was recorded, false if not " +
+                        "(listening to the same track in a short timespan does not count)")
+            }
         }
 
         get("/api/stats/users/{userId}/activity") {
@@ -129,6 +179,20 @@ fun Application.configureStatisticRoutes() = routing {
                 topTracks = TrackRepo.toMinimalDto(activity.topTracks),
                 topArtists = ArtistRepo.toDto(activity.topArtists)
             ))
+        }.describe {
+            operationId = "getUserActivity"
+            summary = "Get a user's listening activity"
+            tag("Statistics")
+            parameters {
+                p("userId", 1L)
+                q("since", 1782511260L, required = false)
+                q("limit", 10, required = false)
+            }
+            responses {
+                successResponse<UserActivityDto>("The user's listening activity")
+                forbiddenResponse("User has disabled showing activities to others")
+                invalidParameterResponse("limit", "limit is not a positive integer")
+            }
         }
 
         get("/api/stats/global") {
@@ -142,6 +206,13 @@ fun Application.configureStatisticRoutes() = routing {
                 totalPlays = ListenRepo.getTotalListenedTracks(),
                 totalListenDuration = ListenTrackingRepo.getGlobalListenDuration()
             ))
+        }.describe {
+            operationId = "getGlobalStatistics"
+            summary = "Get the global server statistics"
+            tag("Statistics")
+            responses {
+                successResponse<StatisticsDto>("The global server statistics")
+            }
         }
 
         getP("/api/stats/tracks/{id}/duration", PermissionType.VIEW_TRACKS) {
@@ -150,9 +221,16 @@ fun Application.configureStatisticRoutes() = routing {
 
             val duration = ListenTrackingRepo.getUserListenDurationForTrack(trackId, userId)
 
-            call.respond(mapOf(
-                "duration" to duration
+            call.respond(ListenDurationDto(
+                duration = duration
             ))
+        }.describe {
+            operationId = "getTrackListeningDuration"
+            summary = "Get a users total listening duration for a track"
+            tag("Statistics")
+            authResponses(PermissionType.VIEW_TRACKS) {
+                successResponse<ListenDurationDto>("Total listening duration in seconds")
+            }
         }
     }
 }

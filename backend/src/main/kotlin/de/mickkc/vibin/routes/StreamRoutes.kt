@@ -1,5 +1,6 @@
 package de.mickkc.vibin.routes
 
+import de.mickkc.vibin.dto.Streamable
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.TrackRepo
 import de.mickkc.vibin.streaming.StreamBuilder
@@ -10,10 +11,13 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.routing.openapi.describe
+import io.ktor.utils.io.ExperimentalKtorApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
+@OptIn(ExperimentalKtorApi::class)
 fun Application.configureStreamRoutes() = routing {
 
     authenticate("tokenAuth") {
@@ -28,6 +32,16 @@ fun Application.configureStreamRoutes() = routing {
 
             val streams = trackList.map { track -> StreamBuilder.build(track) }
             call.respond(streams)
+        }.describe {
+            operationId = "getStreamables"
+            summary = "Get streamables for multiple tracks"
+            tag("Streaming")
+            parameters {
+                q("ids", "1,2,3", required = true, description = "Comma-separated list of track Ids")
+            }
+            authResponses(PermissionType.STREAM_TRACKS) {
+                successResponse<List<Streamable>>("List of streamables")
+            }
         }
     }
 
@@ -95,6 +109,23 @@ fun Application.configureStreamRoutes() = routing {
         }
 
         call.respondFile(file)
+    }.describe {
+        operationId = "streamTrack"
+        summary = "Stream a track"
+        tag("Streaming")
+        parameters {
+            q("trackId", "1,2,3", required = true, description = "Comma-separated list of track Ids")
+            q("sig", "2WLmw57JNDQXrQhIR7s3DfrtWY=", required = true, description = "Track signature")
+            q("exp", "1782511260", required = true, description = "Expiration timestamp")
+            q("format", "mp3", required = true, description = "Transcoding format: `mp3`, `opus`, `aac`, `original` (no transcoding)")
+            q("bitrate", 320, required = false, description = "Transcoding bitrate")
+            q("start", 0, required = false, description = "Transcoding start offset in seconds")
+        }
+        authResponses(PermissionType.STREAM_TRACKS) {
+            successResponse<ByteArray>("Audio data")
+            notFoundResponse("Track")
+            unauthorizedResponse("Invalid or expired track signature")
+        }
     }
 
 }

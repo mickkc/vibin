@@ -16,6 +16,8 @@ import de.mickkc.vibin.db.tracks.TrackVisibility
 import de.mickkc.vibin.dto.KeyValueDto
 import de.mickkc.vibin.utils.DateTimeUtils
 import de.mickkc.vibin.utils.UserActivity
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
@@ -128,9 +130,9 @@ object ListenRepo {
         requestingUserId: Long?,
         global: Boolean = false,
         allowedTypes: List<ListenType> = PermissionRepo.getPermittedListenTypes(userId) - ListenType.TRACK
-    ): Map<KeyValueDto, Int> = transaction {
+    ): Map<KeyValueDto<String, @Serializable @Contextual Any>, Int> = transaction {
 
-        val dtos = mutableMapOf<KeyValueDto, Int>()
+        val dtos = mutableMapOf<KeyValueDto<String, @Serializable @Contextual Any>, Int>()
 
         if (allowedTypes.contains(ListenType.TRACK)) {
             dtos += getMostListenedTracks(userId.takeIf { !global }, since, requestingUserId).mapKeys {
@@ -273,7 +275,7 @@ object ListenRepo {
         limit: Int,
         requestingUserId: Long?,
         allowedTypes: List<ListenType> = PermissionRepo.getPermittedListenTypes(userId) - ListenType.TRACK
-    ): List<KeyValueDto> = transaction {
+    ): List<KeyValueDto<String, @Serializable @Contextual Any>> = transaction {
 
         return@transaction ListenEntity
             .find { (ListenTable.user eq userId) and (ListenTable.type inList allowedTypes) and

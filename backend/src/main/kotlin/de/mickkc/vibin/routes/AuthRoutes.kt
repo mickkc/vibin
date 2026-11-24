@@ -1,5 +1,6 @@
 package de.mickkc.vibin.routes
 
+import de.mickkc.vibin.dto.SessionsDto
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.response.*
@@ -13,6 +14,7 @@ import de.mickkc.vibin.config.EnvUtil.LOGIN_RATE_LIMIT_TIMEOUT
 import de.mickkc.vibin.db.SessionState
 import de.mickkc.vibin.db.TotpType
 import de.mickkc.vibin.dto.LoginResultDto
+import de.mickkc.vibin.dto.SuccessDto
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.PermissionRepo
 import de.mickkc.vibin.repos.SessionRepo
@@ -20,8 +22,11 @@ import de.mickkc.vibin.repos.UserRepo
 import de.mickkc.vibin.security.LoginNotificationManager
 import de.mickkc.vibin.security.TotpManager
 import de.mickkc.vibin.utils.RateLimiter
+import io.ktor.server.routing.openapi.describe
+import io.ktor.utils.io.ExperimentalKtorApi
 import java.security.MessageDigest
 
+@OptIn(ExperimentalKtorApi::class)
 fun Application.configureAuthRoutes() = routing {
 
     val logger = LoggerFactory.getLogger("Authentication API Routes")
@@ -89,6 +94,23 @@ fun Application.configureAuthRoutes() = routing {
             permissions = PermissionRepo.getPermissions(user.id.value).map { it.id },
             totpRequired = state == SessionState.TotpPending
         ))
+    }.describe {
+        operationId = "login"
+        summary = "Login"
+        tag("Auth")
+        parameters {
+            q("username", "mickkc", required = true)
+            q("password", "hunter2", required = true)
+            q("deviceId", "UM6fjbATKLXiLWSflCeVeGGxRE3L2Aje", required = true,
+                description = "An Id identifying this device. Should be persistent across logins from the same device.")
+            q("deviceName", "My Laptop", required = true,
+                description = "A human-readable description of the device logging in.")
+        }
+        responses {
+            unauthorizedResponse("Invalid username or password")
+            rateLimitedResponse()
+            invalidParameterResponse("deviceId", "Must be max. 32 characters long.")
+        }
     }
 
     authenticate("tokenAuth") {
@@ -105,6 +127,14 @@ fun Application.configureAuthRoutes() = routing {
                 permissions = PermissionRepo.getPermissions(user.id.value).map { it.id },
                 totpRequired = false
             ))
+        }.describe {
+            operationId = "validateSession"
+            summary = "Validate a session"
+            tag("Auth")
+            authResponses {
+                successResponse<LoginResultDto>("Session is valid")
+                unauthorizedResponse("Invalid or expired token")
+            }
         }
 
         // User logout
@@ -116,6 +146,14 @@ fun Application.configureAuthRoutes() = routing {
             logger.info("User ID ${principal.userId} logged out")
 
             call.success()
+        }.describe {
+            operationId = "logout"
+            summary = "Logout"
+            description = "The current token will be invalidated an can no longer be used to access the API."
+            tag("Auth")
+            authResponses {
+                successResponse<SuccessDto>("Logged out")
+            }
         }
 
         getP("/api/auth/sessions", PermissionType.MANAGE_SESSIONS) {
@@ -125,11 +163,17 @@ fun Application.configureAuthRoutes() = routing {
 
             val sessions = SessionRepo.getAllValidSessionsForUser(userId)
 
-
-            call.respond(mapOf(
-                "sessions" to SessionRepo.toSessionDto(sessions),
-                "currentSessionIndex" to sessions.indexOfFirst { it.token == token }
+            call.respond(SessionsDto(
+                sessions = SessionRepo.toSessionDto(sessions),
+                currentSessionIndex = sessions.indexOfFirst { it.token == token }
             ))
+        }.describe {
+            operationId = "getAllSessions"
+            summary = "Get all active sessions for the currently logged-in user"
+            tag("Auth")
+            authResponses(PermissionType.MANAGE_SESSIONS) {
+                successResponse<SessionsDto>("All active sessions and the index of the current session")
+            }
         }
 
         deleteP("/api/auth/sessions/{id}", PermissionType.MANAGE_SESSIONS) {
@@ -142,24 +186,41 @@ fun Application.configureAuthRoutes() = routing {
             val sessionUserId = SessionRepo.getUserFromSessionId(sessionId)?.id?.value ?: notFound()
 
             if (sessionUserId != userId) {
-                noPermission()
+                forbidden()
             }
 
             SessionRepo.invalidateSessionById(sessionId)
 
             call.success()
+        }.describe {
+            operationId = "invalidateSession"
+            summary = "Invalidate a session based on its Id"
+            tag("Auth")
+            parameters {
+                p("id", 1L, description = "The session Id")
+            }
+            authResponses(PermissionType.MANAGE_SESSIONS) {
+                successResponse<SuccessDto>("Success")
+                notFoundResponse("Session")
+                forbiddenResponse("The session does not belong to the user.")
+            }
         }
 
         deleteP("/api/auth/sessions/all", PermissionType.MANAGE_SESSIONS) {
 
-            val userId = call.getUserId()
-                ?: unauthorized()
-
+            val userId = call.getUserId() ?: unauthorized()
             val token = call.getToken() ?: unauthorized()
 
             SessionRepo.invalidateAllOtherSessionsForUser(userId, token)
 
             call.success()
+        }.describe {
+            operationId = "invalidateAllSessions"
+            summary = "Invalidate all sessions except the current one"
+            tag("Auth")
+            authResponses(PermissionType.MANAGE_SESSIONS) {
+                successResponse<SuccessDto>("Success")
+            }
         }
     }
 }

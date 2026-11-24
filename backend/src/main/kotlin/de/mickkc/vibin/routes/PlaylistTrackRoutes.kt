@@ -1,16 +1,22 @@
 package de.mickkc.vibin.routes
 
-import io.ktor.server.application.*
-import io.ktor.server.auth.authenticate
-import io.ktor.server.response.respond
-import io.ktor.server.routing.*
 import de.mickkc.vibin.db.playlists.PlaylistEntity
 import de.mickkc.vibin.db.tracks.TrackEntity
+import de.mickkc.vibin.dto.SuccessDto
+import de.mickkc.vibin.dto.playlists.PlaylistDto
+import de.mickkc.vibin.dto.playlists.PlaylistTrackDto
 import de.mickkc.vibin.permissions.PermissionType
 import de.mickkc.vibin.repos.PlaylistRepo
 import de.mickkc.vibin.repos.PlaylistTrackRepo
 import de.mickkc.vibin.repos.TrackRepo
+import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.server.routing.openapi.*
+import io.ktor.utils.io.*
 
+@OptIn(ExperimentalKtorApi::class)
 fun Application.configurePlaylistTrackRoutes() = routing {
 
     fun RoutingCall.getPlaylistAndTrack(): Pair<PlaylistEntity, TrackEntity> {
@@ -38,6 +44,18 @@ fun Application.configurePlaylistTrackRoutes() = routing {
 
             PlaylistTrackRepo.addTrackToPlaylist(playlist, track, user)
             call.success()
+        }.describe {
+            operationId = "addTrackToPlaylist"
+            summary = "Add a track to a playlist"
+            tag("PlaylistTracks")
+            parameters {
+                p("playlistId", 1L)
+                q("trackId", 1L, required = true)
+            }
+            authResponses(PermissionType.MANAGE_PLAYLIST_TRACKS) {
+                successResponse<SuccessDto>("Success")
+                notFoundResponse("Playlist or track")
+            }
         }
 
         deleteP("/api/playlists/{playlistId}/tracks", PermissionType.MANAGE_PLAYLIST_TRACKS) {
@@ -46,6 +64,18 @@ fun Application.configurePlaylistTrackRoutes() = routing {
 
             PlaylistTrackRepo.removeTrackFromPlaylist(playlist, track)
             call.success()
+        }.describe {
+            operationId = "removeTrackFromPlaylist"
+            summary = "Remove a track from a playlist"
+            tag("PlaylistTracks")
+            parameters {
+                p("playlistId", 1L)
+                q("trackId", 1L, required = true)
+            }
+            authResponses(PermissionType.MANAGE_PLAYLIST_TRACKS) {
+                successResponse<SuccessDto>("Success")
+                notFoundResponse("Playlist or track")
+            }
         }
 
         putP("/api/playlists/{playlistId}/tracks", PermissionType.MANAGE_PLAYLIST_TRACKS) {
@@ -62,6 +92,20 @@ fun Application.configurePlaylistTrackRoutes() = routing {
 
             val playlistTracks = PlaylistTrackRepo.getTracksAsDtos(playlist)
             call.respond(playlistTracks)
+        }.describe {
+            operationId = "moveTrackInPlaylist"
+            summary = "Move a track inside a playlist"
+            tag("PlaylistTracks")
+            parameters {
+                p("playlistId", 1L)
+                q("trackId", 1L, required = true)
+                q("afterTrackId", 2L, required = false,
+                    description = "The Id of the track before the moved track. If null, the track will be moved to the start.")
+            }
+            authResponses(PermissionType.MANAGE_PLAYLIST_TRACKS) {
+                successResponse<List<PlaylistTrackDto>>("The tracks in their new order")
+                notFoundResponse("Playlist or track")
+            }
         }
 
         getP("/api/playlists/containing/{trackId}", PermissionType.VIEW_PLAYLISTS) {
@@ -71,6 +115,17 @@ fun Application.configurePlaylistTrackRoutes() = routing {
 
             val playlists = PlaylistTrackRepo.getPlaylistsWithTrack(track, userId)
             call.respond(PlaylistRepo.toDto(playlists))
+        }.describe {
+            operationId = "getPlaylistsContainingTrack"
+            summary = "Get playlists containing a track"
+            tag("PlaylistTracks")
+            parameters {
+                p("trackId", 1L)
+            }
+            authResponses(PermissionType.VIEW_PLAYLISTS) {
+                successResponse<List<PlaylistDto>>("A list of all playlists containing the track")
+                notFoundResponse("Track")
+            }
         }
     }
 }
