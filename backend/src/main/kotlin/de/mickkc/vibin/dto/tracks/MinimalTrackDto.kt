@@ -16,6 +16,7 @@ data class MinimalTrackDto (
     @JsonSchema.Example("{\"id\": 1, \"name\": \"Rick Astley\"}")
     val artists: List<IdNameDto>,
 
+    @JsonSchema.Example("{\"id\": 1, \"name\": \"Whenever You Need Somebody\"}")
     val album: IdNameDto,
 
     @JsonSchema.Example("1")

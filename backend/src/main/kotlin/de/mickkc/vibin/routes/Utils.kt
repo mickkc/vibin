@@ -16,6 +16,8 @@ import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlin.enums.enumEntries
+import kotlin.reflect.KType
+import kotlin.reflect.typeOf
 
 suspend fun ApplicationCall.success(success: Boolean = true) {
     respond(SuccessDto(success))
@@ -275,32 +277,24 @@ inline fun<reified E : Enum<E>> ApplicationCall.getEnum(paramName: String, defau
     }
 }
 
+/**
+ * One schema per response DTO type to prevent duplicate schemas in the generated OpenAPI docs
+ */
+@PublishedApi
+internal val successSchemas = mutableMapOf<KType, JsonSchema>()
+
 inline fun<reified T : Any> Responses.Builder.successResponse(description: String, exampleValue: T? = null) {
     response(200) {
         this.description = description
-        this.schema = jsonSchema<T>().let {
-            if (exampleValue != null)
-                it.copy(example = GenericElement(exampleValue))
-            else it
+        content {
+            schema = successSchemas.getOrPut(typeOf<T>()) { jsonSchema<T>() }
+            if (exampleValue != null) {
+                example(T::class.simpleName ?: "success", ExampleObject(
+                    summary = description,
+                    value = GenericElement(exampleValue)
+                ))
+            }
         }
-    }
-}
-
-fun Responses.Builder.redirectResponse(target: String, permanent: Boolean = false) {
-    response(if (permanent) 301 else 302) {
-        description = "Redirect to $target"
-    }
-}
-
-fun Responses.Builder.missingPermissionsResponse(vararg permissions: PermissionType) {
-    response(403) {
-        description = "Missing a required permission"
-        schema = jsonSchema<ErrorDto>().copy(
-            example = GenericElement.encodeToElement(ErrorDto.serializer(), ErrorDto(
-                type = ErrorDtoType.NO_PERMISSION,
-                data = mapOf("requiredPermissions" to permissions.joinToString(",") { it.id })
-            ))
-        )
     }
 }
 
@@ -371,98 +365,46 @@ inline fun<reified T : Any> Parameters.Builder.p(name: String, example: T? = nul
     }
 }
 
-fun Responses.Builder.notFoundResponse(name: String) {
-    response(404) {
-        description = "$name not found"
-        schema = jsonSchema<ErrorDto>().copy(
-            example = GenericElement.encodeToElement(ErrorDto.serializer(), ErrorDto(
-                type = ErrorDtoType.NOT_FOUND,
-                data = mapOf()
+private val errorSchema: JsonSchema = KotlinxSerializerJsonSchemaInference.Default.jsonSchema<ErrorDto>()
+
+fun Responses.Builder.errorResponse(errorDtoType: ErrorDtoType, description: String, vararg data: Pair<String, String>) {
+    response(errorDtoType.code.value) {
+        this.description = description
+        content {
+            schema = errorSchema
+            example(errorDtoType.name, ExampleObject(
+                summary = description,
+                value = GenericElement.encodeToElement(ErrorDto.serializer(), ErrorDto(
+                    type = errorDtoType,
+                    data = data.toMap()
+                ))
             ))
-        )
+        }
     }
 }
 
-fun Responses.Builder.missingParameterResponse(name: String) {
-    response(404) {
-        description = "Parameter '$name' is missing"
-        schema = jsonSchema<ErrorDto>().copy(
-            example = GenericElement.encodeToElement(ErrorDto.serializer(), ErrorDto(
-                type = ErrorDtoType.MISSING_PARAMETER,
-                data = mapOf("parameterName" to name)
-            ))
-        )
-    }
-}
+fun Responses.Builder.notFoundResponse(name: String)
+    = errorResponse(ErrorDtoType.NOT_FOUND, "$name not found")
+fun Responses.Builder.missingParameterResponse(name: String)
+    = errorResponse(ErrorDtoType.NOT_FOUND, "Parameter '$name' is missing", "parameterName" to name)
+fun Responses.Builder.invalidParameterResponse(name: String, explanation: String)
+    = errorResponse(ErrorDtoType.INVALID_PARAMETER, "Parameter '$name' is invalid: $explanation", "parameterName" to name)
+fun Responses.Builder.unauthorizedResponse(reason: String)
+    = errorResponse(ErrorDtoType.UNAUTHORIZED, "Authorization failed: $reason", "reason" to reason)
+fun Responses.Builder.conflictResponse(reason: String)
+    = errorResponse(ErrorDtoType.CONFLICT, "Conflict: $reason", "reason" to reason)
+fun Responses.Builder.unavailableResponse(reason: String)
+    = errorResponse(ErrorDtoType.UNAVAILABLE, "Service unavailable: $reason", "reason" to reason)
+fun Responses.Builder.rateLimitedResponse()
+    = errorResponse(ErrorDtoType.RATE_LIMIT_EXCEEDED, "A rate-limit has been exceeded.")
+fun Responses.Builder.forbiddenResponse(desc: String = "forbidden")
+    = errorResponse(ErrorDtoType.FORBIDDEN, desc)
+fun Responses.Builder.missingPermissionsResponse(vararg permissions: PermissionType)
+    = errorResponse(ErrorDtoType.NO_PERMISSION, "Missing a required permission",
+        "requiredPermissions" to permissions.joinToString(",") { it.id })
 
-fun Responses.Builder.invalidParameterResponse(name: String, explanation: String) {
-    response(400) {
-        description = "Parameter '$name' is invalid: $explanation"
-        schema = jsonSchema<ErrorDto>().copy(
-            example = GenericElement.encodeToElement(ErrorDto.serializer(), ErrorDto(
-                type = ErrorDtoType.INVALID_PARAMETER,
-                data = mapOf("parameterName" to name)
-            ))
-        )
-    }
-}
-
-fun Responses.Builder.unauthorizedResponse(reason: String) {
-    response(401) {
-        description = "Authorization failed for the following reason: $reason"
-        schema = jsonSchema<ErrorDto>().copy(
-            example = GenericElement.encodeToElement(ErrorDto.serializer(), ErrorDto(
-                type = ErrorDtoType.UNAUTHORIZED,
-                data = mapOf("reason" to reason)
-            ))
-        )
-    }
-}
-
-fun Responses.Builder.conflictResponse(reason: String) {
-    response(409) {
-        description = "Conflict: $reason"
-        schema = jsonSchema<ErrorDto>().copy(
-            example = GenericElement.encodeToElement(ErrorDto.serializer(), ErrorDto(
-                type = ErrorDtoType.CONFLICT,
-                data = mapOf("reason" to reason)
-            ))
-        )
-    }
-}
-
-fun Responses.Builder.unavailableResponse(reason: String) {
-    response(501) {
-        description = "Service unavailable: $reason"
-        schema = jsonSchema<ErrorDto>().copy(
-            example = GenericElement.encodeToElement(ErrorDto.serializer(), ErrorDto(
-                type = ErrorDtoType.UNAVAILABLE,
-                data = mapOf("reason" to reason)
-            ))
-        )
-    }
-}
-
-fun Responses.Builder.rateLimitedResponse() {
-    response(429) {
-        description = "A rate-limit has been exceeded."
-        schema = jsonSchema<ErrorDto>().copy(
-            example = GenericElement.encodeToElement(ErrorDto.serializer(), ErrorDto(
-                type = ErrorDtoType.RATE_LIMIT_EXCEEDED,
-                data = mapOf()
-            ))
-        )
-    }
-}
-
-fun Responses.Builder.forbiddenResponse(desc: String = "forbidden") {
-    response(403) {
-        description = desc
-        schema = jsonSchema<ErrorDto>().copy(
-            example = GenericElement.encodeToElement(ErrorDto.serializer(), ErrorDto(
-                type = ErrorDtoType.FORBIDDEN,
-                data = mapOf()
-            ))
-        )
+fun Responses.Builder.redirectResponse(target: String, permanent: Boolean = false) {
+    response(if (permanent) 301 else 302) {
+        description = "Redirect to $target"
     }
 }
