@@ -14,6 +14,7 @@ fun Application.configureOpenApi() = routing {
     staticResources("/api/swagger/static", "openapi.static")
 
     swaggerUI("/api/docs") {
+        remotePath = "documentation.json"
         info = OpenApiInfo(
             title = "Vibin' API",
             description = """
